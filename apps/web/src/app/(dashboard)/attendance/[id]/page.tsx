@@ -67,10 +67,13 @@ export default function CheckInPage() {  const { t } = useTranslation(['attendan
                       TYPE_BADGE[service.serviceType],
                     )}
                   >
-                    {service.serviceType}
+                    {t(`attendance:serviceType_${service.serviceType}`)}
                   </span>
                   <h1 className="text-xl font-bold text-foreground">
-                    {service.serviceTitle || `${service.serviceType} Service`}
+                    {service.serviceTitle ||
+                      t('attendance:typedService', {
+                        type: t(`attendance:serviceType_${service.serviceType}`),
+                      })}
                   </h1>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">

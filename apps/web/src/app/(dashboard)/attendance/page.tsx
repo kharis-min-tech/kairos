@@ -133,10 +133,13 @@ export default function AttendanceServicesPage() {  const { t } = useTranslation
                           TYPE_BADGE[s.serviceType],
                         )}
                       >
-                        {s.serviceType}
+                        {t(`attendance:serviceType_${s.serviceType}`)}
                       </span>
                       <span className="truncate font-medium text-foreground">
-                        {s.serviceTitle || `${s.serviceType} Service`}
+                        {s.serviceTitle ||
+                          t('attendance:typedService', {
+                            type: t(`attendance:serviceType_${s.serviceType}`),
+                          })}
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">

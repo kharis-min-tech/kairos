@@ -1,5 +1,12 @@
 import type { NewBelieverSession } from '@kairos/types';
-import { STAGES, SESSION_STAGE_VALUES } from '../../_components/stage-config';
+import {
+  STAGES,
+  SESSION_STAGE_VALUES,
+  stageLabel,
+  stageTopic,
+} from '../../_components/stage-config';
+
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
 
 export function todayIso(): string {
   const today = new Date();
@@ -50,14 +57,27 @@ export function getSessionStageDef(sessionStage: string) {
   return STAGES.find((stage) => stage.value === sessionStage);
 }
 
-export const curriculumOptions = STAGES
-  .filter((stage) => SESSION_STAGE_VALUES.has(stage.value))
-  .map((stage) => ({
-    value: stage.value,
-    label: `${stage.label}: ${stage.topic}`,
-  }));
+export function getCurriculumOptions(t: Translate) {
+  return STAGES
+    .filter((stage) => SESSION_STAGE_VALUES.has(stage.value))
+    .map((stage) => ({
+      value: stage.value,
+      label: `${stageLabel(t, stage)}: ${stageTopic(t, stage) ?? ''}`,
+    }));
+}
 
-export function teacherName(session: NewBelieverSession): string {
-  if (!session.teacherFirstName) return 'Unassigned teacher';
+/**
+ * A session's topic is stored free-text, but sessions created from the
+ * curriculum carry the stage's English topic verbatim. When they match, show
+ * the translated curriculum title; anything a leader typed is left alone.
+ */
+export function sessionTopic(t: Translate, session: NewBelieverSession): string {
+  const stage = getSessionStageDef(session.sessionStage);
+  if (stage?.topic && session.topic === stage.topic) return stageTopic(t, stage) ?? session.topic;
+  return session.topic ?? '';
+}
+
+export function teacherName(t: Translate, session: NewBelieverSession): string {
+  if (!session.teacherFirstName) return t('newBelievers:unassignedTeacher');
   return `${session.teacherFirstName} ${session.teacherLastName ?? ''}`.trim();
 }

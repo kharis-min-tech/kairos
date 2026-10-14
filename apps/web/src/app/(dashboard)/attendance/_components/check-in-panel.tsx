@@ -126,7 +126,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {  const { t 
         <Card>
           <CardContent className="space-y-2 py-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              First-time visitors ({visitors.length})
+              {t('attendance:firstTimeVisitorsCount', { count: visitors.length })}
             </p>
             {visitors.map((v) => (
               <div key={v.key} className="flex items-center justify-between gap-3 text-sm">

@@ -31,7 +31,8 @@ def _ns_list(ns):
 PROPS = ('label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle'
          '|heading|helper|hint|emptyText|emptyLabel|confirmLabel|cancelLabel|submitLabel')
 FIELDS = ('title|message|label|subtitle|placeholder|confirmLabel|cancelLabel'
-          '|emptyLabel|helper|hint|heading')
+          '|emptyLabel|helper|hint|heading|description|helperText|emptyText'
+          '|confirmText|cancelText|tooltip|caption')
 
 SKIP = re.compile(r'^(?:[A-Z]{1,4}|\d+|[^A-Za-z]*|https?:.*|[a-z]+://.*)$')
 CODEISH = re.compile(r'[;()\[\]=]|=>|&&|\|\||\breturn\b|\bconst\b|\.\w+\(')
@@ -155,6 +156,29 @@ def main():
             lambda m, k: f"{m.group(1)}: t('{ns}:{k}')")
     collect(JSX_TEXT, lambda m, k: f">{{t('{ns}:{k}')}}<",
             group=1, flags=re.S, guard=True)
+
+    # Positions the JSX scan cannot see. Each of these was shipping English in
+    # every language because it lives in an expression, not in markup.
+
+    # Toasts and native confirms.
+    collect(r"(toast\.(?:success|error|info|warning|message)\(\s*)'([^'\\\n]{4,200})'",
+            lambda m, k: f"{m.group(1)}t('{ns}:{k}')", group=2)
+    collect(r"(window\.confirm\(\s*)'([^'\\\n]{4,300})'",
+            lambda m, k: f"{m.group(1)}t('{ns}:{k}')", group=2)
+
+    # Both arms of a ternary. The audit only looked for a capitalised first
+    # letter, which missed every lowercase fragment -- "in a row, attended".
+    for m in re.finditer(r"\?\s*'([^'\\\n]{3,200})'\s*:\s*'([^'\\\n]{3,200})'", src):
+        if not inside(m.start()):
+            continue
+        ka, kb = remember(m.group(1)), remember(m.group(2))
+        if ka and kb:
+            edits.append((m.start(), m.end(), f"? t('{ns}:{ka}') : t('{ns}:{kb}')"))
+
+    # `err instanceof Error ? err.message : 'Could not load X.'` -- the branch
+    # a reader actually hits when the server is down.
+    collect(r"(:\s*)'([A-Z][^'\\\n]{6,200}[.!?])'(\s*[,)\n])",
+            lambda m, k: f"{m.group(1)}t('{ns}:{k}'){m.group(3)}", group=2)
 
     if edits:
         for start, end, text in sorted(edits, key=lambda e: -e[0]):

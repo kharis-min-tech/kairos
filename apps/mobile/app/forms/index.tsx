@@ -21,7 +21,12 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
-import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
+import {
+  FORM_DEFINITIONS,
+  FORM_TYPES,
+  localiseFormDefinition,
+  type FormType,
+} from '@kairos/types';
 import { useTranslation } from 'react-i18next';
 
 /*
@@ -66,7 +71,7 @@ export default function FormsLanding() {  const { t } = useTranslation(['forms',
 
         <View style={styles.tileList}>
           {FORM_TYPES.map((type) => {
-            const definition = FORM_DEFINITIONS[type];
+            const definition = localiseFormDefinition(t, FORM_DEFINITIONS[type]);
             const Icon = FORM_ICONS[type];
             return (
               <Pressable key={type} onPress={() => router.push(`/forms/${type}`)}>

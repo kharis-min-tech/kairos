@@ -16,7 +16,7 @@ import {
 } from '@kairos/ui';
 import { formatShortDate } from '@kairos/core';
 import { useCreateMentorFollowup, useMentorFollowups } from '@/hooks/use-new-believers';
-import { getStageByValue } from './stage-config';
+import { getStageByValue, stageLabel } from './stage-config';
 import type { EnrollmentCardData } from './types';
 import { useTranslation } from 'react-i18next';
 
@@ -136,13 +136,13 @@ function MenteeRow({
                 className={`inline-block h-1.5 w-1.5 rounded-full ${stage?.dotColor ?? 'bg-slate-400'}`}
                 aria-hidden
               />
-              {stage?.label ?? enrollment.stage}
+              {stageLabel(t, stage, enrollment.stage)}
             </span>
             <span aria-hidden>·</span>
             <span>
               {lastFollowupAt
-                ? `Last follow-up ${formatShortDate(lastFollowupAt)}`
-                : 'No follow-up logged yet'}
+                ? t('newBelievers:lastFollowUpOn', { date: formatShortDate(lastFollowupAt) })
+                : t('newBelievers:noFollowUpLoggedYet')}
             </span>
           </div>
         </div>

@@ -22,10 +22,11 @@ import { useCreateSession } from '@/hooks/use-new-believers';
 import type { CreateNewBelieverSessionRequest } from '@kairos/types';
 import {
   combineDateAndTime,
-  curriculumOptions,
+  getCurriculumOptions,
   getSessionStageDef,
   todayIso,
 } from './session-helpers';
+import { stageTopic } from '../../_components/stage-config';
 import { useTranslation } from 'react-i18next';
 
 const createSessionFormSchema = z.object({
@@ -117,10 +118,12 @@ export function CreateSessionDialog({
                   shouldValidate: true,
                 })
               }
-              options={curriculumOptions}
+              options={getCurriculumOptions(t)}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Topic: {selectedStage?.topic ?? 'Select a session'}
+              {selectedStage
+                ? t('newBelievers:topicWithName', { topic: stageTopic(t, selectedStage) ?? '' })
+                : t('newBelievers:selectASession')}
             </p>
             {form.formState.errors.sessionStage && (
               <p className="mt-1 text-xs font-medium text-destructive">

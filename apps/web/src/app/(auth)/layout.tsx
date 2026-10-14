@@ -2,7 +2,7 @@
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from './kharis-logo';
-import { AUTH_VERSES, pickAuthVerse } from '@kairos/core';
+import { AUTH_VERSES, pickAuthVerse, resolveAuthVerse } from '@kairos/core';
 import { HandDrawn } from '@/components/motion/hand-drawn';
 import { Reveal } from '@/components/motion/reveal';
 import { AuthAmbient } from './auth-ambient';
@@ -60,8 +60,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   // and the two disagree — React then throws a hydration error and rebuilds
   // the tree. The first verse renders on the server and the real pick lands
   // on mount.
-  const [verse, setVerse] = useState(AUTH_VERSES[0]!);
-  useEffect(() => setVerse(pickAuthVerse()), []);
+  const [picked, setPicked] = useState(AUTH_VERSES[0]!);
+  useEffect(() => setPicked(pickAuthVerse()), []);
+  const verse = resolveAuthVerse(picked, i18n.language);
 
   // Word-by-word entrance. A highlighted word is one beat and gets its
   // underline drawn once every word has landed.
@@ -144,7 +145,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <div className="h-px w-8 bg-gray-300 dark:bg-white/20" />
               <span className="text-[11px] font-medium uppercase tracking-widest text-gray-500 dark:text-white/50">
                 {verse.reference} ({verse.version})
-                {i18n.language === 'en' ? '' : ` · ${t('common:shownInEnglish')}`}
+                {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
               </span>
             </div>
           </div>

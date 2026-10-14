@@ -32,7 +32,7 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
-import { pickAuthVerse } from '@kairos/core';
+import { pickAuthVerse, resolveAuthVerse } from '@kairos/core';
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
@@ -59,7 +59,8 @@ export default function LoginScreen() {
 
   // Rotates per mount, so the page has a voice rather than a slogan. Shared
   // with web via the same verse set.
-  const verse = useMemo(() => pickAuthVerse(), []);
+  const picked = useMemo(() => pickAuthVerse(), []);
+  const verse = resolveAuthVerse(picked, i18n.language);
 
   // Canvas motion. Reanimated is not installed and adding it would force a
   // native rebuild, so this is RN's built-in Animated on the native driver
@@ -279,7 +280,10 @@ export default function LoginScreen() {
                 <Text style={styles.verseAccent}>{verse.accentWord}</Text>
                 {verse.after}
               </Text>
-              <Text style={styles.verseRef}>{verse.reference}</Text>
+              <Text style={styles.verseRef}>
+                {verse.reference} ({verse.version})
+                {verse.fellBackToEnglish ? ` \u00b7 ${t('common:shownInEnglish')}` : ''}
+              </Text>
             </Animated.View>
           </View>
 

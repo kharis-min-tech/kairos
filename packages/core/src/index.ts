@@ -27,7 +27,14 @@ export {
   type ResolvedAddress,
 } from './address-suggestions';
 
-export { AUTH_VERSES, pickAuthVerse, type AuthVerse } from './auth-verses';
+export {
+  AUTH_VERSES,
+  pickAuthVerse,
+  resolveAuthVerse,
+  type AuthVerse,
+  type AuthVerseText,
+  type ResolvedAuthVerse,
+} from './auth-verses';
 
 export {
   DOVE_PATH,

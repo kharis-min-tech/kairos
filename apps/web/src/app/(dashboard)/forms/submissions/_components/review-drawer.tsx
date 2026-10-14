@@ -17,7 +17,7 @@ import {
 import { formatShortDate } from '@kairos/core';
 import { useUpdateFormSubmission } from '@/hooks/use-forms';
 import { STATUS_META, STATUS_OPTIONS } from '../../_lib/form-meta';
-import { FORM_DEFINITIONS } from '@kairos/types';
+import { FORM_DEFINITIONS, localiseFormDefinition } from '@kairos/types';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
 
@@ -133,7 +133,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
   const payload = submission.payload as unknown as Record<string, unknown>;
   const isTestimony = submission.formType === 'testimony';
   const anonymous = isTestimony && payload.shareAnonymously === true;
-  const definition = FORM_DEFINITIONS[submission.formType];
+  const definition = localiseFormDefinition(t, FORM_DEFINITIONS[submission.formType]);
   const statusMeta = STATUS_META[submission.status];
 
   // Hide submitter identity for anonymous testimonies.

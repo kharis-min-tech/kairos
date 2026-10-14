@@ -149,19 +149,20 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {  const { t } = useTran
     year: 'numeric',
   });
 
-  const outcomeLabel = isVisit
+  const outcomeKey = isVisit
     ? row.visitOutcome === 'present'
-      ? 'Present'
+      ? 'present'
       : row.visitOutcome === 'not_present'
-        ? 'Not present'
+        ? 'notPresent'
         : row.visitOutcome === 'rescheduled'
-          ? 'Rescheduled'
+          ? 'rescheduled'
           : null
     : row.contactReached === true
-      ? 'Reached'
+      ? 'reached'
       : row.contactReached === false
-        ? 'No answer'
+        ? 'noAnswer'
         : null;
+  const outcomeLabel = outcomeKey ? t(`members:outcome_${outcomeKey}`) : null;
 
   return (
     <li>
@@ -178,8 +179,10 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {  const { t } = useTran
               {row.memberFirstName} {row.memberLastName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {dateLabel} · {row.scopeName ?? 'Branch'} · by {row.recordedByFirstName}{' '}
-              {row.recordedByLastName}
+              {dateLabel} · {row.scopeName ?? t('members:branch')} ·{' '}
+              {t('members:recordedByName', {
+                name: `${row.recordedByFirstName} ${row.recordedByLastName ?? ''}`.trim(),
+              })}
             </p>
           </div>
           {outcomeLabel && (

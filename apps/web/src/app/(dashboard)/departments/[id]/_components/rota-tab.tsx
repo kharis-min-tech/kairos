@@ -1210,8 +1210,12 @@ function PoolManager({
                     {p.memberFirstName} {p.memberLastName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {p.preferredRoleName ? `Prefers ${p.preferredRoleName}` : 'Any role'}
-                    {p.lastScheduledAt ? ` • Last scheduled ${p.lastScheduledAt}` : ''}
+                    {p.preferredRoleName
+                      ? t('departments:prefersRole', { role: p.preferredRoleName })
+                      : t('departments:anyRole')}
+                    {p.lastScheduledAt
+                      ? ` • ${t('departments:lastScheduledOn', { date: p.lastScheduledAt })}`
+                      : ''}
                   </p>
                 </div>
               </div>

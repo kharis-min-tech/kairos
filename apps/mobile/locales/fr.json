@@ -80,7 +80,8 @@
     "appInfo": "Infos sur l'application",
     "retry2": "Réessayer",
     "v1V2V3TapChange": "{{v1}} {{v2}}, {{v3}}. Touchez pour changer. Appui long pour ouvrir le sélecteur.",
-    "disconnectV1": "Déconnecter {{v1}} ?"
+    "disconnectV1": "Déconnecter {{v1}} ?",
+    "shownInEnglish": "affiché en anglais"
   },
   "more": {
     "sections": {
@@ -388,7 +389,410 @@
     "searchPerson": "Rechercher une personne",
     "searchNamePhoneUseNameType": "Recherchez par nom ou téléphone — ou utilisez le nom que vous saisissez, s'il ne s'agit pas d'un membre.",
     "searchMembersBranchNamePhone": "Rechercher des membres de cette antenne par nom ou téléphone.",
-    "archiveV1": "Archiver {{v1}} ?"
+    "archiveV1": "Archiver {{v1}} ?",
+    "def": {
+      "first_time_visitor": {
+        "title": "Premier visiteur",
+        "description": "Bienvenue ! Parlez-nous un peu de vous pour que nous puissions vous recontacter.",
+        "subjectLink": {
+          "label": "Rechercher une personne existante",
+          "helpText": "Recherchez par nom ou téléphone. Laissez vide pour créer un nouveau contact.",
+          "linkedNote": "Lié à une personne existante : l'envoi mettra à jour sa fiche."
+        },
+        "success": {
+          "title": "Accueil enregistré",
+          "message": "Merci de votre visite. Un responsable vous contactera bientôt."
+        },
+        "block": {
+          "about-you": {
+            "title": "À propos de vous",
+            "field": {
+              "firstName": {
+                "label": "Prénom"
+              },
+              "lastName": {
+                "label": "Nom"
+              },
+              "middleName": {
+                "label": "Deuxième prénom"
+              },
+              "dateOfBirth": {
+                "label": "Date de naissance"
+              },
+              "gender": {
+                "label": "Genre",
+                "option": {
+                  "Male": "Homme",
+                  "Female": "Femme"
+                }
+              },
+              "isUnder16": {
+                "label": "Avez-vous moins de 16 ans ?",
+                "helpText": "Nous pouvons le déduire de votre date de naissance.",
+                "option": {
+                  "Yes": "Oui",
+                  "No": "Non"
+                }
+              }
+            }
+          },
+          "contact": {
+            "title": "Coordonnées",
+            "field": {
+              "email": {
+                "label": "E-mail"
+              },
+              "phone": {
+                "label": "Téléphone"
+              },
+              "address": {
+                "label": "Adresse"
+              },
+              "city": {
+                "label": "Ville"
+              },
+              "postalCode": {
+                "label": "Code postal"
+              }
+            }
+          },
+          "guardian": {
+            "title": "Parent / tuteur",
+            "description": "Obligatoire pour les visiteurs de moins de 16 ans.",
+            "field": {
+              "guardianMemberId": {
+                "label": "Tuteur",
+                "placeholder": "Recherchez, ou saisissez leur nom s'ils sont nouveaux"
+              },
+              "guardianPhone": {
+                "label": "Téléphone du tuteur"
+              },
+              "guardianRelationship": {
+                "label": "Lien avec vous",
+                "placeholder": "ex. mère, père, aidant"
+              }
+            }
+          },
+          "children-with-you": {
+            "title": "Êtes-vous venu avec des enfants ?",
+            "field": {
+              "broughtChildren": {
+                "label": "Je suis venu avec un ou plusieurs enfants"
+              }
+            }
+          },
+          "children": {
+            "label": "Enfants qui vous accompagnent",
+            "itemLabel": "Enfant",
+            "field": {
+              "firstName": {
+                "label": "Prénom"
+              },
+              "lastName": {
+                "label": "Nom"
+              },
+              "dateOfBirth": {
+                "label": "Date de naissance"
+              },
+              "gender": {
+                "label": "Genre",
+                "option": {
+                  "Male": "Homme",
+                  "Female": "Femme"
+                }
+              }
+            }
+          },
+          "getting-involved": {
+            "title": "S'impliquer",
+            "field": {
+              "interest": {
+                "label": "Qu'est-ce qui vous intéresse ?",
+                "helpText": "Dites-nous où vous aimeriez vous investir.",
+                "option": {
+                  "fellowship": "Rejoindre une cellule",
+                  "department": "Servir dans un département",
+                  "new_believers": "Programme des nouveaux convertis",
+                  "just_visiting": "Simple visite pour l'instant"
+                }
+              },
+              "howDidYouHear": {
+                "label": "Comment avez-vous entendu parler de nous ?",
+                "placeholder": "ex. un ami, les réseaux sociaux, en passant"
+              },
+              "invitedByMemberId": {
+                "label": "Qui vous a invité ?",
+                "placeholder": "Recherchez la personne qui vous a invité"
+              }
+            }
+          }
+        }
+      },
+      "altar_call": {
+        "title": "Cours des nouveaux convertis",
+        "description": "Inscrivez quelqu'un au programme des nouveaux convertis. Nous vous recontacterons pour organiser le cours de quatre semaines.",
+        "subjectLink": {
+          "label": "Rechercher une personne existante",
+          "helpText": "Recherchez par nom ou téléphone. Laissez vide pour créer un nouveau contact.",
+          "linkedNote": "Lié à une personne existante : l'envoi l'inscrira."
+        },
+        "success": {
+          "title": "Inscription créée",
+          "message": "Un nouveau contact a été créé et inscrit au programme des nouveaux convertis.",
+          "linkedMessage": "Cette personne a été liée et inscrite au programme des nouveaux convertis."
+        },
+        "block": {
+          "details": {
+            "title": "Ses coordonnées",
+            "field": {
+              "todaysDate": {
+                "label": "Date du jour"
+              },
+              "firstName": {
+                "label": "Prénom"
+              },
+              "lastName": {
+                "label": "Nom"
+              },
+              "phone": {
+                "label": "Téléphone"
+              }
+            }
+          }
+        }
+      },
+      "baptism": {
+        "title": "Baptême",
+        "description": "Demandez le baptême. Un responsable vous contactera pour convenir d'une date et des prochaines étapes.",
+        "subjectLink": {
+          "label": "Rechercher le candidat au baptême",
+          "helpText": "Recherchez par nom ou téléphone. Laissez vide pour créer un nouveau contact.",
+          "linkedNote": "Lié à une personne existante. Sa fiche sera utilisée."
+        },
+        "success": {
+          "title": "Demande de baptême envoyée",
+          "message": "Votre demande de baptême a été enregistrée. Un responsable vous contactera."
+        },
+        "block": {
+          "details": {
+            "title": "Vos coordonnées",
+            "field": {
+              "firstName": {
+                "label": "Prénom"
+              },
+              "lastName": {
+                "label": "Nom"
+              },
+              "phone": {
+                "label": "Téléphone"
+              }
+            }
+          }
+        }
+      },
+      "testimony": {
+        "title": "Témoignage",
+        "description": "Partagez ce que Dieu a fait. Les responsables pourront vous contacter pour s'en réjouir avec vous ou vous proposer de le partager un dimanche.",
+        "subjectLink": {
+          "label": "Rechercher la personne qui témoigne",
+          "helpText": "Recherchez par nom ou téléphone. Laissez vide pour créer un nouveau contact.",
+          "linkedNote": "Lié à une personne existante : ce témoignage sera rattaché à sa fiche."
+        },
+        "success": {
+          "title": "Témoignage partagé",
+          "message": "Merci d'avoir partagé votre témoignage. À Dieu soit la gloire !"
+        },
+        "block": {
+          "about-you": {
+            "title": "À propos de vous",
+            "field": {
+              "firstName": {
+                "label": "Prénom"
+              },
+              "lastName": {
+                "label": "Nom"
+              },
+              "phone": {
+                "label": "Téléphone"
+              },
+              "todaysDate": {
+                "label": "Date du jour"
+              }
+            }
+          },
+          "testimony": {
+            "title": "Votre témoignage",
+            "field": {
+              "dateOfTestimony": {
+                "label": "Date des faits"
+              },
+              "category": {
+                "label": "Catégorie",
+                "placeholder": "Choisissez une catégorie",
+                "option": {
+                  "Business": "Affaires",
+                  "Career/Job": "Carrière / emploi",
+                  "Deliverance": "Délivrance",
+                  "Education": "Éducation",
+                  "Financial": "Finances",
+                  "Health/Healing": "Santé / guérison",
+                  "Marriage/Family": "Mariage / famille",
+                  "Salvation": "Salut",
+                  "Unusual Favour": "Faveur extraordinaire",
+                  "Other": "Autre"
+                }
+              },
+              "details": {
+                "label": "Que s'est-il passé ?",
+                "placeholder": "Racontez-le avec vos propres mots."
+              }
+            }
+          },
+          "sharing": {
+            "title": "Préférences de partage",
+            "field": {
+              "shareAnonymously": {
+                "label": "Partager anonymement ?",
+                "helpText": "Nous n'utiliserons pas votre nom en cas de publication."
+              },
+              "happyToShareSunday": {
+                "label": "Prêt à le partager pendant le culte du dimanche ?"
+              }
+            }
+          }
+        }
+      },
+      "baby_naming": {
+        "title": "Imposition du nom",
+        "description": "Demandez une cérémonie d'imposition du nom.",
+        "subjectLink": {
+          "label": "Rechercher le parent / tuteur",
+          "helpText": "Recherchez par nom ou téléphone pour lier un membre existant. Laissez vide sinon.",
+          "linkedNote": "Lié à un membre existant. Il sera enregistré comme parent / tuteur."
+        },
+        "success": {
+          "title": "Demande d'imposition du nom envoyée",
+          "message": "Votre demande a été enregistrée. Un responsable vous recontactera pour confirmer une date."
+        },
+        "block": {
+          "baby": {
+            "title": "À propos du bébé",
+            "field": {
+              "babyFullName": {
+                "label": "Nom complet du bébé"
+              },
+              "dateOfBirth": {
+                "label": "Date de naissance"
+              },
+              "gender": {
+                "label": "Genre",
+                "option": {
+                  "Male": "Homme",
+                  "Female": "Femme"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Parents",
+            "field": {
+              "fatherMemberId": {
+                "label": "Père",
+                "placeholder": "Recherchez, ou saisissez leur nom s'ils ne sont pas membres"
+              },
+              "motherMemberId": {
+                "label": "Mère",
+                "placeholder": "Recherchez, ou saisissez leur nom s'ils ne sont pas membres"
+              },
+              "parentContactPhone": {
+                "label": "Téléphone du parent"
+              },
+              "parentContactEmail": {
+                "label": "E-mail du parent"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Préférences",
+            "field": {
+              "preferredCeremonyDate": {
+                "label": "Date de cérémonie souhaitée",
+                "helpText": "Les responsables confirmeront la date définitive."
+              },
+              "additionalNotes": {
+                "label": "Autre chose ?",
+                "placeholder": "Demandes particulières, parrains, etc."
+              }
+            }
+          }
+        }
+      },
+      "baby_dedication": {
+        "title": "Dédicace du bébé",
+        "description": "Demandez une dédicace de bébé.",
+        "subjectLink": {
+          "label": "Rechercher le parent / tuteur",
+          "helpText": "Recherchez par nom ou téléphone pour lier un membre existant. Laissez vide sinon.",
+          "linkedNote": "Lié à un membre existant. Il sera enregistré comme parent / tuteur."
+        },
+        "success": {
+          "title": "Demande de dédicace envoyée",
+          "message": "Votre demande a été enregistrée. Un responsable vous recontactera pour confirmer une date."
+        },
+        "block": {
+          "baby": {
+            "title": "À propos du bébé",
+            "field": {
+              "babyFullName": {
+                "label": "Nom complet du bébé"
+              },
+              "dateOfBirth": {
+                "label": "Date de naissance"
+              },
+              "gender": {
+                "label": "Genre",
+                "option": {
+                  "Male": "Homme",
+                  "Female": "Femme"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Parents",
+            "field": {
+              "fatherMemberId": {
+                "label": "Père",
+                "placeholder": "Recherchez, ou saisissez leur nom s'ils ne sont pas membres"
+              },
+              "motherMemberId": {
+                "label": "Mère",
+                "placeholder": "Recherchez, ou saisissez leur nom s'ils ne sont pas membres"
+              },
+              "parentContactPhone": {
+                "label": "Téléphone du parent"
+              },
+              "parentContactEmail": {
+                "label": "E-mail du parent"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Préférences",
+            "field": {
+              "preferredDedicationDate": {
+                "label": "Date de dédicace souhaitée",
+                "helpText": "Les responsables confirmeront la date définitive."
+              },
+              "additionalNotes": {
+                "label": "Autre chose ?",
+                "placeholder": "Demandes particulières, parrains, etc."
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "reports": {
     "reports": "Rapports",

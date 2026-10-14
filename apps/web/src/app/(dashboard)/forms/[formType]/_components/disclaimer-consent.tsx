@@ -48,8 +48,7 @@ export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps)
           required
         />
         <span id="consent-helper" className="text-sm text-foreground">
-          I have read the privacy notice above and confirm I have the subject&rsquo;s
-          consent to record this information.
+          {t('forms:consentCheckboxLabel')}
         </span>
       </label>
     </div>

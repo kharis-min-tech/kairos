@@ -37,6 +37,7 @@ import {
 } from '@kairos/ui-native';
 import {
   FORM_DEFINITIONS,
+  localiseFormDefinition,
   buildFormPayload,
   declaredFieldIds,
   emptyFormRow,
@@ -94,7 +95,7 @@ export default function FormRenderer() {  const { t } = useTranslation(['forms',
 
   // Every form type has a definition, and one renderer draws all of them on
   // both platforms. There is no "open it on the web" fallback any more.
-  const definition = FORM_DEFINITIONS[formType];
+  const definition = localiseFormDefinition(t, FORM_DEFINITIONS[formType]);
 
   return <DeclarativeForm definition={definition} onDone={() => router.replace('/forms')} />;
 }

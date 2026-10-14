@@ -5,6 +5,7 @@ import { Users } from 'lucide-react';
 import { useEnrollments } from '@/hooks/use-new-believers';
 import type { NewBelieverEnrollmentWithMember, NewBelieverStageValue } from '@kairos/types';
 import { getSessionStageDef } from './session-helpers';
+import { stageLabel } from '../../_components/stage-config';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -41,7 +42,7 @@ export function RosterTab({ branchId, sessionStage }: Props) {  const { t } = us
     return (
       <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
         {t('newBelievers:noActiveEnrollmentsAt', {
-          stage: stageDef?.label ?? t('newBelievers:thisStage'),
+          stage: stageLabel(t, stageDef, t('newBelievers:thisStage')),
         })}
       </p>
     );
@@ -52,7 +53,7 @@ export function RosterTab({ branchId, sessionStage }: Props) {  const { t } = us
       <p className="text-xs text-muted-foreground">
         {t('newBelievers:showingActiveEnrollmentsAt', {
           count: enrolled.length,
-          stage: stageDef?.label ?? sessionStage,
+          stage: stageLabel(t, stageDef, sessionStage),
         })}
       </p>
       <div className="overflow-hidden rounded-lg border border-input/10">

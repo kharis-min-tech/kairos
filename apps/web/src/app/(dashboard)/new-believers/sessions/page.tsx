@@ -92,13 +92,15 @@ export default function SessionsPage() {  const { t } = useTranslation(['newBeli
           <div>
             <h1 className="text-3xl font-semibold tracking-[-0.02em]">{t('newBelievers:newBelieversSessions')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {sessions.length} session{sessions.length === 1 ? '' : 's'}
+              {t('newBelievers:sessionCount', { count: sessions.length })}
               {nextSession && (
                 <>
                   {' · '}
                   <span className="font-medium text-foreground">
-                    Next: {formatShortSessionDate(nextSession.sessionDate)} ·{' '}
-                    {formatSessionTime(nextSession.sessionDate)}
+                    {t('newBelievers:nextSessionAt', {
+                      date: formatShortSessionDate(nextSession.sessionDate),
+                      time: formatSessionTime(nextSession.sessionDate),
+                    })}
                   </span>
                 </>
               )}

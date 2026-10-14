@@ -477,7 +477,7 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                           </p>
                           <div className="mt-0.5 flex flex-wrap items-center gap-2">
                             <p className="text-xs text-muted-foreground">
-                              Joined {m.joinDate}
+                              {t('departments:joinedOn', { date: m.joinDate })}
                             </p>
                             {m.nbStage && <NbStageChip stage={m.nbStage} />}
                           </div>

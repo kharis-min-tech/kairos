@@ -80,7 +80,8 @@
     "appInfo": "App info",
     "retry2": "Retry",
     "v1V2V3TapChange": "{{v1}} {{v2}}, {{v3}}. Tap to change. Long-press to open picker.",
-    "disconnectV1": "Disconnect {{v1}}?"
+    "disconnectV1": "Disconnect {{v1}}?",
+    "shownInEnglish": "shown in English"
   },
   "more": {
     "sections": {
@@ -388,7 +389,410 @@
     "searchPerson": "Search for a person",
     "searchNamePhoneUseNameType": "Search by name or phone — or use the name you type, if they aren’t a member.",
     "searchMembersBranchNamePhone": "Search members in this branch by name or phone.",
-    "archiveV1": "Archive {{v1}}?"
+    "archiveV1": "Archive {{v1}}?",
+    "def": {
+      "first_time_visitor": {
+        "title": "First-Time Visitor",
+        "description": "Welcome! Tell us a little about yourself so we can follow up.",
+        "subjectLink": {
+          "label": "Find an existing person",
+          "helpText": "Search by name or phone. Leave blank to create a new contact.",
+          "linkedNote": "Linked to an existing person, so submitting will update their record."
+        },
+        "success": {
+          "title": "Welcome recorded",
+          "message": "Thank you for visiting. A leader will reach out to you soon."
+        },
+        "block": {
+          "about-you": {
+            "title": "About you",
+            "field": {
+              "firstName": {
+                "label": "First name"
+              },
+              "lastName": {
+                "label": "Last name"
+              },
+              "middleName": {
+                "label": "Middle name"
+              },
+              "dateOfBirth": {
+                "label": "Date of birth"
+              },
+              "gender": {
+                "label": "Gender",
+                "option": {
+                  "Male": "Male",
+                  "Female": "Female"
+                }
+              },
+              "isUnder16": {
+                "label": "Are you under 16?",
+                "helpText": "We may derive this from your date of birth.",
+                "option": {
+                  "Yes": "Yes",
+                  "No": "No"
+                }
+              }
+            }
+          },
+          "contact": {
+            "title": "Contact details",
+            "field": {
+              "email": {
+                "label": "Email"
+              },
+              "phone": {
+                "label": "Phone"
+              },
+              "address": {
+                "label": "Address"
+              },
+              "city": {
+                "label": "City"
+              },
+              "postalCode": {
+                "label": "Postal code"
+              }
+            }
+          },
+          "guardian": {
+            "title": "Parent / guardian",
+            "description": "Required for visitors under 16.",
+            "field": {
+              "guardianMemberId": {
+                "label": "Guardian",
+                "placeholder": "Search, or type their name if they’re new"
+              },
+              "guardianPhone": {
+                "label": "Guardian phone"
+              },
+              "guardianRelationship": {
+                "label": "Relationship to you",
+                "placeholder": "e.g. Mother, Father, Carer"
+              }
+            }
+          },
+          "children-with-you": {
+            "title": "Did you come with children?",
+            "field": {
+              "broughtChildren": {
+                "label": "I came with one or more children"
+              }
+            }
+          },
+          "children": {
+            "label": "Children with you",
+            "itemLabel": "Child",
+            "field": {
+              "firstName": {
+                "label": "First name"
+              },
+              "lastName": {
+                "label": "Last name"
+              },
+              "dateOfBirth": {
+                "label": "Date of birth"
+              },
+              "gender": {
+                "label": "Gender",
+                "option": {
+                  "Male": "Male",
+                  "Female": "Female"
+                }
+              }
+            }
+          },
+          "getting-involved": {
+            "title": "Getting involved",
+            "field": {
+              "interest": {
+                "label": "What are you interested in?",
+                "helpText": "Tell us where you would like to plug in.",
+                "option": {
+                  "fellowship": "Joining a fellowship",
+                  "department": "Serving in a department",
+                  "new_believers": "New Believers programme",
+                  "just_visiting": "Just visiting for now"
+                }
+              },
+              "howDidYouHear": {
+                "label": "How did you hear about us?",
+                "placeholder": "e.g. A friend, social media, walked past"
+              },
+              "invitedByMemberId": {
+                "label": "Who invited you?",
+                "placeholder": "Search for the person who invited you"
+              }
+            }
+          }
+        }
+      },
+      "altar_call": {
+        "title": "New Believers Class",
+        "description": "Enrol someone into the New Believers programme. We’ll follow up to arrange the four-week class.",
+        "subjectLink": {
+          "label": "Find an existing person",
+          "helpText": "Search by name or phone. Leave blank to create a new contact.",
+          "linkedNote": "Linked to an existing person, so submitting will enrol them."
+        },
+        "success": {
+          "title": "Enrollment created",
+          "message": "A new contact was created and enrolled in the New Believers programme.",
+          "linkedMessage": "This person was linked and enrolled in the New Believers programme."
+        },
+        "block": {
+          "details": {
+            "title": "Their details",
+            "field": {
+              "todaysDate": {
+                "label": "Today’s date"
+              },
+              "firstName": {
+                "label": "First name"
+              },
+              "lastName": {
+                "label": "Last name"
+              },
+              "phone": {
+                "label": "Phone"
+              }
+            }
+          }
+        }
+      },
+      "baptism": {
+        "title": "Baptism",
+        "description": "Request baptism. A leader will get in touch to talk through timing and next steps.",
+        "subjectLink": {
+          "label": "Find the baptism candidate",
+          "helpText": "Search by name or phone. Leave blank to create a new contact.",
+          "linkedNote": "Linked to an existing person. Their record will be used."
+        },
+        "success": {
+          "title": "Baptism request submitted",
+          "message": "Your baptism request has been recorded. A leader will be in touch."
+        },
+        "block": {
+          "details": {
+            "title": "Your details",
+            "field": {
+              "firstName": {
+                "label": "First name"
+              },
+              "lastName": {
+                "label": "Last name"
+              },
+              "phone": {
+                "label": "Phone"
+              }
+            }
+          }
+        }
+      },
+      "testimony": {
+        "title": "Testimony",
+        "description": "Share what God has done. Leaders may reach out to celebrate with you or ask if you’d share it on a Sunday.",
+        "subjectLink": {
+          "label": "Find the person giving the testimony",
+          "helpText": "Search by name or phone. Leave blank to create a new contact.",
+          "linkedNote": "Linked to an existing person, so this testimony will be tied to their record."
+        },
+        "success": {
+          "title": "Testimony shared",
+          "message": "Thank you for sharing your testimony. To God be the glory!"
+        },
+        "block": {
+          "about-you": {
+            "title": "About you",
+            "field": {
+              "firstName": {
+                "label": "First name"
+              },
+              "lastName": {
+                "label": "Last name"
+              },
+              "phone": {
+                "label": "Phone"
+              },
+              "todaysDate": {
+                "label": "Today’s date"
+              }
+            }
+          },
+          "testimony": {
+            "title": "Your testimony",
+            "field": {
+              "dateOfTestimony": {
+                "label": "Date this happened"
+              },
+              "category": {
+                "label": "Category",
+                "placeholder": "Choose a category",
+                "option": {
+                  "Business": "Business",
+                  "Career/Job": "Career / Job",
+                  "Deliverance": "Deliverance",
+                  "Education": "Education",
+                  "Financial": "Financial",
+                  "Health/Healing": "Health / Healing",
+                  "Marriage/Family": "Marriage / Family",
+                  "Salvation": "Salvation",
+                  "Unusual Favour": "Unusual Favour",
+                  "Other": "Other"
+                }
+              },
+              "details": {
+                "label": "What happened?",
+                "placeholder": "Tell us in your own words."
+              }
+            }
+          },
+          "sharing": {
+            "title": "Sharing preferences",
+            "field": {
+              "shareAnonymously": {
+                "label": "Share anonymously?",
+                "helpText": "We won’t use your name if this is published."
+              },
+              "happyToShareSunday": {
+                "label": "Happy to share during Sunday service?"
+              }
+            }
+          }
+        }
+      },
+      "baby_naming": {
+        "title": "Baby Naming",
+        "description": "Request a baby naming ceremony.",
+        "subjectLink": {
+          "label": "Find the parent/guardian",
+          "helpText": "Search by name or phone to link an existing member. Leave blank otherwise.",
+          "linkedNote": "Linked to an existing member. They’ll be recorded as the parent/guardian."
+        },
+        "success": {
+          "title": "Naming request submitted",
+          "message": "Your request has been recorded. A leader will follow up to confirm a date."
+        },
+        "block": {
+          "baby": {
+            "title": "About the baby",
+            "field": {
+              "babyFullName": {
+                "label": "Baby’s full name"
+              },
+              "dateOfBirth": {
+                "label": "Date of birth"
+              },
+              "gender": {
+                "label": "Gender",
+                "option": {
+                  "Male": "Male",
+                  "Female": "Female"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Parents",
+            "field": {
+              "fatherMemberId": {
+                "label": "Father",
+                "placeholder": "Search, or type their name if they’re not a member"
+              },
+              "motherMemberId": {
+                "label": "Mother",
+                "placeholder": "Search, or type their name if they’re not a member"
+              },
+              "parentContactPhone": {
+                "label": "Parent contact phone"
+              },
+              "parentContactEmail": {
+                "label": "Parent contact email"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Preferences",
+            "field": {
+              "preferredCeremonyDate": {
+                "label": "Preferred ceremony date",
+                "helpText": "Leaders will confirm the actual date."
+              },
+              "additionalNotes": {
+                "label": "Anything else?",
+                "placeholder": "Special requests, sponsors, etc."
+              }
+            }
+          }
+        }
+      },
+      "baby_dedication": {
+        "title": "Baby Dedication",
+        "description": "Request a baby dedication.",
+        "subjectLink": {
+          "label": "Find the parent/guardian",
+          "helpText": "Search by name or phone to link an existing member. Leave blank otherwise.",
+          "linkedNote": "Linked to an existing member. They’ll be recorded as the parent/guardian."
+        },
+        "success": {
+          "title": "Dedication request submitted",
+          "message": "Your request has been recorded. A leader will follow up to confirm a date."
+        },
+        "block": {
+          "baby": {
+            "title": "About the baby",
+            "field": {
+              "babyFullName": {
+                "label": "Baby’s full name"
+              },
+              "dateOfBirth": {
+                "label": "Date of birth"
+              },
+              "gender": {
+                "label": "Gender",
+                "option": {
+                  "Male": "Male",
+                  "Female": "Female"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Parents",
+            "field": {
+              "fatherMemberId": {
+                "label": "Father",
+                "placeholder": "Search, or type their name if they’re not a member"
+              },
+              "motherMemberId": {
+                "label": "Mother",
+                "placeholder": "Search, or type their name if they’re not a member"
+              },
+              "parentContactPhone": {
+                "label": "Parent contact phone"
+              },
+              "parentContactEmail": {
+                "label": "Parent contact email"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Preferences",
+            "field": {
+              "preferredDedicationDate": {
+                "label": "Preferred dedication date",
+                "helpText": "Leaders will confirm the actual date."
+              },
+              "additionalNotes": {
+                "label": "Anything else?",
+                "placeholder": "Special requests, sponsors, etc."
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "myGroups": {},
   "rollcall": {},

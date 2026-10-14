@@ -188,10 +188,10 @@ function SoulCard({
           {(soul.status === 'New' || soul.status === 'Following Up' || soul.status === 'Interested') && (
             <p className="text-xs text-muted-foreground">
               {soul.daysSinceLastFollowUp === null || soul.daysSinceLastFollowUp === undefined
-                ? 'No follow-up logged'
+                ? t('souls:noFollowUpLogged')
                 : soul.daysSinceLastFollowUp === 0
-                  ? 'Last contact: Today'
-                  : `Last contact: ${soul.daysSinceLastFollowUp} day${soul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago`}
+                  ? t('souls:lastContactToday')
+                  : t('souls:lastContactDaysAgo', { count: soul.daysSinceLastFollowUp })}
             </p>
           )}
         </div>

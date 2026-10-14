@@ -69,13 +69,20 @@ const PROSE_TAGS = 'p|li|h1|h2|h3|h4|td|th|strong|em|figcaption|blockquote|label
 const CUSTOM_CHILDREN = /<([A-Z]\w+)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
 const TITLE_PROP = /\btitle="([^"]{4,160})"/g;
 
-function hardcoded(file) {
+// Returns the offending strings, so `I18N_AUDIT_DUMP=1` can print exactly
+// what is still English instead of only how many there are.
+function findHardcoded(file) {
   const src = readFileSync(file, 'utf8');
-  let n = 0;
+  const hits = [];
+  const at = (idx) => src.slice(0, idx).split('\n').length;
+  const n = { valueOf: () => hits.length };
+  const push = (idx, text) => hits.push({ line: at(idx), text: String(text).replace(/\s+/g, ' ').trim().slice(0, 120) });
   // display props
   // `text` was missing from this list, which is how the homepage's hero
   // strapline stayed English in every language without the audit noticing.
-  n += (src.match(/\b(?:label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle|heading|emptyText|text|alt|caption|description|tooltip|ariaLabel|confirmText|cancelText|submitText|helperText)="[A-Z][^"]{1,160}"/g) ?? []).length;
+  for (const m of src.matchAll(/\b(?:label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle|heading|emptyText|text|alt|caption|description|tooltip|ariaLabel|confirmText|cancelText|submitText|helperText)="[A-Z][^"]{1,160}"/g)) {
+    push(m.index, m[0]);
+  }
 
   const re = new RegExp(`<(${PROSE_TAGS})\\b[^>]*>([\\s\\S]*?)</\\1>`, 'g');
   for (const m of src.matchAll(re)) {
@@ -90,7 +97,7 @@ function hardcoded(file) {
       .trim();
     // Two or more real words left over means prose nobody has keyed yet.
     if (!/[A-Za-z]{3}\s+\S|^[A-Za-z]{4,}$/.test(text)) continue;
-    n++;
+    push(m.index, text);
   }
 
   for (const m of src.matchAll(CUSTOM_CHILDREN)) {
@@ -105,31 +112,37 @@ function hardcoded(file) {
       .replace(/\s+/g, ' ')
       .trim();
     if (!/[A-Za-z]{3}\s+\S|^[A-Za-z]{4,}$/.test(text)) continue;
-    n++;
+    push(m.index, text);
   }
   for (const m of src.matchAll(TITLE_PROP)) {
-    if (/^[A-Za-z]/.test(m[1])) n++;
+    if (/^[A-Za-z]/.test(m[1])) push(m.index, m[1]);
   }
   // Toasts are as user-facing as anything on the page and live in callbacks,
   // so no amount of JSX scanning finds them. There were 133 of them.
   for (const m of src.matchAll(/toast\.(?:success|error|info|warning|message)\(\s*['"`]([^'"`]{3,})/g)) {
-    if (/[A-Za-z]{3}/.test(m[1])) n++;
+    if (/[A-Za-z]{3}/.test(m[1])) push(m.index, m[1]);
   }
   // A t() call written as JSX inside a template literal. `{t('k')}` in an
   // HTML string is literal text, not a call -- the mobile data export shipped
   // "{t('security:kharisMyData')}" as its document heading. HTML uses class=,
   // JSX uses className=, which tells the two apart.
   for (const m of src.matchAll(/^.*\bclass="[^"]*".*$/gm)) {
-    if (/(?<!\$)\{t\(/.test(m[0])) n++;
+    if (/(?<!\$)\{t\(/.test(m[0])) push(m.index, m[0]);
   }
   // English on both arms of a ternary -- button labels that flip while saving,
   // show/hide aria-labels, empty states. These sit inside a JSX expression, so
   // stripping {...} hid every one of them; there were 141.
   for (const m of src.matchAll(/\?\s*'([A-Z][^']{2,90})'\s*:\s*'([A-Z][^']{2,90})'/g)) {
-    if (/[A-Za-z]{3}/.test(m[1]) && /[A-Za-z]{3}/.test(m[2])) n += 2;
+    if (/[A-Za-z]{3}/.test(m[1]) && /[A-Za-z]{3}/.test(m[2])) {
+      push(m.index, m[1]);
+      push(m.index, m[2]);
+    }
   }
-  return n;
+  void n;
+  return hits;
 }
+
+const hardcoded = (file) => findHardcoded(file).length;
 
 let hardFailures = 0;
 const line = (s = '') => console.log(s);
@@ -236,8 +249,13 @@ for (const app of APPS) {
   withStrings
     .map((f) => [relative(ROOT, f), hardcoded(f)])
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .forEach(([f, n]) => line(`       ${String(n).padStart(4)}  ${f}`));
+    .slice(0, process.env.I18N_AUDIT_FULL ? 9999 : 8)
+    .forEach(([f, n]) => {
+      line(`       ${String(n).padStart(4)}  ${f}`);
+      if (process.env.I18N_AUDIT_DUMP) {
+        for (const h of findHardcoded(join(ROOT, f))) line(`             :${h.line}  ${h.text}`);
+      }
+    });
 }
 
 line(`\n${'='.repeat(64)}`);

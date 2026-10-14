@@ -375,7 +375,7 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {  const { t } = useTrans
                   />
                   <Tooltip
                     contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value) => [`${value}%`, 'Attendance']}
+                    formatter={(value) => [`${value}%`, t('newBelievers:attendance')]}
                     labelFormatter={(label, payload) => {
                       const point = payload?.[0]?.payload as
                         | { date: string; topic: string | null; attended: number; eligible: number }

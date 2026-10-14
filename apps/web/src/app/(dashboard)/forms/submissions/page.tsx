@@ -24,7 +24,7 @@ import {
 } from '@/hooks/use-forms';
 import { STATUS_META, STATUS_OPTIONS, subjectName } from '../_lib/form-meta';
 import { ReviewDrawer } from './_components/review-drawer';
-import { FORM_DEFINITIONS, FORM_TYPES } from '@kairos/types';
+import { FORM_DEFINITIONS, FORM_TYPES, localiseFormDefinition } from '@kairos/types';
 import type { FormSubmission, FormType, FormSubmissionStatus } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
 
@@ -122,7 +122,10 @@ export default function SubmissionsPage() {  const { t } = useTranslation(['form
                 { value: '', label: t('forms:allForms') },
                 ...FORM_TYPES
                   .filter((t) => visibleSet.includes(t))
-                  .map((t) => ({ value: t, label: FORM_DEFINITIONS[t].title })),
+                  .map((formType) => ({
+                    value: formType,
+                    label: localiseFormDefinition(t, FORM_DEFINITIONS[formType]).title,
+                  })),
               ]}
             />
           </div>
@@ -194,7 +197,7 @@ export default function SubmissionsPage() {  const { t } = useTranslation(['form
                         subjectName(payload)
                       )}
                     </TableCell>
-                    <TableCell>{FORM_DEFINITIONS[s.formType].title}</TableCell>
+                    <TableCell>{localiseFormDefinition(t, FORM_DEFINITIONS[s.formType]).title}</TableCell>
                     <TableCell>
                       {s.branchName ? (
                         <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-xs font-medium text-[#5D3FD3]">

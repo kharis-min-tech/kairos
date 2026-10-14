@@ -139,13 +139,15 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {isMemberView
-              ? 'Your active department memberships and upcoming duties.'
-              : `Ministry teams${pagination ? `, ${pagination.total} total` : ''}`}
+              ? t('departments:yourActiveMembershipsAndDuties')
+              : pagination
+                ? t('departments:ministryTeamsWithTotal', { count: pagination.total })
+                : t('departments:ministryTeams')}
           </p>
         </div>
         {(caps.has('branch:write')) && (
           <Link href="/departments/new">
-            <Button size="sm">+ New Department</Button>
+            <Button size="sm">+ {t('departments:newDepartment')}</Button>
           </Link>
         )}
       </div>

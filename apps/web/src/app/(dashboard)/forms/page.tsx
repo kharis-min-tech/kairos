@@ -14,7 +14,12 @@ import {
   Archive,
   ChevronRight,
 } from 'lucide-react';
-import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
+import {
+  FORM_DEFINITIONS,
+  FORM_TYPES,
+  localiseFormDefinition,
+  type FormType,
+} from '@kairos/types';
 import { useTranslation } from 'react-i18next';
 
 const FORM_ICONS: Record<FormType, React.ReactNode> = {
@@ -42,7 +47,7 @@ export default function FormsLandingPage() {  const { t } = useTranslation(['for
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FORM_TYPES.map((type) => {
-          const definition = FORM_DEFINITIONS[type];
+          const definition = localiseFormDefinition(t, FORM_DEFINITIONS[type]);
           return (
             <Link key={type} href={`/forms/${type}`} className="group">
               <Card className="h-full transition-shadow hover:shadow-ambient">

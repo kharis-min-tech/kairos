@@ -59,3 +59,20 @@ export function getStaleDays(
   const days = Math.floor((Date.now() - last) / (1000 * 60 * 60 * 24));
   return days >= STALE_DAYS_THRESHOLD ? days : null;
 }
+
+// ── Display text ───────────────────────────────────────────────────────────
+// `label` and `topic` above are the English source. Everything that renders
+// them goes through these helpers so the board reads in the viewer's
+// language, while `value` — which the API and the drag rules compare on —
+// stays untouched.
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
+export function stageLabel(t: Translate, stage?: StageDef | null, fallback = ''): string {
+  if (!stage) return fallback;
+  return t(`newBelievers:stage_${stage.value}_label`, { defaultValue: '' }) || stage.label;
+}
+
+export function stageTopic(t: Translate, stage?: StageDef | null): string | undefined {
+  if (!stage?.topic) return undefined;
+  return t(`newBelievers:stage_${stage.value}_topic`, { defaultValue: '' }) || stage.topic;
+}

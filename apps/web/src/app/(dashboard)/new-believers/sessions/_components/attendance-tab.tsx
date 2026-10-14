@@ -16,6 +16,7 @@ import type {
   NewBelieverStageValue,
 } from '@kairos/types';
 import { getSessionStageDef } from './session-helpers';
+import { stageLabel } from '../../_components/stage-config';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -122,7 +123,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
             present: presentCount,
             total: mergedRows.length,
           })}
-          {stageDef ? t('newBelievers:candidatesOnlySuffix', { stage: stageDef.label }) : ''}
+          {stageDef ? t('newBelievers:candidatesOnlySuffix', { stage: stageLabel(t, stageDef) }) : ''}
         </p>
         {canRecordAttendance && (
           <div className="flex items-center gap-2">

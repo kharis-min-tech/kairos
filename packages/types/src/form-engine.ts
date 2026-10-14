@@ -1039,3 +1039,92 @@ export const FORM_TYPES = Object.keys(FORM_DEFINITIONS) as FormType[];
 export function isFormType(value: string | undefined): value is FormType {
   return value !== undefined && value in FORM_DEFINITIONS;
 }
+
+// ── Localisation ───────────────────────────────────────────
+//
+// Every display string above is English. It is the source text, not the only
+// text: `localiseFormDefinition` walks a definition and swaps each one for a
+// catalogue lookup, keyed by a path that is stable because it is built from
+// `formType`, block ids, field ids and option values — all of which are
+// payload keys and so can't be reworded without a migration.
+//
+// The English string is passed as `defaultValue`, so an untranslated key
+// renders the original wording rather than a key path. `value`, `id` and
+// `formType` are never touched: they are the submission contract.
+
+type FormTranslate = (key: string, opts: { defaultValue: string }) => string;
+
+const localiseStrings = (
+  t: FormTranslate,
+  prefix: string,
+  obj: Record<string, unknown>,
+  keys: string[],
+): Record<string, unknown> => {
+  const out = { ...obj };
+  for (const k of keys) {
+    const v = out[k];
+    if (typeof v === 'string' && v.length > 0) {
+      out[k] = t(`forms:def.${prefix}.${k}`, { defaultValue: v });
+    }
+  }
+  return out;
+};
+
+function localiseField(t: FormTranslate, prefix: string, field: FormFieldDef): FormFieldDef {
+  const p = `${prefix}.field.${field.id}`;
+  const out = localiseStrings(t, p, field as unknown as Record<string, unknown>, [
+    'label',
+    'placeholder',
+    'helpText',
+  ]) as unknown as FormFieldDef;
+  if (field.options) {
+    out.options = field.options.map((o) => ({
+      value: o.value,
+      label: t(`forms:def.${p}.option.${o.value}`, { defaultValue: o.label }),
+    }));
+  }
+  return out;
+}
+
+function localiseBlock(t: FormTranslate, formType: string, block: FormBlockDef): FormBlockDef {
+  const p = `${formType}.block.${block.id}`;
+  const keys = block.kind === 'section' ? ['title', 'description'] : ['label', 'itemLabel'];
+  const out = localiseStrings(
+    t,
+    p,
+    block as unknown as Record<string, unknown>,
+    keys,
+  ) as unknown as FormBlockDef;
+  out.fields = block.fields.map((f) => localiseField(t, p, f));
+  return out;
+}
+
+/**
+ * Returns a copy of `def` with every rendered string resolved through `t`.
+ * Renderers call this once and then treat the result as the definition.
+ */
+export function localiseFormDefinition(t: FormTranslate, def: FormDefinition): FormDefinition {
+  const ft = def.formType;
+  const out = localiseStrings(t, ft, def as unknown as Record<string, unknown>, [
+    'title',
+    'description',
+  ]) as unknown as FormDefinition;
+  if (def.subjectLink) {
+    out.subjectLink = localiseStrings(
+      t,
+      `${ft}.subjectLink`,
+      def.subjectLink as unknown as Record<string, unknown>,
+      ['label', 'helpText', 'linkedNote'],
+    ) as unknown as FormSubjectLinkDef;
+  }
+  if (def.success) {
+    out.success = localiseStrings(
+      t,
+      `${ft}.success`,
+      def.success as unknown as Record<string, unknown>,
+      ['title', 'message', 'linkedMessage'],
+    ) as unknown as FormSuccessDef;
+  }
+  out.blocks = def.blocks.map((b) => localiseBlock(t, ft, b));
+  return out;
+}

@@ -172,7 +172,7 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
           {isAdmin && (
             <Link href="/members/approval">
               <Button variant="outline" size="sm" className="relative">
-                Approval Queue
+                {t('members:approvalQueue')}
                 {(pendingResult?.meta?.total ?? 0) > 0 && (
                   <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#f8b537] px-1 text-xs font-bold text-[#3a2807]">
                     {pendingResult!.meta!.total}
@@ -281,8 +281,8 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
                           )}
                         </div>
                         {showFullDetails && (
-                          <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
-                            {member.approvalStatus}
+                          <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCls}`}>
+                            {t(`members:approvalStatus_${member.approvalStatus}`)}
                           </span>
                         )}
                       </div>

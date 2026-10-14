@@ -24,10 +24,10 @@ import { useTranslation } from 'react-i18next';
  */
 type Queue = 'first-timers' | 'no-group' | 'due';
 
-const QUEUES: Array<{ value: Queue; label: string }> = [
-  { value: 'first-timers', label: 'First-timers' },
-  { value: 'no-group', label: 'No group' },
-  { value: 'due', label: 'Due' },
+const QUEUES: Array<{ value: Queue; labelKey: string }> = [
+  { value: 'first-timers', labelKey: 'concerns:queueFirstTimers' },
+  { value: 'no-group', labelKey: 'concerns:queueNoGroup' },
+  { value: 'due', labelKey: 'concerns:queueDue' },
 ];
 
 export default function FollowUpsPage() {  const { t } = useTranslation(['concerns', 'common']);
@@ -71,7 +71,7 @@ export default function FollowUpsPage() {  const { t } = useTranslation(['concer
         <TabsList aria-label={t('concerns:followUpQueues')}>
           {QUEUES.map((q) => (
             <TabsTrigger key={q.value} value={q.value}>
-              {q.label}
+              {t(q.labelKey)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -159,7 +159,9 @@ function QueueList({
               <p className="truncate text-xs text-muted-foreground">
                 {[
                   row.phone ?? row.email,
-                  showInviter && row.invitedByName ? `invited by ${row.invitedByName}` : null,
+                  showInviter && row.invitedByName
+                    ? t('concerns:invitedByName', { name: row.invitedByName })
+                    : null,
                   row.branchName,
                 ]
                   .filter(Boolean)

@@ -169,7 +169,9 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
                         <p className="truncate font-medium">{fullName}</p>
                         <p className="truncate text-sm text-muted-foreground">{assignment.member.email}</p>
                         <p className="text-xs text-muted-foreground">
-                          Assigned {formatShortDate(assignment.assignedDate)}
+                          {t('branches:assignedOn', {
+                            date: formatShortDate(assignment.assignedDate),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -184,8 +186,7 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
                         onClick={async () => {
                           const ok = await confirm({
                             title: t('branches:revokeBranchSystemAdminV1', { v1: fullName }),
-                            description:
-                              'They will lose access to admin-level branch tools. You can reassign them later.',
+                            description: t('branches:revokeBranchAdminDescription'),
                             confirmLabel: t('branches:revoke'),
                             variant: 'destructive',
                           });

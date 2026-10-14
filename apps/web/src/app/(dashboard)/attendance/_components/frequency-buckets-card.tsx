@@ -43,9 +43,10 @@ export function FrequencyBucketsCard({
         <CardTitle className="flex items-center gap-2 text-base">
           <BarChart3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:attendanceFrequency')}</CardTitle>
         <CardDescription>
-          How often engaged members show up over the last {q.data?.windowMonths ?? engagedWindowMonths}
-          &nbsp;months ({q.data?.servicesConsidered ?? '…'} services). Dormant = on
-          the active roll but zero attendance in the window.
+          {t('attendance:frequencyBucketsCaption', {
+            months: q.data?.windowMonths ?? engagedWindowMonths,
+            services: q.data?.servicesConsidered ?? '…',
+          })}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -57,7 +58,9 @@ export function FrequencyBucketsCard({
           </div>
         ) : q.isError ? (
           <p role="alert" className="text-sm font-medium text-destructive">
-            {q.error instanceof Error ? q.error.message : 'Could not load frequency buckets.'}
+            {q.error instanceof Error
+              ? q.error.message
+              : t('attendance:couldNotLoadFrequencyBuckets')}
           </p>
         ) : (q.data?.servicesConsidered ?? 0) === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">{t('attendance:noServicesOnTheBranchIn')}</p>
@@ -80,6 +83,10 @@ function BucketBars({
   }[];
 }) {
   const { t } = useTranslation(['attendance', 'common']);
+  // The API composes these in English. Translate by the stable `key` and keep
+  // the server's wording as the fallback so a new bucket still renders.
+  const localise = (prefix: string, key: string, fallback: string) =>
+    t(`attendance:bucket_${prefix}_${key}`, { defaultValue: '' }) || fallback;
   const max = Math.max(1, ...buckets.map((b) => b.members));
   return (
     <ul className="space-y-2.5">
@@ -90,9 +97,9 @@ function BucketBars({
             <div className="mb-1 flex items-baseline justify-between text-sm">
               <span
                 className="font-medium text-foreground"
-                title={b.description}
+                title={localise('desc', b.key, b.description)}
               >
-                {b.label}
+                {localise('label', b.key, b.label)}
               </span>
               <span className="tabular-nums text-muted-foreground">{b.members}</span>
             </div>

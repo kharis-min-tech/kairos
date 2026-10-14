@@ -16,6 +16,7 @@ export function useFriendlyRoleLines(opts: {
   homeBranchId?: string | null;
 }): string[] {
   const { systemRole, memberId, homeBranchId } = opts;
+  const { t } = useTranslation(['settings', 'common']);
   const { data: branches } = useBranches();
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
@@ -25,7 +26,7 @@ export function useFriendlyRoleLines(opts: {
   // Top-level church role lines
   const lines: string[] = [];
   if (systemRole === 'admin') {
-    lines.push('Church administrator');
+    lines.push(t('settings:roleChurchAdministrator'));
   }
 
   // Fellowship leadership
@@ -36,8 +37,10 @@ export function useFriendlyRoleLines(opts: {
     coLeaderId?: string | null;
   }>;
   for (const f of fellowships) {
-    if (memberId && f.leaderId === memberId) lines.push(`Lead of ${f.fellowshipName} fellowship`);
-    else if (memberId && f.coLeaderId === memberId) lines.push(`Co-lead of ${f.fellowshipName} fellowship`);
+    if (memberId && f.leaderId === memberId)
+      lines.push(t('settings:roleFellowshipLead', { name: f.fellowshipName }));
+    else if (memberId && f.coLeaderId === memberId)
+      lines.push(t('settings:roleFellowshipCoLead', { name: f.fellowshipName }));
   }
 
   // Department leadership
@@ -48,17 +51,19 @@ export function useFriendlyRoleLines(opts: {
     deputyMemberId?: string | null;
   }>;
   for (const d of depts) {
-    const name = d.departmentName ?? 'Department';
-    if (memberId && d.leadMemberId === memberId) lines.push(`Lead of ${name} department`);
-    else if (memberId && d.deputyMemberId === memberId) lines.push(`Deputy of ${name} department`);
+    const name = d.departmentName ?? t('settings:roleDepartmentFallbackName');
+    if (memberId && d.leadMemberId === memberId)
+      lines.push(t('settings:roleDepartmentLead', { name }));
+    else if (memberId && d.deputyMemberId === memberId)
+      lines.push(t('settings:roleDepartmentDeputy', { name }));
   }
 
   // Plain member fallback — only when no other role line exists at all
   if (lines.length === 0) {
     lines.push(
       homeBranchName
-        ? `Member of Kharis Church, ${homeBranchName} branch`
-        : 'Member of Kharis Church',
+        ? t('settings:roleMemberOfBranch', { branch: homeBranchName })
+        : t('settings:roleMemberOfChurch'),
     );
   }
 

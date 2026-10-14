@@ -3,7 +3,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import { EnrollmentCard } from './enrollment-card';
-import { getNextStage, type StageDef } from './stage-config';
+import { getNextStage, stageLabel, stageTopic, type StageDef } from './stage-config';
 import type { EnrollmentCardData } from './types';
 import { useTranslation } from 'react-i18next';
 
@@ -46,14 +46,14 @@ export function StageColumn({
               aria-hidden
             />
             <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
-              {stage.label}
+              {stageLabel(t, stage)}
             </CardTitle>
             <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">
               {count}
             </span>
           </div>
-          {stage.topic && (
-            <p className="mt-1 text-xs text-muted-foreground">{stage.topic}</p>
+          {stageTopic(t, stage) && (
+            <p className="mt-1 text-xs text-muted-foreground">{stageTopic(t, stage)}</p>
           )}
         </CardHeader>
         <CardContent

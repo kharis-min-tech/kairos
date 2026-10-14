@@ -304,8 +304,8 @@ export function RecruitmentTab({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {totalOpen} open candidate{totalOpen === 1 ? '' : 's'}
-        {search.trim() ? ` matching "${search.trim()}"` : ''}
+        {t('departments:openCandidateCount', { count: totalOpen })}
+        {search.trim() ? ` ${t('departments:matchingQuery', { query: search.trim() })}` : ''}
       </p>
 
       <DndContext

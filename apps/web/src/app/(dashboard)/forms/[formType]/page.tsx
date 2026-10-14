@@ -6,7 +6,7 @@ import { use } from 'react';
 import Link from 'next/link';
 import { Button } from '@kairos/ui';
 import { DeclarativeForm } from './_components/declarative-form';
-import { FORM_DEFINITIONS, isFormType } from '@kairos/types';
+import { FORM_DEFINITIONS, isFormType, localiseFormDefinition } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -28,7 +28,9 @@ export default function FormFillPage({
 
   const { formType } = use(params);
 
-  const definition = isFormType(formType) ? FORM_DEFINITIONS[formType] : undefined;
+  const definition = isFormType(formType)
+    ? localiseFormDefinition(t, FORM_DEFINITIONS[formType])
+    : undefined;
 
   if (!definition) {
     return (

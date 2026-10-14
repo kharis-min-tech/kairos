@@ -255,8 +255,8 @@ export default function AttendanceReportsPage() {  const { t } = useTranslation(
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {m.missedStreak === 1
-                        ? 'missed the last service'
-                        : `missed ${m.missedStreak} in a row`}
+                        ? t('reports:missedTheLastService')
+                        : t('reports:missedInARow', { count: m.missedStreak })}
                     </span>
                   </li>
                 ))}

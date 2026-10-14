@@ -1620,7 +1620,410 @@
     "exporting": "Ɛreyi…",
     "exportCsv": "Yi CSV",
     "removeV1V2": "Yi {{v1}} {{v2}}",
-    "selectV1V2": "Yi {{v1}} {{v2}}"
+    "selectV1V2": "Yi {{v1}} {{v2}}",
+    "def": {
+      "first_time_visitor": {
+        "title": "Ɔhɔhoɔ Foforɔ",
+        "description": "Akwaaba! Ka wo ho asɛm kakra kyerɛ yɛn na yɛatumi adi w'akyi.",
+        "subjectLink": {
+          "label": "Hwehwɛ obi a ɔwɔ hɔ dada",
+          "helpText": "Fa din anaa telefon nɔma hwehwɛ. Gyae no hunu sɛ wopɛ sɛ woyɛ nkitahodie foforɔ.",
+          "linkedNote": "Wɔde abata obi a ɔwɔ hɔ dada ho, enti sɛ wosoma a ɛbɛsesa ne krataa."
+        },
+        "success": {
+          "title": "Wɔatwerɛ akwaaba no",
+          "message": "Yɛda wo ase sɛ woabɛsra yɛn. Ɔkannifoɔ bi bɛfrɛ wo nnansa yi ara."
+        },
+        "block": {
+          "about-you": {
+            "title": "Wo ho nsɛm",
+            "field": {
+              "firstName": {
+                "label": "Edin a ɛdi kan"
+              },
+              "lastName": {
+                "label": "Abusua din"
+              },
+              "middleName": {
+                "label": "Mfinimfini din"
+              },
+              "dateOfBirth": {
+                "label": "Awoda"
+              },
+              "gender": {
+                "label": "Ɔbarima anaa ɔbaa",
+                "option": {
+                  "Male": "Ɔbarima",
+                  "Female": "Ɔbaa"
+                }
+              },
+              "isUnder16": {
+                "label": "Wonnii mfeɛ 16?",
+                "helpText": "Yɛbɛtumi afiri w'awoda mu ahunu yei.",
+                "option": {
+                  "Yes": "Aane",
+                  "No": "Daabi"
+                }
+              }
+            }
+          },
+          "contact": {
+            "title": "Nkitahodie nsɛm",
+            "field": {
+              "email": {
+                "label": "Email"
+              },
+              "phone": {
+                "label": "Telefon"
+              },
+              "address": {
+                "label": "Adres"
+              },
+              "city": {
+                "label": "Kuropɔn"
+              },
+              "postalCode": {
+                "label": "Post koodu"
+              }
+            }
+          },
+          "guardian": {
+            "title": "Awofoɔ / Ɔhwɛfoɔ",
+            "description": "Ɛho hia ma ahɔhoɔ a wɔnnii mfeɛ 16.",
+            "field": {
+              "guardianMemberId": {
+                "label": "Ɔhwɛfoɔ",
+                "placeholder": "Hwehwɛ, anaa twerɛ ne din sɛ ɔyɛ foforɔ a"
+              },
+              "guardianPhone": {
+                "label": "Ɔhwɛfoɔ telefon"
+              },
+              "guardianRelationship": {
+                "label": "Abusuabɔ a ɛda mo ntam",
+                "placeholder": "sɛ ebia Ɛna, Agya, Ɔhwɛfoɔ"
+              }
+            }
+          },
+          "children-with-you": {
+            "title": "Wo ne mmɔfra na ɛbaeɛ?",
+            "field": {
+              "broughtChildren": {
+                "label": "Me ne abɔfra baako anaa pii na ɛbaeɛ"
+              }
+            }
+          },
+          "children": {
+            "label": "Mmɔfra a wɔka wo ho",
+            "itemLabel": "Abɔfra",
+            "field": {
+              "firstName": {
+                "label": "Edin a ɛdi kan"
+              },
+              "lastName": {
+                "label": "Abusua din"
+              },
+              "dateOfBirth": {
+                "label": "Awoda"
+              },
+              "gender": {
+                "label": "Ɔbarima anaa ɔbaa",
+                "option": {
+                  "Male": "Ɔbarima",
+                  "Female": "Ɔbaa"
+                }
+              }
+            }
+          },
+          "getting-involved": {
+            "title": "Wo ho a wode bɛhyɛ mu",
+            "field": {
+              "interest": {
+                "label": "Ɛdeɛn na w'ani gye ho?",
+                "helpText": "Ka baabi a wopɛ sɛ wode wo ho hyɛ mu kyerɛ yɛn.",
+                "option": {
+                  "fellowship": "Fekubɔ bi mu kɔ",
+                  "department": "Adwumakuo bi mu som",
+                  "new_believers": "Agyidifoɔ Foforɔ nhyehyɛɛ",
+                  "just_visiting": "Meresra kɛkɛ seisei"
+                }
+              },
+              "howDidYouHear": {
+                "label": "Ɛkwan bɛn so na wotee yɛn ho asɛm?",
+                "placeholder": "sɛ ebia Adamfo, soshal midia, metwaa mu"
+              },
+              "invitedByMemberId": {
+                "label": "Hwan na ɔtoo wo nsa frɛɛ wo?",
+                "placeholder": "Hwehwɛ onipa a ɔtoo wo nsa frɛɛ wo"
+              }
+            }
+          }
+        }
+      },
+      "altar_call": {
+        "title": "Agyidifoɔ Foforɔ Adesua",
+        "description": "Kyerɛw obi din wɔ Agyidifoɔ Foforɔ nhyehyɛɛ no mu. Yɛbɛdi akyire ayɛ nnawɔtwe nnan adesua no ho nhyehyɛɛ.",
+        "subjectLink": {
+          "label": "Hwehwɛ obi a ɔwɔ hɔ dada",
+          "helpText": "Fa din anaa telefon nɔma hwehwɛ. Gyae no hunu sɛ wopɛ sɛ woyɛ nkitahodie foforɔ.",
+          "linkedNote": "Wɔde abata obi a ɔwɔ hɔ dada ho, enti sɛ wosoma a wɔbɛkyerɛw ne din."
+        },
+        "success": {
+          "title": "Wɔakyerɛw din no",
+          "message": "Wɔyɛɛ nkitahodie foforɔ na wɔkyerɛw ne din wɔ Agyidifoɔ Foforɔ nhyehyɛɛ no mu.",
+          "linkedMessage": "Wɔde onipa yi bataa ho na wɔkyerɛw ne din wɔ Agyidifoɔ Foforɔ nhyehyɛɛ no mu."
+        },
+        "block": {
+          "details": {
+            "title": "Ne ho nsɛm",
+            "field": {
+              "todaysDate": {
+                "label": "Ɛnnɛ da"
+              },
+              "firstName": {
+                "label": "Edin a ɛdi kan"
+              },
+              "lastName": {
+                "label": "Abusua din"
+              },
+              "phone": {
+                "label": "Telefon"
+              }
+            }
+          }
+        }
+      },
+      "baptism": {
+        "title": "Asubɔ",
+        "description": "Bisa asubɔ. Ɔkannifoɔ bi bɛfrɛ wo na mo aka berɛ ne deɛ ɛdi hɔ ho asɛm.",
+        "subjectLink": {
+          "label": "Hwehwɛ onipa a ɔpɛ asubɔ no",
+          "helpText": "Fa din anaa telefon nɔma hwehwɛ. Gyae no hunu sɛ wopɛ sɛ woyɛ nkitahodie foforɔ.",
+          "linkedNote": "Wɔde abata obi a ɔwɔ hɔ dada ho. Wɔde ne krataa no bɛdi dwuma."
+        },
+        "success": {
+          "title": "Wɔasoma asubɔ abisadeɛ no",
+          "message": "Wɔatwerɛ w'asubɔ abisadeɛ no. Ɔkannifoɔ bi bɛfrɛ wo."
+        },
+        "block": {
+          "details": {
+            "title": "Wo ho nsɛm",
+            "field": {
+              "firstName": {
+                "label": "Edin a ɛdi kan"
+              },
+              "lastName": {
+                "label": "Abusua din"
+              },
+              "phone": {
+                "label": "Telefon"
+              }
+            }
+          }
+        }
+      },
+      "testimony": {
+        "title": "Adansedie",
+        "description": "Ka deɛ Onyankopɔn ayɛ. Akannifoɔ bɛtumi afrɛ wo sɛ wɔne wo bɛdi ahurisie anaasɛ wɔabisa wo sɛ wobɛka wɔ Kwasiada.",
+        "subjectLink": {
+          "label": "Hwehwɛ onipa a ɔredi adanseɛ no",
+          "helpText": "Fa din anaa telefon nɔma hwehwɛ. Gyae no hunu sɛ wopɛ sɛ woyɛ nkitahodie foforɔ.",
+          "linkedNote": "Wɔde abata obi a ɔwɔ hɔ dada ho, enti wɔde adansedie yi bɛbata ne krataa ho."
+        },
+        "success": {
+          "title": "Wɔaka adansedie no",
+          "message": "Yɛda wo ase sɛ woaka w'adansedie. Animuonyam nka Onyankopɔn!"
+        },
+        "block": {
+          "about-you": {
+            "title": "Wo ho nsɛm",
+            "field": {
+              "firstName": {
+                "label": "Edin a ɛdi kan"
+              },
+              "lastName": {
+                "label": "Abusua din"
+              },
+              "phone": {
+                "label": "Telefon"
+              },
+              "todaysDate": {
+                "label": "Ɛnnɛ da"
+              }
+            }
+          },
+          "testimony": {
+            "title": "W'adansedie",
+            "field": {
+              "dateOfTestimony": {
+                "label": "Da a ɛsiiɛ"
+              },
+              "category": {
+                "label": "Ekuo",
+                "placeholder": "Yi ekuo bi",
+                "option": {
+                  "Business": "Adwadie",
+                  "Career/Job": "Adwuma",
+                  "Deliverance": "Ɔgyeɛ",
+                  "Education": "Nwomasua",
+                  "Financial": "Sikasɛm",
+                  "Health/Healing": "Akwahosan / Ayaresa",
+                  "Marriage/Family": "Awadeɛ / Abusua",
+                  "Salvation": "Nkwagyeɛ",
+                  "Unusual Favour": "Adom Soronko",
+                  "Other": "Foforɔ"
+                }
+              },
+              "details": {
+                "label": "Ɛdeɛn na ɛsiiɛ?",
+                "placeholder": "Fa w'ankasa nsɛm ka kyerɛ yɛn."
+              }
+            }
+          },
+          "sharing": {
+            "title": "Sɛdeɛ wopɛ sɛ wɔka",
+            "field": {
+              "shareAnonymously": {
+                "label": "Wɔnka wo din?",
+                "helpText": "Sɛ wɔtintim yei a yɛremmɔ wo din."
+              },
+              "happyToShareSunday": {
+                "label": "Wopɛ sɛ woka wɔ Kwasiada asɔre ase?"
+              }
+            }
+          }
+        }
+      },
+      "baby_naming": {
+        "title": "Abadinto",
+        "description": "Bisa abadinto dwumadie.",
+        "subjectLink": {
+          "label": "Hwehwɛ ɔwofoɔ/ɔhwɛfoɔ no",
+          "helpText": "Fa din anaa telefon nɔma hwehwɛ na fa bata ɔmanni a ɔwɔ hɔ ho. Sɛ ɛnte saa a, gyae no hunu.",
+          "linkedNote": "Wɔde abata ɔmanni a ɔwɔ hɔ ho. Wɔbɛtwerɛ no sɛ ɔwofoɔ/ɔhwɛfoɔ."
+        },
+        "success": {
+          "title": "Wɔasoma abadinto abisadeɛ no",
+          "message": "Wɔatwerɛ w'abisadeɛ no. Ɔkannifoɔ bi bɛdi akyire asi da bi so dua."
+        },
+        "block": {
+          "baby": {
+            "title": "Akokoaa no ho nsɛm",
+            "field": {
+              "babyFullName": {
+                "label": "Akokoaa no din nyinaa"
+              },
+              "dateOfBirth": {
+                "label": "Awoda"
+              },
+              "gender": {
+                "label": "Ɔbarima anaa ɔbaa",
+                "option": {
+                  "Male": "Ɔbarima",
+                  "Female": "Ɔbaa"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Awofoɔ",
+            "field": {
+              "fatherMemberId": {
+                "label": "Agya",
+                "placeholder": "Hwehwɛ, anaa twerɛ ne din sɛ ɔnyɛ ɔmanni a"
+              },
+              "motherMemberId": {
+                "label": "Ɛna",
+                "placeholder": "Hwehwɛ, anaa twerɛ ne din sɛ ɔnyɛ ɔmanni a"
+              },
+              "parentContactPhone": {
+                "label": "Ɔwofoɔ telefon"
+              },
+              "parentContactEmail": {
+                "label": "Ɔwofoɔ email"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Deɛ wopɛ",
+            "field": {
+              "preferredCeremonyDate": {
+                "label": "Da a wopɛ sɛ wɔyɛ dwumadie no",
+                "helpText": "Akannifoɔ bɛsi da ankasa no so dua."
+              },
+              "additionalNotes": {
+                "label": "Biribi foforɔ?",
+                "placeholder": "Abisadeɛ soronko, aboafoɔ, ne nkaeɛ."
+              }
+            }
+          }
+        }
+      },
+      "baby_dedication": {
+        "title": "Akokoaa a Wɔde Ma Awurade",
+        "description": "Bisa sɛ wɔde akokoaa ma Awurade.",
+        "subjectLink": {
+          "label": "Hwehwɛ ɔwofoɔ/ɔhwɛfoɔ no",
+          "helpText": "Fa din anaa telefon nɔma hwehwɛ na fa bata ɔmanni a ɔwɔ hɔ ho. Sɛ ɛnte saa a, gyae no hunu.",
+          "linkedNote": "Wɔde abata ɔmanni a ɔwɔ hɔ ho. Wɔbɛtwerɛ no sɛ ɔwofoɔ/ɔhwɛfoɔ."
+        },
+        "success": {
+          "title": "Wɔasoma anoyie abisadeɛ no",
+          "message": "Wɔatwerɛ w'abisadeɛ no. Ɔkannifoɔ bi bɛdi akyire asi da bi so dua."
+        },
+        "block": {
+          "baby": {
+            "title": "Akokoaa no ho nsɛm",
+            "field": {
+              "babyFullName": {
+                "label": "Akokoaa no din nyinaa"
+              },
+              "dateOfBirth": {
+                "label": "Awoda"
+              },
+              "gender": {
+                "label": "Ɔbarima anaa ɔbaa",
+                "option": {
+                  "Male": "Ɔbarima",
+                  "Female": "Ɔbaa"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Awofoɔ",
+            "field": {
+              "fatherMemberId": {
+                "label": "Agya",
+                "placeholder": "Hwehwɛ, anaa twerɛ ne din sɛ ɔnyɛ ɔmanni a"
+              },
+              "motherMemberId": {
+                "label": "Ɛna",
+                "placeholder": "Hwehwɛ, anaa twerɛ ne din sɛ ɔnyɛ ɔmanni a"
+              },
+              "parentContactPhone": {
+                "label": "Ɔwofoɔ telefon"
+              },
+              "parentContactEmail": {
+                "label": "Ɔwofoɔ email"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Deɛ wopɛ",
+            "field": {
+              "preferredDedicationDate": {
+                "label": "Da a wopɛ sɛ wɔde no ma Awurade",
+                "helpText": "Akannifoɔ bɛsi da ankasa no so dua."
+              },
+              "additionalNotes": {
+                "label": "Biribi foforɔ?",
+                "placeholder": "Abisadeɛ soronko, aboafoɔ, ne nkaeɛ."
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "members": {
     "theyArenTInTheDirectory": "Wɔnni din nhoma no mu, enti yɛbɛkyerɛw din no nko ara.",
@@ -2559,7 +2962,85 @@
     "newMembersApproved_one": "Ɔmanfoɔ foforɔ {{count}} a wɔapene so",
     "newMembersApproved_other": "Amanfoɔ foforɔ {{count}} a wɔapene so",
     "kairosReplacesTheSpreadsheets": "Kairos sii spreadsheet, WhatsApp akuo, ne nhwehwɛmu a wɔde nsa kyerɛw a ɛrema w'asɔre kɔ brɛoo no anan mu.",
-    "whatsappYouthLeaders": "WhatsApp · Mmabunu Akannifoɔ (214 a wɔnkenkaneeɛ)"
+    "whatsappYouthLeaders": "WhatsApp · Mmabunu Akannifoɔ (214 a wɔnkenkaneeɛ)",
+    "feature_memberDirectory_title": "Asafomma Nhyehyɛe",
+    "feature_memberDirectory_desc": "Nkurɔfoɔ ho nsɛm, dwumadie, baa a wɔahyɛ wɔn, ne nkitahodie nsɛm nyinaa wɔ baabi koro.",
+    "feature_multiBranch_title": "Baa Ahodoɔ Sohwɛ",
+    "feature_multiBranch_desc": "Hwɛ kampus, kuo, ne baa biara so firi dashboard baako so.",
+    "feature_attendance_title": "Mmaeɛ Nhwɛsoɔ",
+    "feature_attendance_desc": "Twerɛ asɔre, fekubɔ, ne adwumakuo nhyiamu mmaeɛ, ne dapɛn biara amanneɛbɔ a emu da hɔ.",
+    "feature_fellowships_title": "Fekubɔ ne Akwan",
+    "feature_fellowships_desc": "K-Akuo, agyidifoɔ foforɔ asuafoɔyɛ, akra akyiridie: hwɛ abusuabɔ biara.",
+    "feature_reports_title": "Amanneɛbɔ ne Nhunumu",
+    "feature_reports_desc": "Mmaeɛ nkɔsoɔ, fekubɔ nkɔanim, akannifoɔ dashboard, a spreadsheet adwuma biara nni mu.",
+    "feature_roles_title": "Dwumadie ne Kwan a Wɔama",
+    "feature_roles_desc": "Baa so ahwɛfoɔ, fekubɔ akannifoɔ, ahobammɔ akannifoɔ: obiara hunu deɛ ɛsɛ sɛ ɔhunu nko ara.",
+    "pain_spreadsheets": "Spreadsheet a apete a nokwasɛm baabi koro nni hɔ",
+    "pain_absence": "Ɔkwan biara nni hɔ a wobɛhunu obi a wamma nnawɔtwe pii",
+    "pain_contacts": "Asafomma nkitahodie nsɛm ahyɛ ankorankoro WhatsApp akuo mu",
+    "pain_reporting": "Kwasiada amanneɛbɔ a ɛgye nnɔnhwere pii sɛ wɔde bɛka abom",
+    "stat_multi_value": "Pii",
+    "stat_multi_label": "Baa · Ɔmantam · Ɔman",
+    "stat_realtime_value": "Mprempren",
+    "stat_realtime_label": "Nsesaeɛ kɔ kampus nyinaa so",
+    "stat_gdpr_value": "GDPR",
+    "stat_gdpr_label": "UK kan, wɔtumi hwɛ mu",
+    "stat_zero_value": "Hwee",
+    "stat_zero_label": "Spreadsheet ho nhia",
+    "mockMembers": "Asafomma",
+    "mockSunday": "Kwasiada",
+    "mockNew": "Foforɔ",
+    "mockLeaders": "Akannifoɔ",
+    "mockTotalBranches": "Baa Nyinaa",
+    "mockActive": "Ɛrekɔ so",
+    "mockTotalMembers": "Asafomma Nyinaa",
+    "mockPlus47ThisMonth": "+47 bosome yi",
+    "mockTotalFellowships": "Fekubɔ Nyinaa",
+    "mockScheduled": "Wɔahyɛ da",
+    "mockPendingApprovals": "Gyinaeɛ a Ɛretwɛn",
+    "mockRequests": "Abisadeɛ",
+    "mockBranches": "Baa",
+    "mockFellowships": "Fekubɔ",
+    "mockAttendance": "Mmaeɛ",
+    "mockEngagement": "Nkitahodie",
+    "mockHigh": "Ɛkorɔn",
+    "mockAll": "Nyinaa",
+    "mockAdmins": "Ahwɛfoɔ",
+    "mockBranchAdmin": "Baa so Hwɛfoɔ",
+    "mockFellowshipLead": "Fekubɔ Kannifoɔ",
+    "mockMember": "Ɔmanni",
+    "mockSafeguarding": "Ahobammɔ",
+    "mockW1": "D1",
+    "mockW2": "D2",
+    "mockW3": "D3",
+    "mockW4": "D4",
+    "mockW5": "D5",
+    "mockNow": "Seisei",
+    "navOverview": "Nhwɛsoɔ",
+    "navBranches": "Baa",
+    "navRegions": "Amantam",
+    "navMembers": "Asafomma",
+    "navFellowships": "Fekubɔ",
+    "navAttendance": "Mmaeɛ",
+    "navMyAttendance": "Me Mmaeɛ",
+    "navReports": "Amanneɛbɔ",
+    "navNewBelievers": "Agyidifoɔ Foforɔ",
+    "navDepartments": "Adwumakuo",
+    "navOutreachPrograms": "Asɛmpatrɛw Nhyehyɛɛ",
+    "navSoulsPipeline": "Akra Kwan",
+    "navForms": "Nkrataa",
+    "navSoulsDashboard": "Akra Dashboard",
+    "navProfile": "Wo Ho Nsɛm",
+    "mockManageBranches": "Hwɛ Baa so",
+    "mockViewReports": "Hwɛ Amanneɛbɔ",
+    "mockExportCsv": "Yi CSV",
+    "mockStageWelcome": "Akwaaba",
+    "mockStageFoundation": "Fapem",
+    "mockStageMembershipReady": "Asafomuyɛ Ho Ayɛ Krado",
+    "mockJustEnrolled": "Ɔkyerɛɛ ne din nnansa yi ara",
+    "mockWeekN": "Dapɛn {{n}}",
+    "mockWeekOfFour": "Dapɛn {{n}} / 4",
+    "mockClassComplete": "Adesua awie"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",

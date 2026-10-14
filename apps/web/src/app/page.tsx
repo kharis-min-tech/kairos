@@ -49,57 +49,22 @@ import { resolveVerse } from '@kairos/core';
 const DOCS_BASE = "https://docs.kairos.kharis.org";
 
 const FEATURES = [
-  {
-    Icon: Users,
-    title: "Member Directory",
-    desc: "Full profiles, roles, branch assignments and contact details in one place.",
-    href: `${DOCS_BASE}/platform/members`,
-  },
-  {
-    Icon: Building2,
-    title: "Multi-Branch Management",
-    desc: "Oversee every campus, cell, and satellite branch from a single dashboard.",
-    href: `${DOCS_BASE}/platform/branches`,
-  },
-  {
-    Icon: ClipboardList,
-    title: "Attendance Tracking",
-    desc: "Record service, fellowship, and department meeting attendance, with clean weekly reports.",
-    href: `${DOCS_BASE}/platform/attendance`,
-  },
-  {
-    Icon: Heart,
-    title: "Fellowships & Pipelines",
-    desc: "K-Groups, new-believer discipleship, soul follow-ups: track every relationship.",
-    href: `${DOCS_BASE}/platform/fellowships`,
-  },
-  {
-    Icon: BarChart2,
-    title: "Reports & Insights",
-    desc: "Attendance trends, fellowship growth, leader-scoped dashboards, with no spreadsheet stitching.",
-    href: `${DOCS_BASE}/platform/reports`,
-  },
-  {
-    Icon: ShieldCheck,
-    title: "Roles & Permissions",
-    desc: "Branch admins, fellowship leaders, safeguarding leads: each sees only what they should.",
-    href: `${DOCS_BASE}/administration/permissions`,
-  },
+  { Icon: Users, id: 'memberDirectory', href: `${DOCS_BASE}/platform/members` },
+  { Icon: Building2, id: 'multiBranch', href: `${DOCS_BASE}/platform/branches` },
+  { Icon: ClipboardList, id: 'attendance', href: `${DOCS_BASE}/platform/attendance` },
+  { Icon: Heart, id: 'fellowships', href: `${DOCS_BASE}/platform/fellowships` },
+  { Icon: BarChart2, id: 'reports', href: `${DOCS_BASE}/platform/reports` },
+  { Icon: ShieldCheck, id: 'roles', href: `${DOCS_BASE}/administration/permissions` },
 ];
 
 const PAIN_POINTS = [
-  { Icon: FileSpreadsheet, text: "Scattered spreadsheets with no single source of truth" },
-  { Icon: Search, text: "No way to see who's been absent for weeks" },
-  { Icon: MessageSquare, text: "Member contact info trapped in personal WhatsApp groups" },
-  { Icon: BarChart2, text: "Sunday reports that take hours of manual stitching" },
+  { Icon: FileSpreadsheet, id: 'spreadsheets' },
+  { Icon: Search, id: 'absence' },
+  { Icon: MessageSquare, id: 'contacts' },
+  { Icon: BarChart2, id: 'reporting' },
 ];
 
-const STATS = [
-  { value: "Multi", label: "Branch · Region · Country" },
-  { value: "Real-time", label: "Sync across every campus" },
-  { value: "GDPR", label: "UK-first, auditable" },
-  { value: "Zero", label: "Spreadsheets needed" },
-];
+const STATS = ['multi', 'realtime', 'gdpr', 'zero'] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -327,13 +292,13 @@ export default function KairosLanding() {
       {/* ── Stats band ──────────────────────────────────────────────────── */}
       <section className="border-y border-black/[0.06] dark:border-white/[0.06] bg-[#f9f9f9] dark:bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-black/[0.06] dark:divide-white/[0.06]">
-          {STATS.map((s, i) => (
-            <Reveal key={s.label} index={i} className="p-6 md:p-8">
+          {STATS.map((statId, i) => (
+            <Reveal key={statId} index={i} className="p-6 md:p-8">
               <div className="text-2xl md:text-3xl font-black text-[#f8b537] leading-none">
-                {s.value}
+                {t(`marketing:stat_${statId}_value`)}
               </div>
               <div className="mt-2 text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-black/55 dark:text-white/45 leading-snug">
-                {s.label}
+                {t(`marketing:stat_${statId}_label`)}
               </div>
             </Reveal>
           ))}
@@ -352,13 +317,13 @@ export default function KairosLanding() {
             {PAIN_POINTS.map((p, i) => (
               <Reveal
                 as="li"
-                key={p.text}
+                key={p.id}
                 index={i}
                 className="flex items-start gap-4 rounded-lg border border-black/[0.08] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/[0.15] dark:hover:border-white/[0.12] transition-colors p-5"
               >
                 <p.Icon className="h-5 w-5 text-[#f8b537] mt-0.5 shrink-0" />
                 <span className="relative text-sm md:text-base text-black/70 dark:text-white/70 leading-relaxed">
-                  {p.text}
+                  {t(`marketing:pain_${p.id}`)}
                   <HandDrawn
                     d="M2 11 C 80 5, 190 15, 298 8"
                     viewBox="0 0 300 20"
@@ -383,7 +348,7 @@ export default function KairosLanding() {
             {FEATURES.map((f, i) => (
               <Reveal
                 as="a"
-                key={f.title}
+                key={f.id}
                 index={i}
                 href={f.href}
                 target="_blank"
@@ -396,10 +361,10 @@ export default function KairosLanding() {
                   <ArrowUpRight className="h-4 w-4 text-black/25 dark:text-white/20 group-hover:text-[#5D3FD3] dark:group-hover:text-[#a78bfa] transition-colors" />
                 </div>
                 <h3 className="mt-6 text-base font-black uppercase tracking-tight">
-                  {f.title}
+                  {t(`marketing:feature_${f.id}_title`)}
                 </h3>
                 <p className="mt-3 text-sm text-black/55 dark:text-white/50 group-hover:text-black/80 dark:group-hover:text-white/85 leading-relaxed transition-colors">
-                  {f.desc}
+                  {t(`marketing:feature_${f.id}_desc`)}
                 </p>
                 <span className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-black/35 dark:text-white/35 group-hover:text-[#5D3FD3] dark:group-hover:text-[#a78bfa] transition-colors">{t('marketing:readTheDocs')}</span>
               </Reveal>
@@ -437,26 +402,26 @@ export default function KairosLanding() {
                     <span className="text-[11px] text-black/40 dark:text-white/30">{t('marketing:searchMembers')}</span>
                   </div>
                   <div className="flex gap-1.5 mb-3">
-                    {["All", "Leaders", "Admins"].map((t, i) => (
+                    {[t('marketing:mockAll'), t('marketing:mockLeaders'), t('marketing:mockAdmins')].map((chip, i) => (
                       <span
-                        key={t}
+                        key={chip}
                         className={`text-[10px] px-2 py-0.5 rounded-full ${
                           i === 0
                             ? "bg-[#5D3FD3]/15 text-[#5D3FD3] dark:bg-[#5D3FD3]/20 dark:text-[#a78bfa] border border-[#5D3FD3]/30"
                             : "text-black/45 dark:text-white/40 border border-black/10 dark:border-white/10"
                         }`}
                       >
-                        {t}
+                        {chip}
                       </span>
                     ))}
                   </div>
                   <ul className="space-y-2.5">
                     {[
-                      { initials: "DB", name: "Daniel B.", role: "Branch Admin", roleColor: "gold" },
-                      { initials: "SM", name: "Sarah M.", role: "Fellowship Lead", roleColor: "purple" },
-                      { initials: "JO", name: "James O.", role: "Member", roleColor: "muted" },
-                      { initials: "EA", name: "Esther A.", role: "Safeguarding", roleColor: "purple" },
-                      { initials: "MK", name: "Michael K.", role: "Member", roleColor: "muted" },
+                      { initials: "DB", name: "Daniel B.", role: t('marketing:mockBranchAdmin'), roleColor: "gold" },
+                      { initials: "SM", name: "Sarah M.", role: t('marketing:mockFellowshipLead'), roleColor: "purple" },
+                      { initials: "JO", name: "James O.", role: t('marketing:mockMember'), roleColor: "muted" },
+                      { initials: "EA", name: "Esther A.", role: t('marketing:mockSafeguarding'), roleColor: "purple" },
+                      { initials: "MK", name: "Michael K.", role: t('marketing:mockMember'), roleColor: "muted" },
                     ].map((m) => (
                       <li key={m.name} className="flex items-center gap-2.5">
                         <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[#5d3fd3] to-[#451ebb] flex items-center justify-center text-[9px] font-bold text-white shrink-0">
@@ -494,10 +459,10 @@ export default function KairosLanding() {
                   </div>
                   <div className="grid grid-cols-4 gap-2 mb-5">
                     {[
-                      { label: "Members", value: "387" },
-                      { label: "Sunday", value: "312", trend: "+8%" },
-                      { label: "New", value: "12" },
-                      { label: "Leaders", value: "28" },
+                      { label: t('marketing:mockMembers'), value: "387" },
+                      { label: t('marketing:mockSunday'), value: "312", trend: "+8%" },
+                      { label: t('marketing:mockNew'), value: "12" },
+                      { label: t('marketing:mockLeaders'), value: "28" },
                     ].map((s) => (
                       <div
                         key={s.label}
@@ -530,7 +495,7 @@ export default function KairosLanding() {
                       ))}
                     </div>
                     <div className="flex items-end justify-between gap-1.5 mt-1.5 text-[8px] text-black/40 dark:text-white/30 uppercase">
-                      {["W1", "W2", "W3", "W4", "W5", "Now"].map((w) => (
+                      {[t('marketing:mockW1'), t('marketing:mockW2'), t('marketing:mockW3'), t('marketing:mockW4'), t('marketing:mockW5'), t('marketing:mockNow')].map((w) => (
                         <span key={w} className="flex-1 text-center">{w}</span>
                       ))}
                     </div>
@@ -598,21 +563,21 @@ export default function KairosLanding() {
 
                   <ul className="pt-3 space-y-0.5 text-[9px] flex-1">
                     {[
-                      { Icon: LayoutDashboard, label: "Overview", active: true },
-                      { Icon: Building2, label: "Branches" },
-                      { Icon: Map, label: "Regions" },
-                      { Icon: Users, label: "Members" },
-                      { Icon: Heart, label: "Fellowships" },
-                      { Icon: CalendarCheck, label: "Attendance" },
-                      { Icon: ClipboardList, label: "My Attendance", muted: true },
-                      { Icon: BarChart2, label: "Reports" },
-                      { Icon: GraduationCap, label: "New Believers" },
-                      { Icon: Briefcase, label: "Departments" },
-                      { Icon: Megaphone, label: "Outreach Programs" },
-                      { Icon: Sparkles, label: "Souls Pipeline" },
-                      { Icon: FileText, label: "Forms" },
-                      { Icon: BarChart2, label: "Souls Dashboard" },
-                      { Icon: UserCircle, label: "Profile" },
+                      { Icon: LayoutDashboard, label: t('marketing:navOverview'), active: true },
+                      { Icon: Building2, label: t('marketing:navBranches') },
+                      { Icon: Map, label: t('marketing:navRegions') },
+                      { Icon: Users, label: t('marketing:navMembers') },
+                      { Icon: Heart, label: t('marketing:navFellowships') },
+                      { Icon: CalendarCheck, label: t('marketing:navAttendance') },
+                      { Icon: ClipboardList, label: t('marketing:navMyAttendance'), muted: true },
+                      { Icon: BarChart2, label: t('marketing:navReports') },
+                      { Icon: GraduationCap, label: t('marketing:navNewBelievers') },
+                      { Icon: Briefcase, label: t('marketing:navDepartments') },
+                      { Icon: Megaphone, label: t('marketing:navOutreachPrograms') },
+                      { Icon: Sparkles, label: t('marketing:navSoulsPipeline') },
+                      { Icon: FileText, label: t('marketing:navForms') },
+                      { Icon: BarChart2, label: t('marketing:navSoulsDashboard') },
+                      { Icon: UserCircle, label: t('marketing:navProfile') },
                     ].map((item, i) => (
                       <li key={`${item.label}-${i}`}>
                         <span
@@ -665,10 +630,10 @@ export default function KairosLanding() {
                   {/* KPI row */}
                   <div className="grid grid-cols-4 gap-2">
                     {[
-                      { label: "Total Branches", value: "24", sub: "Active", color: "#16a34a", colorDark: "#22c55e", Icon: Building2 },
-                      { label: "Total Members", value: "1,847", sub: "+47 this month", color: "#1a1c1c", colorDark: "#ffffff", Icon: Users },
-                      { label: "Total Fellowships", value: "62", sub: "Scheduled", color: "#f8b537", colorDark: "#f8b537", Icon: Heart },
-                      { label: "Pending Approvals", value: "8", sub: "Requests", color: "#dc2626", colorDark: "#f87171", Icon: ShieldCheck },
+                      { label: t('marketing:mockTotalBranches'), value: "24", sub: t('marketing:mockActive'), color: "#16a34a", colorDark: "#22c55e", Icon: Building2 },
+                      { label: t('marketing:mockTotalMembers'), value: "1,847", sub: t('marketing:mockPlus47ThisMonth'), color: "#1a1c1c", colorDark: "#ffffff", Icon: Users },
+                      { label: t('marketing:mockTotalFellowships'), value: "62", sub: t('marketing:mockScheduled'), color: "#f8b537", colorDark: "#f8b537", Icon: Heart },
+                      { label: t('marketing:mockPendingApprovals'), value: "8", sub: t('marketing:mockRequests'), color: "#dc2626", colorDark: "#f87171", Icon: ShieldCheck },
                     ].map((s) => (
                       <div key={s.label} className="rounded-md border border-black/[0.08] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.02] p-2.5">
                         <div className="flex items-start justify-between mb-1">
@@ -786,9 +751,9 @@ export default function KairosLanding() {
                         <span className="text-[8px] uppercase tracking-wider text-black/55 dark:text-white/45 font-bold block mb-2">{t('marketing:quickActions')}</span>
                         <ul className="space-y-1.5">
                           {[
-                            { Icon: Building2, label: "Manage Branches" },
-                            { Icon: BarChart2, label: "View Reports" },
-                            { Icon: FileSpreadsheet, label: "Export CSV" },
+                            { Icon: Building2, label: t('marketing:mockManageBranches') },
+                            { Icon: BarChart2, label: t('marketing:mockViewReports') },
+                            { Icon: FileSpreadsheet, label: t('marketing:mockExportCsv') },
                           ].map((a) => (
                             <li key={a.label} className="flex items-center gap-1.5 text-[8px]">
                               <a.Icon className="w-2.5 h-2.5 text-black/55 dark:text-white/45 shrink-0" />
@@ -824,11 +789,11 @@ export default function KairosLanding() {
                     </div>
                     <div className="flex items-center gap-3 md:gap-5">
                       {[
-                        { label: "Branches", value: "24", color: "#5D3FD3", colorDark: "#a78bfa" },
-                        { label: "Members", value: "1,847", color: "#5D3FD3", colorDark: "#a78bfa" },
-                        { label: "Fellowships", value: "62", color: "#16a34a", colorDark: "#22c55e" },
-                        { label: "Attendance", value: "84%", color: "#16a34a", colorDark: "#22c55e" },
-                        { label: "Engagement", value: "High", color: "#f8b537", colorDark: "#f8b537" },
+                        { label: t('marketing:mockBranches'), value: "24", color: "#5D3FD3", colorDark: "#a78bfa" },
+                        { label: t('marketing:mockMembers'), value: "1,847", color: "#5D3FD3", colorDark: "#a78bfa" },
+                        { label: t('marketing:mockFellowships'), value: "62", color: "#16a34a", colorDark: "#22c55e" },
+                        { label: t('marketing:mockAttendance'), value: "84%", color: "#16a34a", colorDark: "#22c55e" },
+                        { label: t('marketing:mockEngagement'), value: t('marketing:mockHigh'), color: "#f8b537", colorDark: "#f8b537" },
                       ].map((s) => (
                         <div key={s.label} className="text-center">
                           <div className="text-sm font-black leading-none text-[color:var(--v)] dark:text-[color:var(--vd)]" style={{ ["--v" as string]: s.color, ["--vd" as string]: s.colorDark }}>
@@ -862,32 +827,32 @@ export default function KairosLanding() {
               <div className="grid grid-cols-3 gap-3">
                 {[
                   {
-                    stage: "Welcome",
+                    stage: t('marketing:mockStageWelcome'),
                     count: 18,
                     accent: "#f8b537",
                     items: [
-                      { initials: "MT", name: "Mary T.", note: "Just enrolled" },
-                      { initials: "JD", name: "John D.", note: "Week 1" },
-                      { initials: "FB", name: "Faith B.", note: "Week 1" },
+                      { initials: "MT", name: "Mary T.", note: t('marketing:mockJustEnrolled') },
+                      { initials: "JD", name: "John D.", note: t('marketing:mockWeekN', { n: 1 }) },
+                      { initials: "FB", name: "Faith B.", note: t('marketing:mockWeekN', { n: 1 }) },
                     ],
                   },
                   {
-                    stage: "Foundation",
+                    stage: t('marketing:mockStageFoundation'),
                     count: 47,
                     accent: "#5D3FD3",
                     items: [
-                      { initials: "JA", name: "James A.", note: "Week 3 / 4" },
-                      { initials: "GL", name: "Grace L.", note: "Week 2 / 4" },
-                      { initials: "PN", name: "Paul N.", note: "Week 1 / 4" },
+                      { initials: "JA", name: "James A.", note: t('marketing:mockWeekOfFour', { n: 3 }) },
+                      { initials: "GL", name: "Grace L.", note: t('marketing:mockWeekOfFour', { n: 2 }) },
+                      { initials: "PN", name: "Paul N.", note: t('marketing:mockWeekOfFour', { n: 1 }) },
                     ],
                   },
                   {
-                    stage: "Membership Ready",
+                    stage: t('marketing:mockStageMembershipReady'),
                     count: 24,
                     accent: "gradient",
                     items: [
-                      { initials: "EO", name: "Esther O.", note: "✓ Class complete" },
-                      { initials: "DK", name: "David K.", note: "✓ Class complete" },
+                      { initials: "EO", name: "Esther O.", note: `✓ ${t('marketing:mockClassComplete')}` },
+                      { initials: "DK", name: "David K.", note: `✓ ${t('marketing:mockClassComplete')}` },
                     ],
                   },
                 ].map((col) => (

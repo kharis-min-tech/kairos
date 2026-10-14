@@ -46,31 +46,52 @@ export const DAILY_VERSES: DailyVerse[] = [
     // Was previously credited to Psalm 46:10 in the web dashboard, which is a
     // different verse entirely, and already in this list below.
     ref: '1 Corinthians 16:14',
-    text: { en: { text: 'Let all that you do be done in love.', version: 'WEB' } },
+    text: {
+      en: { text: 'Let all that you do be done in love.', version: 'WEB' },
+      fr: { text: 'Que tout ce que vous faites se fasse avec charité.', version: 'LSG' },
+    },
   },
   {
     ref: 'Proverbs 3:5',
-    text: { en: { text: 'Trust in the Lord with all your heart.', version: 'WEB' } },
+    text: {
+      en: { text: 'Trust in the Lord with all your heart.', version: 'WEB' },
+      fr: { text: 'Confie-toi en l’Éternel de tout ton cœur.', version: 'LSG' },
+    },
   },
   {
     ref: 'Philippians 4:13',
-    text: { en: { text: 'I can do all things through Christ who strengthens me.', version: 'WEB' } },
+    text: {
+      en: { text: 'I can do all things through Christ who strengthens me.', version: 'WEB' },
+      fr: { text: 'Je puis tout par celui qui me fortifie.', version: 'LSG' },
+    },
   },
   {
     ref: 'Psalm 46:10',
-    text: { en: { text: 'Be still, and know that I am God.', version: 'WEB' } },
+    text: {
+      en: { text: 'Be still, and know that I am God.', version: 'WEB' },
+      fr: { text: 'Arrêtez, et sachez que je suis Dieu.', version: 'LSG' },
+    },
   },
   {
     ref: 'Psalm 23:1',
-    text: { en: { text: 'The Lord is my shepherd; I shall not want.', version: 'WEB' } },
+    text: {
+      en: { text: 'The Lord is my shepherd; I shall not want.', version: 'WEB' },
+      fr: { text: 'L’Éternel est mon berger : je ne manquerai de rien.', version: 'LSG' },
+    },
   },
   {
     ref: 'Jeremiah 29:11',
-    text: { en: { text: 'For I know the plans I have for you.', version: 'WEB' } },
+    text: {
+      en: { text: 'For I know the plans I have for you.', version: 'WEB' },
+      fr: { text: 'Car je connais les projets que j’ai formés sur vous.', version: 'LSG' },
+    },
   },
   {
     ref: 'John 15:12',
-    text: { en: { text: 'Love one another as I have loved you.', version: 'WEB' } },
+    text: {
+      en: { text: 'Love one another as I have loved you.', version: 'WEB' },
+      fr: { text: 'Aimez-vous les uns les autres, comme je vous ai aimés.', version: 'LSG' },
+    },
   },
 ];
 

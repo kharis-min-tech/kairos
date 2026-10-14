@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@kairos/ui';
 import { Check, Award } from 'lucide-react';
 import { formatShortDate } from '@kairos/core';
-import { STAGES } from './stage-config';
+import { STAGES, stageLabel, stageTopic } from './stage-config';
 import type { EnrollmentCardData } from './types';
 import { useTranslation } from 'react-i18next';
 
@@ -24,7 +24,7 @@ export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {  con
             className={`inline-block h-2 w-2 rounded-full ${stage?.dotColor ?? 'bg-slate-400'}`}
             aria-hidden
           />
-          {stage?.label ?? enrollment.stage}
+          {stageLabel(t, stage, enrollment.stage)}
         </span>
         <span className="text-sm text-muted-foreground">
           Enrolled {formatShortDate(enrollment.enrolledAt)}
@@ -89,10 +89,10 @@ export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {  con
                             : 'text-muted-foreground'
                       }`}
                     >
-                      {s.label}
+                      {stageLabel(t, s)}
                     </p>
-                    {s.topic && (
-                      <p className="text-xs text-muted-foreground">{s.topic}</p>
+                    {stageTopic(t, s) && (
+                      <p className="text-xs text-muted-foreground">{stageTopic(t, s)}</p>
                     )}
                   </div>
                 </li>

@@ -260,7 +260,7 @@ export function CohortForm({
                 onValueChange={(v) => setStatus(v as MembershipCohortStatus)}
                 options={STATUSES.map((s) => ({
                   value: s,
-                  label: s.charAt(0).toUpperCase() + s.slice(1),
+                  label: t(`membership:cohortStatus_${s}`),
                 }))}
               />
             </div>

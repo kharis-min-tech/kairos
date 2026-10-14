@@ -34,6 +34,7 @@ import type { NewBelieverStageValue, UpdateEnrollmentRequest } from '@kairos/typ
 import {
   STAGES,
   SESSION_STAGE_VALUES,
+  stageLabel,
   getStageByValue,
   getNextStage,
 } from '../_components/stage-config';
@@ -133,7 +134,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
       });
       toast.success(
         nextStage
-          ? `Session completed and advanced to ${nextStage.label}`
+          ? t('newBelievers:sessionCompletedAdvancedTo', { stage: stageLabel(t, nextStage) })
           : 'Session marked as completed',
       );
       setShowMarkCompleteModal(false);
@@ -169,7 +170,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
 
     try {
       await updateEnrollment.mutateAsync({ id, data: { stage: nextStage.value } });
-      toast.success(t('newBelievers:stageAdvancedTo', { stage: nextStage.label }));
+      toast.success(t('newBelievers:stageAdvancedTo', { stage: stageLabel(t, nextStage) }));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
     }
@@ -274,7 +275,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
               className={`inline-block h-2 w-2 rounded-full ${stage?.dotColor ?? 'bg-slate-400'}`}
               aria-hidden
             />
-            {stage?.label ?? enrollment.stage}
+            {stageLabel(t, stage, enrollment.stage)}
           </span>
           {isSessionStage && (
             <span
@@ -312,7 +313,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
               className={`h-2 flex-1 rounded-full transition-colors ${
                 idx <= currentStageIdx ? 'bg-[#5D3FD3]' : 'bg-foreground/10'
               }`}
-              title={s.label}
+              title={stageLabel(t, s)}
             />
           ))}
         </div>
@@ -355,7 +356,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
               disabled={updateEnrollment.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {t('newBelievers:advanceToStageButton', { stage: nextStage.label })}
+              {t('newBelievers:advanceToStageButton', { stage: stageLabel(t, nextStage) })}
             </Button>
           )}
           <Button variant="outline" onClick={startEdit}>{t('newBelievers:edit')}</Button>
@@ -384,7 +385,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                     onValueChange={(v) =>
                       setEditForm((f) => ({ ...f, stage: v as NewBelieverStageValue }))
                     }
-                    options={STAGES.map((s) => ({ value: s.value, label: s.label }))}
+                    options={STAGES.map((s) => ({ value: s.value, label: stageLabel(t, s) }))}
                   />
                   <p className="mt-1 text-xs font-medium text-[#f8b537]">{t('newBelievers:movingForwardFromASessionRequires')}</p>
                 </div>
@@ -443,7 +444,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                   <div>
                     <dt className="text-muted-foreground">{t('newBelievers:stage')}</dt>
-                    <dd className="font-medium">{stage?.label ?? enrollment.stage}</dd>
+                    <dd className="font-medium">{stageLabel(t, stage, enrollment.stage)}</dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">{t('newBelievers:enrolledOn')}</dt>
@@ -512,7 +513,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                       className="flex items-center justify-between rounded-lg border p-3 text-sm"
                     >
                       <div>
-                        <p className="font-medium">{a.topic ?? 'Session'}</p>
+                        <p className="font-medium">{a.topic ?? t('newBelievers:session')}</p>
                         <p className="text-xs text-muted-foreground">
                           {formatShortDate(a.sessionDate)}
                         </p>
@@ -581,7 +582,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                                 : 'text-muted-foreground'
                           }`}
                         >
-                          {s.label}
+                          {stageLabel(t, s)}
                         </span>
                         {isCurrent && SESSION_STAGE_VALUES.has(s.value) && (
                           <span
@@ -622,7 +623,9 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               {markCompleteShouldAdvance
-                ? `Record feedback before moving to ${nextStage?.label ?? 'the next stage'}.`
+                ? t('newBelievers:recordFeedbackBeforeMovingTo', {
+                    stage: stageLabel(t, nextStage, t('newBelievers:theNextStage')),
+                  })
                 : 'Record feedback for this session before marking it complete.'}
             </DialogDescription>
           </DialogHeader>

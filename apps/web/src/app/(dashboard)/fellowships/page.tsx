@@ -140,7 +140,7 @@ function FellowshipsContent() {  const { t } = useTranslation(['fellowships', 'c
         </div>
         {(caps.has('branch:write')) && (
           <Link href="/fellowships/new">
-            <Button size="sm">+ New Fellowship</Button>
+            <Button size="sm">+ {t('fellowships:newFellowship')}</Button>
           </Link>
         )}
       </div>

@@ -508,7 +508,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                                   ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]'
                                   : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                             }`}>
-                              {member.approvalStatus}
+                              {t(`members:approvalStatus_${member.approvalStatus}`)}
                             </span>
                           </td>
                         </tr>

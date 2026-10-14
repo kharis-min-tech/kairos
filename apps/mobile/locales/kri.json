@@ -80,7 +80,8 @@
     "appInfo": "App infɔmeshɔn",
     "retry2": "Tray bak",
     "v1V2V3TapChange": "{{v1}} {{v2}}, {{v3}}. Tɔch fɔ chenj. Prɛs lɔng fɔ opin di pika.",
-    "disconnectV1": "Pul di link wit {{v1}}?"
+    "disconnectV1": "Pul di link wit {{v1}}?",
+    "shownInEnglish": "dɛn sho am na Inglish"
   },
   "more": {
     "title": "Mɔ",
@@ -425,7 +426,410 @@
     "searchPerson": "Luk fɔ wan pɔsin",
     "searchNamePhoneUseNameType": "Luk wit nem ɔ fon — ɔ yuz di nem we yu rayt, if i nɔto wan mɛmba.",
     "searchMembersBranchNamePhone": "Luk fɔ mɛmba dɛn na dis branch wit nem ɔ fon.",
-    "archiveV1": "Akayv {{v1}}?"
+    "archiveV1": "Akayv {{v1}}?",
+    "def": {
+      "first_time_visitor": {
+        "title": "Fɔs-Taym Vizita",
+        "description": "Wɛlkɔm! Tɛl wi smɔl bɔt yusɛf so wi go ebul fɔ fɔloap.",
+        "subjectLink": {
+          "label": "Fɛn pɔsin we de insay",
+          "helpText": "Sach bay nem ɔ fon. Lɛf am ɛmti fɔ mek nyu kɔntakt.",
+          "linkedNote": "Dɛn jɔyn am to pɔsin we de insay, so if yu sɛnd am i go apdet in rɛkɔd."
+        },
+        "success": {
+          "title": "Dɛn rɛkɔd di wɛlkɔm",
+          "message": "Tɛnki fɔ kam. Wan lida go kɔntakt yu sɔn."
+        },
+        "block": {
+          "about-you": {
+            "title": "Bɔt yu",
+            "field": {
+              "firstName": {
+                "label": "Fɔs nem"
+              },
+              "lastName": {
+                "label": "Las nem"
+              },
+              "middleName": {
+                "label": "Midul nem"
+              },
+              "dateOfBirth": {
+                "label": "Bɔn de"
+              },
+              "gender": {
+                "label": "Jɛnda",
+                "option": {
+                  "Male": "Man",
+                  "Female": "Uman"
+                }
+              },
+              "isUnder16": {
+                "label": "Yu nɔ rich 16 yia?",
+                "helpText": "Wi kin tek dis frɔm yu bɔn de.",
+                "option": {
+                  "Yes": "Yɛs",
+                  "No": "No"
+                }
+              }
+            }
+          },
+          "contact": {
+            "title": "Kɔntakt dɛm",
+            "field": {
+              "email": {
+                "label": "Imel"
+              },
+              "phone": {
+                "label": "Fon"
+              },
+              "address": {
+                "label": "Adrɛs"
+              },
+              "city": {
+                "label": "Siti"
+              },
+              "postalCode": {
+                "label": "Pos kod"
+              }
+            }
+          },
+          "guardian": {
+            "title": "Mama ɔ Papa / Gadian",
+            "description": "Na fɔ gɛt am fɔ vizita dɛm we nɔ rich 16 yia.",
+            "field": {
+              "guardianMemberId": {
+                "label": "Gadian",
+                "placeholder": "Sach, ɔ rayt dɛn nem if dɛn nyu"
+              },
+              "guardianPhone": {
+                "label": "Gadian fon"
+              },
+              "guardianRelationship": {
+                "label": "Aw una tan",
+                "placeholder": "fɔ ɛgzampul Mama, Papa, Kɛya"
+              }
+            }
+          },
+          "children-with-you": {
+            "title": "Yu kam wit pikin dɛm?",
+            "field": {
+              "broughtChildren": {
+                "label": "A kam wit wan ɔ mɔ pikin dɛm"
+              }
+            }
+          },
+          "children": {
+            "label": "Pikin dɛm we de wit yu",
+            "itemLabel": "Pikin",
+            "field": {
+              "firstName": {
+                "label": "Fɔs nem"
+              },
+              "lastName": {
+                "label": "Las nem"
+              },
+              "dateOfBirth": {
+                "label": "Bɔn de"
+              },
+              "gender": {
+                "label": "Jɛnda",
+                "option": {
+                  "Male": "Man",
+                  "Female": "Uman"
+                }
+              }
+            }
+          },
+          "getting-involved": {
+            "title": "Fɔ jɔyn in",
+            "field": {
+              "interest": {
+                "label": "Wetin yu want fɔ du?",
+                "helpText": "Tɛl wi usay yu want fɔ jɔyn.",
+                "option": {
+                  "fellowship": "Fɔ jɔyn wan fɛloship",
+                  "department": "Fɔ sav na wan dipatmɛnt",
+                  "new_believers": "Nyu Bilivaz program",
+                  "just_visiting": "A jɔs kam vizit naw"
+                }
+              },
+              "howDidYouHear": {
+                "label": "Aw yu bin yɛri bɔt wi?",
+                "placeholder": "fɔ ɛgzampul Padi, soshal midia, a jɔs pas"
+              },
+              "invitedByMemberId": {
+                "label": "Udat invayt yu?",
+                "placeholder": "Sach fɔ di pɔsin we invayt yu"
+              }
+            }
+          }
+        }
+      },
+      "altar_call": {
+        "title": "Nyu Bilivaz Klas",
+        "description": "Rɛjista sɔmbɔdi na di Nyu Bilivaz program. Wi go fɔloap fɔ arenj di fo-wik klas.",
+        "subjectLink": {
+          "label": "Fɛn pɔsin we de insay",
+          "helpText": "Sach bay nem ɔ fon. Lɛf am ɛmti fɔ mek nyu kɔntakt.",
+          "linkedNote": "Dɛn jɔyn am to pɔsin we de insay, so if yu sɛnd am i go rɛjista am."
+        },
+        "success": {
+          "title": "Dɛn mek di rɛjistreshɔn",
+          "message": "Dɛn mek nyu kɔntakt ɛn rɛjista am na di Nyu Bilivaz program.",
+          "linkedMessage": "Dɛn jɔyn dis pɔsin ɛn rɛjista am na di Nyu Bilivaz program."
+        },
+        "block": {
+          "details": {
+            "title": "In dɛtel dɛm",
+            "field": {
+              "todaysDate": {
+                "label": "Tide in de"
+              },
+              "firstName": {
+                "label": "Fɔs nem"
+              },
+              "lastName": {
+                "label": "Las nem"
+              },
+              "phone": {
+                "label": "Fon"
+              }
+            }
+          }
+        }
+      },
+      "baptism": {
+        "title": "Baptism",
+        "description": "Aks fɔ baptism. Wan lida go kɔntakt yu fɔ tɔk bɔt taym ɛn wetin fɔ du nɛks.",
+        "subjectLink": {
+          "label": "Fɛn di pɔsin we want baptism",
+          "helpText": "Sach bay nem ɔ fon. Lɛf am ɛmti fɔ mek nyu kɔntakt.",
+          "linkedNote": "Dɛn jɔyn am to pɔsin we de insay. Dɛn go yuz in rɛkɔd."
+        },
+        "success": {
+          "title": "Dɛn sɛnd di baptism rikwɛst",
+          "message": "Dɛn rɛkɔd yu baptism rikwɛst. Wan lida go kɔntakt yu."
+        },
+        "block": {
+          "details": {
+            "title": "Yu dɛtel dɛm",
+            "field": {
+              "firstName": {
+                "label": "Fɔs nem"
+              },
+              "lastName": {
+                "label": "Las nem"
+              },
+              "phone": {
+                "label": "Fon"
+              }
+            }
+          }
+        }
+      },
+      "testimony": {
+        "title": "Tɛstimoni",
+        "description": "Tɛl wi wetin Gɔd dɔn du. Lida dɛm kin kɔntakt yu fɔ rijɔys wit yu ɔ aks if yu go tɛl am na Sɔndè.",
+        "subjectLink": {
+          "label": "Fɛn di pɔsin we de gi di tɛstimoni",
+          "helpText": "Sach bay nem ɔ fon. Lɛf am ɛmti fɔ mek nyu kɔntakt.",
+          "linkedNote": "Dɛn jɔyn am to pɔsin we de insay, so dis tɛstimoni go tay to in rɛkɔd."
+        },
+        "success": {
+          "title": "Dɛn sheb di tɛstimoni",
+          "message": "Tɛnki fɔ sheb yu tɛstimoni. Glori na fɔ Gɔd!"
+        },
+        "block": {
+          "about-you": {
+            "title": "Bɔt yu",
+            "field": {
+              "firstName": {
+                "label": "Fɔs nem"
+              },
+              "lastName": {
+                "label": "Las nem"
+              },
+              "phone": {
+                "label": "Fon"
+              },
+              "todaysDate": {
+                "label": "Tide in de"
+              }
+            }
+          },
+          "testimony": {
+            "title": "Yu tɛstimoni",
+            "field": {
+              "dateOfTestimony": {
+                "label": "De we dis apin"
+              },
+              "category": {
+                "label": "Katigori",
+                "placeholder": "Pik wan katigori",
+                "option": {
+                  "Business": "Biznɛs",
+                  "Career/Job": "Kɛria / Wok",
+                  "Deliverance": "Dilivrans",
+                  "Education": "Ɛjukeshɔn",
+                  "Financial": "Mɔni",
+                  "Health/Healing": "Ɛlt / Il",
+                  "Marriage/Family": "Marij / Famili",
+                  "Salvation": "Salveshɔn",
+                  "Unusual Favour": "Spɛshal Feva",
+                  "Other": "Ɔda wan"
+                }
+              },
+              "details": {
+                "label": "Wetin apin?",
+                "placeholder": "Tɛl wi na yu oun wɔd dɛm."
+              }
+            }
+          },
+          "sharing": {
+            "title": "Aw yu want wi fɔ sheb am",
+            "field": {
+              "shareAnonymously": {
+                "label": "Sheb am witawt yu nem?",
+                "helpText": "Wi nɔ go yuz yu nem if dɛn pablish dis."
+              },
+              "happyToShareSunday": {
+                "label": "Yu rɛdi fɔ tɛl am na Sɔndè savis?"
+              }
+            }
+          }
+        }
+      },
+      "baby_naming": {
+        "title": "Bebi Nem",
+        "description": "Aks fɔ bebi nem sɛrimoni.",
+        "subjectLink": {
+          "label": "Fɛn di mama ɔ papa / gadian",
+          "helpText": "Sach bay nem ɔ fon fɔ jɔyn mɛmba we de insay. If nɔto, lɛf am ɛmti.",
+          "linkedNote": "Dɛn jɔyn am to mɛmba we de insay. Dɛn go rɛkɔd am as di mama ɔ papa / gadian."
+        },
+        "success": {
+          "title": "Dɛn sɛnd di nem rikwɛst",
+          "message": "Dɛn rɛkɔd yu rikwɛst. Wan lida go fɔloap fɔ kɔnfam di de."
+        },
+        "block": {
+          "baby": {
+            "title": "Bɔt di bebi",
+            "field": {
+              "babyFullName": {
+                "label": "Di bebi in ful nem"
+              },
+              "dateOfBirth": {
+                "label": "Bɔn de"
+              },
+              "gender": {
+                "label": "Jɛnda",
+                "option": {
+                  "Male": "Man",
+                  "Female": "Uman"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Mama ɛn Papa",
+            "field": {
+              "fatherMemberId": {
+                "label": "Papa",
+                "placeholder": "Sach, ɔ rayt dɛn nem if dɛn nɔto mɛmba"
+              },
+              "motherMemberId": {
+                "label": "Mama",
+                "placeholder": "Sach, ɔ rayt dɛn nem if dɛn nɔto mɛmba"
+              },
+              "parentContactPhone": {
+                "label": "Mama ɔ papa fon"
+              },
+              "parentContactEmail": {
+                "label": "Mama ɔ papa imel"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Wetin yu want",
+            "field": {
+              "preferredCeremonyDate": {
+                "label": "Di de we yu want fɔ di sɛrimoni",
+                "helpText": "Lida dɛm go kɔnfam di rial de."
+              },
+              "additionalNotes": {
+                "label": "Ɛnitin ɛls?",
+                "placeholder": "Spɛshal rikwɛst, spɔnsa, ɛn ɔda tin dɛm."
+              }
+            }
+          }
+        }
+      },
+      "baby_dedication": {
+        "title": "Bebi Dɛdikeshɔn",
+        "description": "Aks fɔ bebi dɛdikeshɔn.",
+        "subjectLink": {
+          "label": "Fɛn di mama ɔ papa / gadian",
+          "helpText": "Sach bay nem ɔ fon fɔ jɔyn mɛmba we de insay. If nɔto, lɛf am ɛmti.",
+          "linkedNote": "Dɛn jɔyn am to mɛmba we de insay. Dɛn go rɛkɔd am as di mama ɔ papa / gadian."
+        },
+        "success": {
+          "title": "Dɛn sɛnd di dɛdikeshɔn rikwɛst",
+          "message": "Dɛn rɛkɔd yu rikwɛst. Wan lida go fɔloap fɔ kɔnfam di de."
+        },
+        "block": {
+          "baby": {
+            "title": "Bɔt di bebi",
+            "field": {
+              "babyFullName": {
+                "label": "Di bebi in ful nem"
+              },
+              "dateOfBirth": {
+                "label": "Bɔn de"
+              },
+              "gender": {
+                "label": "Jɛnda",
+                "option": {
+                  "Male": "Man",
+                  "Female": "Uman"
+                }
+              }
+            }
+          },
+          "parents": {
+            "title": "Mama ɛn Papa",
+            "field": {
+              "fatherMemberId": {
+                "label": "Papa",
+                "placeholder": "Sach, ɔ rayt dɛn nem if dɛn nɔto mɛmba"
+              },
+              "motherMemberId": {
+                "label": "Mama",
+                "placeholder": "Sach, ɔ rayt dɛn nem if dɛn nɔto mɛmba"
+              },
+              "parentContactPhone": {
+                "label": "Mama ɔ papa fon"
+              },
+              "parentContactEmail": {
+                "label": "Mama ɔ papa imel"
+              }
+            }
+          },
+          "preferences": {
+            "title": "Wetin yu want",
+            "field": {
+              "preferredDedicationDate": {
+                "label": "Di de we yu want fɔ di dɛdikeshɔn",
+                "helpText": "Lida dɛm go kɔnfam di rial de."
+              },
+              "additionalNotes": {
+                "label": "Ɛnitin ɛls?",
+                "placeholder": "Spɛshal rikwɛst, spɔnsa, ɛn ɔda tin dɛm."
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "reports": {
     "reports": "Ripɔt",

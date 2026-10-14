@@ -312,7 +312,7 @@ function ServiceColumn({
                   checked={checked}
                   onChange={() => onToggleService(s.id)}
                 />
-                <span className="font-medium">{s.serviceType}</span>
+                <span className="font-medium">{t(`attendance:serviceType_${s.serviceType}`)}</span>
                 <span className="text-muted-foreground">{formatShortDate(s.serviceDate)}</span>
                 {s.serviceTitle && <span className="text-xs text-muted-foreground">· {s.serviceTitle}</span>}
               </label>

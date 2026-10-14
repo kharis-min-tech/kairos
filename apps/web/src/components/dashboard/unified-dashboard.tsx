@@ -200,31 +200,35 @@ export function UnifiedDashboard({
   );
 
   // Prepare data for charts
+  // Every chart datum carries both a `rag`/`status` key and a `name`. The key
+  // is the API's own value and is what click handlers filter on; `name` is
+  // only ever rendered. They were the same string until the catalogue arrived,
+  // at which point translating the label silently broke the filter.
   const ragPieData = [
-    { name: 'Critical', value: overview?.ragCounts?.RED || 0, color: COLORS.RED },
-    { name: 'Monitor', value: overview?.ragCounts?.AMBER || 0, color: COLORS.AMBER },
-    { name: 'On Track', value: overview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
+    { rag: 'RED' as const, name: t('common:critical'), value: overview?.ragCounts?.RED || 0, color: COLORS.RED },
+    { rag: 'AMBER' as const, name: t('common:monitor'), value: overview?.ragCounts?.AMBER || 0, color: COLORS.AMBER },
+    { rag: 'GREEN' as const, name: t('common:onTrack'), value: overview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
   ];
 
   const statusBarData = [
-    { name: 'New', count: overview?.statusCounts?.New || 0 },
-    { name: 'Following Up', count: overview?.statusCounts?.['Following Up'] || 0 },
-    { name: 'Interested', count: overview?.statusCounts?.Interested || 0 },
-    { name: 'Converted', count: overview?.statusCounts?.Converted || 0 },
-    { name: 'Not Interested', count: overview?.statusCounts?.['Not Interested'] || 0 },
+    { status: 'New', name: t('common:new'), count: overview?.statusCounts?.New || 0 },
+    { status: 'Following Up', name: t('common:followingUp'), count: overview?.statusCounts?.['Following Up'] || 0 },
+    { status: 'Interested', name: t('common:interested'), count: overview?.statusCounts?.Interested || 0 },
+    { status: 'Converted', name: t('common:converted'), count: overview?.statusCounts?.Converted || 0 },
+    { status: 'Not Interested', name: t('common:notInterested'), count: overview?.statusCounts?.['Not Interested'] || 0 },
   ];
 
   const followUpRagData = [
-    { name: 'Critical', value: followUpOverview?.ragCounts?.RED || 0, color: COLORS.RED },
-    { name: 'Monitor', value: followUpOverview?.ragCounts?.AMBER || 0, color: COLORS.AMBER },
-    { name: 'On Track', value: followUpOverview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
+    { rag: 'RED' as const, name: t('common:critical'), value: followUpOverview?.ragCounts?.RED || 0, color: COLORS.RED },
+    { rag: 'AMBER' as const, name: t('common:monitor'), value: followUpOverview?.ragCounts?.AMBER || 0, color: COLORS.AMBER },
+    { rag: 'GREEN' as const, name: t('common:onTrack'), value: followUpOverview?.ragCounts?.GREEN || 0, color: COLORS.GREEN },
   ];
 
   const conversionFunnelData = analytics?.conversionFunnel ? [
-    { stage: 'New', count: analytics.conversionFunnel.New || 0 },
-    { stage: 'Following Up', count: analytics.conversionFunnel['Following Up'] || 0 },
-    { stage: 'Interested', count: analytics.conversionFunnel.Interested || 0 },
-    { stage: 'Converted', count: analytics.conversionFunnel.Converted || 0 },
+    { stage: 'New', name: t('common:new'), count: analytics.conversionFunnel.New || 0 },
+    { stage: 'Following Up', name: t('common:followingUp'), count: analytics.conversionFunnel['Following Up'] || 0 },
+    { stage: 'Interested', name: t('common:interested'), count: analytics.conversionFunnel.Interested || 0 },
+    { stage: 'Converted', name: t('common:converted'), count: analytics.conversionFunnel.Converted || 0 },
   ] : [];
 
   return (
@@ -322,7 +326,7 @@ export function UnifiedDashboard({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div 
             className="bg-card rounded p-6 shadow-ambient cursor-pointer hover:shadow-ambient-lg transition-shadow"
-            onClick={() => showSouls(soulsData?.data || [], 'All Souls')}
+            onClick={() => showSouls(soulsData?.data || [], t('common:allSouls'))}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -336,7 +340,7 @@ export function UnifiedDashboard({
 
           <div
             className="bg-card rounded p-6 shadow-ambient cursor-pointer hover:shadow-ambient-lg transition-shadow"
-            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'RED') || [], 'Critical Souls - Need Immediate Attention')}
+            onClick={() => showSouls(soulsData?.data?.filter((s) => s.ragStatus === 'RED') || [], t('common:criticalSoulsNeedAttention'))}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -432,7 +436,7 @@ export function UnifiedDashboard({
             </ResponsiveContainer>
             <div className="mt-4 flex items-center justify-center gap-4 text-sm">
               {ragPieData.map((entry) => (
-                <div key={entry.name} className="flex items-center gap-1.5">
+                <div key={entry.rag} className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                   <span className="text-muted-foreground">{entry.name}</span>
                   <span className="font-semibold text-foreground">{entry.value}</span>
@@ -467,9 +471,10 @@ export function UnifiedDashboard({
                   radius={[4, 4, 0, 0]}
                   maxBarSize={36}
                   onClick={(data) => {
+                    const row = data as unknown as { status: string; name: string };
                     showSouls(
-                      soulsData?.data?.filter((s) => s.status === data.name) || [],
-                      `${data.name} Souls`
+                      soulsData?.data?.filter((s) => s.status === row.status) || [],
+                      t('common:soulsWithStatus', { status: row.name }),
                     );
                   }}
                   style={{ cursor: 'pointer' }}
@@ -527,12 +532,10 @@ export function UnifiedDashboard({
                   stroke="none"
                   dataKey="value"
                   onClick={(data) => {
-                    const name = data.name ?? '';
-                    const ragStatus = name.includes('Critical') ? 'RED' : 
-                                     name.includes('Monitor') ? t('common:amber') : t('common:green');
+                    const row = data as unknown as { rag: string; name: string };
                     showFollowUps(
-                      followUpsData?.data?.filter((f) => f.ragStatus === ragStatus) || [],
-                      name
+                      followUpsData?.data?.filter((f) => f.ragStatus === row.rag) || [],
+                      row.name,
                     );
                   }}
                   style={{ cursor: 'pointer' }}
@@ -546,7 +549,7 @@ export function UnifiedDashboard({
             </ResponsiveContainer>
             <div className="mt-4 flex items-center justify-center gap-4 text-sm">
               {followUpRagData.map((entry) => (
-                <div key={entry.name} className="flex items-center gap-1.5">
+                <div key={entry.rag} className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
                   <span className="text-muted-foreground">{entry.name}</span>
                   <span className="font-semibold text-foreground">{entry.value}</span>
@@ -573,7 +576,7 @@ export function UnifiedDashboard({
               <BarChart data={conversionFunnelData} layout="vertical" margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={axisColor} strokeOpacity={0.15} horizontal={false} />
                 <XAxis type="number" stroke={axisColor} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
-                <YAxis dataKey="stage" type="category" stroke={axisColor} width={110} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
+                <YAxis dataKey="name" type="category" stroke={axisColor} width={110} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} />
                 <Tooltip cursor={{ fill: axisColor, fillOpacity: 0.06 }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
                 <Bar 
                   dataKey="count" 
@@ -581,10 +584,10 @@ export function UnifiedDashboard({
                   radius={[0, 4, 4, 0]}
                   maxBarSize={28}
                   onClick={(data) => {
-                    const stage = (data as unknown as Record<string, unknown>).stage as string;
+                    const row = data as unknown as { stage: string; name: string };
                     showSouls(
-                      soulsData?.data?.filter((s) => s.status === stage) || [],
-                      `${stage} Souls`
+                      soulsData?.data?.filter((s) => s.status === row.stage) || [],
+                      t('common:soulsWithStatus', { status: row.name }),
                     );
                   }}
                   style={{ cursor: 'pointer' }}
@@ -727,7 +730,7 @@ export function UnifiedDashboard({
               <div className="divide-y divide-border/10">
                 {recentFollowUps.map((followUp) => {
                   const statusLabel =
-                    followUp.ragStatus === 'RED' ? 'Critical' :
+                    followUp.ragStatus === 'RED' ? t('common:critical') :
                     followUp.ragStatus === 'AMBER' ? t('common:monitor') : t('common:onTrack');
                   const statusClasses =
                     followUp.ragStatus === 'RED' ? 'bg-destructive/10 text-destructive' :

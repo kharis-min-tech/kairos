@@ -111,17 +111,21 @@ export default function SelfCheckInPage() {  const { t } = useTranslation(['atte
         >
           <p className="text-sm font-semibold">
             {result.alreadyCheckedIn
-              ? "You're already checked in"
+              ? t('attendance:youreAlreadyCheckedIn')
               : result.status === 'Late'
-                ? "You're checked in, marked Late"
-                : "You're in"}
+                ? t('attendance:youreCheckedInMarkedLate')
+                : t('attendance:youreIn')}
           </p>
           <p className="mt-1 text-sm text-white/80">
             {result.alreadyCheckedIn
-              ? `Recorded as ${result.status}.`
+              ? t('attendance:recordedAsStatus', {
+                  status: t(`attendance:checkInStatus_${result.status}`, {
+                    defaultValue: result.status,
+                  }),
+                })
               : result.status === 'Late'
-                ? "The service already started, but you're recorded."
-                : 'Have a great service.'}
+                ? t('attendance:serviceAlreadyStartedButRecorded')
+                : t('attendance:haveAGreatService')}
           </p>
         </div>
       ) : null}
@@ -229,7 +233,7 @@ function ServiceCard({
           <div className="flex items-center gap-2">
             {badge}
             <span className="truncate font-semibold text-foreground">
-              {candidate.serviceTitle ?? candidate.serviceType}
+              {candidate.serviceTitle ?? t(`attendance:serviceType_${candidate.serviceType}`)}
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">

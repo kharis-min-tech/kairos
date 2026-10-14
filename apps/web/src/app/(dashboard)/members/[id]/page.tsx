@@ -111,8 +111,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                 {member.firstName} {member.lastName}
               </h1>
               <div className="mt-1 flex items-center gap-2">
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
-                  {member.approvalStatus}
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCls}`}>
+                  {t(`members:approvalStatus_${member.approvalStatus}`)}
                 </span>
                 {member.isMinor && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#f8b537]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3]">
@@ -544,30 +544,35 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {  cons
     year: 'numeric',
   });
 
-  const outcomeLabel = isVisit
+  // The outcome is derived once as a stable key, then rendered and coloured
+  // from that key. Tone used to be decided by comparing against the English
+  // label, which stopped matching the moment the label was translated.
+  const outcomeKey: string | null = isVisit
     ? row.visitOutcome === 'present'
-      ? 'Present'
+      ? 'present'
       : row.visitOutcome === 'not_present'
-        ? 'Not present'
+        ? 'notPresent'
         : row.visitOutcome === 'rescheduled'
-          ? 'Rescheduled'
+          ? 'rescheduled'
           : null
     : row.contactReached === true
       ? row.interestLevel === 'interested'
-        ? 'Interested'
+        ? 'interested'
         : row.interestLevel === 'not_interested'
-          ? t('members:notInterested')
-: t('members:reached')
+          ? 'notInterested'
+          : 'reached'
       : row.contactReached === false
-        ? 'No answer'
+        ? 'noAnswer'
         : null;
 
+  const outcomeLabel = outcomeKey ? t(`members:outcome_${outcomeKey}`) : null;
+
   const outcomeTone =
-    outcomeLabel === 'Present' || outcomeLabel === 'Interested'
+    outcomeKey === 'present' || outcomeKey === 'interested'
       ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-      : outcomeLabel === 'Not present' ||
-          outcomeLabel === 'No answer' ||
-          outcomeLabel === 'Not interested'
+      : outcomeKey === 'notPresent' ||
+          outcomeKey === 'noAnswer' ||
+          outcomeKey === 'notInterested'
         ? 'bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]'
         : 'bg-[#5D3FD3]/15 text-[#5D3FD3]';
 
@@ -576,17 +581,7 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {  cons
       ? t('members:virtualVisit')
 : t('members:homeVisit')
     : (row.methods ?? [row.contactMethod])
-        .map((m) =>
-          m === 'phone_call'
-            ? 'Call'
-            : m === 'text_message'
-              ? 'Text'
-              : m === 'whatsapp'
-                ? 'WhatsApp'
-                : m === 'email'
-                  ? 'Email'
-                  : m,
-        )
+        .map((m) => t(`members:contactMethod_${m}`, { defaultValue: m }))
         .join(' · ');
 
   return (
@@ -606,8 +601,10 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {  cons
           )}
         </div>
         <p className="truncate text-xs text-muted-foreground">
-          {dateLabel} · {row.scopeName ?? 'Branch'} · by {row.recordedByFirstName}{' '}
-          {row.recordedByLastName}
+          {dateLabel} · {row.scopeName ?? t('members:branch')} ·{' '}
+          {t('members:recordedByName', {
+            name: `${row.recordedByFirstName} ${row.recordedByLastName ?? ''}`.trim(),
+          })}
         </p>
         {row.notes && (
           <p className="line-clamp-2 whitespace-pre-wrap text-sm text-foreground/90">

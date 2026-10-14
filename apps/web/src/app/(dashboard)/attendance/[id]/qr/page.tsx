@@ -68,7 +68,10 @@ export default function AttendanceQrPage() {  const { t } = useTranslation(['att
             {service ? (
               <div className="text-center">
                 <p className="text-lg font-semibold text-foreground">
-                  {service.serviceTitle || `${service.serviceType} Service`}
+                  {service.serviceTitle ||
+                      t('attendance:typedService', {
+                        type: t(`attendance:serviceType_${service.serviceType}`),
+                      })}
                 </p>
               </div>
             ) : null}

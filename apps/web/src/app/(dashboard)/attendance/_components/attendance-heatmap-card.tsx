@@ -155,7 +155,7 @@ function HeatmapTable({
               <th
                 key={s.id}
                 scope="col"
-                title={`${s.serviceType} · ${formatShortDate(s.serviceDate)}${s.serviceTitle ? ` · ${s.serviceTitle}` : ''}`}
+                title={`${t(`attendance:serviceType_${s.serviceType}`)} · ${formatShortDate(s.serviceDate)}${s.serviceTitle ? ` · ${s.serviceTitle}` : ''}`}
                 className="py-2 text-center text-[11px] font-medium tabular-nums leading-tight text-muted-foreground"
               >
                 {formatDayMonth(s.serviceDate)}
@@ -189,7 +189,7 @@ function HeatmapTable({
                 return (
                   <td
                     key={`${m.memberId}-${s.id}`}
-                    title={`${s.serviceType} · ${formatShortDate(s.serviceDate)} · ${cellLabel(c)}`}
+                    title={`${t(`attendance:serviceType_${s.serviceType}`)} · ${formatShortDate(s.serviceDate)} · ${cellLabel(c)}`}
                     className="p-0.5 text-center"
                   >
                     <Cell status={c} />

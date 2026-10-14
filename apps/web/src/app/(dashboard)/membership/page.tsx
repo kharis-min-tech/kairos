@@ -116,13 +116,13 @@ export default function MembershipPage() {  const { t } = useTranslation(['membe
                 type="button"
                 onClick={() => setStatusFilter(s)}
                 className={cn(
-                  'rounded-full border px-3 py-1 text-xs font-medium capitalize transition',
+                  'rounded-full border px-3 py-1 text-xs font-medium transition',
                   statusFilter === s
                     ? 'border-[#5D3FD3] bg-[#5D3FD3] text-white'
                     : 'border-border text-muted-foreground hover:bg-muted/60',
                 )}
               >
-                {s}
+                {t(`membership:cohortStatus_${s}`)}
               </button>
             ))}
           </div>
@@ -383,11 +383,11 @@ function CohortCard({ cohort }: { cohort: MembershipCohortSummary }) {
           </Link>
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-[10px] font-medium capitalize',
+              'rounded-full px-2 py-0.5 text-[10px] font-medium',
               statusTone[cohort.status],
             )}
           >
-            {cohort.status}
+            {t(`membership:cohortStatus_${cohort.status}`)}
           </span>
         </div>
 

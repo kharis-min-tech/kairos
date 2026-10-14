@@ -155,19 +155,20 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {  const { t } = useTran
     month: 'short',
     year: 'numeric',
   });
-  const outcomeLabel = isVisit
+  const outcomeKey = isVisit
     ? row.visitOutcome === 'present'
-      ? 'Present'
+      ? 'present'
       : row.visitOutcome === 'not_present'
-        ? 'Not present'
+        ? 'notPresent'
         : row.visitOutcome === 'rescheduled'
-          ? 'Rescheduled'
+          ? 'rescheduled'
           : null
     : row.contactReached === true
-      ? 'Reached'
+      ? 'reached'
       : row.contactReached === false
-        ? 'No answer'
+        ? 'noAnswer'
         : null;
+  const outcomeLabel = outcomeKey ? t(`members:outcome_${outcomeKey}`) : null;
 
   return (
     <Pressable
@@ -184,8 +185,10 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {  const { t } = useTran
               {row.memberFirstName} {row.memberLastName}
             </Text>
             <Text style={styles.metaLine} numberOfLines={1}>
-              {dateLabel} · {row.scopeName} · by {row.recordedByFirstName}{' '}
-              {row.recordedByLastName}
+              {dateLabel} · {row.scopeName} ·{' '}
+              {t('members:recordedByName', {
+                name: `${row.recordedByFirstName} ${row.recordedByLastName ?? ''}`.trim(),
+              })}
             </Text>
           </View>
           {outcomeLabel ? (

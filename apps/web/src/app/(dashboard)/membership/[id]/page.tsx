@@ -125,7 +125,7 @@ export default function CohortDetailPage() {  const { t } = useTranslation(['mem
             {cohort.finalTestDeadline ? (
               <span>Final test by {formatShortDate(cohort.finalTestDeadline)}</span>
             ) : null}
-            <span className="capitalize">{cohort.status}</span>
+            <span>{t(`membership:cohortStatus_${cohort.status}`)}</span>
           </div>
         </div>
         {isAdmin ? (
@@ -204,7 +204,9 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  
                   )}
                 </td>
                 <td className="px-4 py-2 text-muted-foreground">{e.branchName ?? '—'}</td>
-                <td className="px-4 py-2 capitalize text-muted-foreground">{e.status}</td>
+                <td className="px-4 py-2 text-muted-foreground">
+                  {t(`membership:enrolmentStatus_${e.status}`)}
+                </td>
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
                     <Input
@@ -262,7 +264,9 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  
                       onClick={() => {
                         if (
                           !window.confirm(
-                            `Withdraw ${e.memberFirstName} ${e.memberLastName} from this cohort? Their marks are kept and they can be admitted to a later intake.`,
+                            t('membership:confirmWithdrawEnrolment', {
+                              name: `${e.memberFirstName} ${e.memberLastName}`,
+                            }),
                           )
                         ) {
                           return;
@@ -273,7 +277,9 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  
                             onSuccess: () => toast.success(t('membership:enrolmentWithdrawn')),
                             onError: (err: unknown) =>
                               toast.error(
-                                err instanceof Error ? err.message : 'Could not withdraw.',
+                                err instanceof Error
+                                  ? err.message
+                                  : t('membership:couldNotWithdraw'),
                               ),
                           },
                         );
@@ -360,7 +366,9 @@ function SessionsTab({
                   {s.sessionDate ? formatShortDate(s.sessionDate) : t('membership:dateToBeConfirmed')}
                   {s.location ? ` · ${s.location}` : ''}
                   {s.teacherFirstName
-                    ? ` · taught by ${s.teacherFirstName} ${s.teacherLastName}`
+                    ? ` · ${t('membership:taughtByName', {
+                        name: `${s.teacherFirstName} ${s.teacherLastName ?? ''}`.trim(),
+                      })}`
                     : ''}
                 </p>
               </div>

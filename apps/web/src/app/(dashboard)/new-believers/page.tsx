@@ -35,7 +35,12 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMembers } from '@/hooks/use-members';
 import type { NewBelieverStageValue, EnrollmentListParams, UpdateEnrollmentRequest } from '@kairos/types';
 
-import { STAGES, SESSION_STAGE_VALUES, MAX_BULK_SELECT } from './_components/stage-config';
+import {
+  STAGES,
+  SESSION_STAGE_VALUES,
+  MAX_BULK_SELECT,
+  stageLabel,
+} from './_components/stage-config';
 import type { EnrollmentCardData } from './_components/types';
 import { PipelineToolbar, type EnrollmentSortOption } from './_components/pipeline-toolbar';
 import { BulkActionBar } from './_components/bulk-action-bar';
@@ -297,7 +302,7 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
     }
 
     let undone = false;
-    const toastId = toast(`${move.memberName} → ${nextStage.label}`, {
+    const toastId = toast(`${move.memberName} → ${stageLabel(t, nextStage)}`, {
       duration: 5000,
       action: {
         label: t('newBelievers:undo'),
@@ -612,9 +617,11 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
           <DialogHeader>
             <DialogTitle>{t('newBelievers:sessionFeedbackRequired')}</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Record feedback for {pendingStageMove?.memberName ?? 'this member'} before moving
-              from {pendingMoveFromStage?.label ?? 'this session'} to{' '}
-              {pendingMoveToStage?.label ?? 'the next stage'}.
+              {t('newBelievers:recordFeedbackBeforeMoving', {
+                member: pendingStageMove?.memberName ?? t('newBelievers:thisMember'),
+                from: stageLabel(t, pendingMoveFromStage, t('newBelievers:thisSession')),
+                to: stageLabel(t, pendingMoveToStage, t('newBelievers:theNextStage')),
+              })}
             </DialogDescription>
           </DialogHeader>
           <div>

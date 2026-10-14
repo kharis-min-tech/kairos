@@ -158,10 +158,13 @@ function ConnectedAccountsCard() {  const { t } = useTranslation(['security', 'c
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{OAUTH_PROVIDER_LABEL[c.provider]}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {c.providerEmail ?? 'Hidden email'}
+                    {c.providerEmail ?? t('security:hiddenEmail')}
                   </p>
                   <p className="text-[11px] text-muted-foreground/80">
-                    Connected {formatRelative(c.connectedAt)} · Last used {formatRelative(c.lastUsedAt)}
+                    {t('security:connectedAndLastUsed', {
+                      connected: formatRelative(c.connectedAt),
+                      lastUsed: formatRelative(c.lastUsedAt),
+                    })}
                   </p>
                 </div>
                 <Button
