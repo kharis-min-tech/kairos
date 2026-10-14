@@ -51,6 +51,9 @@
     "production": {
       "ios": {},
       "android": {}
+    },
+    "preview-ios": {
+      "ios": {}
     }
   }
 }
