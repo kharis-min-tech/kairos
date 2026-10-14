@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import { TranslationNotice } from '@/components/legal/translation-notice';
 
 
 const PRIVACY_VERSION = '2026-07-v1';
@@ -11,26 +12,18 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
 
   return (
     <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
+      <TranslationNotice />
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('legalPrivacy:legal')}</p>
         <h1 className="text-3xl font-bold tracking-tight">{t('legalPrivacy:privacyNotice')}</h1>
         <p className="text-sm text-muted-foreground">
-          Effective {PRIVACY_EFFECTIVE_DATE} · Version {PRIVACY_VERSION}
+          {t('legalPrivacy:effectiveVersion', { date: PRIVACY_EFFECTIVE_DATE, version: PRIVACY_VERSION })}
         </p>
       </header>
 
       <section className="space-y-3">
-        <p>
-          This notice explains how Kharis Church (&ldquo;we&rdquo;,
-          &ldquo;us&rdquo;, &ldquo;the church&rdquo;) collects and uses your
-          personal data when you use Kairos, our internal church administration
-          platform. It is written to comply with the UK General Data Protection
-          Regulation (UK GDPR) and the Data Protection Act 2018.
-        </p>
-        <p>{t('legalPrivacy:kharisChurchIsThe')}<strong>{t('legalPrivacy:dataController')}</strong> for personal
-          data processed in Kairos. If you have any questions about this
-          notice, or you want to exercise any of the rights described below,
-          please contact us at{' '}
+        <p>{t('legalPrivacy:intro')}</p>
+        <p>{t('legalPrivacy:kharisChurchIsThe')}<strong>{t('legalPrivacy:dataController')}</strong> {t('legalPrivacy:forPersonalDataProcessedInKairos')}{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
@@ -40,13 +33,7 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
       </section>
 
       <Section title={t('legalPrivacy:whoThisNoticeAppliesTo')}>
-        <p>
-          This notice applies to members of Kharis Church who create an account
-          in Kairos, to people whose information is entered into Kairos by our
-          leaders (for example first-time visitors captured on a welcome form,
-          or children whose parents provide information on their behalf), and
-          to anyone who submits information through a public Kairos form.
-        </p>
+        <p>{t('legalPrivacy:appliesToMembersWhoCreateAnAccount')}</p>
       </Section>
 
       <Section title={t('legalPrivacy:whatPersonalDataWeCollect')}>
@@ -54,13 +41,13 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
 
         <SubHeading>2.1 Information you give us at sign-up</SubHeading>
         <ul className="list-disc space-y-1 pl-6">
-          <li>Full name (first, middle, last) and any preferred honorific</li>
+          <li>{t('legalPrivacy:fullNameAndHonorific')}</li>
           <li>{t('legalPrivacy:emailAddressAndPhoneNumber')}</li>
           <li>{t('legalPrivacy:dateOfBirthAndGender')}</li>
-          <li>Home and (optionally) secondary postal address</li>
+          <li>{t('legalPrivacy:homeAndSecondaryAddress')}</li>
           <li>{t('legalPrivacy:theKharisChurchBranchYouAttend')}</li>
           <li>{t('legalPrivacy:emergencyContactNameRelationshipAndPhone')}</li>
-          <li>A password (stored only as a one-way cryptographic hash)</li>
+          <li>{t('legalPrivacy:aPasswordStoredAsAHash')}</li>
         </ul>
 
         <SubHeading>2.2 Information you can add later</SubHeading>
@@ -76,16 +63,9 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
           <li>{t('legalPrivacy:fellowshipGroupMembershipAndAnyLeadership')}</li>
           <li>{t('legalPrivacy:departmentMembershipRotaAssignmentsAndUnifor')}</li>
           <li>{t('legalPrivacy:newBelieverDiscipleshipPipelineStageIf')}</li>
-          <li>
-            Form submissions you make (for example: baptism application,
-            testimony, altar-call response, baby dedication, declarative forms)
-          </li>
+          <li>{t('legalPrivacy:formSubmissionsYouMake')}</li>
           <li>{t('legalPrivacy:prayerRequestsFollowUpNotesOr')}</li>
-          <li>
-            Records of the consents you have given or withdrawn, and the
-            versions of this notice and our Terms &amp; Conditions you have
-            accepted
-          </li>
+          <li>{t('legalPrivacy:recordsOfConsentsGivenOrWithdrawn')}</li>
         </ul>
 
         <SubHeading>2.4 Technical information</SubHeading>
@@ -96,14 +76,7 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
         </ul>
 
         <SubHeading>2.5 Special category and safeguarding data</SubHeading>
-        <p>
-          Where a form asks you to disclose information about your health, a
-          disability, a child in your care, or a safeguarding concern, that
-          information is treated with extra care. We collect it only where it
-          is necessary for the pastoral and safeguarding responsibilities of
-          the church, and access is restricted to leaders with a lawful reason
-          to see it.
-        </p>
+        <p>{t('legalPrivacy:whereAFormAsksAboutHealth')}</p>
       </Section>
 
       <Section title={t('legalPrivacy:whyWeUseYourDataAnd')}>
@@ -127,10 +100,7 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
                 <td className="py-2">{t('legalPrivacy:legitimateInterestsOfTheChurchIn2')}</td>
               </tr>
               <tr>
-                <td className="py-2 pr-4">
-                  Pastoral care, prayer follow-up and safeguarding of
-                  vulnerable people (including children under 16)
-                </td>
+                <td className="py-2 pr-4">{t('legalPrivacy:pastoralCarePrayerFollowUp')}</td>
                 <td className="py-2">{t('legalPrivacy:legitimateInterestsAndWhereRelevantOur')}</td>
               </tr>
               <tr>
@@ -149,38 +119,21 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
       </Section>
 
       <Section title={t('legalPrivacy:whoWeShareYourDataWith')}>
-        <p>
-          Your data is visible inside Kharis Church to leaders whose role
-          requires it. For example, your fellowship leader can see your
-          attendance in that fellowship, and branch administrators can see
-          member information for the branch they administer. Access is scoped
-          so that leaders only see the data for the people and areas they are
-          responsible for.
-        </p>
+        <p>{t('legalPrivacy:yourDataIsVisibleToLeaders')}</p>
         <p>{t('legalPrivacy:weShareDataWithTheFollowing')}</p>
         <ul className="list-disc space-y-2 pl-6">
           <li>
             <strong>{t('legalPrivacy:cloudflareInc')}</strong>{t('legalPrivacy:hostsTheKairosWebsiteApplicationServer')}</li>
           <li>
-            <strong>{t('legalPrivacy:planetscaleInc')}</strong> runs the Postgres
-            database that stores your member record. Data is stored in the
-            United Kingdom / European Economic Area (EEA).
+            <strong>{t('legalPrivacy:planetscaleInc')}</strong> {t('legalPrivacy:runsThePostgresDatabase')}
           </li>
           <li>
-            <strong>{t('legalPrivacy:amazonWebServicesInc')}</strong> sends the
-            transactional emails Kairos generates (for example account
-            verification, password reset, notification digests). Region: EU
-            (London / Frankfurt).
+            <strong>{t('legalPrivacy:amazonWebServicesInc')}</strong> {t('legalPrivacy:sendsTheTransactionalEmails')}
           </li>
           <li>
             <strong>{t('legalPrivacy:sentryInc')}</strong>{t('legalPrivacy:receivesErrorReportsWhenKairosFails')}</li>
         </ul>
-        <p>{t('legalPrivacy:theseProvidersActAs')}<em>{t('legalPrivacy:dataProcessors')}</em>: they process your
-          data only under our instructions and are bound by contract to
-          protect it. Where a provider transfers data outside the UK / EEA, we
-          rely on the UK International Data Transfer Agreement or Standard
-          Contractual Clauses adopted by the UK / EU to keep the data
-          protected to an equivalent standard.
+        <p>{t('legalPrivacy:theseProvidersActAs')}<em>{t('legalPrivacy:dataProcessors')}</em>{t('legalPrivacy:theyProcessYourDataOnlyUnderOur')}
         </p>
         <p>{t('legalPrivacy:weMayAlsoDiscloseDataWhere')}</p>
       </Section>
@@ -206,68 +159,52 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
         <p>{t('legalPrivacy:underUkGdprYouHaveThe')}</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            <strong>{t('legalPrivacy:access')}</strong> your personal data (a &ldquo;subject
-            access request&rdquo;)
+            <strong>{t('legalPrivacy:access')}</strong> {t('legalPrivacy:yourPersonalDataSubjectAccessRequest')}
           </li>
           <li>
             <strong>{t('legalPrivacy:correct')}</strong>{t('legalPrivacy:dataThatIsInaccurateOrIncomplete')}</li>
           <li>
-            <strong>{t('legalPrivacy:erase')}</strong> your data (&ldquo;the right to be
-            forgotten&rdquo;), except where we are required to keep it for
-            safeguarding or legal reasons
+            <strong>{t('legalPrivacy:erase')}</strong> {t('legalPrivacy:yourDataRightToBeForgotten')}
           </li>
           <li>
             <strong>{t('legalPrivacy:restrict')}</strong>{t('legalPrivacy:howWeProcessYourDataWhile')}</li>
           <li>
-            <strong>{t('legalPrivacy:portability')}</strong>: receive a machine-readable
-            export of the data you gave us
+            <strong>{t('legalPrivacy:portability')}</strong>{t('legalPrivacy:receiveAMachineReadableExport')}
           </li>
           <li>
             <strong>{t('legalPrivacy:object')}</strong>{t('legalPrivacy:toProcessingCarriedOutOnThe')}</li>
           <li>
-            <strong>{t('legalPrivacy:withdrawConsent')}</strong> at any time, where we relied on
-            consent. For example, unsubscribing from optional
-            newsletters on{' '}
+            <strong>{t('legalPrivacy:withdrawConsent')}</strong> {t('legalPrivacy:atAnyTimeWhereWeReliedOnConsent')}{' '}
             <Link
               href="/profile/settings/legal"
               className="font-medium text-[#5D3FD3] hover:underline"
             >
-              your legal &amp; consent settings
+              {t('legalPrivacy:yourLegalAndConsentSettings')}
             </Link>
           </li>
         </ul>
         <p>
-          To exercise any of these rights, email us at{' '}
+          {t('legalPrivacy:toExerciseAnyOfTheseRights')}{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
           >{t('legalPrivacy:privacyKharisOrg')}</a>
-          . We will respond within one calendar month.
+          {t('legalPrivacy:weWillRespondWithinOneMonth')}
         </p>
         <p>
-          If you believe we have handled your data unlawfully, you can
-          complain to the UK Information Commissioner&rsquo;s Office at{' '}
+          {t('legalPrivacy:ifYouBelieveWeHandledDataUnlawfully')}{' '}
           <a
             href="https://ico.org.uk"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-[#5D3FD3] hover:underline"
           >{t('legalPrivacy:icoOrgUk')}</a>
-          . We would encourage you to raise the issue with us first so that
-          we can put it right.
+          {t('legalPrivacy:weWouldEncourageYouToRaiseItFirst')}
         </p>
       </Section>
 
       <Section title={t('legalPrivacy:childrenAndYoungPeople')}>
-        <p>
-          Kharis Church takes the safeguarding of children very seriously. If
-          you are under 16, please ask a parent or guardian to complete
-          Kairos-related forms on your behalf. Children&rsquo;s records are
-          created and managed by a parent or a designated safeguarding lead,
-          and their visibility inside Kairos is restricted to leaders whose
-          role requires them to see it. When a child reaches an appropriate
-          age, we support them in taking over their own record.
-        </p>
+        <p>{t('legalPrivacy:churchTakesSafeguardingSeriously')}</p>
       </Section>
 
       <Section title={t('legalPrivacy:cookiesAndTracking')}>
@@ -275,13 +212,7 @@ export function PrivacyBody() {  const { t } = useTranslation(['legalPrivacy', '
       </Section>
 
       <Section title={t('legalPrivacy:security')}>
-        <p>
-          Passwords are stored as one-way cryptographic hashes and cannot be
-          read by anyone, including us. Data in transit is protected by TLS.
-          Access to Kairos administration is gated by role-based permissions
-          and audit-logged. We keep our platform patched and monitored, and
-          run regular reviews of who has access to what.
-        </p>
+        <p>{t('legalPrivacy:passwordsAreStoredAsHashes')}</p>
       </Section>
 
       <Section title={t('legalPrivacy:changesToThisNotice')}>
