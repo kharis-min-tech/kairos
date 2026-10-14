@@ -209,7 +209,34 @@
       "fellowshipAndDepartmentLead": "Responsable de cellule et de département",
       "leader": "Responsable",
       "member": "Membre"
-    }
+    },
+    "showingDataFromTo": "Données du {{from}} au {{to}}",
+    "ragNoFollowUpYet": "• Aucun suivi enregistré pour l'instant",
+    "ragNewFollowing3Days": "• Nouveau / Suivi en cours : 3 jours ou plus depuis le dernier contact",
+    "ragInterested5Days": "• Intéressé : 5 jours ou plus depuis le dernier contact",
+    "ragNewFollowing2Days": "• Nouveau / Suivi en cours : 2 jours depuis le dernier contact",
+    "ragInterested34Days": "• Intéressé : 3 à 4 jours depuis le dernier contact",
+    "ragNewFollowingUnder2": "• Nouveau / Suivi en cours : moins de 2 jours depuis le dernier contact",
+    "ragInterestedUnder3": "• Intéressé : moins de 3 jours depuis le dernier contact",
+    "ragConvertedNotInterestedLost": "• Converti / Pas intéressé / Contact perdu",
+    "fuRagNoFollowUpLogged": "• Aucun suivi enregistré",
+    "fuRagOverdue3Days": "• En retard : 3 jours ou plus (Nouveau / Suivi en cours)",
+    "fuRagOverdue5Days": "• En retard : 5 jours ou plus (Intéressé)",
+    "fuRagWrongNumberDeclined": "• Statut du contact : mauvais numéro, refusé",
+    "fuRagDueSoon2Days": "• Bientôt dû : 2 jours (Nouveau / Suivi en cours)",
+    "fuRagDueSoon34Days": "• Bientôt dû : 3 à 4 jours (Intéressé)",
+    "fuRagNoAnswerBusy": "• Statut du contact : sans réponse, occupé",
+    "fuRagOnTrackOrNotNeeded": "• Sur la bonne voie ou aucun suivi nécessaire",
+    "fuRagSuccessful": "• Statut du contact : réussi",
+    "assimilationFormula": "Formule : âmes atteignant l'étape B / âmes atteignant l'étape A × 100",
+    "assimilationThresholds": "Seuils : ≥{{green}} % vert · ≥{{amber}} % orange · en dessous = rouge.",
+    "lastContactWhen": "Dernier contact : {{when}}",
+    "memberCount_one": "{{count}} membre",
+    "memberCount_other": "{{count}} membres",
+    "lastPresentOfTotal": " · dernière fois {{present}}/{{total}}",
+    "lastPresentCount": " · dernière fois {{count}} présents",
+    "weeksRunning_one": "{{count}} semaine d'affilée",
+    "weeksRunning_other": "{{count}} semaines d'affilée"
   },
   "nav": {
     "sections": {
@@ -340,7 +367,12 @@
     "lightDarkMatchDeviceSPreference": "Clair, sombre, ou selon la préférence de votre appareil.",
     "legalConsent": "Mentions légales et consentement",
     "yourDataBeenDownloadedReadableReport": "Vos données ont été téléchargées sous forme de rapport lisible.",
-    "yourDataBeenDownloadedJson": "Vos données ont été téléchargées au format JSON."
+    "yourDataBeenDownloadedJson": "Vos données ont été téléchargées au format JSON.",
+    "currentlyAtSecondary": "Actuellement à {{name}} (secondaire)",
+    "currentlyAt": "Actuellement à {{name}}",
+    "homeBranchFallback": "votre antenne d'origine",
+    "myFellowshipsCount": "Mes cellules ({{count}})",
+    "myDepartmentsCount": "Mes départements ({{count}})"
   },
   "auth": {
     "finishSettingUp": "Terminer la configuration",
@@ -468,7 +500,14 @@
     "weVeSentVerificationLinkEmail": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Cliquez sur ce lien pour confirmer votre e-mail et terminer votre inscription.",
     "theLinkMayExpiredVeAlready": "Le lien a peut-être expiré, ou vous avez déjà vérifié cet e-mail.",
     "signInAction": "Se connecter",
-    "dontHaveAnAccount": "Vous n'avez pas de compte ?"
+    "dontHaveAnAccount": "Vous n'avez pas de compte ?",
+    "alreadyApproved": "Déjà approuvé ?",
+    "alreadyHaveAnAccount": "Vous avez déjà un compte ?",
+    "newToKairos": "Nouveau sur Kairos ?",
+    "oneHour": "1 heure",
+    "youllReceiveNotificationWhenActivated": "Vous recevrez une notification dès l'activation de votre compte.",
+    "yourEmailFallback": "votre e-mail",
+    "enterPasswordToLinkProvider": "Saisissez votre mot de passe pour le lier à votre compte {{provider}}."
   },
   "branches": {
     "deactivate": "Désactiver",
@@ -544,7 +583,11 @@
     "leaderRemoved": "Responsable retiré.",
     "failedRemoveLeaderTryAgain": "Échec du retrait du responsable. Veuillez réessayer.",
     "branchDeactivated": "Antenne désactivée.",
-    "failedDeactivateBranchTryAgain": "Échec de la désactivation de l'antenne. Veuillez réessayer."
+    "failedDeactivateBranchTryAgain": "Échec de la désactivation de l'antenne. Veuillez réessayer.",
+    "noLeadershipRecordsYet": "Aucun historique de responsables pour l'instant.",
+    "noLeadershipAssignedYet2": "Aucun responsable désigné pour l'instant.",
+    "noBranchSystemAdminsYet": "Aucun administrateur système d'antenne désigné pour l'instant.",
+    "addOneToGetStarted": "Ajoutez-en un pour commencer."
   },
   "admin": {
     "delete": "Supprimer",
@@ -560,7 +603,9 @@
     "newRegion": "+ Nouvelle région",
     "regionUpdated": "Région mise à jour.",
     "regionCreated": "Région créée.",
-    "regionDeleted": "Région supprimée."
+    "regionDeleted": "Région supprimée.",
+    "manageRegions": "Gérer les régions géographiques",
+    "manageRegionsWithTotal": "Gérer les régions géographiques, {{count}} au total"
   },
   "attendance": {
     "members": "Membres",
@@ -657,7 +702,12 @@
     "everyServiceInTheWindowOldest": "Tous les cultes de la période, du plus ancien au plus récent.",
     "noServicesInThisWindowYet": "Aucun culte sur cette période pour l'instant.",
     "expectedAttendance": "Présence attendue",
-    "pointCameraCodeAdminDeskScreen": "Dirigez votre appareil photo vers le code affiché sur l'écran de l'accueil."
+    "pointCameraCodeAdminDeskScreen": "Dirigez votre appareil photo vers le code affiché sur l'écran de l'accueil.",
+    "attendanceRateWeeks": "Taux de présence ({{count}} semaines)",
+    "attendedOfServices": "{{attended}} présences sur {{total}} cultes",
+    "lastSeenAt": "Vu pour la dernière fois à",
+    "onDate": "le {{date}}",
+    "typedService": "Culte {{type}}"
   },
   "reports": {
     "weeklyAttendance": "Présences hebdomadaires",
@@ -1086,7 +1136,10 @@
     "departmentDeactivated": "Département désactivé.",
     "failedDeactivateDepartmentTryAgain": "Échec de la désactivation du département. Veuillez réessayer.",
     "toastInterviewScheduled": "Entretien planifié.",
-    "toastOfferExtended": "Proposition envoyée."
+    "toastOfferExtended": "Proposition envoyée.",
+    "noStatusSwapRequests": "Aucune demande d'échange {{status}}.",
+    "noUpcomingAssignments2": "Aucune affectation à venir.",
+    "useAssignDateToSchedule": "Utilisez « Attribuer une date » pour en planifier une."
   },
   "fellowships": {
     "serviceAttendance": "Présence aux cultes",
@@ -1347,7 +1400,10 @@
     "subject": "Objet",
     "submitted": "Soumis le",
     "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church s'engage à respecter la confidentialité et la sécurité de vos données personnelles. Nous utilisons les informations que vous fournissez pour pouvoir vous contacter, effectuer des visites à domicile le cas échéant, et pour administrer et vous tenir informé des activités de l'église, telles que les cours pour nouveaux croyants. Les informations que vous fournissez seront partagées avec nos équipes internes à ces fins. Nous les conservons en sécurité jusqu'à ce qu'elles ne soient plus nécessaires.",
-    "formsDataCapture": "Formulaires et collecte de données"
+    "formsDataCapture": "Formulaires et collecte de données",
+    "submittingForBranch": "Envoi pour l'antenne",
+    "isntAFormWeRecognise": "« {{name}} » n'est pas un formulaire que nous reconnaissons.",
+    "noOneInBranchMatches": "Personne dans votre antenne ne correspond à « {{query}} »."
   },
   "members": {
     "theyArenTInTheDirectory": "Ils ne sont pas dans l'annuaire : nous enregistrerons donc le nom sans dossier.",
@@ -1520,7 +1576,12 @@
     "registrationRejected": "Inscription refusée.",
     "failedRejectRegistrationTryAgain": "Échec du refus de l'inscription. Veuillez réessayer.",
     "failedApproveMemberTryAgain": "Échec de l'approbation du membre. Veuillez réessayer.",
-    "memberRemovedSystem": "Membre retiré du système."
+    "memberRemovedSystem": "Membre retiré du système.",
+    "membersImportedSuccessfully_one": "{{count}} membre importé avec succès",
+    "membersImportedSuccessfully_other": "{{count}} membres importés avec succès",
+    "errorsRowsSkipped_one": "Erreurs ({{count}} ligne ignorée) :",
+    "errorsRowsSkipped_other": "Erreurs ({{count}} lignes ignorées) :",
+    "completedTheClassOn": "A terminé la classe le"
   },
   "membership": {
     "eGWhoWeAreAs": "ex. Qui nous sommes en tant qu'église",
@@ -1635,7 +1696,10 @@
     "inductionRecordedFor_one": "Intégration enregistrée pour {{count}} membre.",
     "inductionRecordedFor_other": "Intégration enregistrée pour {{count}} membres.",
     "graduatedMembers_one": "{{count}} membre diplômé.",
-    "graduatedMembers_other": "{{count}} membres diplômés."
+    "graduatedMembers_other": "{{count}} membres diplômés.",
+    "selectedCount": "{{count}} sélectionné(s)",
+    "showingOfTotal": "Affichage de {{shown}} sur {{total}}.",
+    "noHomeBranch": "Aucune antenne d'origine"
   },
   "newBelievers": {
     "unassigned": "Non attribué",
@@ -2013,7 +2077,9 @@
     "beforeAccepting": "avant d'accepter.",
     "listOr": ", ou ",
     "trackWhichPoliciesVeAcceptedWhen": "Suivez les politiques que vous avez acceptées et à quelle date.",
-    "legalConsent": "Mentions légales et consentement"
+    "legalConsent": "Mentions légales et consentement",
+    "docWithVersion": "{{name}} (v{{version}})",
+    "readTheDoc": "Lire {{name}}"
   },
   "marketing": {
     "helpGuides": "Aide et guides",

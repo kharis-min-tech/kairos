@@ -106,8 +106,8 @@ function ConfirmLinkContent() {  const { t } = useTranslation(['auth', 'common']
           {provider && (
             <OAuthProviderIcon provider={provider as OAuthProviderId} className="mt-0.5 h-5 w-5 shrink-0" />
           )}
-          <p className="text-sm text-foreground">{t('auth:weFoundAKairosAccountFor')}<span className="font-semibold">{email ?? 'your email'}</span>.
-            Enter your password to link it with your {providerName} account.
+          <p className="text-sm text-foreground">{t('auth:weFoundAKairosAccountFor')}<span className="font-semibold">{email ?? t('auth:yourEmailFallback')}</span>.{' '}
+            {t('auth:enterPasswordToLinkProvider', { provider: providerName })}
           </p>
         </div>
 

@@ -108,8 +108,10 @@ export function WhereIBelongCard({
                 <p className="text-sm font-medium">{t('settings:activeBranch')}</p>
                 <p className="text-xs text-muted-foreground">
                   {isAtSecondaryBranch
-                    ? `Currently at ${secondary.branchName} (secondary)`
-                    : `Currently at ${home?.branchName ?? 'home branch'}`}
+                    ? t('settings:currentlyAtSecondary', { name: secondary.branchName })
+                    : t('settings:currentlyAt', {
+                        name: home?.branchName ?? t('settings:homeBranchFallback'),
+                      })}
                 </p>
               </div>
               {onSwitchBranch && (
@@ -162,7 +164,7 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {  c
         {fellowships.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              My Fellowships ({fellowships.length})
+              {t('settings:myFellowshipsCount', { count: fellowships.length })}
             </p>
             <ul className="mt-2 space-y-1.5">
               {fellowships.map((f) => (
@@ -175,7 +177,7 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {  c
                     {f.fellowshipName}
                     {f.fellowshipType && (
                       <span className="text-xs text-muted-foreground">
-                        · {f.fellowshipType}
+                        {`· ${f.fellowshipType}`}
                       </span>
                     )}
                   </Link>
@@ -188,7 +190,7 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {  c
         {depts.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              My Departments ({depts.length})
+              {t('settings:myDepartmentsCount', { count: depts.length })}
             </p>
             <ul className="mt-2 space-y-1.5">
               {depts.map((d) => (

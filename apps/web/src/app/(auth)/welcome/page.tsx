@@ -72,7 +72,7 @@ export default function WelcomePage() {  const { t } = useTranslation(['auth', '
           </Link>
 
           <p className="text-center text-xs text-muted-foreground">
-            New to Kairos?{' '}
+            {t('auth:newToKairos')}{' '}
             <a
               href="https://docs.kairos.kharis.org/getting-started/introduction"
               target="_blank"

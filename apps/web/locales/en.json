@@ -209,7 +209,34 @@
       "fellowshipAndDepartmentLead": "Fellowship & Department Lead",
       "leader": "Leader",
       "member": "Member"
-    }
+    },
+    "showingDataFromTo": "Showing data from {{from}} to {{to}}",
+    "ragNoFollowUpYet": "• No follow-up logged yet",
+    "ragNewFollowing3Days": "• New/Following Up: 3+ days since last contact",
+    "ragInterested5Days": "• Interested: 5+ days since last contact",
+    "ragNewFollowing2Days": "• New/Following Up: 2 days since last contact",
+    "ragInterested34Days": "• Interested: 3-4 days since last contact",
+    "ragNewFollowingUnder2": "• New/Following Up: < 2 days since last contact",
+    "ragInterestedUnder3": "• Interested: < 3 days since last contact",
+    "ragConvertedNotInterestedLost": "• Converted/Not Interested/Lost Contact",
+    "fuRagNoFollowUpLogged": "• No follow-up logged",
+    "fuRagOverdue3Days": "• Overdue: 3+ days (New/Following Up)",
+    "fuRagOverdue5Days": "• Overdue: 5+ days (Interested)",
+    "fuRagWrongNumberDeclined": "• Contact Status: Wrong Number, Declined",
+    "fuRagDueSoon2Days": "• Due soon: 2 days (New/Following Up)",
+    "fuRagDueSoon34Days": "• Due soon: 3-4 days (Interested)",
+    "fuRagNoAnswerBusy": "• Contact Status: No Answer, Busy",
+    "fuRagOnTrackOrNotNeeded": "• On track or no follow-up needed",
+    "fuRagSuccessful": "• Contact Status: Successful",
+    "assimilationFormula": "Formula: souls reaching stage B / souls reaching stage A × 100",
+    "assimilationThresholds": "Thresholds: ≥{{green}}% green · ≥{{amber}}% amber · below = red.",
+    "lastContactWhen": "Last contact: {{when}}",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "lastPresentOfTotal": " · last {{present}}/{{total}}",
+    "lastPresentCount": " · last {{count}} present",
+    "weeksRunning_one": "{{count}} week running",
+    "weeksRunning_other": "{{count}} weeks running"
   },
   "nav": {
     "sections": {
@@ -340,7 +367,12 @@
     "lightDarkMatchDeviceSPreference": "Light, dark, or match your device's preference.",
     "legalConsent": "Legal & consent",
     "yourDataBeenDownloadedReadableReport": "Your data has been downloaded as a readable report.",
-    "yourDataBeenDownloadedJson": "Your data has been downloaded as JSON."
+    "yourDataBeenDownloadedJson": "Your data has been downloaded as JSON.",
+    "currentlyAtSecondary": "Currently at {{name}} (secondary)",
+    "currentlyAt": "Currently at {{name}}",
+    "homeBranchFallback": "home branch",
+    "myFellowshipsCount": "My Fellowships ({{count}})",
+    "myDepartmentsCount": "My Departments ({{count}})"
   },
   "auth": {
     "dailyVerse": "DAILY VERSE",
@@ -468,7 +500,14 @@
     "weVeSentVerificationLinkEmail": "We've sent a verification link to your email address. Click the link to confirm your email and complete registration.",
     "theLinkMayExpiredVeAlready": "The link may have expired, or you've already verified this email.",
     "signInAction": "Sign in",
-    "dontHaveAnAccount": "Don't have an account?"
+    "dontHaveAnAccount": "Don't have an account?",
+    "alreadyApproved": "Already approved?",
+    "alreadyHaveAnAccount": "Already have an account?",
+    "newToKairos": "New to Kairos?",
+    "oneHour": "1 hour",
+    "youllReceiveNotificationWhenActivated": "You'll receive a notification once your account is activated.",
+    "yourEmailFallback": "your email",
+    "enterPasswordToLinkProvider": "Enter your password to link it with your {{provider}} account."
   },
   "branches": {
     "selectARegion": "Select a region",
@@ -544,7 +583,11 @@
     "leaderRemoved": "Leader removed.",
     "failedRemoveLeaderTryAgain": "Failed to remove leader. Please try again.",
     "branchDeactivated": "Branch deactivated.",
-    "failedDeactivateBranchTryAgain": "Failed to deactivate branch. Please try again."
+    "failedDeactivateBranchTryAgain": "Failed to deactivate branch. Please try again.",
+    "noLeadershipRecordsYet": "No leadership records yet.",
+    "noLeadershipAssignedYet2": "No leadership assigned yet.",
+    "noBranchSystemAdminsYet": "No Branch System Admins assigned yet.",
+    "addOneToGetStarted": "Add one to get started."
   },
   "admin": {
     "selectContinent": "Select continent…",
@@ -560,7 +603,9 @@
     "newRegion": "+ New Region",
     "regionUpdated": "Region updated.",
     "regionCreated": "Region created.",
-    "regionDeleted": "Region deleted."
+    "regionDeleted": "Region deleted.",
+    "manageRegions": "Manage geographic regions",
+    "manageRegionsWithTotal": "Manage geographic regions, {{count}} total"
   },
   "attendance": {
     "members": "Members",
@@ -657,7 +702,12 @@
     "everyServiceInTheWindowOldest": "Every service in the window, oldest first.",
     "noServicesInThisWindowYet": "No services in this window yet.",
     "expectedAttendance": "Expected attendance",
-    "pointCameraCodeAdminDeskScreen": "Point your camera at the code on the admin desk screen."
+    "pointCameraCodeAdminDeskScreen": "Point your camera at the code on the admin desk screen.",
+    "attendanceRateWeeks": "Attendance rate ({{count}} weeks)",
+    "attendedOfServices": "{{attended}} attended of {{total}} services",
+    "lastSeenAt": "Last seen at",
+    "onDate": "on {{date}}",
+    "typedService": "{{type}} Service"
   },
   "reports": {
     "allBranches": "All branches",
@@ -1086,7 +1136,10 @@
     "departmentDeactivated": "Department deactivated.",
     "failedDeactivateDepartmentTryAgain": "Failed to deactivate department. Please try again.",
     "toastInterviewScheduled": "Interview scheduled.",
-    "toastOfferExtended": "Offer extended."
+    "toastOfferExtended": "Offer extended.",
+    "noStatusSwapRequests": "No {{status}} swap requests.",
+    "noUpcomingAssignments2": "No upcoming assignments.",
+    "useAssignDateToSchedule": "Use “Assign date” to schedule one."
   },
   "fellowships": {
     "serviceAttendance": "Service attendance",
@@ -1347,7 +1400,10 @@
     "branch": "Branch",
     "submitted": "Submitted",
     "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church is committed to respecting the privacy and security of your personal data. We use the information you provide to be able to contact you, conduct home visits where appropriate and to administer and keep you informed of church related activities, such as new believers classes. The information you provide will be shared with our internal teams for such purposes. We securely store this information until it is no longer required.",
-    "formsDataCapture": "Forms & Data Capture"
+    "formsDataCapture": "Forms & Data Capture",
+    "submittingForBranch": "Submitting for branch",
+    "isntAFormWeRecognise": "“{{name}}” isn’t a form we recognise.",
+    "noOneInBranchMatches": "No one in your branch matches “{{query}}”."
   },
   "members": {
     "directoryMember": "Directory member",
@@ -1520,7 +1576,12 @@
     "registrationRejected": "Registration rejected.",
     "failedRejectRegistrationTryAgain": "Failed to reject registration. Please try again.",
     "failedApproveMemberTryAgain": "Failed to approve member. Please try again.",
-    "memberRemovedSystem": "Member removed from system."
+    "memberRemovedSystem": "Member removed from system.",
+    "membersImportedSuccessfully_one": "{{count}} member imported successfully",
+    "membersImportedSuccessfully_other": "{{count}} members imported successfully",
+    "errorsRowsSkipped_one": "Errors ({{count}} row skipped):",
+    "errorsRowsSkipped_other": "Errors ({{count}} rows skipped):",
+    "completedTheClassOn": "Completed the class on"
   },
   "membership": {
     "cohortView": "Cohort view",
@@ -1635,7 +1696,10 @@
     "inductionRecordedFor_one": "Induction recorded for {{count}} member.",
     "inductionRecordedFor_other": "Induction recorded for {{count}} members.",
     "graduatedMembers_one": "Graduated {{count}} member.",
-    "graduatedMembers_other": "Graduated {{count}} members."
+    "graduatedMembers_other": "Graduated {{count}} members.",
+    "selectedCount": "{{count}} selected",
+    "showingOfTotal": "Showing {{shown}} of {{total}}.",
+    "noHomeBranch": "No home branch"
   },
   "newBelievers": {
     "unassigned": "Unassigned",
@@ -2013,7 +2077,9 @@
     "beforeAccepting": "before accepting.",
     "listOr": ", or ",
     "trackWhichPoliciesVeAcceptedWhen": "Track which policies you've accepted and when.",
-    "legalConsent": "Legal & consent"
+    "legalConsent": "Legal & consent",
+    "docWithVersion": "{{name}} (v{{version}})",
+    "readTheDoc": "Read the {{name}}"
   },
   "marketing": {
     "kairosChurchAdministrationPlatform": "Kairos church administration platform",

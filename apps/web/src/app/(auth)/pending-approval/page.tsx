@@ -66,7 +66,7 @@ export default function PendingApprovalPage() {  const { t } = useTranslation(['
               </div>
 
               <p className="text-center text-sm text-muted-foreground/70">
-                Already approved?{' '}
+                {t('auth:alreadyApproved')}{' '}
                 <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:signIn')}</Link>
               </p>
             </>

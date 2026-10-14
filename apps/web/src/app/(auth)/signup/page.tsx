@@ -514,7 +514,7 @@ export default function SignupPage() {  const { t } = useTranslation(['auth', 'c
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            {t('auth:alreadyHaveAnAccount')}{' '}
             <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:signIn')}</Link>
           </p>
         </form>

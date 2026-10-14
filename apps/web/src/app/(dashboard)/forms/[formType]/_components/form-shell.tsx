@@ -45,7 +45,7 @@ export function FormShell({
 
       {branchName ? (
         <p className="text-xs text-muted-foreground">
-          Submitting for branch{' '}
+          {t('forms:submittingForBranch')}{' '}
           <span className="font-semibold text-[#5D3FD3]">{branchName}</span>
         </p>
       ) : null}

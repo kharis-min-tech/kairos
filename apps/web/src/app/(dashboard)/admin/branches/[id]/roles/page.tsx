@@ -145,7 +145,8 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
             </div>
           ) : activeRoles.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No Branch System Admins assigned yet. {canManage ? 'Add one to get started.' : ''}
+              {t('branches:noBranchSystemAdminsYet')}{' '}
+              {canManage ? t('branches:addOneToGetStarted') : ''}
             </p>
           ) : (
             <ul className="space-y-3">

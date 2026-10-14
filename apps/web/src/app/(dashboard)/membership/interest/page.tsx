@@ -154,7 +154,7 @@ export default function MembershipInterestPage() {  const { t } = useTranslation
         <Card className="border-[#5D3FD3]/40 bg-[#5D3FD3]/5">
           <CardContent className="flex flex-wrap items-center gap-3 py-3">
             <p className="text-sm font-medium text-foreground">
-              {selected.size} selected
+              {t('membership:selectedCount', { count: selected.size })}
             </p>
             <div className="min-w-48">
               <CustomSelect
@@ -203,7 +203,7 @@ export default function MembershipInterestPage() {  const { t } = useTranslation
 
       {data?.pagination && data.pagination.total > rows.length ? (
         <p className="text-xs text-muted-foreground">
-          Showing {rows.length} of {data.pagination.total}.
+          {t('membership:showingOfTotal', { shown: rows.length, total: data.pagination.total })}
         </p>
       ) : null}
     </div>
@@ -221,6 +221,7 @@ function InterestRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation(['membership', 'common']);
   // The signal that matters at admission time. Someone who has not been at a
   // service in three months is the case the lapse rule exists for, so say it
   // plainly rather than making the admin read a zero and infer it.
@@ -242,7 +243,7 @@ function InterestRow({
             {row.memberFirstName} {row.memberLastName}
           </p>
           <p className="text-xs text-muted-foreground">
-            {row.branchName ?? 'No home branch'}
+            {row.branchName ?? t('membership:noHomeBranch')}
             {row.memberEmail ? ` · ${row.memberEmail}` : ''}
           </p>
         </div>

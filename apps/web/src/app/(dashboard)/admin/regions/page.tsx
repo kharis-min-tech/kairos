@@ -109,7 +109,9 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('admin:regions')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage geographic regions{regions ? `, ${regions.length} total` : ''}
+            {regions
+              ? t('admin:manageRegionsWithTotal', { count: regions.length })
+              : t('admin:manageRegions')}
           </p>
         </div>
         <Button

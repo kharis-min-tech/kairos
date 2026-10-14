@@ -368,7 +368,9 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
           )}
 
           {!leadership || leadership.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No leadership {showHistory ? 'records' : 'assigned'} yet.</p>
+            <p className="text-sm text-muted-foreground">
+              {showHistory ? t('branches:noLeadershipRecordsYet') : t('branches:noLeadershipAssignedYet2')}
+            </p>
           ) : showHistory ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

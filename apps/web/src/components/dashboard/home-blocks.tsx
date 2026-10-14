@@ -302,11 +302,14 @@ export function GroupsBlock({
                 <p className="text-xs text-muted-foreground">
                   {group.kind === 'branch'
                     ? t('common:inCongregation', { count: group.headcount })
-                    : `${group.headcount} member${group.headcount === 1 ? '' : 's'}`}
+                    : t('common:memberCount', { count: group.headcount })}
                   {group.lastPresent !== null && group.lastTotal !== null
-                    ? ` · last ${group.lastPresent}/${group.lastTotal}`
+                    ? t('common:lastPresentOfTotal', {
+                        present: group.lastPresent,
+                        total: group.lastTotal,
+                      })
                     : group.lastPresent !== null
-                      ? ` · last ${group.lastPresent.toLocaleString()} present`
+                      ? t('common:lastPresentCount', { count: group.lastPresent })
                       : ''}
                 </p>
               </div>
@@ -446,7 +449,7 @@ export function StreakBlock({ weeks }: { weeks: number }) {  const { t } = useTr
       >
         <div>
           <p className="text-sm font-semibold text-foreground">
-            {weeks} week{weeks === 1 ? '' : 's'} running
+            {t('common:weeksRunning', { count: weeks })}
           </p>
           <p className="text-xs text-muted-foreground">{t('common:myAttendance')}</p>
         </div>

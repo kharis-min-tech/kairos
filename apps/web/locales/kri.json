@@ -209,7 +209,34 @@
       "fellowshipAndDepartmentLead": "Fɛloship ɛn Dipatmɛnt Lid",
       "leader": "Lida",
       "member": "Mɛmba"
-    }
+    },
+    "showingDataFromTo": "Di data frɔm {{from}} te {{to}}",
+    "ragNoFollowUpYet": "• Nɔ fɔlo ɔp nɔ rɛkɔd yet",
+    "ragNewFollowing3Days": "• Nyu/Wi de fɔlo ɔp: 3+ de sins di las tɔk",
+    "ragInterested5Days": "• I want: 5+ de sins di las tɔk",
+    "ragNewFollowing2Days": "• Nyu/Wi de fɔlo ɔp: 2 de sins di las tɔk",
+    "ragInterested34Days": "• I want: 3-4 de sins di las tɔk",
+    "ragNewFollowingUnder2": "• Nyu/Wi de fɔlo ɔp: lɛs dan 2 de sins di las tɔk",
+    "ragInterestedUnder3": "• I want: lɛs dan 3 de sins di las tɔk",
+    "ragConvertedNotInterestedLost": "• I dɔn kɔnvat/I nɔ want/Wi nɔ ebul fɔ get am",
+    "fuRagNoFollowUpLogged": "• Nɔ fɔlo ɔp nɔ rɛkɔd",
+    "fuRagOverdue3Days": "• Dɔn let: 3+ de (Nyu/Wi de fɔlo ɔp)",
+    "fuRagOverdue5Days": "• Dɔn let: 5+ de (I want)",
+    "fuRagWrongNumberDeclined": "• Aw di tɔk tan: Rɔng Nɔmba, I se nɔ",
+    "fuRagDueSoon2Days": "• I de kam sun: 2 de (Nyu/Wi de fɔlo ɔp)",
+    "fuRagDueSoon34Days": "• I de kam sun: 3-4 de (I want)",
+    "fuRagNoAnswerBusy": "• Aw di tɔk tan: Nɔbɔdi nɔ ansa, Lain bizi",
+    "fuRagOnTrackOrNotNeeded": "• I de go fayn ɔ nɔ fɔlo ɔp nɔ nid",
+    "fuRagSuccessful": "• Aw di tɔk tan: I wok",
+    "assimilationFormula": "Fɔmyula: sol dɛn we rich stej B / sol dɛn we rich stej A × 100",
+    "assimilationThresholds": "Limit dɛn: ≥{{green}}% grin · ≥{{amber}}% amba · anda dat = rɛd.",
+    "lastContactWhen": "Di las tɛm wi tɔk: {{when}}",
+    "memberCount_one": "{{count}} mɛmba",
+    "memberCount_other": "{{count}} mɛmba dɛn",
+    "lastPresentOfTotal": " · las {{present}}/{{total}}",
+    "lastPresentCount": " · las {{count}} bin de",
+    "weeksRunning_one": "{{count}} wik wan afta di ɔda",
+    "weeksRunning_other": "{{count}} wik wan afta di ɔda"
   },
   "nav": {
     "sections": {
@@ -340,7 +367,12 @@
     "lightDarkMatchDeviceSPreference": "Layt, dak, ɔ folo wetin yu divays layk.",
     "legalConsent": "Ligal ɛn pamishɔn",
     "yourDataBeenDownloadedReadableReport": "Wi dɔn dawnlod yu infɔmeshɔn as wan ripɔt we yu kin rid.",
-    "yourDataBeenDownloadedJson": "Wi dɔn dawnlod yu infɔmeshɔn as JSON."
+    "yourDataBeenDownloadedJson": "Wi dɔn dawnlod yu infɔmeshɔn as JSON.",
+    "currentlyAtSecondary": "Naw yu de na {{name}} (di ɔda wan)",
+    "currentlyAt": "Naw yu de na {{name}}",
+    "homeBranchFallback": "yu om branch",
+    "myFellowshipsCount": "Mi Fɛloship dɛn ({{count}})",
+    "myDepartmentsCount": "Mi Dipatmɛnt dɛn ({{count}})"
   },
   "auth": {
     "finishSettingUp": "Finish fɔ sɛt ɔp",
@@ -468,7 +500,14 @@
     "weVeSentVerificationLinkEmail": "Wi dɔn sɛn wan vɛrifikeshɔn link to yu imel adrɛs. Klik di link fɔ kɔnfam yu imel ɛn finish di rejistreshɔn.",
     "theLinkMayExpiredVeAlready": "Di link kin dɔn spɔyl, ɔ yu dɔn vɛrifay dis imel bifo.",
     "signInAction": "Sayn in",
-    "dontHaveAnAccount": "Yu nɔ gɛt akawnt?"
+    "dontHaveAnAccount": "Yu nɔ gɛt akawnt?",
+    "alreadyApproved": "Dɛn dɔn apruv yu?",
+    "alreadyHaveAnAccount": "Yu dɔn gɛt akawnt?",
+    "newToKairos": "Yu nyu to Kairos?",
+    "oneHour": "1 awa",
+    "youllReceiveNotificationWhenActivated": "Yu go gɛt wan notifikeshɔn we dɛn opin yu akawnt.",
+    "yourEmailFallback": "yu imel",
+    "enterPasswordToLinkProvider": "Put yu paswɔd fɔ link am wit yu {{provider}} akawnt."
   },
   "branches": {
     "deactivate": "Stɔp am",
@@ -544,7 +583,11 @@
     "leaderRemoved": "Wi pul di lida.",
     "failedRemoveLeaderTryAgain": "Wi nɔ ebul fɔ pul di lida. Duya tray igen.",
     "branchDeactivated": "Wi lɔk di branch.",
-    "failedDeactivateBranchTryAgain": "Wi nɔ ebul fɔ lɔk di branch. Duya tray igen."
+    "failedDeactivateBranchTryAgain": "Wi nɔ ebul fɔ lɔk di branch. Duya tray igen.",
+    "noLeadershipRecordsYet": "Nɔ lidaship rɛkɔd nɔ de yet.",
+    "noLeadershipAssignedYet2": "Nɔbɔdi nɔ gɛt lidaship yet.",
+    "noBranchSystemAdminsYet": "Nɔ Branch Sistɛm Admin nɔ gi yet.",
+    "addOneToGetStarted": "Ad wan fɔ bigin."
   },
   "admin": {
     "delete": "Dilit",
@@ -560,7 +603,9 @@
     "newRegion": "+ Nyu Rijɔn",
     "regionUpdated": "Wi chenj di rijɔn.",
     "regionCreated": "Wi mek di rijɔn.",
-    "regionDeleted": "Wi dilit di rijɔn."
+    "regionDeleted": "Wi dilit di rijɔn.",
+    "manageRegions": "Manej di jiografik rijɔn dɛn",
+    "manageRegionsWithTotal": "Manej di jiografik rijɔn dɛn, {{count}} ɔltugɛda"
   },
   "attendance": {
     "members": "Mɛmba dɛn",
@@ -657,7 +702,12 @@
     "noServicesInThisWindowYet": "Nɔ sɛvis nɔ de insay dis windo yet.",
     "branch": "Branch",
     "expectedAttendance": "Aw mɔch wi ɛkspɛkt fɔ kam",
-    "pointCameraCodeAdminDeskScreen": "Pwɛnt yu kamra to di kod pan di admin dɛsk skrin."
+    "pointCameraCodeAdminDeskScreen": "Pwɛnt yu kamra to di kod pan di admin dɛsk skrin.",
+    "attendanceRateWeeks": "Atɛndans ret ({{count}} wik)",
+    "attendedOfServices": "Yu kam {{attended}} awt pan {{total}} sɛvis",
+    "lastSeenAt": "Di las tɛm wi si yu na",
+    "onDate": "pan {{date}}",
+    "typedService": "{{type}} Sɛvis"
   },
   "reports": {
     "weeklyAttendance": "Wikli atɛndans",
@@ -1086,7 +1136,10 @@
     "departmentDeactivated": "Wi lɔk di dipatmɛnt.",
     "failedDeactivateDepartmentTryAgain": "Wi nɔ ebul fɔ lɔk di dipatmɛnt. Duya tray igen.",
     "toastInterviewScheduled": "Wi sɛt di intavyu.",
-    "toastOfferExtended": "Wi gi di ɔfa."
+    "toastOfferExtended": "Wi gi di ɔfa.",
+    "noStatusSwapRequests": "Nɔ {{status}} swap rikwɛst nɔ de.",
+    "noUpcomingAssignments2": "Nɔ asaynmɛnt nɔ de we de kam.",
+    "useAssignDateToSchedule": "Yuz “Asayn Det” fɔ sɛt wan."
   },
   "fellowships": {
     "serviceAttendance": "Sɛvis atɛndans",
@@ -1347,7 +1400,10 @@
     "submitted": "Wi sɛn am",
     "branch": "Branch",
     "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church prɔmis fɔ rispɛkt di praivasi ɛn sikyuriti fɔ yu pɔsinal infɔmeshɔn. Wi de yuz di infɔmeshɔn we yu gi so dat wi kin tɔk to yu, du om vizit usay i fit, ɛn fɔ rɔn ɛn tɛl yu bɔt chɔch tin dɛn, lɛk nyu biliva klas dɛn. Wi go sheb di infɔmeshɔn we yu gi wit wi insay tim dɛn fɔ dɛn rizin ya. Wi de kip am sef te wi nɔ nid am igen.",
-    "formsDataCapture": "Fɔm ɛn Data Kapchɔ"
+    "formsDataCapture": "Fɔm ɛn Data Kapchɔ",
+    "submittingForBranch": "Yu de sɛn am fɔ di branch",
+    "isntAFormWeRecognise": "“{{name}}” nɔto wan fɔm we wi no.",
+    "noOneInBranchMatches": "Nɔbɔdi na yu branch nɔ fit “{{query}}”."
   },
   "members": {
     "theyArenTInTheDirectory": "Dɛn nem nɔ de na di dayrɛktri, so wi go rikɔd di nem nɔmɔ widawt wan rikɔd.",
@@ -1520,7 +1576,12 @@
     "registrationRejected": "Wi rifyuz di rejistreshɔn.",
     "failedRejectRegistrationTryAgain": "Wi nɔ ebul fɔ rifyuz di rejistreshɔn. Duya tray igen.",
     "failedApproveMemberTryAgain": "Wi nɔ ebul fɔ apruv di mɛmba. Duya tray igen.",
-    "memberRemovedSystem": "Wi pul di mɛmba frɔm di sistɛm."
+    "memberRemovedSystem": "Wi pul di mɛmba frɔm di sistɛm.",
+    "membersImportedSuccessfully_one": "{{count}} mɛmba dɔn impɔt fayn",
+    "membersImportedSuccessfully_other": "{{count}} mɛmba dɔn impɔt fayn",
+    "errorsRowsSkipped_one": "Ɛrɔ dɛn ({{count}} rol wi skip):",
+    "errorsRowsSkipped_other": "Ɛrɔ dɛn ({{count}} rol wi skip):",
+    "completedTheClassOn": "I dɔn di klas pan"
   },
   "membership": {
     "eGWhoWeAreAs": "lɛkɛ Udat wi bi as wan church",
@@ -1635,7 +1696,10 @@
     "inductionRecordedFor_one": "Wi rɛkɔd di indɔkshɔn fɔ {{count}} mɛmba.",
     "inductionRecordedFor_other": "Wi rɛkɔd di indɔkshɔn fɔ {{count}} mɛmba.",
     "graduatedMembers_one": "{{count}} mɛmba dɔn gradyuet.",
-    "graduatedMembers_other": "{{count}} mɛmba dɔn gradyuet."
+    "graduatedMembers_other": "{{count}} mɛmba dɔn gradyuet.",
+    "selectedCount": "{{count}} we yu pik",
+    "showingOfTotal": "Wi de sho {{shown}} awt pan {{total}}.",
+    "noHomeBranch": "Nɔ om branch"
   },
   "newBelievers": {
     "unassigned": "Dɛn nɔ gi am to ɛnibɔdi",
@@ -2013,7 +2077,9 @@
     "beforeAccepting": "bifo yu gri.",
     "listOr": ", ɔ ",
     "trackWhichPoliciesVeAcceptedWhen": "Fɔlo wich pɔlisi dɛn yu dɔn gri to ɛn wɛn.",
-    "legalConsent": "Ligal ɛn pamishɔn"
+    "legalConsent": "Ligal ɛn pamishɔn",
+    "docWithVersion": "{{name}} (v{{version}})",
+    "readTheDoc": "Rid di {{name}}"
   },
   "marketing": {
     "helpGuides": "Ɛp ɛn gayd",

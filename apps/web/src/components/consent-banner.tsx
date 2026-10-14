@@ -59,7 +59,14 @@ export function ConsentBanner() {  const { t } = useTranslation(['security', 'co
             <p className="text-sm font-semibold">{t('security:pleaseReviewOurPolicies')}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {pending
-                .map((s) => `${CONSENT_TYPE_LABEL[s.consentType]} (v${s.currentVersion})`)
+                .map((s) =>
+                  t('legal:docWithVersion', {
+                    name: t(`legal:consentType.${s.consentType}`, {
+                      defaultValue: CONSENT_TYPE_LABEL[s.consentType],
+                    }),
+                    version: s.currentVersion,
+                  }),
+                )
                 .join(' · ')}
             </p>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -71,7 +78,11 @@ export function ConsentBanner() {  const { t } = useTranslation(['security', 'co
                   rel="noopener noreferrer"
                   className="font-medium text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
                 >
-                  Read the {CONSENT_TYPE_LABEL[s.consentType]}
+                  {t('legal:readTheDoc', {
+                    name: t(`legal:consentType.${s.consentType}`, {
+                      defaultValue: CONSENT_TYPE_LABEL[s.consentType],
+                    }),
+                  })}
                 </Link>
               ))}
             </p>

@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {  const { t } = useTranslation(['a
           <div className="rounded-lg bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-400">
             If an account exists for that email address, we&apos;ve sent a password reset link. Check your inbox and spam folder.
           </div>
-          <p className="text-sm text-muted-foreground">{t('auth:theLinkWillExpireIn')}<span className="font-medium text-foreground">1 hour</span>.
+          <p className="text-sm text-muted-foreground">{t('auth:theLinkWillExpireIn')}<span className="font-medium text-foreground">{t('auth:oneHour')}</span>.
           </p>
           {devToken && (
             <div className="rounded-lg bg-[#f8b537]/10 p-4 space-y-2">

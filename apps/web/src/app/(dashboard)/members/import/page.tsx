@@ -153,11 +153,11 @@ export default function MembersImportPage() {  const { t } = useTranslation(['me
               <svg className="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{result.imported} member(s) imported successfully</p>
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('members:membersImportedSuccessfully', { count: result.imported })}</p>
             </div>
             {result.errors.length > 0 && (
               <div className="space-y-1">
-                <p className="text-sm font-medium text-destructive">Errors ({result.errors.length} rows skipped):</p>
+                <p className="text-sm font-medium text-destructive">{t('members:errorsRowsSkipped', { count: result.errors.length })}</p>
                 <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
                   {result.errors.map((e, i) => (
                     <li key={i}>{e}</li>

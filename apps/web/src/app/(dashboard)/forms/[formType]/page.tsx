@@ -35,7 +35,7 @@ export default function FormFillPage({
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-2xl font-bold text-foreground">{t('forms:formNotFound')}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          “{formType}” isn’t a form we recognise.
+          {t('forms:isntAFormWeRecognise', { name: formType })}
         </p>
         <Link href="/forms" className="mt-6 inline-block">
           <Button className="bg-[#5D3FD3] hover:bg-[#451ebb]">{t('forms:backToForms')}</Button>

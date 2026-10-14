@@ -80,28 +80,28 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {  const
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Attendance rate ({snapshot.windowWeeks} weeks)
+              {t('attendance:attendanceRateWeeks', { count: snapshot.windowWeeks })}
             </p>
             <p className={`mt-1 text-5xl font-bold ${tone.tone}`}>{ratePct}%</p>
             <p className={`mt-1 text-sm font-medium ${tone.tone}`}>{tone.label}</p>
           </div>
           <div className="text-sm text-muted-foreground">
             <p>
-              <span className="font-semibold text-foreground">{snapshot.attendedCount}</span>{' '}
-              attended of{' '}
-              <span className="font-semibold text-foreground">{snapshot.servicesInWindow}</span>{' '}
-              services
+              {t('attendance:attendedOfServices', {
+                attended: snapshot.attendedCount,
+                total: snapshot.servicesInWindow,
+              })}
             </p>
             {snapshot.lastService && (
               <p className="mt-1">
-                Last seen at{' '}
+                {t('attendance:lastSeenAt')}{' '}
                 <Link
                   href={`/attendance/${snapshot.lastService.id}`}
                   className="font-medium text-[#5D3FD3] hover:underline"
                 >
-                  {snapshot.lastService.serviceTitle || `${snapshot.lastService.serviceType} Service`}
+                  {snapshot.lastService.serviceTitle || t('attendance:typedService', { type: snapshot.lastService.serviceType })}
                 </Link>{' '}
-                on {formatShortDate(snapshot.lastService.serviceDate)}
+                {t('attendance:onDate', { date: formatShortDate(snapshot.lastService.serviceDate) })}
               </p>
             )}
           </div>

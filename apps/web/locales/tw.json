@@ -209,7 +209,34 @@
       "fellowshipAndDepartmentLead": "Fekuo ne Adwumakuo Panin",
       "leader": "Ɔkannifoɔ",
       "member": "Ɔmanfoɔ"
-    }
+    },
+    "showingDataFromTo": "Nsɛm firi {{from}} kɔsi {{to}}",
+    "ragNoFollowUpYet": "• Wɔnkyerɛɛ nkɔdi akyi biara ɛnnɛ",
+    "ragNewFollowing3Days": "• Foforɔ/Yɛredi akyi: nna 3+ firi berɛ a yɛkasaeɛ",
+    "ragInterested5Days": "• N'ani gye ho: nna 5+ firi berɛ a yɛkasaeɛ",
+    "ragNewFollowing2Days": "• Foforɔ/Yɛredi akyi: nna 2 firi berɛ a yɛkasaeɛ",
+    "ragInterested34Days": "• N'ani gye ho: nna 3-4 firi berɛ a yɛkasaeɛ",
+    "ragNewFollowingUnder2": "• Foforɔ/Yɛredi akyi: nna 2 nnuruu firi berɛ a yɛkasaeɛ",
+    "ragInterestedUnder3": "• N'ani gye ho: nna 3 nnuruu firi berɛ a yɛkasaeɛ",
+    "ragConvertedNotInterestedLost": "• Wasakra/N'ani nnye ho/Yɛanhunu no bio",
+    "fuRagNoFollowUpLogged": "• Wɔnkyerɛɛ nkɔdi akyi biara",
+    "fuRagOverdue3Days": "• Aka akyi: nna 3+ (Foforɔ/Yɛredi akyi)",
+    "fuRagOverdue5Days": "• Aka akyi: nna 5+ (N'ani gye ho)",
+    "fuRagWrongNumberDeclined": "• Nkitahodie tebea: Nɔma a ɛnteɛ, Wampɛ",
+    "fuRagDueSoon2Days": "• Ɛreba: nna 2 (Foforɔ/Yɛredi akyi)",
+    "fuRagDueSoon34Days": "• Ɛreba: nna 3-4 (N'ani gye ho)",
+    "fuRagNoAnswerBusy": "• Nkitahodie tebea: Obiara ammua, Ɔyɛ adwuma",
+    "fuRagOnTrackOrNotNeeded": "• Ɛrekɔ yie anaa nkɔdi akyi nhia",
+    "fuRagSuccessful": "• Nkitahodie tebea: Ɛyɛɛ yie",
+    "assimilationFormula": "Akontabuo: akra a wɔduruu gyinaberɛ B / akra a wɔduruu gyinaberɛ A × 100",
+    "assimilationThresholds": "Ano: ≥{{green}}% ahabammono · ≥{{amber}}% akokɔsradeɛ · ase = kɔkɔɔ.",
+    "lastContactWhen": "Nkitahodie a ɛtwa toɔ: {{when}}",
+    "memberCount_one": "Ɔmanfoɔ {{count}}",
+    "memberCount_other": "Amanfoɔ {{count}}",
+    "lastPresentOfTotal": " · deɛ ɛtwa toɔ {{present}}/{{total}}",
+    "lastPresentCount": " · deɛ ɛtwa toɔ {{count}} baeɛ",
+    "weeksRunning_one": "Nnawɔtwe {{count}} a ɛtoatoa so",
+    "weeksRunning_other": "Nnawɔtwe {{count}} a ɛtoatoa so"
   },
   "nav": {
     "sections": {
@@ -340,7 +367,12 @@
     "lightDarkMatchDeviceSPreference": "Hann, esum, anaa di w'afidie deɛ ɛpɛ akyi.",
     "legalConsent": "Mmara ne Pene",
     "yourDataBeenDownloadedReadableReport": "Yɛatwe wo nsɛm sɛ amanneɛbɔ a wobɛtumi akenkan.",
-    "yourDataBeenDownloadedJson": "Yɛatwe wo nsɛm sɛ JSON."
+    "yourDataBeenDownloadedJson": "Yɛatwe wo nsɛm sɛ JSON.",
+    "currentlyAtSecondary": "Seesei wowɔ {{name}} (deɛ ɛtɔ so mmienu)",
+    "currentlyAt": "Seesei wowɔ {{name}}",
+    "homeBranchFallback": "wo fie asɔre baa",
+    "myFellowshipsCount": "M'Nkabomfekuo ({{count}})",
+    "myDepartmentsCount": "M'Adwumakuo ({{count}})"
   },
   "auth": {
     "finishSettingUp": "Wie nhyehyɛeɛ no",
@@ -468,7 +500,14 @@
     "weVeSentVerificationLinkEmail": "Yɛde nhwehwɛmu link akɔ w'email akyerɛw so. Klike link no na fa hyɛ w'email mu den na wie din kyerɛw no.",
     "theLinkMayExpiredVeAlready": "Ebia link no atwam, anaasɛ woahwɛ email yi dada.",
     "signInAction": "Hyɛn mu",
-    "dontHaveAnAccount": "Wonni akawnt?"
+    "dontHaveAnAccount": "Wonni akawnt?",
+    "alreadyApproved": "Wɔapene so dada?",
+    "alreadyHaveAnAccount": "Wowɔ akawnt dada?",
+    "newToKairos": "Woyɛ foforɔ wɔ Kairos?",
+    "oneHour": "dɔnhwere 1",
+    "youllReceiveNotificationWhenActivated": "Wobɛnya nkrasɛm sɛ wɔbue w'akawnt a.",
+    "yourEmailFallback": "w'email",
+    "enterPasswordToLinkProvider": "Hyɛ wo password na bata no wo {{provider}} akawnt ho."
   },
   "branches": {
     "deactivate": "Gyae",
@@ -544,7 +583,11 @@
     "leaderRemoved": "Yɛayi ɔkannifoɔ no.",
     "failedRemoveLeaderTryAgain": "Yɛantumi anyi ɔkannifoɔ no. Yɛsrɛ wo sɔ hwɛ bio.",
     "branchDeactivated": "Yɛadum asɔre baa no.",
-    "failedDeactivateBranchTryAgain": "Yɛantumi andum asɔre baa no. Yɛsrɛ wo sɔ hwɛ bio."
+    "failedDeactivateBranchTryAgain": "Yɛantumi andum asɔre baa no. Yɛsrɛ wo sɔ hwɛ bio.",
+    "noLeadershipRecordsYet": "Akannie nkrataa biara nni hɔ ɛnnɛ.",
+    "noLeadershipAssignedYet2": "Wɔnhyɛɛ ɔkannifoɔ biara ɛnnɛ.",
+    "noBranchSystemAdminsYet": "Wɔnhyɛɛ Asɔre Baa Sistem Sohwɛfoɔ biara ɛnnɛ.",
+    "addOneToGetStarted": "Fa bi ka ho na fi aseɛ."
   },
   "admin": {
     "delete": "Yi firi hɔ",
@@ -560,7 +603,9 @@
     "newRegion": "+ Mantam Foforɔ",
     "regionUpdated": "Yɛasesa mantam no.",
     "regionCreated": "Yɛayɛ mantam.",
-    "regionDeleted": "Yɛayi mantam no."
+    "regionDeleted": "Yɛayi mantam no.",
+    "manageRegions": "Hwɛ mantam ahorow so",
+    "manageRegionsWithTotal": "Hwɛ mantam ahorow so, {{count}} nyinaa"
   },
   "attendance": {
     "members": "Amanfoɔ",
@@ -657,7 +702,12 @@
     "everyServiceInTheWindowOldest": "Ɔsom biara a ɛwɔ berɛ no mu, deɛ adi mu kan.",
     "noServicesInThisWindowYet": "Ɔsom biara nni berɛ yi mu ɛnnɛ.",
     "expectedAttendance": "Mmaeɛ a Yɛhwɛ Kwan",
-    "pointCameraCodeAdminDeskScreen": "Fa wo mfoninitwa afidie kyerɛ kod a ɛwɔ ɛpono no screen so."
+    "pointCameraCodeAdminDeskScreen": "Fa wo mfoninitwa afidie kyerɛ kod a ɛwɔ ɛpono no screen so.",
+    "attendanceRateWeeks": "Mmaeɛ dodoɔ (nnawɔtwe {{count}})",
+    "attendedOfServices": "Wobaa {{attended}} wɔ ɔsom {{total}} mu",
+    "lastSeenAt": "Berɛ a yɛhunuu wo a ɛtwa toɔ wɔ",
+    "onDate": "wɔ {{date}}",
+    "typedService": "{{type}} Ɔsom"
   },
   "reports": {
     "weeklyAttendance": "Dapɛn biara mmaeɛ",
@@ -1086,7 +1136,10 @@
     "departmentDeactivated": "Yɛadum adwumakuo no.",
     "failedDeactivateDepartmentTryAgain": "Yɛantumi andum adwumakuo no. Yɛsrɛ wo sɔ hwɛ bio.",
     "toastInterviewScheduled": "Yɛahyehyɛ nsɛmmisa.",
-    "toastOfferExtended": "Yɛde adwuma no ama."
+    "toastOfferExtended": "Yɛde adwuma no ama.",
+    "noStatusSwapRequests": "Nsesaeɛ abisadeɛ {{status}} biara nni hɔ.",
+    "noUpcomingAssignments2": "Adwuma biara nni hɔ a ɛrebɛba.",
+    "useAssignDateToSchedule": "Fa “Hyɛ Da” di dwuma na hyehyɛ bi."
   },
   "fellowships": {
     "serviceAttendance": "Ɔsom mmaeɛ",
@@ -1347,7 +1400,10 @@
     "subject": "Asɛmti",
     "submitted": "Wɔde abrɛ",
     "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church ahyɛ bɔ sɛ ɔbɛbu wo ankasa nsɛm kokoamyɛ ne ahobammɔ. Yɛde nsɛm a wode ma di dwuma na yɛne wo akasa, akɔsra wo fie baabi a ɛfata, na yɛahwɛ asɔre nnwuma so na yɛabɔ wo ho amaneɛ, te sɛ gyidifoɔ foforɔ adesua. Yɛde nsɛm a wode ma no bɛma yɛn kuo a ɛwɔ mu ama saa botaeɛ no. Yɛkora so yie kɔsi sɛ yɛnhia bio.",
-    "formsDataCapture": "Fɔm ne Nsɛm Gyeɛ"
+    "formsDataCapture": "Fɔm ne Nsɛm Gyeɛ",
+    "submittingForBranch": "Wode rebrɛ asɔre baa",
+    "isntAFormWeRecognise": "“{{name}}” nyɛ fɔm a yɛnim.",
+    "noOneInBranchMatches": "Obiara nni w'asɔre baa mu a ɔhyia “{{query}}”."
   },
   "members": {
     "theyArenTInTheDirectory": "Wɔnni din nhoma no mu, enti yɛbɛkyerɛw din no nko ara.",
@@ -1520,7 +1576,12 @@
     "registrationRejected": "Yɛapow din kyerɛw no.",
     "failedRejectRegistrationTryAgain": "Yɛantumi ampow din kyerɛw no. Yɛsrɛ wo sɔ hwɛ bio.",
     "failedApproveMemberTryAgain": "Yɛantumi ampene ɔmanfoɔ no so. Yɛsrɛ wo sɔ hwɛ bio.",
-    "memberRemovedSystem": "Yɛayi ɔmanfoɔ no afiri sistem no mu."
+    "memberRemovedSystem": "Yɛayi ɔmanfoɔ no afiri sistem no mu.",
+    "membersImportedSuccessfully_one": "Yɛde ɔmanfoɔ {{count}} abra yie",
+    "membersImportedSuccessfully_other": "Yɛde amanfoɔ {{count}} abra yie",
+    "errorsRowsSkipped_one": "Mfomsoɔ (yɛtwaa nkyerɛwee {{count}} mu):",
+    "errorsRowsSkipped_other": "Mfomsoɔ (yɛtwaa nkyerɛwee {{count}} mu):",
+    "completedTheClassOn": "Ɔwiee adesuakuo no"
   },
   "membership": {
     "eGWhoWeAreAs": "te sɛ Yɛne hwan sɛ asɔre",
@@ -1635,7 +1696,10 @@
     "inductionRecordedFor_one": "Yɛakyerɛw nnyeto ama ɔmanfoɔ {{count}}.",
     "inductionRecordedFor_other": "Yɛakyerɛw nnyeto ama amanfoɔ {{count}}.",
     "graduatedMembers_one": "Ɔmanfoɔ {{count}} awie.",
-    "graduatedMembers_other": "Amanfoɔ {{count}} awie."
+    "graduatedMembers_other": "Amanfoɔ {{count}} awie.",
+    "selectedCount": "{{count}} a woayi",
+    "showingOfTotal": "Yɛrekyerɛ {{shown}} wɔ {{total}} mu.",
+    "noHomeBranch": "Fie asɔre baa biara nni hɔ"
   },
   "newBelievers": {
     "unassigned": "Wɔmmfaa mmaa obiara",
@@ -2013,7 +2077,9 @@
     "beforeAccepting": "ansa na wagye atom.",
     "listOr": ", anaa ",
     "trackWhichPoliciesVeAcceptedWhen": "Hwɛ nhyehyɛeɛ a woapene so ne berɛ a wopenee so.",
-    "legalConsent": "Mmara ne Pene"
+    "legalConsent": "Mmara ne Pene",
+    "docWithVersion": "{{name}} (v{{version}})",
+    "readTheDoc": "Kenkan {{name}}"
   },
   "marketing": {
     "helpGuides": "Mmoa ne akwankyerɛ",

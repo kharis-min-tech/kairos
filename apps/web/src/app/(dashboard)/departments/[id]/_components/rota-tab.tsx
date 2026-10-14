@@ -1340,7 +1340,9 @@ function SwapsSection({
       ) : !requests || requests.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">No {statusFilter} swap requests.</p>
+            <p className="text-sm text-muted-foreground">
+              {t('departments:noStatusSwapRequests', { status: statusFilter })}
+            </p>
           </CardContent>
         </Card>
       ) : (

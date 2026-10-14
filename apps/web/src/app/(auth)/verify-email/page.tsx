@@ -45,7 +45,7 @@ function VerifyEmailContent() {  const { t } = useTranslation(['auth', 'common']
 
         <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
-            <p className="text-sm text-muted-foreground">{t('auth:yourAccountIsNow')}<span className="font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('auth:pendingAdminApproval')}</span>. You&apos;ll receive a notification once your account is activated.
+            <p className="text-sm text-muted-foreground">{t('auth:yourAccountIsNow')}<span className="font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('auth:pendingAdminApproval')}</span>. {t('auth:youllReceiveNotificationWhenActivated')}
             </p>
             <button
               className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90"

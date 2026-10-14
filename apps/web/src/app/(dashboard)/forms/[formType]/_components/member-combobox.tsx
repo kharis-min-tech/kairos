@@ -251,7 +251,7 @@ export function MemberCombobox({
             ))
           ) : (
             <p className="px-3 py-2 text-sm text-muted-foreground">
-              No one in your branch matches “{text.trim()}”.
+              {t('forms:noOneInBranchMatches', { query: text.trim() })}
             </p>
           )}
 

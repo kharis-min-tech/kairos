@@ -183,8 +183,8 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {  cons
             <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loading')}</p>
           ) : upcomingAssignments.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No upcoming assignments.{' '}
-              {canManage && outfits.length > 0 && 'Use “Assign date” to schedule one.'}
+              {t('departments:noUpcomingAssignments2')}{' '}
+              {canManage && outfits.length > 0 && t('departments:useAssignDateToSchedule')}
               {canManage && outfits.length === 0 && 'Upload an outfit first.'}
             </p>
           ) : (

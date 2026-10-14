@@ -247,7 +247,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
               <div>
                 <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">{t('members:confirmedMember')}</p>
                 <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">
-                  Completed the class on{' '}
+                  {t('members:completedTheClassOn')}{' '}
                   {new Date(member.membershipClassCompletedAt).toLocaleDateString(undefined, {
                     year: 'numeric',
                     month: 'long',

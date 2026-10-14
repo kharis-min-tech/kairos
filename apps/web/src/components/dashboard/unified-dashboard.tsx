@@ -292,7 +292,10 @@ export function UnifiedDashboard({
           )}
           {dateFrom && dateTo && (
             <p className="text-xs text-muted-foreground">
-              Showing data from {formatShortDate(dateFrom)} to {formatShortDate(dateTo)}
+              {t('common:showingDataFromTo', {
+                from: formatShortDate(dateFrom),
+                to: formatShortDate(dateTo),
+              })}
             </p>
           )}
           {onProgramChange && (
@@ -383,24 +386,24 @@ export function UnifiedDashboard({
                   <div>
                     <p className="text-destructive font-semibold">{t('common:redRedCritical')}</p>
                     <ul className="ml-4 text-xs space-y-1">
-                      <li>• No follow-up logged yet</li>
-                      <li>• New/Following Up: 3+ days since last contact</li>
-                      <li>• Interested: 5+ days since last contact</li>
+                      <li>{t('common:ragNoFollowUpYet')}</li>
+                      <li>{t('common:ragNewFollowing3Days')}</li>
+                      <li>{t('common:ragInterested5Days')}</li>
                     </ul>
                   </div>
                   <div>
                     <p className="text-accent font-semibold">{t('common:amberAmberMonitor')}</p>
                     <ul className="ml-4 text-xs space-y-1">
-                      <li>• New/Following Up: 2 days since last contact</li>
-                      <li>• Interested: 3-4 days since last contact</li>
+                      <li>{t('common:ragNewFollowing2Days')}</li>
+                      <li>{t('common:ragInterested34Days')}</li>
                     </ul>
                   </div>
                   <div>
                     <p className="text-success font-semibold">{t('common:greenGreenOnTrack')}</p>
                     <ul className="ml-4 text-xs space-y-1">
-                      <li>• New/Following Up: &lt; 2 days since last contact</li>
-                      <li>• Interested: &lt; 3 days since last contact</li>
-                      <li>• Converted/Not Interested/Lost Contact</li>
+                      <li>{t('common:ragNewFollowingUnder2')}</li>
+                      <li>{t('common:ragInterestedUnder3')}</li>
+                      <li>{t('common:ragConvertedNotInterestedLost')}</li>
                     </ul>
                   </div>
                 </div>
@@ -486,25 +489,25 @@ export function UnifiedDashboard({
                   <div>
                     <p className="text-destructive font-semibold">{t('common:redRedCritical')}</p>
                     <ul className="ml-4 text-xs space-y-1">
-                      <li>• No follow-up logged</li>
-                      <li>• Overdue: 3+ days (New/Following Up)</li>
-                      <li>• Overdue: 5+ days (Interested)</li>
-                      <li>• Contact Status: Wrong Number, Declined</li>
+                      <li>{t('common:fuRagNoFollowUpLogged')}</li>
+                      <li>{t('common:fuRagOverdue3Days')}</li>
+                      <li>{t('common:fuRagOverdue5Days')}</li>
+                      <li>{t('common:fuRagWrongNumberDeclined')}</li>
                     </ul>
                   </div>
                   <div>
                     <p className="text-accent font-semibold">{t('common:amberAmberMonitor')}</p>
                     <ul className="ml-4 text-xs space-y-1">
-                      <li>• Due soon: 2 days (New/Following Up)</li>
-                      <li>• Due soon: 3-4 days (Interested)</li>
-                      <li>• Contact Status: No Answer, Busy</li>
+                      <li>{t('common:fuRagDueSoon2Days')}</li>
+                      <li>{t('common:fuRagDueSoon34Days')}</li>
+                      <li>{t('common:fuRagNoAnswerBusy')}</li>
                     </ul>
                   </div>
                   <div>
                     <p className="text-success font-semibold">{t('common:greenGreenOnTrack')}</p>
                     <ul className="ml-4 text-xs space-y-1">
-                      <li>• On track or no follow-up needed</li>
-                      <li>• Contact Status: Successful</li>
+                      <li>{t('common:fuRagOnTrackOrNotNeeded')}</li>
+                      <li>{t('common:fuRagSuccessful')}</li>
                     </ul>
                   </div>
                 </div>
@@ -599,11 +602,14 @@ export function UnifiedDashboard({
                 <p className="text-xs mb-2">{t('common:percentageOfSoulsWhoAdvancedFrom')}<em>{t('common:new2')}</em>{t('common:to')}<em>{t('common:converted2')}</em>.
                 </p>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Formula: souls reaching stage B / souls reaching stage A &times; 100
+                  {t('common:assimilationFormula')}
                 </p>
                 <p className="text-xs mt-2 text-success">{t('common:higherIsBetterMoreSoulsMoving')}</p>
                 <p className="text-xs mt-2 text-muted-foreground">
-                  Thresholds: &ge;{ASSIMILATION_THRESHOLDS.green}% green &middot; &ge;{ASSIMILATION_THRESHOLDS.amber}% amber &middot; below = red.
+                  {t('common:assimilationThresholds', {
+                    green: ASSIMILATION_THRESHOLDS.green,
+                    amber: ASSIMILATION_THRESHOLDS.amber,
+                  })}
                 </p>
               </InfoTooltip>
             </h3>
@@ -862,7 +868,9 @@ export function UnifiedDashboard({
                       
                       {soul.lastFollowUpDate && (
                         <p className="text-muted-foreground text-xs mt-2">
-                          Last contact: {formatDistanceToNow(new Date(soul.lastFollowUpDate), { addSuffix: true })}
+                          {t('common:lastContactWhen', {
+                            when: formatDistanceToNow(new Date(soul.lastFollowUpDate), { addSuffix: true }),
+                          })}
                         </p>
                       )}
                       
