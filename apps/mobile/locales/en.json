@@ -258,7 +258,8 @@
     "greeting": "Good day, {{name}}",
     "friend": "friend",
     "couldNotLoad": "We couldn't load your dashboard",
-    "retry": "Retry"
+    "retry": "Retry",
+    "verseInEnglish": "Shown in English"
   },
   "community": {
     "people": "People",

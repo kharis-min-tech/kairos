@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +12,7 @@ import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
 import type { Capability } from '@kairos/types';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
 import { ConsentBanner } from '@/components/consent-banner';
 // RBAC Phase 5b: in-app role switcher removed. Users see all their grants
@@ -23,7 +25,8 @@ import { ConsentBanner } from '@/components/consent-banner';
 // links automatically.
 type NavItem = {
   href: string;
-  label: string;
+  /** Catalogue key under `nav:items`, resolved at render. */
+  labelKey: string;
   adminOnly?: boolean;
   capability?: Capability;
   /**
@@ -60,48 +63,58 @@ const NAV_SECTIONS: NavSection[] = [
   'Organisation',
 ];
 
+/** Section names are the display order's source of truth; keys live here. */
+const SECTION_KEYS: Record<string, string> = {
+  'For you': 'forYou',
+  'People': 'people',
+  'Groups': 'groups',
+  'Gatherings': 'gatherings',
+  'Insights': 'insights',
+  'Organisation': 'organisation',
+};
+
 const navItems: NavItem[] = [
   // Ungrouped — the control centre is the front door, not a category.
-  { href: '/dashboard', label: 'Overview' },
+  { href: '/dashboard', labelKey: 'overview' },
 
-  { href: '/my-branch', label: 'My Branch', capability: 'branch:write', section: 'For you' },
-  { href: '/me/attendance', label: 'My Attendance', section: 'For you' },
-  { href: '/profile', label: 'Profile', section: 'For you' },
+  { href: '/my-branch', labelKey: 'myBranch', capability: 'branch:write', section: 'For you' },
+  { href: '/me/attendance', labelKey: 'myAttendance', section: 'For you' },
+  { href: '/profile', labelKey: 'profile', section: 'For you' },
 
-  { href: '/members', label: 'Members', capability: 'branch:write', section: 'People' },
-  { href: '/new-believers', label: 'New Believers', section: 'People' },
+  { href: '/members', labelKey: 'members', capability: 'branch:write', section: 'People' },
+  { href: '/new-believers', labelKey: 'newBelievers', section: 'People' },
   // Membership classes are church-wide, so every approved member sees this:
   // they can view cohorts and join the interest pool. Admin-only actions gate
   // inside the page.
-  { href: '/membership', label: 'Membership', section: 'People' },
+  { href: '/membership', labelKey: 'membership', section: 'People' },
   {
     href: '/concerns',
-    label: 'Concerns',
+    labelKey: 'concerns',
     anyCapability: ['branch:write', 'safeguarding:read'],
     section: 'People',
   },
-  { href: '/follow-ups', label: 'Follow-ups', capability: 'branch:write', section: 'People' },
-  { href: '/outreach/programs', label: 'Outreach Programs', section: 'People' },
-  { href: '/souls', label: 'Souls Pipeline', section: 'People' },
-  { href: '/forms', label: 'Forms', section: 'People' },
+  { href: '/follow-ups', labelKey: 'followUps', capability: 'branch:write', section: 'People' },
+  { href: '/outreach/programs', labelKey: 'outreachPrograms', section: 'People' },
+  { href: '/souls', labelKey: 'soulsPipeline', section: 'People' },
+  { href: '/forms', labelKey: 'forms', section: 'People' },
 
-  { href: '/fellowships', label: 'Fellowships', section: 'Groups' },
-  { href: '/departments', label: 'Departments', section: 'Groups' },
+  { href: '/fellowships', labelKey: 'fellowships', section: 'Groups' },
+  { href: '/departments', labelKey: 'departments', section: 'Groups' },
 
   // /attendance is open to all — page-level gating (canRecord) hides write CTAs
   // from non-writers, and Admin-dept members (systemRole='member') need the
   // entry point to reach the desk.
-  { href: '/attendance', label: 'Attendance', section: 'Gatherings' },
+  { href: '/attendance', labelKey: 'attendance', section: 'Gatherings' },
   // /attendance/check-in is the member self-check-in surface (honour system +
   // QR scanner). Open to any authenticated member — the API 403s if the branch
   // has self-check-in off.
-  { href: '/attendance/check-in', label: 'Check in', section: 'Gatherings' },
+  { href: '/attendance/check-in', labelKey: 'checkIn', section: 'Gatherings' },
 
-  { href: '/reports', label: 'Reports', section: 'Insights' },
-  { href: '/souls-dashboard', label: 'Souls Dashboard', section: 'Insights' },
+  { href: '/reports', labelKey: 'reports', section: 'Insights' },
+  { href: '/souls-dashboard', labelKey: 'soulsDashboard', section: 'Insights' },
 
-  { href: '/admin/branches', label: 'Branches', adminOnly: true, section: 'Organisation' },
-  { href: '/admin/regions', label: 'Regions', adminOnly: true, section: 'Organisation' },
+  { href: '/admin/branches', labelKey: 'branches', adminOnly: true, section: 'Organisation' },
+  { href: '/admin/regions', labelKey: 'regions', adminOnly: true, section: 'Organisation' },
 ];
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
@@ -255,6 +268,7 @@ function NavSectionHeader({
 }
 
 function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
+  const { t } = useTranslation(['nav', 'common']);
   const isActive = isItemActive(item.href, pathname);
 
   return (
@@ -269,7 +283,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
       )}
     >
       {NAV_ICONS[item.href]}
-      {item.label}
+      {t(`nav:items.${item.labelKey}`)}
       {item.badge && (
         <span className="ml-auto rounded-full bg-[#5D3FD3] px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
           {item.badge}
@@ -280,6 +294,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation(['nav', 'common']);
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -453,7 +468,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           return (
             <div key={section} className="pt-2">
               <NavSectionHeader
-                label={section}
+                label={t(`nav:sections.${SECTION_KEYS[section]}`)}
                 open={open}
                 onToggle={() =>
                   setToggledSections((prev) => ({ ...prev, [section]: !open }))
@@ -518,6 +533,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
           </Link>
           <ThemeToggle className="flex-shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
+          <LanguageToggle className="flex-shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
           <button
             onClick={handleLogout}
             className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
@@ -577,6 +593,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <span className="text-lg font-bold text-foreground">Kairos</span>
           </div>
           <ThemeToggle className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
+          <LanguageToggle className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
         </header>
 
         <main className="flex-1 overflow-y-auto">

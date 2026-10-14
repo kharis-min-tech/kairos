@@ -106,7 +106,8 @@
     "greeting": "Maakye, {{name}}",
     "friend": "adamfo",
     "couldNotLoad": "Yɛantumi amfa wo dashboard no",
-    "retry": "Sɔ hwɛ bio"
+    "retry": "Sɔ hwɛ bio",
+    "verseInEnglish": "Ɛwɔ Borɔfo mu"
   },
   "community": {
     "people": "Nnipa",

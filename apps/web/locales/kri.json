@@ -1,0 +1,49 @@
+{
+  "common": {
+    "signOut": "Kɔmɔt",
+    "save": "Sev",
+    "cancel": "Kansul",
+    "search": "Luk fɔ",
+    "loading": "I de lod…",
+    "retry": "Tray bak",
+    "somethingWentWrong": "Sɔntin go rɔng. Duya tray bak.",
+    "language": "Langwej",
+    "dailyVerse": "Vas fɔ tide",
+    "shownInEnglish": "I de sho na Inglish",
+    "matchBrowser": "Folo mi brawza",
+    "draft": "Nɔ chɛk yet",
+    "draftNote": "Krio ɛn Twi dɔn translet bɔt nativ spika nɔ chɛk am yet."
+  },
+  "nav": {
+    "sections": {
+      "forYou": "Fɔ yu",
+      "people": "Pipul",
+      "groups": "Grup",
+      "gatherings": "Gɛdarin",
+      "insights": "Insayt",
+      "organisation": "Ɔganisheshɔn"
+    },
+    "items": {
+      "overview": "Ɔvavyu",
+      "myBranch": "Mi branch",
+      "myAttendance": "Mi atɛndans",
+      "profile": "Profayl",
+      "members": "Mɛmba dɛn",
+      "newBelievers": "Nyu bilivа dɛn",
+      "membership": "Mɛmbaship",
+      "concerns": "Kɔnsan",
+      "followUps": "Fɔlo ɔp",
+      "outreachPrograms": "Awtrich program",
+      "soulsPipeline": "Sol payplayn",
+      "forms": "Fɔm",
+      "fellowships": "Fɛloship",
+      "departments": "Dipatmɛnt",
+      "attendance": "Atɛndans",
+      "checkIn": "Chɛk in",
+      "reports": "Ripɔt",
+      "soulsDashboard": "Sol dashbɔd",
+      "branches": "Branch dɛn",
+      "regions": "Rijɔn"
+    }
+  }
+}

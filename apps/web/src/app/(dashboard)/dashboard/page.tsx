@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { resolveVerse } from '@kairos/core';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMeHome, useMyLeadership } from '@/hooks/use-me';
@@ -31,19 +32,6 @@ import {
  * Mobile stacks the same blocks and reads priority top-down; here they're
  * zones and priority is read by position and size.
  */
-
-// ── Daily verses ───────────────────────────────────────────
-
-const DAILY_VERSES = [
-  { text: 'Let all that you do be done in love.', ref: 'Psalm 46:10' },
-  { text: 'Trust in the Lord with all your heart.', ref: 'Prov 3:5' },
-  { text: 'I can do all things through Christ who strengthens me.', ref: 'Phil 4:13' },
-  { text: 'Be still and know that I am God.', ref: 'Psalm 46:10' },
-  { text: 'The Lord is my shepherd; I shall not want.', ref: 'Psalm 23:1' },
-  { text: 'For I know the plans I have for you.', ref: 'Jer 29:11' },
-  { text: 'Love one another as I have loved you.', ref: 'John 15:12' },
-];
-const getDailyVerse = () => DAILY_VERSES[new Date().getDay() % DAILY_VERSES.length]!;
 
 // ── Role label ─────────────────────────────────────────────
 
@@ -178,7 +166,7 @@ export default function DashboardPage() {
     day: 'numeric',
     month: 'long',
   });
-  const verse = getDailyVerse();
+  const verse = resolveVerse('en');
 
   const bsaIds = leadership.data?.branchSystemAdminBranchIds ?? [];
   const bdaIds = leadership.data?.branchDataAdminBranchIds ?? [];
@@ -325,7 +313,9 @@ export default function DashboardPage() {
         <p className="mb-2 text-sm italic leading-relaxed text-foreground/80">
           &ldquo;{verse.text}&rdquo;
         </p>
-        <p className="text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">— {verse.ref}</p>
+        <p className="text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">
+          — {verse.ref} ({verse.version})
+        </p>
       </div>
     </div>
   );

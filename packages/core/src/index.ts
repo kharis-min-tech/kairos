@@ -1,4 +1,13 @@
 export {
+  DAILY_VERSES,
+  resolveVerse,
+  versionsFor,
+  type DailyVerse,
+  type VerseText,
+  type ResolvedVerse,
+} from './daily-verses';
+
+export {
   UK_DATE_LOCALE,
   formatDate,
   formatShortDate,

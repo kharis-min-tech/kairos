@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { resolveVerse } from '@kairos/core';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -49,7 +50,8 @@ import {
  * tree lives in the handlers below.
  */
 export default function Home() {
-  const { t } = useTranslation(['home', 'common']);
+  const { t, i18n } = useTranslation(['home', 'common']);
+  const verse = resolveVerse(i18n.language);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -270,10 +272,11 @@ export default function Home() {
 
         <View style={styles.verseCard}>
           <Text style={styles.verseEyebrow}>{t('home:dailyVerse')}</Text>
-          <Text style={styles.verseText}>
-            &ldquo;Be still, and know that I am God.&rdquo;
+          <Text style={styles.verseText}>{`\u201C${verse.text}\u201D`}</Text>
+          <Text style={styles.verseRef}>
+            {`— ${verse.ref} (${verse.version})`}
+            {verse.fellBackToEnglish ? ` · ${t('home:verseInEnglish')}` : ''}
           </Text>
-          <Text style={styles.verseRef}>— Psalm 46:10</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

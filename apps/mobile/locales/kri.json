@@ -106,7 +106,8 @@
     "greeting": "Gud de, {{name}}",
     "friend": "padi",
     "couldNotLoad": "Wi nɔ ebul fɔ lod yu dashbɔd",
-    "retry": "Tray bak"
+    "retry": "Tray bak",
+    "verseInEnglish": "I de sho na Inglish"
   },
   "community": {
     "people": "Pipul",

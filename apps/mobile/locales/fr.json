@@ -258,7 +258,8 @@
     "greeting": "Bonjour, {{name}}",
     "friend": "ami(e)",
     "couldNotLoad": "Impossible de charger votre tableau de bord",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "verseInEnglish": "Affiché en anglais"
   },
   "community": {
     "people": "Personnes",

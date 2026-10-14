@@ -1,0 +1,49 @@
+{
+  "common": {
+    "signOut": "Sign out",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "language": "Language",
+    "dailyVerse": "Daily verse",
+    "shownInEnglish": "Shown in English",
+    "matchBrowser": "Match my browser",
+    "draft": "Draft",
+    "draftNote": "Krio and Twi are translated but not yet checked by a native speaker."
+  },
+  "nav": {
+    "sections": {
+      "forYou": "For you",
+      "people": "People",
+      "groups": "Groups",
+      "gatherings": "Gatherings",
+      "insights": "Insights",
+      "organisation": "Organisation"
+    },
+    "items": {
+      "overview": "Overview",
+      "myBranch": "My Branch",
+      "myAttendance": "My Attendance",
+      "profile": "Profile",
+      "members": "Members",
+      "newBelievers": "New Believers",
+      "membership": "Membership",
+      "concerns": "Concerns",
+      "followUps": "Follow-ups",
+      "outreachPrograms": "Outreach Programs",
+      "soulsPipeline": "Souls Pipeline",
+      "forms": "Forms",
+      "fellowships": "Fellowships",
+      "departments": "Departments",
+      "attendance": "Attendance",
+      "checkIn": "Check in",
+      "reports": "Reports",
+      "soulsDashboard": "Souls Dashboard",
+      "branches": "Branches",
+      "regions": "Regions"
+    }
+  }
+}

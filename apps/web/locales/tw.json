@@ -1,0 +1,49 @@
+{
+  "common": {
+    "signOut": "Pue",
+    "save": "Sie",
+    "cancel": "Gyae",
+    "search": "Hwehwɛ",
+    "loading": "Ɛreba…",
+    "retry": "Sɔ hwɛ bio",
+    "somethingWentWrong": "Biribi ankɔ yie. Yɛsrɛ wo sɔ hwɛ bio.",
+    "language": "Kasa",
+    "dailyVerse": "Ɛnnɛ nkyekyɛm",
+    "shownInEnglish": "Ɛwɔ Borɔfo mu",
+    "matchBrowser": "Di me brawza akyi",
+    "draft": "Wɔnhwɛeɛ",
+    "draftNote": "Wɔakyerɛ Krio ne Twi ase nanso ɔmanfoɔ a wɔka no nhwɛɛ mu."
+  },
+  "nav": {
+    "sections": {
+      "forYou": "Wo deɛ",
+      "people": "Nnipa",
+      "groups": "Akuo",
+      "gatherings": "Nhyiamu",
+      "insights": "Nhwehwɛmu",
+      "organisation": "Nhyehyɛeɛ"
+    },
+    "items": {
+      "overview": "Nhwɛmu",
+      "myBranch": "Me asɔre baa",
+      "myAttendance": "Me mmaeɛ",
+      "profile": "Profayl",
+      "members": "Amanfoɔ",
+      "newBelievers": "Gyidifoɔ foforɔ",
+      "membership": "Amanfoɔ yɛ",
+      "concerns": "Nsɛm a ɛhia",
+      "followUps": "Nkɔdi akyi",
+      "outreachPrograms": "Asɛmpaka nhyehyɛeɛ",
+      "soulsPipeline": "Akra kwan",
+      "forms": "Krataa",
+      "fellowships": "Nkabomfekuo",
+      "departments": "Adwumakuo",
+      "attendance": "Mmaeɛ",
+      "checkIn": "Kyerɛ sɛ waba",
+      "reports": "Amanneɛbɔ",
+      "soulsDashboard": "Akra dashboard",
+      "branches": "Asɔre baa ahorow",
+      "regions": "Mpɔtam"
+    }
+  }
+}

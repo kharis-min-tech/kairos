@@ -1,0 +1,49 @@
+{
+  "common": {
+    "signOut": "Se déconnecter",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "search": "Rechercher",
+    "loading": "Chargement…",
+    "retry": "Réessayer",
+    "somethingWentWrong": "Une erreur s'est produite. Veuillez réessayer.",
+    "language": "Langue",
+    "dailyVerse": "Verset du jour",
+    "shownInEnglish": "Affiché en anglais",
+    "matchBrowser": "Suivre mon navigateur",
+    "draft": "Provisoire",
+    "draftNote": "Le krio et le twi sont traduits mais pas encore relus par un locuteur natif."
+  },
+  "nav": {
+    "sections": {
+      "forYou": "Pour vous",
+      "people": "Personnes",
+      "groups": "Groupes",
+      "gatherings": "Rassemblements",
+      "insights": "Analyses",
+      "organisation": "Organisation"
+    },
+    "items": {
+      "overview": "Vue d'ensemble",
+      "myBranch": "Mon antenne",
+      "myAttendance": "Ma présence",
+      "profile": "Profil",
+      "members": "Membres",
+      "newBelievers": "Nouveaux croyants",
+      "membership": "Adhésion",
+      "concerns": "Préoccupations",
+      "followUps": "Suivis",
+      "outreachPrograms": "Programmes d'évangélisation",
+      "soulsPipeline": "Parcours des âmes",
+      "forms": "Formulaires",
+      "fellowships": "Cellules",
+      "departments": "Départements",
+      "attendance": "Présence",
+      "checkIn": "Pointage",
+      "reports": "Rapports",
+      "soulsDashboard": "Tableau de bord des âmes",
+      "branches": "Antennes",
+      "regions": "Régions"
+    }
+  }
+}
