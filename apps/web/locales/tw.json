@@ -1139,7 +1139,11 @@
     "toastOfferExtended": "Yɛde adwuma no ama.",
     "noStatusSwapRequests": "Nsesaeɛ abisadeɛ {{status}} biara nni hɔ.",
     "noUpcomingAssignments2": "Adwuma biara nni hɔ a ɛrebɛba.",
-    "useAssignDateToSchedule": "Fa “Hyɛ Da” di dwuma na hyehyɛ bi."
+    "useAssignDateToSchedule": "Fa “Hyɛ Da” di dwuma na hyehyɛ bi.",
+    "myDepartments": "M'Adwumakuo",
+    "departments": "Adwumakuo",
+    "memberCount_one": "Ɔmanfoɔ {{count}}",
+    "memberCount_other": "Amanfoɔ {{count}}"
   },
   "fellowships": {
     "serviceAttendance": "Ɔsom mmaeɛ",
@@ -1342,7 +1346,9 @@
     "requestsApproved_one": "Yɛapene abisadeɛ {{count}} so.",
     "requestsApproved_other": "Yɛapene abisadeɛ {{count}} so.",
     "requestsRejected_one": "Yɛapow abisadeɛ {{count}}.",
-    "requestsRejected_other": "Yɛapow abisadeɛ {{count}}."
+    "requestsRejected_other": "Yɛapow abisadeɛ {{count}}.",
+    "fellowshipGroups": "Nkabomfekuo",
+    "fellowshipGroupsWithTotal": "Nkabomfekuo, {{count}} nyinaa"
   },
   "forms": {
     "remove": "Yi firi hɔ",
@@ -1581,7 +1587,13 @@
     "membersImportedSuccessfully_other": "Yɛde amanfoɔ {{count}} abra yie",
     "errorsRowsSkipped_one": "Mfomsoɔ (yɛtwaa nkyerɛwee {{count}} mu):",
     "errorsRowsSkipped_other": "Mfomsoɔ (yɛtwaa nkyerɛwee {{count}} mu):",
-    "completedTheClassOn": "Ɔwiee adesuakuo no"
+    "completedTheClassOn": "Ɔwiee adesuakuo no",
+    "directory": "Asɔre amanfoɔ nhwehwɛmu",
+    "directoryWithTotal": "Asɔre amanfoɔ nhwehwɛmu, {{count}} nyinaa",
+    "sinceDate": "Ɛfiri {{date}}",
+    "createdOn": "Wɔyɛeɛ {{date}}",
+    "dobSuffix": " · Awoda {{date}}",
+    "consentLastRecorded": "Berɛ a wɔkyerɛw pene a ɛtwa toɔ ne {{date}}."
   },
   "membership": {
     "eGWhoWeAreAs": "te sɛ Yɛne hwan sɛ asɔre",
@@ -1699,7 +1711,11 @@
     "graduatedMembers_other": "Amanfoɔ {{count}} awie.",
     "selectedCount": "{{count}} a woayi",
     "showingOfTotal": "Yɛrekyerɛ {{shown}} wɔ {{total}} mu.",
-    "noHomeBranch": "Fie asɔre baa biara nni hɔ"
+    "noHomeBranch": "Fie asɔre baa biara nni hɔ",
+    "sessionNumber": "Adesua {{number}}",
+    "sessionNumberTitled": "Adesua {{number}}: {{title}}",
+    "dateToBeConfirmed": "Yɛbɛka da no akyerɛ",
+    "didNotMeetTheGate": "{{name}} anni deɛ ɛhia so"
   },
   "newBelievers": {
     "unassigned": "Wɔmmfaa mmaa obiara",
@@ -1845,7 +1861,19 @@
     "membersAdvanced_other": "Amanfoɔ {{count}} akɔ w'anim",
     "advancedAndFailed": "{{advanced}} akɔ w'anim, {{failed}} antumi",
     "advancedToStage": "Wakɔ {{stage}} so",
-    "stageAdvancedTo": "Gyinaberɛ akɔ {{stage}} so"
+    "stageAdvancedTo": "Gyinaberɛ akɔ {{stage}} so",
+    "notAssigned": "Wɔnhyɛɛ obiara",
+    "thisStage": "gyinaberɛ yi",
+    "noActiveEnrollmentsAt": "Din kyerɛw biara a ɛrekɔ so nni {{stage}} mu.",
+    "showingActiveEnrollmentsAt_one": "Yɛrekyerɛ din kyerɛw {{count}} a ɛrekɔ so a ɛwɔ {{stage}} mu seesei.",
+    "showingActiveEnrollmentsAt_other": "Yɛrekyerɛ din kyerɛw {{count}} a ɛrekɔ so a ɛwɔ {{stage}} mu seesei.",
+    "upcomingCount": "Ɛrebɛba ({{count}})",
+    "pastCount": "Atwam ({{count}})",
+    "ofMarkedPresent": "{{present}} wɔ {{total}} mu na wɔakyerɛw sɛ wɔbaeɛ",
+    "candidatesOnlySuffix": " · {{stage}} wɔn nko ara",
+    "assignedAsBothStudentAndTeacher": "{{name}} yɛ osuani ne ɔkyerɛkyerɛni nyinaa wɔ din kyerɛw yi mu. Yɛsrɛ wo fa Sesa so sesa ɔkyerɛkyerɛni no.",
+    "enrolmentsNoProgress_one": "Din kyerɛw {{count}} nnyaa nkɔso biara nna 7 ni.",
+    "enrolmentsNoProgress_other": "Din kyerɛw {{count}} nnyaa nkɔso biara nna 7 ni."
   },
   "outreach": {
     "completed": "Awie",

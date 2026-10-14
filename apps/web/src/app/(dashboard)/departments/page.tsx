@@ -135,7 +135,7 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
       <div className="flex items-start justify-between pb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {isMemberView ? 'My Departments' : 'Departments'}
+            {isMemberView ? t('departments:myDepartments') : t('departments:departments')}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {isMemberView
@@ -276,7 +276,7 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
                         </span>
                       </p>
                       <p className="text-xs">
-                        {dept.memberCount ?? 0} member{(dept.memberCount ?? 0) === 1 ? '' : 's'}
+                        {t('departments:memberCount', { count: dept.memberCount ?? 0 })}
                       </p>
                       {dept.description && (
                         <p className="line-clamp-2 pt-1">{dept.description}</p>

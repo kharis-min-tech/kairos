@@ -135,7 +135,7 @@ export default function SessionsPage() {  const { t } = useTranslation(['newBeli
             {upcoming.length > 0 && (
               <section>
                 <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Upcoming ({upcoming.length})
+                  {t('newBelievers:upcomingCount', { count: upcoming.length })}
                 </h2>
                 <div className="space-y-1.5">
                   {upcoming.map((session) => (
@@ -153,7 +153,7 @@ export default function SessionsPage() {  const { t } = useTranslation(['newBeli
             {past.length > 0 && (
               <section>
                 <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Past ({past.length})
+                  {t('newBelievers:pastCount', { count: past.length })}
                 </h2>
                 <div className="space-y-1.5">
                   {past.map((session) => (

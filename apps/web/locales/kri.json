@@ -1139,7 +1139,11 @@
     "toastOfferExtended": "Wi gi di ɔfa.",
     "noStatusSwapRequests": "Nɔ {{status}} swap rikwɛst nɔ de.",
     "noUpcomingAssignments2": "Nɔ asaynmɛnt nɔ de we de kam.",
-    "useAssignDateToSchedule": "Yuz “Asayn Det” fɔ sɛt wan."
+    "useAssignDateToSchedule": "Yuz “Asayn Det” fɔ sɛt wan.",
+    "myDepartments": "Mi Dipatmɛnt dɛn",
+    "departments": "Dipatmɛnt dɛn",
+    "memberCount_one": "{{count}} mɛmba",
+    "memberCount_other": "{{count}} mɛmba dɛn"
   },
   "fellowships": {
     "serviceAttendance": "Sɛvis atɛndans",
@@ -1342,7 +1346,9 @@
     "requestsApproved_one": "{{count}} rikwɛst dɔn apruv.",
     "requestsApproved_other": "{{count}} rikwɛst dɔn apruv.",
     "requestsRejected_one": "{{count}} rikwɛst dɔn rifyuz.",
-    "requestsRejected_other": "{{count}} rikwɛst dɔn rifyuz."
+    "requestsRejected_other": "{{count}} rikwɛst dɔn rifyuz.",
+    "fellowshipGroups": "Fɛloship grup dɛn",
+    "fellowshipGroupsWithTotal": "Fɛloship grup dɛn, {{count}} ɔltugɛda"
   },
   "forms": {
     "remove": "Pul am",
@@ -1581,7 +1587,13 @@
     "membersImportedSuccessfully_other": "{{count}} mɛmba dɔn impɔt fayn",
     "errorsRowsSkipped_one": "Ɛrɔ dɛn ({{count}} rol wi skip):",
     "errorsRowsSkipped_other": "Ɛrɔ dɛn ({{count}} rol wi skip):",
-    "completedTheClassOn": "I dɔn di klas pan"
+    "completedTheClassOn": "I dɔn di klas pan",
+    "directory": "Di chɔch mɛmba dayrɛktri",
+    "directoryWithTotal": "Di chɔch mɛmba dayrɛktri, {{count}} ɔltugɛda",
+    "sinceDate": "Sins {{date}}",
+    "createdOn": "Wi mek am pan {{date}}",
+    "dobSuffix": " · bɔn pan {{date}}",
+    "consentLastRecorded": "Di las tɛm wi rɛkɔd di pamishɔn na {{date}}."
   },
   "membership": {
     "eGWhoWeAreAs": "lɛkɛ Udat wi bi as wan church",
@@ -1699,7 +1711,11 @@
     "graduatedMembers_other": "{{count}} mɛmba dɔn gradyuet.",
     "selectedCount": "{{count}} we yu pik",
     "showingOfTotal": "Wi de sho {{shown}} awt pan {{total}}.",
-    "noHomeBranch": "Nɔ om branch"
+    "noHomeBranch": "Nɔ om branch",
+    "sessionNumber": "Sɛshɔn {{number}}",
+    "sessionNumberTitled": "Sɛshɔn {{number}}: {{title}}",
+    "dateToBeConfirmed": "Wi go tɛl yu di de leta",
+    "didNotMeetTheGate": "{{name}} nɔ mit di rikwayamɛnt dɛn"
   },
   "newBelievers": {
     "unassigned": "Dɛn nɔ gi am to ɛnibɔdi",
@@ -1845,7 +1861,19 @@
     "membersAdvanced_other": "{{count}} mɛmba dɔn muv",
     "advancedAndFailed": "{{advanced}} dɔn muv, {{failed}} nɔ muv",
     "advancedToStage": "I muv go na {{stage}}",
-    "stageAdvancedTo": "Di stej muv go na {{stage}}"
+    "stageAdvancedTo": "Di stej muv go na {{stage}}",
+    "notAssigned": "Nɔbɔdi nɔ gɛt am",
+    "thisStage": "dis stej",
+    "noActiveEnrollmentsAt": "Nɔ aktiv rejistreshɔn nɔ de na {{stage}}.",
+    "showingActiveEnrollmentsAt_one": "Wi de sho {{count}} aktiv rejistreshɔn we de na {{stage}} naw.",
+    "showingActiveEnrollmentsAt_other": "Wi de sho {{count}} aktiv rejistreshɔn we de na {{stage}} naw.",
+    "upcomingCount": "We de kam ({{count}})",
+    "pastCount": "We dɔn pas ({{count}})",
+    "ofMarkedPresent": "{{present}} awt pan {{total}} wi mak se dɛn kam",
+    "candidatesOnlySuffix": " · {{stage}} kandidet dɛn nɔmɔ",
+    "assignedAsBothStudentAndTeacher": "{{name}} na di stɔdɛnt ɛn di tisha pan dis rejistreshɔn. Duya chenj di tisha wit Chenj am.",
+    "enrolmentsNoProgress_one": "{{count}} rejistreshɔn nɔ muv fɔ mɔ dan 7 de.",
+    "enrolmentsNoProgress_other": "{{count}} rejistreshɔn nɔ muv fɔ mɔ dan 7 de."
   },
   "outreach": {
     "completed": "I dɔn",

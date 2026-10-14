@@ -133,7 +133,9 @@ function FellowshipsContent() {  const { t } = useTranslation(['fellowships', 'c
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('fellowships:fellowships')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Fellowship groups{pagination ? `, ${pagination.total} total` : ''}
+            {pagination
+              ? t('fellowships:fellowshipGroupsWithTotal', { count: pagination.total })
+              : t('fellowships:fellowshipGroups')}
           </p>
         </div>
         {(caps.has('branch:write')) && (

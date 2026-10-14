@@ -329,8 +329,9 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
           <div>
             <p className="text-sm font-semibold text-[#f8b537]">{t('newBelievers:memberEnrolledAsTheirOwnTeacher')}</p>
             <p className="mt-0.5 text-xs font-medium text-[#f8b537]">
-              {enrollment.memberFirstName} {enrollment.memberLastName} is assigned as both the
-              student and the teacher on this enrolment. Please reassign the teacher using Edit.
+              {t('newBelievers:assignedAsBothStudentAndTeacher', {
+                name: `${enrollment.memberFirstName} ${enrollment.memberLastName}`,
+              })}
             </p>
           </div>
         </div>

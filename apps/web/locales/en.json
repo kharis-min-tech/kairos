@@ -1139,7 +1139,11 @@
     "toastOfferExtended": "Offer extended.",
     "noStatusSwapRequests": "No {{status}} swap requests.",
     "noUpcomingAssignments2": "No upcoming assignments.",
-    "useAssignDateToSchedule": "Use “Assign date” to schedule one."
+    "useAssignDateToSchedule": "Use “Assign date” to schedule one.",
+    "myDepartments": "My Departments",
+    "departments": "Departments",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members"
   },
   "fellowships": {
     "serviceAttendance": "Service attendance",
@@ -1342,7 +1346,9 @@
     "requestsApproved_one": "{{count}} request approved.",
     "requestsApproved_other": "{{count}} requests approved.",
     "requestsRejected_one": "{{count}} request rejected.",
-    "requestsRejected_other": "{{count}} requests rejected."
+    "requestsRejected_other": "{{count}} requests rejected.",
+    "fellowshipGroups": "Fellowship groups",
+    "fellowshipGroupsWithTotal": "Fellowship groups, {{count}} total"
   },
   "forms": {
     "remove": "Remove",
@@ -1581,7 +1587,13 @@
     "membersImportedSuccessfully_other": "{{count}} members imported successfully",
     "errorsRowsSkipped_one": "Errors ({{count}} row skipped):",
     "errorsRowsSkipped_other": "Errors ({{count}} rows skipped):",
-    "completedTheClassOn": "Completed the class on"
+    "completedTheClassOn": "Completed the class on",
+    "directory": "Church member directory",
+    "directoryWithTotal": "Church member directory, {{count}} total",
+    "sinceDate": "Since {{date}}",
+    "createdOn": "Created {{date}}",
+    "dobSuffix": " · DOB {{date}}",
+    "consentLastRecorded": "Consent last recorded {{date}}."
   },
   "membership": {
     "cohortView": "Cohort view",
@@ -1699,7 +1711,11 @@
     "graduatedMembers_other": "Graduated {{count}} members.",
     "selectedCount": "{{count}} selected",
     "showingOfTotal": "Showing {{shown}} of {{total}}.",
-    "noHomeBranch": "No home branch"
+    "noHomeBranch": "No home branch",
+    "sessionNumber": "Session {{number}}",
+    "sessionNumberTitled": "Session {{number}}: {{title}}",
+    "dateToBeConfirmed": "Date to be confirmed",
+    "didNotMeetTheGate": "{{name}} did not meet the gate"
   },
   "newBelievers": {
     "unassigned": "Unassigned",
@@ -1845,7 +1861,19 @@
     "membersAdvanced_other": "{{count}} members advanced",
     "advancedAndFailed": "{{advanced}} advanced, {{failed}} failed",
     "advancedToStage": "Advanced to {{stage}}",
-    "stageAdvancedTo": "Stage advanced to {{stage}}"
+    "stageAdvancedTo": "Stage advanced to {{stage}}",
+    "notAssigned": "Not assigned",
+    "thisStage": "this stage",
+    "noActiveEnrollmentsAt": "No active enrollments at {{stage}}.",
+    "showingActiveEnrollmentsAt_one": "Showing {{count}} active enrollment currently at {{stage}}.",
+    "showingActiveEnrollmentsAt_other": "Showing {{count}} active enrollments currently at {{stage}}.",
+    "upcomingCount": "Upcoming ({{count}})",
+    "pastCount": "Past ({{count}})",
+    "ofMarkedPresent": "{{present}} of {{total}} marked present",
+    "candidatesOnlySuffix": " · {{stage}} candidates only",
+    "assignedAsBothStudentAndTeacher": "{{name}} is assigned as both the student and the teacher on this enrolment. Please reassign the teacher using Edit.",
+    "enrolmentsNoProgress_one": "{{count}} enrolment has had no progress in over 7 days.",
+    "enrolmentsNoProgress_other": "{{count}} enrolments have had no progress in over 7 days."
   },
   "outreach": {
     "failedToLoadProgram": "Failed to load program",

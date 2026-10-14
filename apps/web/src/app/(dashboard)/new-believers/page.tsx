@@ -539,7 +539,7 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
       {alerts.length > 0 && (
         <div className="rounded-lg border border-[#f8b537]/40 bg-[#f8b537]/10 px-4 py-3">
           <p className="text-sm font-medium text-[#f8b537]">
-            {alerts.length} enrolment{alerts.length !== 1 ? 's have' : ' has'} had no progress in over 7 days.
+            {t('newBelievers:enrolmentsNoProgress', { count: alerts.length })}
           </p>
           <div className="mt-1 flex flex-wrap gap-1">
             {alerts.slice(0, 5).map((e) => (

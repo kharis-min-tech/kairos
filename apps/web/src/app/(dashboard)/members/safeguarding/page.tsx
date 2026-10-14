@@ -196,8 +196,10 @@ function DormantRow({ minor }: { minor: DormantMinor }) {  const { t } = useTran
           {minor.firstName} {minor.lastName}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          Created {formatShortDate(minor.createdAt)}
-          {minor.dateOfBirth ? ` · DOB ${formatShortDate(minor.dateOfBirth)}` : ''}
+          {t('members:createdOn', { date: formatShortDate(minor.createdAt) })}
+          {minor.dateOfBirth
+            ? t('members:dobSuffix', { date: formatShortDate(minor.dateOfBirth) })
+            : ''}
         </p>
         <p className="truncate text-xs text-muted-foreground/80">{lastReview}</p>
       </div>

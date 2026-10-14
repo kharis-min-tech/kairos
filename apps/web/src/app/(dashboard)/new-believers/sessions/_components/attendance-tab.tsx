@@ -118,8 +118,11 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          {`${presentCount} of ${mergedRows.length} marked present`}
-          {stageDef ? ` · ${stageDef.label} candidates only` : ''}
+          {t('newBelievers:ofMarkedPresent', {
+            present: presentCount,
+            total: mergedRows.length,
+          })}
+          {stageDef ? t('newBelievers:candidatesOnlySuffix', { stage: stageDef.label }) : ''}
         </p>
         {canRecordAttendance && (
           <div className="flex items-center gap-2">

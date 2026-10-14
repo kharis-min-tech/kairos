@@ -40,7 +40,9 @@ export function RosterTab({ branchId, sessionStage }: Props) {  const { t } = us
   if (enrolled.length === 0) {
     return (
       <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        No active enrollments at {stageDef?.label ?? 'this stage'}.
+        {t('newBelievers:noActiveEnrollmentsAt', {
+          stage: stageDef?.label ?? t('newBelievers:thisStage'),
+        })}
       </p>
     );
   }
@@ -48,8 +50,10 @@ export function RosterTab({ branchId, sessionStage }: Props) {  const { t } = us
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Showing {enrolled.length} active enrollment{enrolled.length === 1 ? '' : 's'} currently at{' '}
-        {stageDef?.label ?? sessionStage}.
+        {t('newBelievers:showingActiveEnrollmentsAt', {
+          count: enrolled.length,
+          stage: stageDef?.label ?? sessionStage,
+        })}
       </p>
       <div className="overflow-hidden rounded-lg border border-input/10">
         {enrolled.map((enrollment) => (

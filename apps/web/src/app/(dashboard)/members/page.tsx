@@ -143,7 +143,9 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('members:members')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Church member directory{pagination ? `, ${pagination.total} total` : ''}
+            {pagination
+              ? t('members:directoryWithTotal', { count: pagination.total })
+              : t('members:directory')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

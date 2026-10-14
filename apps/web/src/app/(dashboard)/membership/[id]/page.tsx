@@ -326,7 +326,9 @@ function SessionsTab({
           <Card key={number} className="border-dashed">
             <CardContent className="flex flex-wrap items-center justify-between gap-2 py-4">
               <div>
-                <p className="text-sm font-semibold text-foreground">Session {number}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {t('membership:sessionNumber', { number })}
+                </p>
                 <p className="text-xs text-muted-foreground">{t('membership:notScheduledYetAllFourAre')}</p>
               </div>
               <Button size="sm" variant="outline" onClick={() => setEditingNumber(number)}>
@@ -349,10 +351,13 @@ function SessionsTab({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Session {s.sessionNumber}: {s.title}
+                  {t('membership:sessionNumberTitled', {
+                    number: s.sessionNumber,
+                    title: s.title,
+                  })}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {s.sessionDate ? formatShortDate(s.sessionDate) : 'Date to be confirmed'}
+                  {s.sessionDate ? formatShortDate(s.sessionDate) : t('membership:dateToBeConfirmed')}
                   {s.location ? ` · ${s.location}` : ''}
                   {s.teacherFirstName
                     ? ` · taught by ${s.teacherFirstName} ${s.teacherLastName}`
@@ -783,7 +788,7 @@ function GraduationTab({
           <CardContent className="space-y-2 py-4">
             <p className="flex items-center gap-2 text-sm font-medium text-foreground">
               <AlertCircle className="size-4 text-destructive" />
-              {nameFor(b.enrollmentId)} did not meet the gate
+              {t('membership:didNotMeetTheGate', { name: nameFor(b.enrollmentId) })}
             </p>
             <ul className="space-y-1 text-xs text-muted-foreground">
               {b.outstanding.map((o) => (

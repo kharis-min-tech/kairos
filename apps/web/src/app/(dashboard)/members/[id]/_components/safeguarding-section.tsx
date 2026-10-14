@@ -151,7 +151,7 @@ function HealthRecordView({ record }: { record: MemberHealthRecord | null }) {  
         <ConsentRow label={t('members:dataProcessingConsent')} value={record.dataProcessingConsent} />
         {record.consentDate && (
           <p className="pt-1 text-xs text-muted-foreground">
-            Consent last recorded {record.consentDate}.
+            {t('members:consentLastRecorded', { date: record.consentDate })}
           </p>
         )}
       </div>

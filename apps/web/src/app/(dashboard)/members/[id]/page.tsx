@@ -345,7 +345,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   <div>
                     <p className="font-medium">{role.roleName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {role.branchName} &middot; Since {role.assignedDate}
+                      {role.branchName} &middot; {t('members:sinceDate', { date: role.assignedDate })}
                     </p>
                   </div>
                   {isAdmin && (

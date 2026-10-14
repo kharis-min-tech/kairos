@@ -1139,7 +1139,11 @@
     "toastOfferExtended": "Proposition envoyée.",
     "noStatusSwapRequests": "Aucune demande d'échange {{status}}.",
     "noUpcomingAssignments2": "Aucune affectation à venir.",
-    "useAssignDateToSchedule": "Utilisez « Attribuer une date » pour en planifier une."
+    "useAssignDateToSchedule": "Utilisez « Attribuer une date » pour en planifier une.",
+    "myDepartments": "Mes départements",
+    "departments": "Départements",
+    "memberCount_one": "{{count}} membre",
+    "memberCount_other": "{{count}} membres"
   },
   "fellowships": {
     "serviceAttendance": "Présence aux cultes",
@@ -1342,7 +1346,9 @@
     "requestsApproved_one": "{{count}} demande approuvée.",
     "requestsApproved_other": "{{count}} demandes approuvées.",
     "requestsRejected_one": "{{count}} demande refusée.",
-    "requestsRejected_other": "{{count}} demandes refusées."
+    "requestsRejected_other": "{{count}} demandes refusées.",
+    "fellowshipGroups": "Groupes de cellule",
+    "fellowshipGroupsWithTotal": "Groupes de cellule, {{count}} au total"
   },
   "forms": {
     "remove": "Retirer",
@@ -1581,7 +1587,13 @@
     "membersImportedSuccessfully_other": "{{count}} membres importés avec succès",
     "errorsRowsSkipped_one": "Erreurs ({{count}} ligne ignorée) :",
     "errorsRowsSkipped_other": "Erreurs ({{count}} lignes ignorées) :",
-    "completedTheClassOn": "A terminé la classe le"
+    "completedTheClassOn": "A terminé la classe le",
+    "directory": "Répertoire des membres de l'église",
+    "directoryWithTotal": "Répertoire des membres de l'église, {{count}} au total",
+    "sinceDate": "Depuis le {{date}}",
+    "createdOn": "Créé le {{date}}",
+    "dobSuffix": " · né(e) le {{date}}",
+    "consentLastRecorded": "Consentement enregistré pour la dernière fois le {{date}}."
   },
   "membership": {
     "eGWhoWeAreAs": "ex. Qui nous sommes en tant qu'église",
@@ -1699,7 +1711,11 @@
     "graduatedMembers_other": "{{count}} membres diplômés.",
     "selectedCount": "{{count}} sélectionné(s)",
     "showingOfTotal": "Affichage de {{shown}} sur {{total}}.",
-    "noHomeBranch": "Aucune antenne d'origine"
+    "noHomeBranch": "Aucune antenne d'origine",
+    "sessionNumber": "Séance {{number}}",
+    "sessionNumberTitled": "Séance {{number}} : {{title}}",
+    "dateToBeConfirmed": "Date à confirmer",
+    "didNotMeetTheGate": "{{name}} n'a pas rempli les conditions"
   },
   "newBelievers": {
     "unassigned": "Non attribué",
@@ -1845,7 +1861,19 @@
     "membersAdvanced_other": "{{count}} membres avancés",
     "advancedAndFailed": "{{advanced}} avancés, {{failed}} échoués",
     "advancedToStage": "Avancé à {{stage}}",
-    "stageAdvancedTo": "Étape avancée à {{stage}}"
+    "stageAdvancedTo": "Étape avancée à {{stage}}",
+    "notAssigned": "Non attribué",
+    "thisStage": "cette étape",
+    "noActiveEnrollmentsAt": "Aucune inscription active à l'étape {{stage}}.",
+    "showingActiveEnrollmentsAt_one": "Affichage de {{count}} inscription active actuellement à l'étape {{stage}}.",
+    "showingActiveEnrollmentsAt_other": "Affichage de {{count}} inscriptions actives actuellement à l'étape {{stage}}.",
+    "upcomingCount": "À venir ({{count}})",
+    "pastCount": "Passées ({{count}})",
+    "ofMarkedPresent": "{{present}} sur {{total}} marqués présents",
+    "candidatesOnlySuffix": " · candidats {{stage}} uniquement",
+    "assignedAsBothStudentAndTeacher": "{{name}} est à la fois l'élève et l'enseignant sur cette inscription. Veuillez réattribuer l'enseignant via Modifier.",
+    "enrolmentsNoProgress_one": "{{count}} inscription n'a connu aucun progrès depuis plus de 7 jours.",
+    "enrolmentsNoProgress_other": "{{count}} inscriptions n'ont connu aucun progrès depuis plus de 7 jours."
   },
   "outreach": {
     "completed": "Terminé",

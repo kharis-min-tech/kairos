@@ -221,7 +221,7 @@ export function EnrollmentDetailDrawer({
                   <p className="text-sm">
                     {enrollment.teacherFirstName
                       ? `${enrollment.teacherFirstName} ${enrollment.teacherLastName}`
-                      : 'Not assigned'}
+                      : t('newBelievers:notAssigned')}
                   </p>
                 )}
               </div>
@@ -238,7 +238,7 @@ export function EnrollmentDetailDrawer({
                   <p className="text-sm">
                     {enrollment.mentorFirstName
                       ? `${enrollment.mentorFirstName} ${enrollment.mentorLastName}`
-                      : 'Not assigned'}
+                      : t('newBelievers:notAssigned')}
                   </p>
                 )}
               </div>
