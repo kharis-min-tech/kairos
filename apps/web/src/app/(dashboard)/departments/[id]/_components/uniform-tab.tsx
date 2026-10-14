@@ -524,7 +524,7 @@ function UploadForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="outfit-notes">Notes (optional)</Label>
+        <Label htmlFor="outfit-notes">{t('departments:notesOptional')}</Label>
         <Textarea
           id="outfit-notes"
           value={notes}
@@ -615,7 +615,7 @@ function AssignForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="assign-notes">Notes (optional)</Label>
+        <Label htmlFor="assign-notes">{t('departments:notesOptional')}</Label>
         <Textarea
           id="assign-notes"
           value={notes}

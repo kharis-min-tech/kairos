@@ -162,9 +162,7 @@ export function EnrollDialog({
               placeholder={t('newBelievers:selectAMentor')}
             />
             {mentorHasNoEmail && (
-              <p className="mt-1 text-xs font-medium text-[#f8b537]">
-                This member has no email on file, so they won&apos;t receive an assignment notification.
-              </p>
+              <p className="mt-1 text-xs font-medium text-[#f8b537]">{t('newBelievers:thisMemberEmailFileSoThey')}</p>
             )}
           </div>
 

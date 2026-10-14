@@ -658,7 +658,7 @@ export function UnifiedDashboard({
               <InfoTooltip title={t('common:responseRate')}>
                 <p className="font-semibold text-foreground mb-2">{t('common:responseRate2')}</p>
                 <p className="text-xs mb-2">{t('common:percentageOfSoulsThatHaveBeen')}</p>
-                <p className="text-xs text-muted-foreground">Formula: (Converted Souls / Total Souls) × 100</p>
+                <p className="text-xs text-muted-foreground">{t('common:formulaConvertedSoulsTotalSouls100')}</p>
                 <p className="text-xs mt-2 text-success">{t('common:higherIsBetterIndicatesEffectiveOutreach')}</p>
               </InfoTooltip>
             </div>
@@ -671,7 +671,7 @@ export function UnifiedDashboard({
               <h4 className="text-muted-foreground text-sm">{t('common:activeFollowUps')}</h4>
               <InfoTooltip title={t('common:activeFollowUps')}>
                 <p className="font-semibold text-foreground mb-2">{t('common:activeFollowUps2')}</p>
-                <p className="text-xs mb-2">Number of souls currently in active follow-up stages (New, Following Up, or Interested).</p>
+                <p className="text-xs mb-2">{t('common:numberSoulsCurrentlyActiveFollowUp')}</p>
                 <p className="text-xs text-muted-foreground">{t('common:theseSoulsRequireOngoingEngagementAnd')}</p>
                 <p className="text-xs mt-2 text-accent">{t('common:monitorRegularlyToEnsureTimelyFollow')}</p>
               </InfoTooltip>
@@ -788,15 +788,15 @@ export function UnifiedDashboard({
             <ClipboardList className="h-5 w-5" />{t('common:quickGuide')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-destructive font-semibold mb-2">Critical (Red)</p>
+              <p className="text-destructive font-semibold mb-2">{t('common:criticalRed')}</p>
               <p className="text-muted-foreground">{t('common:theseSoulsNeedImmediateAttentionNo')}</p>
             </div>
             <div>
-              <p className="text-accent font-semibold mb-2">Monitor (Amber)</p>
+              <p className="text-accent font-semibold mb-2">{t('common:monitorAmber')}</p>
               <p className="text-muted-foreground">{t('common:followUpDueSoonKeepAn')}</p>
             </div>
             <div>
-              <p className="text-success font-semibold mb-2">On Track (Green)</p>
+              <p className="text-success font-semibold mb-2">{t('common:onTrackGreen')}</p>
               <p className="text-muted-foreground">{t('common:recentContactMadeOrNoFollow')}</p>
             </div>
           </div>

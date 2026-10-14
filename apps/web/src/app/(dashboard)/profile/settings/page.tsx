@@ -120,9 +120,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">{t('settings:changePassword')}</p>
-              <p className="text-xs text-muted-foreground">
-                Update your login password. You&apos;ll need your current one.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('settings:updateLoginPasswordLlNeedCurrent')}</p>
             </div>
             <Link href="/profile/settings/change-password">
               <Button variant="outline" size="sm" className="rounded-lg">{t('settings:change')}</Button>
@@ -159,9 +157,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium">{t('settings:theme')}</p>
-              <p className="text-xs text-muted-foreground">
-                Light, dark, or match your device&apos;s preference.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('settings:lightDarkMatchDeviceSPreference')}</p>
             </div>
             <div className="w-40">
               <CustomSelect
@@ -230,7 +226,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium">Legal &amp; consent</p>
+              <p className="text-sm font-medium">{t('settings:legalConsent')}</p>
               <p className="text-xs text-muted-foreground">{t('settings:reviewTheTermsPrivacyNoticeAnd')}</p>
             </div>
             <Link href="/profile/settings/legal">

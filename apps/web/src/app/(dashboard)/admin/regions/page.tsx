@@ -116,9 +116,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
           size="sm"
           className="shrink-0"
           onClick={openCreate}
-        >
-          + New Region
-        </Button>
+        >{t('admin:newRegion')}</Button>
       </div>
 
       {/* Create/edit dialog — same shape as the old create card, just parameterised by mode */}

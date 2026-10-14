@@ -243,9 +243,7 @@ function ScheduleSection({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
           <h3 className="text-base font-semibold">{t('departments:upcomingServices')}</h3>
-          <p className="text-xs text-muted-foreground">
-            Next 90 days. Drafts can be edited or regenerated; publish to notify members. Click any service to manage assignments.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('departments:next90DaysDraftsEditedRegenerated')}</p>
         </div>
         {canManage && activeTemplates.length > 0 && (
           <Button onClick={() => setShowGenerate((v) => !v)} variant="default">
@@ -543,7 +541,7 @@ function GenerateForm({
               min={1}
               max={52}
               suffix="w"
-              ariaLabel="Number of weeks"
+              ariaLabel={t('departments:numberWeeks')}
             />
           </div>
           <div className="space-y-1">
@@ -1066,9 +1064,7 @@ function SlotsManager({
     <div className="space-y-3">
       {confirmDialog}
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('departments:slots')}</h4>
-      <p className="text-xs text-muted-foreground">
-        Roles you need filled each service (e.g. Lead Vocal x1, Soprano x2). Positions = how many people for that role.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('departments:rolesNeedFilledEachServiceE')}</p>
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('departments:noSlotsDefined')}</p>
       ) : (
@@ -1141,7 +1137,7 @@ function SlotsManager({
               onValueChange={setPositions}
               min={1}
               max={99}
-              ariaLabel="Number of positions"
+              ariaLabel={t('departments:numberPositions')}
             />
           </div>
           <Button type="submit" disabled={create.isPending}>{t('departments:addSlot')}</Button>
@@ -1309,9 +1305,7 @@ function SwapsSection({
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Members request a swap on their assignment; you approve it here and the system reassigns automatically.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('departments:membersRequestSwapTheirAssignmentApprove')}</p>
       </div>
 
       <div className="flex gap-1 border-b border-border/60">

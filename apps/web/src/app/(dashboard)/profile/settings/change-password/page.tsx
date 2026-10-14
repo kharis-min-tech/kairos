@@ -86,9 +86,7 @@ export default function ChangePasswordSettingsPage() {  const { t } = useTransla
           {success ? (
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-4 text-sm">
               <p className="font-semibold text-emerald-700 dark:text-emerald-400">{t('settings:passwordUpdated')}</p>
-              <p className="text-muted-foreground">
-                We&apos;ve emailed you a confirmation. Returning to settings…
-              </p>
+              <p className="text-muted-foreground">{t('settings:weVeEmailedConfirmationReturningSettings')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -159,10 +157,7 @@ export default function ChangePasswordSettingsPage() {  const { t } = useTransla
       <Card>
         <CardContent className="flex items-start gap-3 py-4 text-xs text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#5D3FD3]" aria-hidden />
-          <p>
-            You&apos;ll get an email confirming the change. If you didn&apos;t
-            do this, contact your church administrator immediately.
-          </p>
+          <p>{t('settings:youLlGetEmailConfirmingChange')}</p>
         </CardContent>
       </Card>
     </div>

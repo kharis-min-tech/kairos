@@ -249,7 +249,7 @@ export default function ProfilePage() {  const { t } = useTranslation(['settings
             {avatarUrl ? (
               <img
                 src={avatarUrl}
-                alt="Profile"
+                alt={t('settings:profile')}
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
@@ -300,9 +300,7 @@ export default function ProfilePage() {  const { t } = useTranslation(['settings
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {isOnboarding && (
             <div className="rounded-lg border-l-4 border-[#5D3FD3] bg-[#5D3FD3]/5 p-4">
-              <p className="text-sm font-semibold text-[#5D3FD3]">
-                Welcome! Let&apos;s finish setting up your account.
-              </p>
+              <p className="text-sm font-semibold text-[#5D3FD3]">{t('settings:welcomeLetSFinishSettingUp')}</p>
               <p className="mt-1 text-sm text-muted-foreground">{t('settings:weGotSomeDetailsFromYour')}</p>
             </div>
           )}
@@ -326,10 +324,7 @@ export default function ProfilePage() {  const { t } = useTranslation(['settings
                       label: b.branchName,
                     }))}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Your provider didn&apos;t tell us this, so please choose the
-                    branch you attend.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('settings:yourProviderDidnTTellUs')}</p>
                 </div>
               </CardContent>
             </Card>

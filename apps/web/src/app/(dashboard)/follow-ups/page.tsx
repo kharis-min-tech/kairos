@@ -97,7 +97,7 @@ export default function FollowUpsPage() {  const { t } = useTranslation(['concer
           {due.isLoading ? (
             <Skeleton />
           ) : (due.data ?? []).length === 0 ? (
-            <Empty text="Nothing due." />
+            <Empty text={t('concerns:nothingDue')} />
           ) : (
             <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
               <div className="divide-y divide-border">

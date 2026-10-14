@@ -36,7 +36,7 @@ export default function FormsLandingPage() {  const { t } = useTranslation(['for
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Forms &amp; Data Capture</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('forms:formsDataCapture')}</h1>
         <p className="mt-1 text-muted-foreground">{t('forms:captureAltarCallResponsesBaptismAnd')}</p>
       </div>
 

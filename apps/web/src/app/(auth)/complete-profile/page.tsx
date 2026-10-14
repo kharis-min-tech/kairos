@@ -209,10 +209,7 @@ export default function CompleteProfilePage() {  const { t } = useTranslation(['
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="text-xs text-[#5D3FD3]">
-            You&apos;ll be able to access the app once you complete this step
-            and an admin approves your account.
-          </p>
+          <p className="text-xs text-[#5D3FD3]">{t('auth:youLlAbleAccessAppOnce')}</p>
         </div>
 
         {serverError ? (
@@ -254,10 +251,7 @@ export default function CompleteProfilePage() {  const { t } = useTranslation(['
               {branchError ? (
                 <p className="text-xs text-destructive">{branchError}</p>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  Your provider didn&apos;t tell us this, so please choose the
-                  branch you attend.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('auth:yourProviderDidnTTellUs')}</p>
               )}
             </div>
 

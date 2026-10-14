@@ -17,9 +17,7 @@ export default function SafeguardingReviewPage() {  const { t } = useTranslation
       {/* Page header */}
       <div className="pb-2">
         <h1 className="text-2xl font-bold tracking-tight">{t('members:safeguardingReview')}</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Minor records that need a Safeguarding Lead&apos;s attention
-        </p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('members:minorRecordsNeedSafeguardingLeadS')}</p>
       </div>
 
       <section className="space-y-3">
@@ -70,9 +68,7 @@ function UnguardedSection({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-12 text-center">
-          <p className="text-sm font-medium text-[#DC2626]">
-            You don&apos;t have safeguarding access to this list
-          </p>
+          <p className="text-sm font-medium text-[#DC2626]">{t('members:youDonTSafeguardingAccessList')}</p>
           {error?.message && <p className="text-xs text-muted-foreground">{error.message}</p>}
         </CardContent>
       </Card>
@@ -155,9 +151,7 @@ function DormantSection({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-12 text-center">
-          <p className="text-sm font-medium text-[#DC2626]">
-            You don&apos;t have safeguarding access to this list
-          </p>
+          <p className="text-sm font-medium text-[#DC2626]">{t('members:youDonTSafeguardingAccessList')}</p>
           {error?.message && <p className="text-xs text-muted-foreground">{error.message}</p>}
         </CardContent>
       </Card>

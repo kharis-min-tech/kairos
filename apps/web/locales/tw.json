@@ -132,7 +132,13 @@
     "previous": "Deɛ atwam",
     "uploading": "Ɛrekɔ soro…",
     "noImage": "Mfonini biara nni hɔ",
-    "startingCamera": "Mfoninitwa afidie rehyɛ aseɛ…"
+    "startingCamera": "Mfoninitwa afidie rehyɛ aseɛ…",
+    "weCouldnTLoadDashboard": "Yɛantumi amfa wo dashbɔd amma.",
+    "numberSoulsCurrentlyActiveFollowUp": "Akra dodoɔ a wɔwɔ nkɔdi akyi gyinaberɛ mu seesei (Foforɔ, Yɛredi akyi, anaa N'ani gye ho).",
+    "formulaConvertedSoulsTotalSouls100": "Akontabuo: (Akra a wɔasakra / Akra nyinaa) × 100",
+    "criticalRed": "Ɛho hia (Kɔkɔɔ)",
+    "onTrackGreen": "Ɛrekɔ yie (Ahabammono)",
+    "monitorAmber": "Hwɛ so (Akokɔsradeɛ)"
   },
   "nav": {
     "sections": {
@@ -250,7 +256,18 @@
     "thisWillScrubYourNameEmail": "Yei bɛyi wo din, email, telefon, akyerɛw, mfonini ne wo ankasa nsɛm foforɔ firi Kharis Church hɔ. Wo mmaeɛ abakɔsɛm ne pene so nkrataa bɛka hɔ nanso yɛbɛyi wo din firi so. Worentumi nsesa yei.",
     "toConfirm": "na woahyɛ mu den",
     "logOut": "Pue",
-    "email": "Email"
+    "email": "Email",
+    "profile": "Profayl",
+    "yourProviderDidnTTellUs": "Wo ɔsomafoɔ anka yei ankyerɛ yɛn, enti yɛsrɛ wo yi asɔre baa a wokɔ.",
+    "welcomeLetSFinishSettingUp": "Akwaaba! Momma yɛnwie w'akawnt nhyehyɛeɛ.",
+    "youLlGetEmailConfirmingChange": "Wobɛnya email a ɛhyɛ nsakraeɛ no mu den. Sɛ ɛnyɛ wo na woyɛeɛ a, kasa kyerɛ w'asɔre sohwɛfoɔ ntɛm ara.",
+    "weVeEmailedConfirmationReturningSettings": "Yɛde nhyɛmu email akɔ. Yɛresan akɔ nhyehyɛeɛ no mu…",
+    "yourOldEmailGetAlertWasn": "W'email dada no bɛnya kɔkɔbɔ a “Ɛnyɛ me” link wɔ mu. Sɛ woklike no a, ɛsesa nsakraeɛ no ntɛm ara na ɛto w'akawnt mu kɔsi sɛ wobɛsesa wo password.",
+    "confirmPasswordThenLlSendVerification": "Hyɛ wo password mu den, na yɛde nhwehwɛmu link bɛkɔ akyerɛw foforɔ no so.",
+    "dailyDigestSendsSingle88239": "Da biara mua de nsɛm mua baako anɔpa nnɔnwɔtwe ma kuo biara, na ɛnyɛ email biara ma adeɛ biara a ɛsiiɛ. Ahobammɔ kɔkɔbɔ deɛ, ɛkɔ ntɛm ara daa.",
+    "updateLoginPasswordLlNeedCurrent": "Sesa wo nhyɛnmu password. Wobɛhia deɛ wode redi dwuma seesei.",
+    "lightDarkMatchDeviceSPreference": "Hann, esum, anaa di w'afidie deɛ ɛpɛ akyi.",
+    "legalConsent": "Mmara ne Pene"
   },
   "auth": {
     "finishSettingUp": "Wie nhyehyɛeɛ no",
@@ -369,7 +386,14 @@
       "number": "Nɔma baako",
       "special": "Nsɛnkyerɛnne soronko baako"
     },
-    "password": "Password"
+    "password": "Password",
+    "yourProviderDidnTTellUs": "Wo ɔsomafoɔ anka yei ankyerɛ yɛn, enti yɛsrɛ wo yi asɔre baa a wokɔ.",
+    "youLlAbleAccessAppOnce": "Wobɛtumi akɔ app no mu sɛ wowie gyinaberɛ yi na sohwɛfoɔ bi pene w'akawnt so a.",
+    "youLlReceiveNotificationOnceAccount": "Wobɛnya nkrasɛm sɛ wɔpene w'akawnt so a.",
+    "couldnTReachServerRefreshPage": "Yɛantumi nnuru server no so. San pɛnsɛn kratafa no anaa sɔ hwɛ bio nnansa yi.",
+    "youLlPickBranchDuringOnboarding": "Wobɛyi w'asɔre baa berɛ a wofiri aseɛ.",
+    "weVeSentVerificationLinkEmail": "Yɛde nhwehwɛmu link akɔ w'email akyerɛw so. Klike link no na fa hyɛ w'email mu den na wie din kyerɛw no.",
+    "theLinkMayExpiredVeAlready": "Ebia link no atwam, anaasɛ woahwɛ email yi dada."
   },
   "branches": {
     "deactivate": "Gyae",
@@ -453,7 +477,8 @@
     "continent": "Kɔntinɛnt *",
     "loadingRegions": "Mantam ahorow reba",
     "noRegionsFoundCreateOneAbove": "Mantam biara nni hɔ. Yɛ bi wɔ soro hɔ.",
-    "edit": "Sesa"
+    "edit": "Sesa",
+    "newRegion": "+ Mantam Foforɔ"
   },
   "attendance": {
     "members": "Amanfoɔ",
@@ -548,7 +573,9 @@
     "punctualityBreakdown": "Berɛ Die Nkyekyɛmu",
     "serviceHistory": "Ɔsom Abakɔsɛm",
     "everyServiceInTheWindowOldest": "Ɔsom biara a ɛwɔ berɛ no mu, deɛ adi mu kan.",
-    "noServicesInThisWindowYet": "Ɔsom biara nni berɛ yi mu ɛnnɛ."
+    "noServicesInThisWindowYet": "Ɔsom biara nni berɛ yi mu ɛnnɛ.",
+    "expectedAttendance": "Mmaeɛ a Yɛhwɛ Kwan",
+    "pointCameraCodeAdminDeskScreen": "Fa wo mfoninitwa afidie kyerɛ kod a ɛwɔ ɛpono no screen so."
   },
   "reports": {
     "weeklyAttendance": "Dapɛn biara mmaeɛ",
@@ -663,7 +690,9 @@
     "onProbation": "Wɔresɔ no hwɛ",
     "serviceAttendancePerWeek": "Ɔsom mmaeɛ dapɛn biara",
     "noServiceAttendanceRecordedInThis": "Wɔnkyerɛɛ ɔsom mmaeɛ biara wɔ berɛ yi mu ɛnnɛ.",
-    "trackChurchGrowthAttendanceTrendsAnd": "Di asɔre nkɔso, mmaeɛ nsakraeɛ, ne asɛmpaka akyi, nyinaa wɔ beaeɛ baako a ɛyɛ dwoodwoo."
+    "trackChurchGrowthAttendanceTrendsAnd": "Di asɔre nkɔso, mmaeɛ nsakraeɛ, ne asɛmpaka akyi, nyinaa wɔ beaeɛ baako a ɛyɛ dwoodwoo.",
+    "onceAttendServiceGetMarkedPresent": "Sɛ wokɔ ɔsom na wɔkyerɛw sɛ wobaeɛ (anaasɛ wo ara wokyerɛw wo din) a, wo dapɛn biara dodoɔ bɛda adi wɔ ha.",
+    "reportsAnalytics": "Amanneɛbɔ ne Nhwehwɛmu"
   },
   "concerns": {
     "concerns": "Nsɛm a ɛhia",
@@ -676,7 +705,8 @@
     "followUpQueues": "Nkɔdi akyi ntoatoasoɔ",
     "noFirstTimersWaitingOnA": "Obi a ɔbaa a ɛdi kan nni hɔ a ɔretwɛn nsrahwɛ a ɛdi kan.",
     "everyoneInThisBranchBelongsTo": "Obiara a ɔwɔ asɔre baa yi mu wɔ fekuo anaa adwumakuo bi mu.",
-    "peopleWhoNeedContactAndBelong": "Nkurɔfoɔ a ɛsɛ sɛ yɛne wɔn kasa na wɔnni fekuo anaa adwumakuo biara mu. Kuo nkɔdi akyi wɔ fekuo ne adwumakuo biara kratafa so."
+    "peopleWhoNeedContactAndBelong": "Nkurɔfoɔ a ɛsɛ sɛ yɛne wɔn kasa na wɔnni fekuo anaa adwumakuo biara mu. Kuo nkɔdi akyi wɔ fekuo ne adwumakuo biara kratafa so.",
+    "nothingDue": "Biribiara nni hɔ."
   },
   "departments": {
     "member": "Ɔmanfoɔ",
@@ -897,7 +927,14 @@
     "youDonTLeadADepartment": "Wonni adwumakuo biara anim",
     "theLeaderViewShowsDepartmentsYou": "Ɔkannifoɔ nhwɛbea no kyerɛ adwumakuo a wodi anim anaa woboa di anim. Sesa kɔ wo ɔmanfoɔ nhwɛbea so na hwɛ na bisa bi.",
     "previous": "Deɛ atwam",
-    "email": "Email"
+    "email": "Email",
+    "couldnTLoadRotaTryAgain": "Yɛantumi amfa w'adwuma nhyehyɛeɛ amma. Sɔ hwɛ bio nnansa yi.",
+    "next90DaysDraftsEditedRegenerated": "Nna 90 a ɛdi hɔ. Wobɛtumi asesa anaa woasan ayɛ nhwɛsoɔ; tintim na ɛmmɔ amanfoɔ amaneɛ. Klike ɔsom biara so na hwɛ nnwuma no so.",
+    "rolesNeedFilledEachServiceE": "Dwumadie a ɛsɛ sɛ wohyɛ ma wɔ ɔsom biara mu (sɛ nhwɛsoɔ Ɔdwontofoɔ Panin x1, Soprano x2). Gyinaberɛ = nnipa dodoɔ a wɔhia ma saa dwumadie no.",
+    "membersRequestSwapTheirAssignmentApprove": "Amanfoɔ bisa sɛ wɔnsesa wɔn adwuma; wopene so wɔ ha na sistem no sesa no ankasa.",
+    "numberPositions": "Gyinaberɛ dodoɔ",
+    "numberWeeks": "Nnawɔtwe dodoɔ",
+    "notesOptional": "Nsɛm (ɛho nhia)"
   },
   "fellowships": {
     "serviceAttendance": "Ɔsom mmaeɛ",
@@ -1065,7 +1102,13 @@
     "viewRoute": "Hwɛ kwan no →",
     "availableFellowships": "Nkabomfekuo a Ɛwɔ hɔ:",
     "fellowshipTypes": "Fekuo Su Ahorow",
-    "loadingMap": "Asase mfonini reba..."
+    "loadingMap": "Asase mfonini reba...",
+    "sundayMidweekSpecialChurchServicesAttended": "Kwasiada / nnawɔtwe mfimfini / ɔsom soronko a obiara a ɔwɔ fekuo yi mu kɔeɛ.",
+    "attendanceFellowshipSOwnMeetings": "Mmaeɛ wɔ fekuo yi ankasa nhyiamu ase.",
+    "meetingScheduleOptional": "Nhyiamu Nhyehyɛeɛ (ɛho nhia)",
+    "durationMins": "Berɛ (simma)",
+    "meetingDurationMinutes": "Nhyiamu berɛ wɔ simma mu",
+    "theLeaderReviewRequestLlNotified": "Ɔkannifoɔ no bɛhwɛ w'abisadeɛ. Yɛbɛbɔ wo amaneɛ sɛ ɔpene so a."
   },
   "forms": {
     "remove": "Yi firi hɔ",
@@ -1121,7 +1164,9 @@
     "to": "Kɔsi",
     "noSubmissionsMatchTheseFilters": "Biribiara a wɔde abrɛ nhyia nhwehwɛmu yi.",
     "subject": "Asɛmti",
-    "submitted": "Wɔde abrɛ"
+    "submitted": "Wɔde abrɛ",
+    "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church ahyɛ bɔ sɛ ɔbɛbu wo ankasa nsɛm kokoamyɛ ne ahobammɔ. Yɛde nsɛm a wode ma di dwuma na yɛne wo akasa, akɔsra wo fie baabi a ɛfata, na yɛahwɛ asɔre nnwuma so na yɛabɔ wo ho amaneɛ, te sɛ gyidifoɔ foforɔ adesua. Yɛde nsɛm a wode ma no bɛma yɛn kuo a ɛwɔ mu ama saa botaeɛ no. Yɛkora so yie kɔsi sɛ yɛnhia bio.",
+    "formsDataCapture": "Fɔm ne Nsɛm Gyeɛ"
   },
   "members": {
     "theyArenTInTheDirectory": "Wɔnni din nhoma no mu, enti yɛbɛkyerɛw din no nko ara.",
@@ -1275,7 +1320,11 @@
     "joinedADepartment": "Waka Adwumakuo bi ho",
     "yourJourney": "Wo Kwan",
     "yourSupportTeam": "Wo Mmoa Kuo",
-    "email": "Email"
+    "email": "Email",
+    "thisMemberUnder16NeedSafeguarding": "Ɔmanfoɔ yi nnii mfeɛ 16. Ɛsɛ sɛ wowɔ ahobammɔ kwan (sohwɛfoɔ, ɔsɔfoɔ, ɔmanfoɔ no hwɛfoɔ, anaa Ahobammɔ Panin) ansa na woahunu n'apɔmuden krataa.",
+    "toViewRemoveFellowshipMembershipsOpen": "Sɛ wopɛ sɛ wohunu anaa woyi fekuo mufoɔ a, bue fekuo no Amanfoɔ tab no.",
+    "minorRecordsNeedSafeguardingLeadS": "Mmɔfra nkrataa a ɛhia Ahobammɔ Panin ɔhwɛ",
+    "youDonTSafeguardingAccessList": "Wonni ahobammɔ kwan kɔ nhwehwɛmu yi mu"
   },
   "membership": {
     "eGWhoWeAreAs": "te sɛ Yɛne hwan sɛ asɔre",
@@ -1361,7 +1410,8 @@
     "loadingCohorts": "Akuo reba…",
     "noCohortsYetCreateOneTo": "Kuo biara nni hɔ ɛnnɛ. Yɛ bi na fi aseɛ gye nkurɔfoɔ.",
     "youAreOnTheListFor": "Wo din wɔ adesuakuo a ɛdi hɔ no nhwehwɛmu mu",
-    "noOneFromYourBranchIs": "Obiara mfiri w'asɔre baa mu nkyerɛw ne din kuo biara mu seesei."
+    "noOneFromYourBranchIs": "Obiara mfiri w'asɔre baa mu nkyerɛw ne din kuo biara mu seesei.",
+    "adminNotesOptional": "Sohwɛfoɔ nsɛm (ɛho nhia)"
   },
   "newBelievers": {
     "unassigned": "Wɔmmfaa mmaa obiara",
@@ -1487,7 +1537,8 @@
     "loadingSessions": "Adesua reba...",
     "noSessionsScheduledYet": "Wɔnhyehyɛɛ adesua biara ɛnnɛ.",
     "createSession": "Yɛ Adesua",
-    "selectASessionToSeeDetails": "Yi adesua bi na hwɛ ne nsɛm."
+    "selectASessionToSeeDetails": "Yi adesua bi na hwɛ ne nsɛm.",
+    "thisMemberEmailFileSoThey": "Ɔmanfoɔ yi nni email wɔ krataa so, enti ɔrennya adwuma nkrasɛm."
   },
   "outreach": {
     "completed": "Awie",
@@ -1570,7 +1621,15 @@
     "youCreatedThis": "Wo na woyɛɛ yei",
     "registrationClosed": "Din kyerɛw ato mu",
     "view": "Hwɛ",
-    "previous": "Deɛ atwam"
+    "previous": "Deɛ atwam",
+    "openAllBranchesAllowPastorsLeaders": "Ɛbue ma Asɔre Baa Nyinaa (Ɛma asɔfoɔ ne akannifoɔ a wɔwɔ asɔre baa nyinaa mu kyerɛw wɔn din)",
+    "organizedDepartmentOptional": "Wɔhyehyɛɛ ma adwumakuo (ɛho nhia)",
+    "organizedFellowshipOptional": "Wɔhyehyɛɛ ma fekuo (ɛho nhia)",
+    "coordinatorOptional": "Ɔhwɛsofoɔ (ɛho nhia)",
+    "descriptionOptional": "Nkyerɛkyerɛmu (ɛho nhia)",
+    "addressOptional": "Akyerɛw (ɛho nhia)",
+    "notesOptional": "Nsɛm (ɛho nhia)",
+    "cityOptional": "Kuropɔn (ɛho nhia)"
   },
   "security": {
     "connectedAccounts": "Akawnt a wɔaka abom",
@@ -1674,7 +1733,17 @@
     "loadingSouls": "Akra reba...",
     "noSoulsFoundStartByCapturing": "Ɔkra biara nni hɔ. Fi aseɛ kyerɛw w'ɔkra a ɛdi kan!",
     "loadingDashboard": "Dashbɔd reba...",
-    "allSouls": "Akra Nyinaa"
+    "allSouls": "Akra Nyinaa",
+    "usePrioritizeHomeVisitsEscalationsE": "Fa yei di dwuma na hwɛ fie nsrahwɛ anaa nsɛm a ɛsɛ sɛ wɔde kɔ soro (sɛ nhwɛsoɔ, ɔkra no bua nanso tebea no hia nkɔdi akyi)",
+    "durationMinutes": "Berɛ wɔ simma mu",
+    "onBehalfDepartmentOptional": "Ma adwumakuo (ɛho nhia)",
+    "onBehalfFellowshipOptional": "Ma fekuo (ɛho nhia)",
+    "ageRangeOptional": "Mfeɛ dodoɔ (ɛho nhia)",
+    "addressOptional": "Akyerɛw (ɛho nhia)",
+    "genderOptional": "Ɔbarima anaa Ɔbaa (ɛho nhia)",
+    "emailOptional": "Email (ɛho nhia)",
+    "notesOptional": "Nsɛm (ɛho nhia)",
+    "cityOptional": "Kuropɔn (ɛho nhia)"
   },
   "legal": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",
@@ -1699,7 +1768,9 @@
       "admin_confidentiality": "Kokoamsɛm ne Nsɛm Dwumadie Bɔhyɛ"
     },
     "beforeAccepting": "ansa na wagye atom.",
-    "listOr": ", anaa "
+    "listOr": ", anaa ",
+    "trackWhichPoliciesVeAcceptedWhen": "Hwɛ nhyehyɛeɛ a woapene so ne berɛ a wopenee so.",
+    "legalConsent": "Mmara ne Pene"
   },
   "marketing": {
     "helpGuides": "Mmoa ne akwankyerɛ",

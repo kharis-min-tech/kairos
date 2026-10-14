@@ -49,10 +49,7 @@ export default function EmailChangePage() {  const { t } = useTranslation(['sett
 
       <div className="pb-4">
         <h1 className="text-2xl font-bold tracking-tight">{t('settings:changeEmail')}</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Confirm your password, then we&apos;ll send a verification link to the
-          new address.
-        </p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:confirmPasswordThenLlSendVerification')}</p>
       </div>
 
       <Card>
@@ -119,11 +116,7 @@ export default function EmailChangePage() {  const { t } = useTranslation(['sett
       <Card>
         <CardContent className="flex items-start gap-3 py-4 text-xs text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#5D3FD3]" aria-hidden />
-          <p>
-            Your old email will get an alert with a &ldquo;This wasn&apos;t me&rdquo;
-            link. Clicking that reverts the change immediately and locks your
-            account until you reset your password.
-          </p>
+          <p>{t('settings:yourOldEmailGetAlertWasn')}</p>
         </CardContent>
       </Card>
     </div>

@@ -721,10 +721,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
               {myWeeklyAttendance.length === 0 ? (
                 <div className="flex h-[280px] flex-col items-center justify-center gap-2 text-center">
                   <p className="text-sm font-medium text-foreground">{t('reports:noAttendanceRecordedYet')}</p>
-                  <p className="max-w-xs text-xs text-muted-foreground">
-                    Once you attend a service and get marked present (or check in
-                    yourself), your weekly rate will show up here.
-                  </p>
+                  <p className="max-w-xs text-xs text-muted-foreground">{t('reports:onceAttendServiceGetMarkedPresent')}</p>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
@@ -1501,7 +1498,7 @@ export default function ReportsPage() {  const { t } = useTranslation(['reports'
   const header = (
     <div>
       <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight">{t('reports:reportsAnalytics')}</h1>
       <p className="mt-0.5 text-sm text-muted-foreground">{t('reports:trackChurchGrowthAttendanceTrendsAnd')}</p>
     </div>
   );

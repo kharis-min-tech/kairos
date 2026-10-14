@@ -866,9 +866,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                     </svg>
                     <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t('fellowships:requestSent')}</p>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    The leader will review your request. You&apos;ll be notified once approved.
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t('fellowships:theLeaderReviewRequestLlNotified')}</p>
                 </div>
               )}
             </CardContent>

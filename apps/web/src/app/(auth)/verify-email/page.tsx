@@ -65,9 +65,7 @@ function VerifyEmailContent() {  const { t } = useTranslation(['auth', 'common']
 
         <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
-            <p className="text-sm text-muted-foreground">
-              We&apos;ve sent a verification link to your email address. Click the link to confirm your email and complete registration.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('auth:weVeSentVerificationLinkEmail')}</p>
             <div className="rounded-lg bg-[#f8b537]/10 p-4 text-sm text-[#9a6b04] dark:text-[#f8b537]">
               Can&apos;t find it? Check your spam folder. The link expires in 24 hours.
             </div>
@@ -98,9 +96,7 @@ function VerifyEmailContent() {  const { t } = useTranslation(['auth', 'common']
               </svg>
               <div>
                 <p className="font-medium">{error}</p>
-                <p className="mt-1 text-xs opacity-80">
-                  The link may have expired, or you&apos;ve already verified this email.
-                </p>
+                <p className="mt-1 text-xs opacity-80">{t('auth:theLinkMayExpiredVeAlready')}</p>
               </div>
             </div>
           ) : (

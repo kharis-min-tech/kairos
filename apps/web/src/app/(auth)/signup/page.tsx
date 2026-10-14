@@ -311,9 +311,7 @@ export default function SignupPage() {  const { t } = useTranslation(['auth', 'c
                   )}
                 />
                 {branchesLoadFailed && (
-                  <p className="text-xs text-destructive">
-                    Couldn&apos;t reach the server. Refresh the page or try again shortly.
-                  </p>
+                  <p className="text-xs text-destructive">{t('auth:couldnTReachServerRefreshPage')}</p>
                 )}
                 {errors.homeBranchId && (
                   <p className="text-xs text-destructive">{errors.homeBranchId.message}</p>
@@ -502,9 +500,7 @@ export default function SignupPage() {  const { t } = useTranslation(['auth', 'c
               </div>
 
               <OAuthButtonGroup returnTo="/welcome" actionLabel="continue" variant="icons" />
-              <p className="text-center text-[11px] text-muted-foreground/60">
-                You&apos;ll pick your branch during onboarding.
-              </p>
+              <p className="text-center text-[11px] text-muted-foreground/60">{t('auth:youLlPickBranchDuringOnboarding')}</p>
             </>
           )}
 

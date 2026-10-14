@@ -268,9 +268,7 @@ export function CohortForm({
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Admin notes (optional)
-          </h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{t('membership:adminNotesOptional')}</h2>
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         </section>
 

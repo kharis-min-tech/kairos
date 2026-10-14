@@ -296,7 +296,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Address (Optional)</Label>
+          <Label htmlFor="address">{t('outreach:addressOptional')}</Label>
           <Input
             id="address"
             value={formData.address}
@@ -306,7 +306,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="city">City (Optional)</Label>
+          <Label htmlFor="city">{t('outreach:cityOptional')}</Label>
           <Input
             id="city"
             value={formData.city}
@@ -316,7 +316,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="coordinatorId">Coordinator (Optional)</Label>
+          <Label htmlFor="coordinatorId">{t('outreach:coordinatorOptional')}</Label>
           <CustomSelect
             id="coordinatorId"
             value={formData.coordinatorId}
@@ -333,7 +333,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description (Optional)</Label>
+          <Label htmlFor="description">{t('outreach:descriptionOptional')}</Label>
           <Textarea
             id="description"
             value={formData.description}
@@ -347,7 +347,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
         {(myFellowships.length > 0 || myDepartments.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fellowshipId">Organized for fellowship (Optional)</Label>
+              <Label htmlFor="fellowshipId">{t('outreach:organizedFellowshipOptional')}</Label>
               <CustomSelect
                 id="fellowshipId"
                 value={formData.fellowshipId}
@@ -357,7 +357,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="branchDepartmentId">Organized for department (Optional)</Label>
+              <Label htmlFor="branchDepartmentId">{t('outreach:organizedDepartmentOptional')}</Label>
               <CustomSelect
                 id="branchDepartmentId"
                 value={formData.branchDepartmentId}
@@ -377,16 +377,14 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
                 checked={formData.isOpenToAllBranches}
                 onChange={(e) => handleChange('isOpenToAllBranches', e.target.checked)}
               />
-              <Label htmlFor="isOpenToAllBranches" className="cursor-pointer font-normal">
-                Open to All Branches (Allow pastors and leaders from all branches to register)
-              </Label>
+              <Label htmlFor="isOpenToAllBranches" className="cursor-pointer font-normal">{t('outreach:openAllBranchesAllowPastorsLeaders')}</Label>
             </div>
             <p className="text-sm text-muted-foreground ml-6">{t('outreach:whenEnabledThisProgramWillBe')}</p>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="notes">Notes (Optional)</Label>
+          <Label htmlFor="notes">{t('outreach:notesOptional')}</Label>
           <Textarea
             id="notes"
             value={formData.notes}

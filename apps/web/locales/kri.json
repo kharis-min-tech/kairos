@@ -132,7 +132,13 @@
     "previous": "Di wan bifo",
     "uploading": "I de ɔplod…",
     "noImage": "Nɔ pikchɔ",
-    "startingCamera": "Di kamra de stat…"
+    "startingCamera": "Di kamra de stat…",
+    "weCouldnTLoadDashboard": "Wi nɔ ebul fɔ lod yu dashbɔd.",
+    "numberSoulsCurrentlyActiveFollowUp": "Aw mɔch sol dɛn de na aktiv fɔlo ɔp stej naw (Nyu, Wi de fɔlo ɔp, ɔ I want).",
+    "formulaConvertedSoulsTotalSouls100": "Fɔmyula: (Sol dɛn we kɔnvat / Ɔl di sol dɛn) × 100",
+    "criticalRed": "Sirios (Rɛd)",
+    "onTrackGreen": "I de go fayn (Grin)",
+    "monitorAmber": "Wach am (Amba)"
   },
   "nav": {
     "sections": {
@@ -250,7 +256,18 @@
     "permanentlyScrubYourPersonalDataAttendance": "Pul yu yon infɔmeshɔn fɔ ɔltɛm. Di atɛndans ɛn kɔnsɛnt istri nɔ go pul; wi go mek am so dat nɔbɔdi nɔ go no se na yu.",
     "thisWillScrubYourNameEmail": "Dis go pul yu nem, imel, fon, adrɛs, pikchɔ, ɛn ɔda tin dɛn bɔt yu frɔm Kharis Church. Yu atɛndans istri ɛn kɔnsɛnt rɛkɔd go tay bɔt nɔbɔdi nɔ go no se na yu. Yu nɔ go ebul fɔ tɔn dis bak.",
     "toConfirm": "fɔ kɔnfam",
-    "logOut": "Sayn awt"
+    "logOut": "Sayn awt",
+    "profile": "Profayl",
+    "yourProviderDidnTTellUs": "Yu prɔvaydɔ nɔ tɛl wi dis, so duya pik di branch we yu de go.",
+    "welcomeLetSFinishSettingUp": "Wɛlkɔm! Mek wi finish sɛt yu akawnt.",
+    "youLlGetEmailConfirmingChange": "Yu go gɛt wan imel we go kɔnfam di chenj. If nɔto yu du am, tɔk to yu chɔch administretɔ wantɛm.",
+    "weVeEmailedConfirmationReturningSettings": "Wi dɔn sɛn yu wan kɔnfameshɔn imel. Wi de go bak na di sɛtin dɛn…",
+    "yourOldEmailGetAlertWasn": "Yu old imel go gɛt wan alat wit wan “Nɔto mi” link. If yu klik am, di chenj go tɔn bak wantɛm ɛn yu akawnt go lɔk te yu risɛt yu paswɔd.",
+    "confirmPasswordThenLlSendVerification": "Kɔnfam yu paswɔd, dɔn wi go sɛn wan vɛrifikeshɔn link to di nyu adrɛs.",
+    "dailyDigestSendsSingle88239": "Di ɛvri-de shɔt ripɔt de sɛn jɔs wan 8 AM rawndɔp fɔ ɛvri katigɔri insted pan wan imel fɔ ɛvri tin we apin. Sikyuriti alat dɛn de go wantɛm ɔltɛm.",
+    "updateLoginPasswordLlNeedCurrent": "Chenj yu lɔgin paswɔd. Yu go nid di wan we yu de yuz naw.",
+    "lightDarkMatchDeviceSPreference": "Layt, dak, ɔ folo wetin yu divays layk.",
+    "legalConsent": "Ligal ɛn pamishɔn"
   },
   "auth": {
     "finishSettingUp": "Finish fɔ sɛt ɔp",
@@ -369,7 +386,14 @@
       "uppercase": "Wan big lɛta",
       "number": "Wan nɔmba",
       "special": "Wan spɛshal karaktɔ"
-    }
+    },
+    "yourProviderDidnTTellUs": "Yu prɔvaydɔ nɔ tɛl wi dis, so duya pik di branch we yu de go.",
+    "youLlAbleAccessAppOnce": "Yu go ebul fɔ go insay di app we yu finish dis step ɛn wan admin apruv yu akawnt.",
+    "youLlReceiveNotificationOnceAccount": "Yu go gɛt wan notifikeshɔn we dɛn apruv yu akawnt.",
+    "couldnTReachServerRefreshPage": "Wi nɔ ebul fɔ rich di sava. Fris di pej ɔ tray igen sun.",
+    "youLlPickBranchDuringOnboarding": "Yu go pik yu branch we yu de stat.",
+    "weVeSentVerificationLinkEmail": "Wi dɔn sɛn wan vɛrifikeshɔn link to yu imel adrɛs. Klik di link fɔ kɔnfam yu imel ɛn finish di rejistreshɔn.",
+    "theLinkMayExpiredVeAlready": "Di link kin dɔn spɔyl, ɔ yu dɔn vɛrifay dis imel bifo."
   },
   "branches": {
     "deactivate": "Stɔp am",
@@ -453,7 +477,8 @@
     "continent": "Kɔntinɛnt *",
     "loadingRegions": "Di rijɔn dɛn de lod",
     "noRegionsFoundCreateOneAbove": "Nɔ rijɔn nɔ de. Mek wan ɔp tɔp.",
-    "edit": "Chenj am"
+    "edit": "Chenj am",
+    "newRegion": "+ Nyu Rijɔn"
   },
   "attendance": {
     "members": "Mɛmba dɛn",
@@ -548,7 +573,9 @@
     "serviceHistory": "Sɛvis istri",
     "everyServiceInTheWindowOldest": "Ɛvri sɛvis insay di windo, di old wan fɔs.",
     "noServicesInThisWindowYet": "Nɔ sɛvis nɔ de insay dis windo yet.",
-    "branch": "Branch"
+    "branch": "Branch",
+    "expectedAttendance": "Aw mɔch wi ɛkspɛkt fɔ kam",
+    "pointCameraCodeAdminDeskScreen": "Pwɛnt yu kamra to di kod pan di admin dɛsk skrin."
   },
   "reports": {
     "weeklyAttendance": "Wikli atɛndans",
@@ -663,7 +690,9 @@
     "serviceAttendancePerWeek": "Sɛvis atɛndans ɛvri wik",
     "noServiceAttendanceRecordedInThis": "Nɔ sɛvis atɛndans nɔ rɛkɔd insay dis windo yet.",
     "trackChurchGrowthAttendanceTrendsAnd": "Fɔlo aw di chɔch de grow, aw di atɛndans de go, ɛn di awtrich, ɔl na wan kwayɛt ples.",
-    "branch": "Branch"
+    "branch": "Branch",
+    "onceAttendServiceGetMarkedPresent": "We yu kam na wan sɛvis ɛn dɛn mak yu se yu bin de (ɔ yu chɛk insɛf in), yu wikli ret go sho ya.",
+    "reportsAnalytics": "Ripɔt ɛn Analitiks"
   },
   "concerns": {
     "concerns": "Kɔnsan",
@@ -676,7 +705,8 @@
     "followUpQueues": "Fɔlo ɔp lain dɛn",
     "noFirstTimersWaitingOnA": "Nɔbɔdi we kam fɔs tɛm nɔ de wet fɔ di fɔs vizit.",
     "everyoneInThisBranchBelongsTo": "Ɛvribɔdi na dis branch bilɔng to wan fɛloship ɔ dipatmɛnt.",
-    "peopleWhoNeedContactAndBelong": "Pipul we wi fɔ tɔk to ɛn we nɔ bilɔng to ɛni fɛloship ɔ dipatmɛnt. Grup fɔlo ɔp de na ɛvri fɛloship ɛn dipatmɛnt pej."
+    "peopleWhoNeedContactAndBelong": "Pipul we wi fɔ tɔk to ɛn we nɔ bilɔng to ɛni fɛloship ɔ dipatmɛnt. Grup fɔlo ɔp de na ɛvri fɛloship ɛn dipatmɛnt pej.",
+    "nothingDue": "Natin nɔ de fɔ du."
   },
   "departments": {
     "member": "Mɛmba",
@@ -897,7 +927,14 @@
     "youDonTLeadADepartment": "Yu nɔ de lid ɛni dipatmɛnt",
     "theLeaderViewShowsDepartmentsYou": "Di lida vyu de sho di dipatmɛnt dɛn we yu de lid ɔ ko-lid. Switch go na yu mɛmba vyu fɔ luk dɛn ɛn aplay fɔ wan.",
     "previous": "Di wan bifo",
-    "rota": "Rota"
+    "rota": "Rota",
+    "couldnTLoadRotaTryAgain": "Wi nɔ ebul fɔ lod yu rota. Tray igen sun.",
+    "next90DaysDraftsEditedRegenerated": "Nɛks 90 de. Yu kin chenj ɔ mek di draft dɛn igen; pɔblish am fɔ tɛl di mɛmba dɛn. Klik ɛni sɛvis fɔ manej di asaynmɛnt dɛn.",
+    "rolesNeedFilledEachServiceE": "Di rol dɛn we yu nid fɔ ful fɔ ɛvri sɛvis (fɔ ɛgzampul Lid Vokal x1, Soprano x2). Pɔzishɔn = aw mɔch pipul fɔ dat rol.",
+    "membersRequestSwapTheirAssignmentApprove": "Mɛmba dɛn de aks fɔ swap dɛn asaynmɛnt; yu de apruv am ya ɛn di sistɛm de rias am insɛf.",
+    "numberPositions": "Aw mɔch pɔzishɔn",
+    "numberWeeks": "Aw mɔch wik",
+    "notesOptional": "Not dɛn (yu nɔ fɔ ful)"
   },
   "fellowships": {
     "serviceAttendance": "Sɛvis atɛndans",
@@ -1065,7 +1102,13 @@
     "viewRoute": "Si di rod →",
     "availableFellowships": "Fɛloship dɛn we de:",
     "fellowshipTypes": "Fɛloship Tayp dɛn",
-    "loadingMap": "Di map de lod..."
+    "loadingMap": "Di map de lod...",
+    "sundayMidweekSpecialChurchServicesAttended": "Sɔnde / midwik / spɛshal chɔch sɛvis dɛn we ɛnibɔdi na dis fɛloship bin go.",
+    "attendanceFellowshipSOwnMeetings": "Atɛndans na dis fɛloship in yon mitin dɛn.",
+    "meetingScheduleOptional": "Mitin Skejul (yu nɔ fɔ ful)",
+    "durationMins": "Aw lɔng (mins)",
+    "meetingDurationMinutes": "Aw lɔng di mitin de na minit",
+    "theLeaderReviewRequestLlNotified": "Di lida go luk yu rikwɛst. Wi go tɛl yu we i apruv am."
   },
   "forms": {
     "remove": "Pul am",
@@ -1121,7 +1164,9 @@
     "noSubmissionsMatchTheseFilters": "Natin we pipul sɛn nɔ fit dɛn filtɔ ya.",
     "subject": "Wetin i bɔt",
     "submitted": "Wi sɛn am",
-    "branch": "Branch"
+    "branch": "Branch",
+    "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church prɔmis fɔ rispɛkt di praivasi ɛn sikyuriti fɔ yu pɔsinal infɔmeshɔn. Wi de yuz di infɔmeshɔn we yu gi so dat wi kin tɔk to yu, du om vizit usay i fit, ɛn fɔ rɔn ɛn tɛl yu bɔt chɔch tin dɛn, lɛk nyu biliva klas dɛn. Wi go sheb di infɔmeshɔn we yu gi wit wi insay tim dɛn fɔ dɛn rizin ya. Wi de kip am sef te wi nɔ nid am igen.",
+    "formsDataCapture": "Fɔm ɛn Data Kapchɔ"
   },
   "members": {
     "theyArenTInTheDirectory": "Dɛn nem nɔ de na di dayrɛktri, so wi go rikɔd di nem nɔmɔ widawt wan rikɔd.",
@@ -1275,7 +1320,11 @@
     "session": "Sɛshɔn 1",
     "joinedADepartment": "I dɔn jɔyn wan dipatmɛnt",
     "yourJourney": "Yu Jɔni",
-    "yourSupportTeam": "Yu Sɔpɔt Tim"
+    "yourSupportTeam": "Yu Sɔpɔt Tim",
+    "thisMemberUnder16NeedSafeguarding": "Dis mɛmba anda 16. Yu fɔ gɛt sefgadin akses (admin, pastɔ, di mɛmba in gadian, ɔ wan Sefgadin Lid) bifo yu kin si dɛn ɛlt rɛkɔd.",
+    "toViewRemoveFellowshipMembershipsOpen": "Fɔ si ɔ pul fɛloship mɛmbaship dɛn, opin di fɛloship in Mɛmba tab.",
+    "minorRecordsNeedSafeguardingLeadS": "Pikin rɛkɔd dɛn we nid wan Sefgadin Lid in atɛnshɔn",
+    "youDonTSafeguardingAccessList": "Yu nɔ gɛt sefgadin akses to dis lis"
   },
   "membership": {
     "eGWhoWeAreAs": "lɛkɛ Udat wi bi as wan church",
@@ -1361,7 +1410,8 @@
     "noCohortsYetCreateOneTo": "Nɔ grup nɔ de yet. Mek wan fɔ bigin tek pipul in.",
     "youAreOnTheListFor": "Yu nem de pan di lis fɔ di nɛks klas",
     "noOneFromYourBranchIs": "Nɔbɔdi frɔm yu branch nɔ rejista na ɛni grup naw.",
-    "branch": "Branch"
+    "branch": "Branch",
+    "adminNotesOptional": "Admin not dɛn (yu nɔ fɔ ful)"
   },
   "newBelievers": {
     "unassigned": "Dɛn nɔ gi am to ɛnibɔdi",
@@ -1487,7 +1537,8 @@
     "loadingSessions": "Di sɛshɔn dɛn de lod...",
     "noSessionsScheduledYet": "Nɔ sɛshɔn nɔ sɛt yet.",
     "createSession": "Mek Sɛshɔn",
-    "selectASessionToSeeDetails": "Pik wan sɛshɔn fɔ si di infɔmeshɔn."
+    "selectASessionToSeeDetails": "Pik wan sɛshɔn fɔ si di infɔmeshɔn.",
+    "thisMemberEmailFileSoThey": "Dis mɛmba nɔ gɛt imel pan rɛkɔd, so i nɔ go gɛt wan asaynmɛnt notifikeshɔn."
   },
   "outreach": {
     "completed": "I dɔn",
@@ -1570,7 +1621,15 @@
     "youCreatedThis": "Na yu mek dis",
     "registrationClosed": "Di rejistreshɔn dɔn klos",
     "view": "Si am",
-    "previous": "Di wan bifo"
+    "previous": "Di wan bifo",
+    "openAllBranchesAllowPastorsLeaders": "Opin to Ol di Branch dɛn (Alaw pastɔ ɛn lida dɛn frɔm ɔl di branch dɛn fɔ rejista)",
+    "organizedDepartmentOptional": "Wi arenj am fɔ di dipatmɛnt (yu nɔ fɔ ful)",
+    "organizedFellowshipOptional": "Wi arenj am fɔ di fɛloship (yu nɔ fɔ ful)",
+    "coordinatorOptional": "Kɔɔdinetɔ (yu nɔ fɔ ful)",
+    "descriptionOptional": "Wetin i bɔt (yu nɔ fɔ ful)",
+    "addressOptional": "Adrɛs (yu nɔ fɔ ful)",
+    "notesOptional": "Not dɛn (yu nɔ fɔ ful)",
+    "cityOptional": "Siti (yu nɔ fɔ ful)"
   },
   "security": {
     "connectedAccounts": "Akawnt dɛn we jɔyn",
@@ -1674,7 +1733,17 @@
     "loadingSouls": "Di sol dɛn de lod...",
     "noSoulsFoundStartByCapturing": "Nɔ sol nɔ de. Bigin bay kach yu fɔs sol!",
     "loadingDashboard": "Di dashbɔd de lod...",
-    "allSouls": "Ol di sol dɛn"
+    "allSouls": "Ol di sol dɛn",
+    "usePrioritizeHomeVisitsEscalationsE": "Yuz dis fɔ no wich om vizit ɔ ɛskaleshɔn fɔ du fɔs (fɔ ɛgzampul, di sol de ansa bɔt di siktyuashɔn nid fɔlo ɔp)",
+    "durationMinutes": "Aw lɔng i de na minit",
+    "onBehalfDepartmentOptional": "Fɔ di dipatmɛnt (yu nɔ fɔ ful)",
+    "onBehalfFellowshipOptional": "Fɔ di fɛloship (yu nɔ fɔ ful)",
+    "ageRangeOptional": "Ej renj (yu nɔ fɔ ful)",
+    "addressOptional": "Adrɛs (yu nɔ fɔ ful)",
+    "genderOptional": "Man ɔ uman (yu nɔ fɔ ful)",
+    "emailOptional": "Imel (yu nɔ fɔ ful)",
+    "notesOptional": "Not dɛn (yu nɔ fɔ ful)",
+    "cityOptional": "Siti (yu nɔ fɔ ful)"
   },
   "legal": {
     "privacyNotice": "Praivasi Notis",
@@ -1699,7 +1768,9 @@
       "admin_confidentiality": "Kɔnfidɛnshaliti ɛn Data Andlin Prɔmis"
     },
     "beforeAccepting": "bifo yu gri.",
-    "listOr": ", ɔ "
+    "listOr": ", ɔ ",
+    "trackWhichPoliciesVeAcceptedWhen": "Fɔlo wich pɔlisi dɛn yu dɔn gri to ɛn wɛn.",
+    "legalConsent": "Ligal ɛn pamishɔn"
   },
   "marketing": {
     "helpGuides": "Ɛp ɛn gayd",

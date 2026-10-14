@@ -498,7 +498,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                     <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder={t('fellowships:eGSouthwarkCommunityCentre')} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Duration (mins)</label>
+                    <label className="text-sm font-medium">{t('fellowships:durationMins')}</label>
                     <NumberStepper
                       value={Number(meetingForm.durationMinutes) || 0}
                       onValueChange={(v) => setMeetingForm((f) => ({ ...f, durationMinutes: v ? String(v) : '' }))}
@@ -506,7 +506,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                       max={600}
                       step={5}
                       suffix="m"
-                      ariaLabel="Meeting duration in minutes"
+                      ariaLabel={t('fellowships:meetingDurationMinutes')}
                     />
                   </div>
                 </div>

@@ -313,7 +313,7 @@ export default function EditFellowshipPage() {  const { t } = useTranslation(['f
             </div>
 
             <div className="space-y-3 rounded-lg border p-4">
-              <p className="text-sm font-medium">Meeting Schedule (optional)</p>
+              <p className="text-sm font-medium">{t('fellowships:meetingScheduleOptional')}</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="meetingFrequency" className="text-xs text-muted-foreground">{t('fellowships:frequency')}</Label>

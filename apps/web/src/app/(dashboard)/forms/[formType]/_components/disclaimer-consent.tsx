@@ -25,15 +25,7 @@ export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps)
     <div className="rounded-lg border bg-card p-4 text-sm">
       <h3 className="font-semibold text-foreground">{t('forms:privacyNotice')}</h3>
       <div className="mt-2 space-y-3 text-muted-foreground">
-        <p>
-          Kharis Church is committed to respecting the privacy and security of your
-          personal data. We use the information you provide to be able to contact
-          you, conduct home visits where appropriate and to administer and keep you
-          informed of church related activities, such as new believers classes. The
-          information you provide will be shared with our internal teams for such
-          purposes. We securely store this information until it is no longer
-          required.
-        </p>
+        <p>{t('forms:kharisChurchCommittedRespectingPrivacySecurity')}</p>
         <p>{t('forms:pleaseTickTheBoxBelowTo')}</p>
         <p>
           To find out more about how we handle your personal data or to{' '}

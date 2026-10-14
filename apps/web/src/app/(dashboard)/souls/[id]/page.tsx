@@ -440,9 +440,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     placeholder={t('souls:selectUrgencyOptional')}
                     options={URGENCY_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Use this to prioritize home visits or escalations (e.g., soul is responsive but situation requires follow-up)
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('souls:usePrioritizeHomeVisitsEscalationsE')}</p>
                 </div>
 
                 <div className="space-y-2">
@@ -469,7 +467,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                   max={600}
                   step={5}
                   suffix="m"
-                  ariaLabel="Duration in minutes"
+                  ariaLabel={t('souls:durationMinutes')}
                 />
               </div>
 

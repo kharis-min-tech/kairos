@@ -291,7 +291,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                   onValueChange={field.onChange}
                   min={0}
                   step={10}
-                  ariaLabel="Expected attendance"
+                  ariaLabel={t('attendance:expectedAttendance')}
                 />
               )}
             />

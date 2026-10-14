@@ -102,7 +102,7 @@ function Body({ report }: { report: FellowshipAttendanceReport }) {  const { t }
       <div className="grid gap-3 md:grid-cols-2">
         <RateCard
           title={t('fellowships:serviceAttendance')}
-          description="Sunday / midweek / special church services attended by anyone in this fellowship."
+          description={t('fellowships:sundayMidweekSpecialChurchServicesAttended')}
           rate={report.services.rate}
           distinctAttendees={report.services.distinctAttendees}
           total={report.services.totalServices}
@@ -111,7 +111,7 @@ function Body({ report }: { report: FellowshipAttendanceReport }) {  const { t }
         />
         <RateCard
           title={t('fellowships:meetingAttendance')}
-          description="Attendance at this fellowship’s own meetings."
+          description={t('fellowships:attendanceFellowshipSOwnMeetings')}
           rate={report.meetings.rate}
           distinctAttendees={report.meetings.distinctAttendees}
           total={report.meetings.totalMeetings}

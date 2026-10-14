@@ -243,9 +243,7 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
       <div className="space-y-6">
         {header}
         <div className="rounded-lg border border-[#e11d48]/40 bg-[#e11d48]/10 p-4">
-          <p className="text-sm font-semibold text-foreground">
-            We couldn&apos;t load your dashboard.
-          </p>
+          <p className="text-sm font-semibold text-foreground">{t('common:weCouldnTLoadDashboard')}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {home.error instanceof Error ? home.error.message : 'Please try again.'}
           </p>

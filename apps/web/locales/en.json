@@ -132,7 +132,13 @@
     "clear": "Clear",
     "uploading": "Uploading…",
     "noImage": "No image",
-    "startingCamera": "Starting camera…"
+    "startingCamera": "Starting camera…",
+    "weCouldnTLoadDashboard": "We couldn't load your dashboard.",
+    "numberSoulsCurrentlyActiveFollowUp": "Number of souls currently in active follow-up stages (New, Following Up, or Interested).",
+    "formulaConvertedSoulsTotalSouls100": "Formula: (Converted Souls / Total Souls) × 100",
+    "criticalRed": "Critical (Red)",
+    "onTrackGreen": "On Track (Green)",
+    "monitorAmber": "Monitor (Amber)"
   },
   "nav": {
     "sections": {
@@ -250,7 +256,18 @@
     "logOut": "Log Out",
     "languageHint": "English and French are complete. Krio and Twi are drafts awaiting a native speaker.",
     "matchBrowser": "Match my browser",
-    "draft": "draft"
+    "draft": "draft",
+    "yourProviderDidnTTellUs": "Your provider didn't tell us this, so please choose the branch you attend.",
+    "welcomeLetSFinishSettingUp": "Welcome! Let's finish setting up your account.",
+    "profile": "Profile",
+    "youLlGetEmailConfirmingChange": "You'll get an email confirming the change. If you didn't do this, contact your church administrator immediately.",
+    "weVeEmailedConfirmationReturningSettings": "We've emailed you a confirmation. Returning to settings…",
+    "yourOldEmailGetAlertWasn": "Your old email will get an alert with a “This wasn't me” link. Clicking that reverts the change immediately and locks your account until you reset your password.",
+    "confirmPasswordThenLlSendVerification": "Confirm your password, then we'll send a verification link to the new address.",
+    "dailyDigestSendsSingle88239": "Daily digest sends a single 8&#8239;AM roundup per category instead of an email per event. Security alerts always go immediately.",
+    "updateLoginPasswordLlNeedCurrent": "Update your login password. You'll need your current one.",
+    "lightDarkMatchDeviceSPreference": "Light, dark, or match your device's preference.",
+    "legalConsent": "Legal & consent"
   },
   "auth": {
     "dailyVerse": "DAILY VERSE",
@@ -369,7 +386,14 @@
       "uppercase": "One uppercase letter",
       "number": "One number",
       "special": "One special character"
-    }
+    },
+    "yourProviderDidnTTellUs": "Your provider didn't tell us this, so please choose the branch you attend.",
+    "youLlAbleAccessAppOnce": "You'll be able to access the app once you complete this step and an admin approves your account.",
+    "youLlReceiveNotificationOnceAccount": "You'll receive a notification once your account is approved.",
+    "couldnTReachServerRefreshPage": "Couldn't reach the server. Refresh the page or try again shortly.",
+    "youLlPickBranchDuringOnboarding": "You'll pick your branch during onboarding.",
+    "weVeSentVerificationLinkEmail": "We've sent a verification link to your email address. Click the link to confirm your email and complete registration.",
+    "theLinkMayExpiredVeAlready": "The link may have expired, or you've already verified this email."
   },
   "branches": {
     "selectARegion": "Select a region",
@@ -453,7 +477,8 @@
     "cancel": "Cancel",
     "loadingRegions": "Loading regions",
     "noRegionsFoundCreateOneAbove": "No regions found. Create one above.",
-    "edit": "Edit"
+    "edit": "Edit",
+    "newRegion": "+ New Region"
   },
   "attendance": {
     "members": "Members",
@@ -548,7 +573,9 @@
     "punctualityBreakdown": "Punctuality breakdown",
     "serviceHistory": "Service history",
     "everyServiceInTheWindowOldest": "Every service in the window, oldest first.",
-    "noServicesInThisWindowYet": "No services in this window yet."
+    "noServicesInThisWindowYet": "No services in this window yet.",
+    "expectedAttendance": "Expected attendance",
+    "pointCameraCodeAdminDeskScreen": "Point your camera at the code on the admin desk screen."
   },
   "reports": {
     "allBranches": "All branches",
@@ -663,7 +690,9 @@
     "onProbation": "On probation",
     "serviceAttendancePerWeek": "Service attendance per week",
     "noServiceAttendanceRecordedInThis": "No service attendance recorded in this window yet.",
-    "trackChurchGrowthAttendanceTrendsAnd": "Track church growth, attendance trends, and outreach, all in one calm view."
+    "trackChurchGrowthAttendanceTrendsAnd": "Track church growth, attendance trends, and outreach, all in one calm view.",
+    "onceAttendServiceGetMarkedPresent": "Once you attend a service and get marked present (or check in yourself), your weekly rate will show up here.",
+    "reportsAnalytics": "Reports & Analytics"
   },
   "concerns": {
     "concerns": "Concerns",
@@ -676,7 +705,8 @@
     "noFirstTimersWaitingOnA": "No first-timers waiting on a first visit.",
     "everyoneInThisBranchBelongsTo": "Everyone in this branch belongs to a fellowship or department.",
     "followUps": "Follow-ups",
-    "peopleWhoNeedContactAndBelong": "People who need contact and belong to no fellowship or department. Group follow-ups live on each fellowship and department page."
+    "peopleWhoNeedContactAndBelong": "People who need contact and belong to no fellowship or department. Group follow-ups live on each fellowship and department page.",
+    "nothingDue": "Nothing due."
   },
   "departments": {
     "weeklyAttendedCount": "Weekly attended count",
@@ -897,7 +927,14 @@
     "theLeaderViewShowsDepartmentsYou": "The leader view shows departments you lead or co-lead. Switch to your member view to browse and apply to one.",
     "noDepartmentsFound": "No departments found.",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "couldnTLoadRotaTryAgain": "Couldn't load your rota. Try again in a moment.",
+    "next90DaysDraftsEditedRegenerated": "Next 90 days. Drafts can be edited or regenerated; publish to notify members. Click any service to manage assignments.",
+    "rolesNeedFilledEachServiceE": "Roles you need filled each service (e.g. Lead Vocal x1, Soprano x2). Positions = how many people for that role.",
+    "membersRequestSwapTheirAssignmentApprove": "Members request a swap on their assignment; you approve it here and the system reassigns automatically.",
+    "numberPositions": "Number of positions",
+    "numberWeeks": "Number of weeks",
+    "notesOptional": "Notes (optional)"
   },
   "fellowships": {
     "serviceAttendance": "Service attendance",
@@ -1065,7 +1102,13 @@
     "viewRoute": "View route →",
     "availableFellowships": "Available fellowships:",
     "fellowshipTypes": "Fellowship Types",
-    "loadingMap": "Loading map..."
+    "loadingMap": "Loading map...",
+    "sundayMidweekSpecialChurchServicesAttended": "Sunday / midweek / special church services attended by anyone in this fellowship.",
+    "attendanceFellowshipSOwnMeetings": "Attendance at this fellowship’s own meetings.",
+    "meetingScheduleOptional": "Meeting Schedule (optional)",
+    "durationMins": "Duration (mins)",
+    "meetingDurationMinutes": "Meeting duration in minutes",
+    "theLeaderReviewRequestLlNotified": "The leader will review your request. You'll be notified once approved."
   },
   "forms": {
     "remove": "Remove",
@@ -1121,7 +1164,9 @@
     "subject": "Subject",
     "form": "Form",
     "branch": "Branch",
-    "submitted": "Submitted"
+    "submitted": "Submitted",
+    "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church is committed to respecting the privacy and security of your personal data. We use the information you provide to be able to contact you, conduct home visits where appropriate and to administer and keep you informed of church related activities, such as new believers classes. The information you provide will be shared with our internal teams for such purposes. We securely store this information until it is no longer required.",
+    "formsDataCapture": "Forms & Data Capture"
   },
   "members": {
     "directoryMember": "Directory member",
@@ -1275,7 +1320,11 @@
     "yourJourney": "Your Journey",
     "yourSupportTeam": "Your Support Team",
     "teacher": "Teacher",
-    "mentor": "Mentor"
+    "mentor": "Mentor",
+    "thisMemberUnder16NeedSafeguarding": "This member is under 16. You need safeguarding access (admin, pastor, the member's guardian, or a Safeguarding Lead) to view their health record.",
+    "toViewRemoveFellowshipMembershipsOpen": "To view or remove fellowship memberships, open the fellowship's Members tab.",
+    "minorRecordsNeedSafeguardingLeadS": "Minor records that need a Safeguarding Lead's attention",
+    "youDonTSafeguardingAccessList": "You don't have safeguarding access to this list"
   },
   "membership": {
     "cohortView": "Cohort view",
@@ -1361,7 +1410,8 @@
     "noCohortsYetCreateOneTo": "No cohorts yet. Create one to start admitting people.",
     "youAreAConfirmedMember": "You are a confirmed Member",
     "youAreOnTheListFor": "You are on the list for the next class",
-    "noOneFromYourBranchIs": "No one from your branch is currently enrolled in a cohort."
+    "noOneFromYourBranchIs": "No one from your branch is currently enrolled in a cohort.",
+    "adminNotesOptional": "Admin notes (optional)"
   },
   "newBelievers": {
     "unassigned": "Unassigned",
@@ -1487,7 +1537,8 @@
     "loadingSessions": "Loading sessions...",
     "noSessionsScheduledYet": "No sessions scheduled yet.",
     "createSession": "Create Session",
-    "selectASessionToSeeDetails": "Select a session to see details."
+    "selectASessionToSeeDetails": "Select a session to see details.",
+    "thisMemberEmailFileSoThey": "This member has no email on file, so they won't receive an assignment notification."
   },
   "outreach": {
     "failedToLoadProgram": "Failed to load program",
@@ -1570,7 +1621,15 @@
     "registrationClosed": "Registration closed",
     "view": "View",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "openAllBranchesAllowPastorsLeaders": "Open to All Branches (Allow pastors and leaders from all branches to register)",
+    "organizedDepartmentOptional": "Organized for department (Optional)",
+    "organizedFellowshipOptional": "Organized for fellowship (Optional)",
+    "coordinatorOptional": "Coordinator (Optional)",
+    "descriptionOptional": "Description (Optional)",
+    "addressOptional": "Address (Optional)",
+    "notesOptional": "Notes (Optional)",
+    "cityOptional": "City (Optional)"
   },
   "security": {
     "connectedAccounts": "Connected accounts",
@@ -1674,7 +1733,17 @@
     "loadingSouls": "Loading souls...",
     "noSoulsFoundStartByCapturing": "No souls found. Start by capturing your first soul!",
     "loadingDashboard": "Loading dashboard...",
-    "allSouls": "All Souls"
+    "allSouls": "All Souls",
+    "usePrioritizeHomeVisitsEscalationsE": "Use this to prioritize home visits or escalations (e.g., soul is responsive but situation requires follow-up)",
+    "durationMinutes": "Duration in minutes",
+    "onBehalfDepartmentOptional": "On behalf of department (Optional)",
+    "onBehalfFellowshipOptional": "On behalf of fellowship (Optional)",
+    "ageRangeOptional": "Age Range (Optional)",
+    "addressOptional": "Address (Optional)",
+    "genderOptional": "Gender (Optional)",
+    "emailOptional": "Email (Optional)",
+    "notesOptional": "Notes (Optional)",
+    "cityOptional": "City (Optional)"
   },
   "legal": {
     "privacyNotice": "Privacy Notice",
@@ -1699,7 +1768,9 @@
       "admin_confidentiality": "Confidentiality & Data Handling Undertaking"
     },
     "beforeAccepting": "before accepting.",
-    "listOr": ", or "
+    "listOr": ", or ",
+    "trackWhichPoliciesVeAcceptedWhen": "Track which policies you've accepted and when.",
+    "legalConsent": "Legal & consent"
   },
   "marketing": {
     "kairosChurchAdministrationPlatform": "Kairos church administration platform",

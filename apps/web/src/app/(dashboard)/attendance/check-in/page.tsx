@@ -207,7 +207,7 @@ export default function SelfCheckInPage() {  const { t } = useTranslation(['atte
         onOpenChange={setScannerOpen}
         onScan={handleScannedQr}
         title={t('attendance:scanCheckInQr')}
-        description="Point your camera at the code on the admin desk screen."
+        description={t('attendance:pointCameraCodeAdminDeskScreen')}
       />
     </div>
   );

@@ -118,9 +118,7 @@ export function MyRotaTab({ branchDepartmentId }: Props) {  const { t } = useTra
       </Card>
 
       {isError ? (
-        <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-          Couldn&apos;t load your rota. Try again in a moment.
-        </p>
+        <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('departments:couldnTLoadRotaTryAgain')}</p>
       ) : isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (

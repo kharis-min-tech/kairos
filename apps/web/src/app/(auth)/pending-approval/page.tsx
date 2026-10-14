@@ -45,9 +45,7 @@ export default function PendingApprovalPage() {  const { t } = useTranslation(['
                 />
               </svg>
             </div>
-            <p className="text-sm text-muted-foreground">
-              You&apos;ll receive a notification once your account is approved.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('auth:youLlReceiveNotificationOnceAccount')}</p>
           </div>
 
           {accessToken ? (

@@ -34,10 +34,8 @@ export default function LegalSettingsPage() {  const { t } = useTranslation(['se
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Legal &amp; consent</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Track which policies you&apos;ve accepted and when.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('legal:legalConsent')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('legal:trackWhichPoliciesVeAcceptedWhen')}</p>
       </div>
 
       <Card>

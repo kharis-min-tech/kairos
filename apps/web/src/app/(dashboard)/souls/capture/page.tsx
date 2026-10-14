@@ -208,7 +208,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email (Optional)</Label>
+          <Label htmlFor="email">{t('souls:emailOptional')}</Label>
           <Input
             id="email"
             type="email"
@@ -222,7 +222,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Address (Optional)</Label>
+          <Label htmlFor="address">{t('souls:addressOptional')}</Label>
           <Input
             id="address"
             value={formData.address}
@@ -232,7 +232,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="city">City (Optional)</Label>
+          <Label htmlFor="city">{t('souls:cityOptional')}</Label>
           <Input
             id="city"
             value={formData.city}
@@ -243,7 +243,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="gender">Gender (Optional)</Label>
+            <Label htmlFor="gender">{t('souls:genderOptional')}</Label>
             <CustomSelect
               id="gender"
               value={formData.gender}
@@ -254,7 +254,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ageRange">Age Range (Optional)</Label>
+            <Label htmlFor="ageRange">{t('souls:ageRangeOptional')}</Label>
             <CustomSelect
               id="ageRange"
               value={formData.ageRange}
@@ -281,7 +281,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
         {(myFellowships.length > 0 || myDepartments.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fellowshipId">On behalf of fellowship (Optional)</Label>
+              <Label htmlFor="fellowshipId">{t('souls:onBehalfFellowshipOptional')}</Label>
               <CustomSelect
                 id="fellowshipId"
                 value={formData.fellowshipId}
@@ -291,7 +291,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="branchDepartmentId">On behalf of department (Optional)</Label>
+              <Label htmlFor="branchDepartmentId">{t('souls:onBehalfDepartmentOptional')}</Label>
               <CustomSelect
                 id="branchDepartmentId"
                 value={formData.branchDepartmentId}
@@ -304,7 +304,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="notes">Notes (Optional)</Label>
+          <Label htmlFor="notes">{t('souls:notesOptional')}</Label>
           <Textarea
             id="notes"
             value={formData.notes}

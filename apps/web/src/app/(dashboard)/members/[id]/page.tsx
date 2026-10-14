@@ -476,9 +476,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                     {addToFellowship.isPending ? 'Adding…' : 'Assign'}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  To view or remove fellowship memberships, open the fellowship&apos;s Members tab.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('members:toViewRemoveFellowshipMembershipsOpen')}</p>
               </>
             ) : (
               <div className="space-y-3 rounded-lg bg-[#5D3FD3]/5 p-4">

@@ -116,10 +116,7 @@ export default function NotificationsSettingsPage() {  const { t } = useTranslat
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Daily digest sends a single 8&#8239;AM roundup per category instead of an
-        email per event. Security alerts always go immediately.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('settings:dailyDigestSendsSingle88239')}</p>
     </div>
   );
 }

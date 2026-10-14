@@ -132,7 +132,13 @@
     "previous": "Précédent",
     "uploading": "Envoi en cours…",
     "noImage": "Aucune image",
-    "startingCamera": "Démarrage de la caméra…"
+    "startingCamera": "Démarrage de la caméra…",
+    "weCouldnTLoadDashboard": "Impossible de charger votre tableau de bord.",
+    "numberSoulsCurrentlyActiveFollowUp": "Nombre d'âmes actuellement en phase de suivi actif (Nouveau, Suivi en cours ou Intéressé).",
+    "formulaConvertedSoulsTotalSouls100": "Formule : (âmes converties / total des âmes) × 100",
+    "criticalRed": "Critique (rouge)",
+    "onTrackGreen": "Sur la bonne voie (vert)",
+    "monitorAmber": "À surveiller (orange)"
   },
   "nav": {
     "sections": {
@@ -250,7 +256,18 @@
     "thisWillScrubYourNameEmail": "Cela effacera votre nom, votre e-mail, votre téléphone, votre adresse, votre photo et vos autres données personnelles de Kharis Church. Votre historique de présence et votre piste d'audit de consentement sont conservés mais anonymisés. Cette action est irréversible.",
     "type": "Tapez",
     "toConfirm": "pour confirmer",
-    "logOut": "Se déconnecter"
+    "logOut": "Se déconnecter",
+    "profile": "Profil",
+    "yourProviderDidnTTellUs": "Votre fournisseur ne nous l'a pas indiqué, veuillez donc choisir l'antenne que vous fréquentez.",
+    "welcomeLetSFinishSettingUp": "Bienvenue ! Terminons la configuration de votre compte.",
+    "youLlGetEmailConfirmingChange": "Vous recevrez un e-mail confirmant le changement. Si vous n'êtes pas à l'origine de cette action, contactez immédiatement l'administrateur de votre église.",
+    "weVeEmailedConfirmationReturningSettings": "Nous vous avons envoyé une confirmation par e-mail. Retour aux paramètres…",
+    "yourOldEmailGetAlertWasn": "Votre ancienne adresse recevra une alerte avec un lien « Ce n'était pas moi ». Cliquer dessus annule immédiatement le changement et verrouille votre compte jusqu'à la réinitialisation de votre mot de passe.",
+    "confirmPasswordThenLlSendVerification": "Confirmez votre mot de passe, puis nous enverrons un lien de vérification à la nouvelle adresse.",
+    "dailyDigestSendsSingle88239": "Le résumé quotidien envoie un seul récapitulatif à 8 h par catégorie au lieu d'un e-mail par événement. Les alertes de sécurité sont toujours envoyées immédiatement.",
+    "updateLoginPasswordLlNeedCurrent": "Mettez à jour votre mot de passe de connexion. Vous aurez besoin de l'actuel.",
+    "lightDarkMatchDeviceSPreference": "Clair, sombre, ou selon la préférence de votre appareil.",
+    "legalConsent": "Mentions légales et consentement"
   },
   "auth": {
     "finishSettingUp": "Terminer la configuration",
@@ -369,7 +386,14 @@
       "uppercase": "Une lettre majuscule",
       "number": "Un chiffre",
       "special": "Un caractère spécial"
-    }
+    },
+    "yourProviderDidnTTellUs": "Votre fournisseur ne nous l'a pas indiqué, veuillez donc choisir l'antenne que vous fréquentez.",
+    "youLlAbleAccessAppOnce": "Vous pourrez accéder à l'application une fois cette étape terminée et votre compte approuvé par un administrateur.",
+    "youLlReceiveNotificationOnceAccount": "Vous recevrez une notification dès que votre compte sera approuvé.",
+    "couldnTReachServerRefreshPage": "Impossible de joindre le serveur. Actualisez la page ou réessayez dans un instant.",
+    "youLlPickBranchDuringOnboarding": "Vous choisirez votre antenne lors de l'intégration.",
+    "weVeSentVerificationLinkEmail": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Cliquez sur ce lien pour confirmer votre e-mail et terminer votre inscription.",
+    "theLinkMayExpiredVeAlready": "Le lien a peut-être expiré, ou vous avez déjà vérifié cet e-mail."
   },
   "branches": {
     "deactivate": "Désactiver",
@@ -453,7 +477,8 @@
     "continent": "Continent *",
     "loadingRegions": "Chargement des régions",
     "noRegionsFoundCreateOneAbove": "Aucune région trouvée. Créez-en une ci-dessus.",
-    "edit": "Modifier"
+    "edit": "Modifier",
+    "newRegion": "+ Nouvelle région"
   },
   "attendance": {
     "members": "Membres",
@@ -548,7 +573,9 @@
     "punctualityBreakdown": "Détail de la ponctualité",
     "serviceHistory": "Historique des cultes",
     "everyServiceInTheWindowOldest": "Tous les cultes de la période, du plus ancien au plus récent.",
-    "noServicesInThisWindowYet": "Aucun culte sur cette période pour l'instant."
+    "noServicesInThisWindowYet": "Aucun culte sur cette période pour l'instant.",
+    "expectedAttendance": "Présence attendue",
+    "pointCameraCodeAdminDeskScreen": "Dirigez votre appareil photo vers le code affiché sur l'écran de l'accueil."
   },
   "reports": {
     "weeklyAttendance": "Présences hebdomadaires",
@@ -663,7 +690,9 @@
     "onProbation": "À l'essai",
     "serviceAttendancePerWeek": "Présence aux cultes par semaine",
     "noServiceAttendanceRecordedInThis": "Aucune présence aux cultes enregistrée sur cette période pour l'instant.",
-    "trackChurchGrowthAttendanceTrendsAnd": "Suivez la croissance de l'église, les tendances de présence et l'évangélisation, tout dans une seule vue claire."
+    "trackChurchGrowthAttendanceTrendsAnd": "Suivez la croissance de l'église, les tendances de présence et l'évangélisation, tout dans une seule vue claire.",
+    "onceAttendServiceGetMarkedPresent": "Dès que vous assisterez à un culte et serez marqué présent (ou vous enregistrerez vous-même), votre taux hebdomadaire apparaîtra ici.",
+    "reportsAnalytics": "Rapports et analyses"
   },
   "concerns": {
     "concerns": "Préoccupations",
@@ -676,7 +705,8 @@
     "followUpQueues": "Files de suivi",
     "noFirstTimersWaitingOnA": "Aucun nouveau venu en attente d'une première visite.",
     "everyoneInThisBranchBelongsTo": "Chaque personne de cette antenne appartient à une cellule ou à un département.",
-    "peopleWhoNeedContactAndBelong": "Personnes à contacter qui n'appartiennent à aucune cellule ni département. Les suivis de groupe se trouvent sur la page de chaque cellule et département."
+    "peopleWhoNeedContactAndBelong": "Personnes à contacter qui n'appartiennent à aucune cellule ni département. Les suivis de groupe se trouvent sur la page de chaque cellule et département.",
+    "nothingDue": "Rien à faire."
   },
   "departments": {
     "member": "Membre",
@@ -897,7 +927,14 @@
     "requestToJoinAnyOfThe": "Demandez à rejoindre l'une des équipes ci-dessous.",
     "youDonTLeadADepartment": "Vous ne dirigez aucun département",
     "theLeaderViewShowsDepartmentsYou": "La vue responsable affiche les départements que vous dirigez ou co-dirigez. Passez à votre vue membre pour en parcourir et postuler.",
-    "previous": "Précédent"
+    "previous": "Précédent",
+    "couldnTLoadRotaTryAgain": "Impossible de charger votre planning. Réessayez dans un instant.",
+    "next90DaysDraftsEditedRegenerated": "90 prochains jours. Les brouillons peuvent être modifiés ou régénérés ; publiez pour prévenir les membres. Cliquez sur un culte pour gérer les affectations.",
+    "rolesNeedFilledEachServiceE": "Les postes à pourvoir pour chaque culte (ex. Chant principal x1, Soprano x2). Postes = combien de personnes pour ce rôle.",
+    "membersRequestSwapTheirAssignmentApprove": "Les membres demandent un échange sur leur affectation ; vous l'approuvez ici et le système réaffecte automatiquement.",
+    "numberPositions": "Nombre de postes",
+    "numberWeeks": "Nombre de semaines",
+    "notesOptional": "Notes (facultatif)"
   },
   "fellowships": {
     "serviceAttendance": "Présence aux cultes",
@@ -1065,7 +1102,13 @@
     "viewRoute": "Voir l'itinéraire →",
     "availableFellowships": "Cellules disponibles :",
     "fellowshipTypes": "Types de cellule",
-    "loadingMap": "Chargement de la carte..."
+    "loadingMap": "Chargement de la carte...",
+    "sundayMidweekSpecialChurchServicesAttended": "Cultes du dimanche, de semaine et spéciaux suivis par les membres de cette cellule.",
+    "attendanceFellowshipSOwnMeetings": "Présence aux réunions propres à cette cellule.",
+    "meetingScheduleOptional": "Calendrier des réunions (facultatif)",
+    "durationMins": "Durée (min)",
+    "meetingDurationMinutes": "Durée de la réunion en minutes",
+    "theLeaderReviewRequestLlNotified": "Le responsable examinera votre demande. Vous serez prévenu dès son approbation."
   },
   "forms": {
     "remove": "Retirer",
@@ -1121,7 +1164,9 @@
     "to": "Au",
     "noSubmissionsMatchTheseFilters": "Aucune soumission ne correspond à ces filtres.",
     "subject": "Objet",
-    "submitted": "Soumis le"
+    "submitted": "Soumis le",
+    "kharisChurchCommittedRespectingPrivacySecurity": "Kharis Church s'engage à respecter la confidentialité et la sécurité de vos données personnelles. Nous utilisons les informations que vous fournissez pour pouvoir vous contacter, effectuer des visites à domicile le cas échéant, et pour administrer et vous tenir informé des activités de l'église, telles que les cours pour nouveaux croyants. Les informations que vous fournissez seront partagées avec nos équipes internes à ces fins. Nous les conservons en sécurité jusqu'à ce qu'elles ne soient plus nécessaires.",
+    "formsDataCapture": "Formulaires et collecte de données"
   },
   "members": {
     "theyArenTInTheDirectory": "Ils ne sont pas dans l'annuaire : nous enregistrerons donc le nom sans dossier.",
@@ -1275,7 +1320,11 @@
     "joinedADepartment": "A rejoint un département",
     "yourJourney": "Votre parcours",
     "yourSupportTeam": "Votre équipe de soutien",
-    "mentor": "Mentor"
+    "mentor": "Mentor",
+    "thisMemberUnder16NeedSafeguarding": "Ce membre a moins de 16 ans. Vous devez disposer d'un accès de protection (administrateur, pasteur, tuteur du membre, ou référent protection) pour consulter son dossier de santé.",
+    "toViewRemoveFellowshipMembershipsOpen": "Pour voir ou retirer les appartenances à une cellule, ouvrez l'onglet Membres de la cellule.",
+    "minorRecordsNeedSafeguardingLeadS": "Dossiers de mineurs nécessitant l'attention d'un référent protection",
+    "youDonTSafeguardingAccessList": "Vous n'avez pas d'accès de protection à cette liste"
   },
   "membership": {
     "eGWhoWeAreAs": "ex. Qui nous sommes en tant qu'église",
@@ -1361,7 +1410,8 @@
     "loadingCohorts": "Chargement des promotions…",
     "noCohortsYetCreateOneTo": "Aucune promotion pour l'instant. Créez-en une pour commencer à admettre des personnes.",
     "youAreOnTheListFor": "Vous êtes inscrit pour la prochaine classe",
-    "noOneFromYourBranchIs": "Personne de votre antenne n'est actuellement inscrit dans une promotion."
+    "noOneFromYourBranchIs": "Personne de votre antenne n'est actuellement inscrit dans une promotion.",
+    "adminNotesOptional": "Notes d'administration (facultatif)"
   },
   "newBelievers": {
     "unassigned": "Non attribué",
@@ -1487,7 +1537,8 @@
     "loadingSessions": "Chargement des sessions...",
     "noSessionsScheduledYet": "Aucune session planifiée pour l'instant.",
     "createSession": "Créer une session",
-    "selectASessionToSeeDetails": "Sélectionnez une session pour voir les détails."
+    "selectASessionToSeeDetails": "Sélectionnez une session pour voir les détails.",
+    "thisMemberEmailFileSoThey": "Ce membre n'a pas d'e-mail enregistré, il ne recevra donc pas de notification d'affectation."
   },
   "outreach": {
     "completed": "Terminé",
@@ -1570,7 +1621,15 @@
     "youCreatedThis": "Vous avez créé ceci",
     "registrationClosed": "Inscriptions closes",
     "view": "Voir",
-    "previous": "Précédent"
+    "previous": "Précédent",
+    "openAllBranchesAllowPastorsLeaders": "Ouvert à toutes les antennes (permet aux pasteurs et responsables de toutes les antennes de s'inscrire)",
+    "organizedDepartmentOptional": "Organisé pour le département (facultatif)",
+    "organizedFellowshipOptional": "Organisé pour la cellule (facultatif)",
+    "coordinatorOptional": "Coordinateur (facultatif)",
+    "descriptionOptional": "Description (facultatif)",
+    "addressOptional": "Adresse (facultatif)",
+    "notesOptional": "Notes (facultatif)",
+    "cityOptional": "Ville (facultatif)"
   },
   "security": {
     "connectedAccounts": "Comptes associés",
@@ -1674,7 +1733,17 @@
     "loadingSouls": "Chargement des âmes...",
     "noSoulsFoundStartByCapturing": "Aucune âme trouvée. Commencez par enregistrer votre première âme !",
     "loadingDashboard": "Chargement du tableau de bord...",
-    "allSouls": "Toutes les âmes"
+    "allSouls": "Toutes les âmes",
+    "usePrioritizeHomeVisitsEscalationsE": "Utilisez ceci pour prioriser les visites à domicile ou les escalades (ex. l'âme répond mais la situation demande un suivi)",
+    "durationMinutes": "Durée en minutes",
+    "onBehalfDepartmentOptional": "Au nom du département (facultatif)",
+    "onBehalfFellowshipOptional": "Au nom de la cellule (facultatif)",
+    "ageRangeOptional": "Tranche d'âge (facultatif)",
+    "addressOptional": "Adresse (facultatif)",
+    "genderOptional": "Sexe (facultatif)",
+    "emailOptional": "E-mail (facultatif)",
+    "notesOptional": "Notes (facultatif)",
+    "cityOptional": "Ville (facultatif)"
   },
   "legal": {
     "privacyNotice": "Avis de confidentialité",
@@ -1699,7 +1768,9 @@
       "admin_confidentiality": "Engagement de confidentialité et de traitement des données"
     },
     "beforeAccepting": "avant d'accepter.",
-    "listOr": ", ou "
+    "listOr": ", ou ",
+    "trackWhichPoliciesVeAcceptedWhen": "Suivez les politiques que vous avez acceptées et à quelle date.",
+    "legalConsent": "Mentions légales et consentement"
   },
   "marketing": {
     "helpGuides": "Aide et guides",
