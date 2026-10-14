@@ -317,7 +317,7 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
         </p>
         <p className="text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">
           — {verse.ref} ({verse.version})
-          {verse.fellBackToEnglish ? ` · ${t('common:verseInEnglish')}` : ''}
+          {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
         </p>
       </div>
     </div>

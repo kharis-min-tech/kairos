@@ -89,6 +89,7 @@ function isTranslatable(file) {
 }
 
 const skipped = [];
+const collisions = [];
 
 for (const file of files) {
   if (!isTranslatable(file)) {
@@ -117,6 +118,12 @@ for (const file of files) {
     if (base[ns][k] === undefined) {
       base[ns][k] = v;
       added++;
+    } else if (base[ns][k] !== v) {
+      // The generated key already exists holding different English. Keeping
+      // the catalogue value silently rewords the screen -- this is how a
+      // "Retry" button started reading "Try again". Report it; the key or the
+      // wording has to be reconciled by hand.
+      collisions.push(`${ns}.${k}: catalogue has ${JSON.stringify(base[ns][k])}, ${relative(ROOT, file)} said ${JSON.stringify(v)}`);
     }
   }
   touched++;
@@ -127,6 +134,10 @@ for (const file of files) {
 writeFileSync(basePath, `${JSON.stringify(base, null, 2)}\n`);
 console.log(`\n${touched} files rewritten, ${added} new keys in ${cfg.locales}/en.json`);
 console.log(Object.entries(perNs).map(([n, c]) => `  ${n}: ${c}`).join('\n'));
+if (collisions.length) {
+  console.log(`\n${collisions.length} key collision(s) -- the English text on screen has changed:`);
+  for (const c of collisions) console.log(`  ! ${c}`);
+}
 if (skipped.length) {
   console.log(`\n${skipped.length} server components skipped (no 'use client'):`);
   for (const f of skipped) console.log(`  ${f}`);

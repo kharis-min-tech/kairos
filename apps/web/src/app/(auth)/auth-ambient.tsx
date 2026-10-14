@@ -42,7 +42,7 @@ export function AuthAmbient() {
             <div className="mt-1.5 text-[13px] italic leading-[1.45]">&ldquo;{verse.text}&rdquo;</div>
             <div className="mt-1.5 text-[11px] text-[#8a6410]">
               — {verse.ref} ({verse.version})
-              {verse.fellBackToEnglish ? ` · ${t('common:verseInEnglish')}` : ''}
+              {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
             </div>
           </div>
         </FloatCard>

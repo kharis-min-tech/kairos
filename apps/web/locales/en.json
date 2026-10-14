@@ -5,7 +5,7 @@
     "cancel": "Cancel",
     "search": "Search",
     "loading": "Loading…",
-    "retry": "Try again",
+    "retry": "Retry",
     "somethingWentWrong": "Something went wrong. Please try again.",
     "language": "Language",
     "dailyVerse": "Daily verse",
@@ -132,8 +132,7 @@
     "clear": "Clear",
     "uploading": "Uploading…",
     "noImage": "No image",
-    "startingCamera": "Starting camera…",
-    "verseInEnglish": "Shown in English"
+    "startingCamera": "Starting camera…"
   },
   "nav": {
     "sections": {
