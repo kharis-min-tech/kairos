@@ -930,7 +930,8 @@
     "subscribe": "S'abonner",
     "sending": "Envoi…",
     "export": "Exporter",
-    "sendConfirmationLink": "Envoyer le lien de confirmation"
+    "sendConfirmationLink": "Envoyer le lien de confirmation",
+    "exportedOn": "Exporté le {{date}}"
   },
   "admin": {
     "retry": "Réessayer",

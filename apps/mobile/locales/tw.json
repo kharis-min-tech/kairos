@@ -967,7 +967,8 @@
     "subscribe": "Ka ho",
     "sending": "Ɛresoma…",
     "export": "Yi",
-    "sendConfirmationLink": "Soma nhyɛmu link"
+    "sendConfirmationLink": "Soma nhyɛmu link",
+    "exportedOn": "Yɛyii no {{date}}"
   },
   "admin": {
     "retry": "Sɔ hwɛ bio",

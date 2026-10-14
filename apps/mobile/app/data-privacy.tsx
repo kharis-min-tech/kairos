@@ -126,8 +126,8 @@ export default function DataPrivacy() {  const { t } = useTranslation(['security
 </head>
 <body>
 <header>
-  <h1>{t('security:kharisMyData')}</h1>
-  <p class="meta">Exported ${esc(stamp)}</p>
+  <h1>${esc(t('security:kharisMyData'))}</h1>
+  <p class="meta">${esc(t('security:exportedOn', { date: stamp }))}</p>
 </header>
 ${sections}
 </body>

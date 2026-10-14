@@ -115,6 +115,13 @@ function hardcoded(file) {
   for (const m of src.matchAll(/toast\.(?:success|error|info|warning|message)\(\s*['"`]([^'"`]{3,})/g)) {
     if (/[A-Za-z]{3}/.test(m[1])) n++;
   }
+  // A t() call written as JSX inside a template literal. `{t('k')}` in an
+  // HTML string is literal text, not a call -- the mobile data export shipped
+  // "{t('security:kharisMyData')}" as its document heading. HTML uses class=,
+  // JSX uses className=, which tells the two apart.
+  for (const m of src.matchAll(/^.*\bclass="[^"]*".*$/gm)) {
+    if (/(?<!\$)\{t\(/.test(m[0])) n++;
+  }
   // English on both arms of a ternary -- button labels that flip while saving,
   // show/hide aria-labels, empty states. These sit inside a JSX expression, so
   // stripping {...} hid every one of them; there were 141.

@@ -932,7 +932,8 @@
     "unsubscribe": "Unsubscribe",
     "subscribe": "Subscribe",
     "sending": "Sending…",
-    "sendConfirmationLink": "Send confirmation link"
+    "sendConfirmationLink": "Send confirmation link",
+    "exportedOn": "Exported {{date}}"
   },
   "admin": {
     "showToCongregation": "Show to congregation",

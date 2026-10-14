@@ -967,7 +967,8 @@
     "subscribe": "Jɔyn",
     "sending": "I de sɛn…",
     "export": "Ɛkspɔt",
-    "sendConfirmationLink": "Sɛn di kɔnfameshɔn link"
+    "sendConfirmationLink": "Sɛn di kɔnfameshɔn link",
+    "exportedOn": "Wi pul am pan {{date}}"
   },
   "admin": {
     "retry": "Tray bak",
