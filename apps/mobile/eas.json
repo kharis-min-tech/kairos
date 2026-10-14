@@ -43,7 +43,8 @@
       "distribution": "store",
       "ios": {
         "simulator": false
-      }
+      },
+      "autoIncrement": true
     }
   },
   "submit": {
