@@ -36,6 +36,7 @@ import { Spotlight } from "@/components/motion/spotlight";
 import { Halo } from "@/components/motion/halo";
 import { Assemble } from "@/components/motion/assemble";
 import { useTranslation } from 'react-i18next';
+import { resolveVerse } from '@kairos/core';
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 // Six shipped capabilities. Donations + Notifications deliberately left off
@@ -139,7 +140,12 @@ function PreviewWindow({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function KairosLanding() {  const { t } = useTranslation(['marketing', 'common']);
+export default function KairosLanding() {
+  const { t, i18n } = useTranslation(['marketing', 'common']);
+  // Third copy of a hardcoded John 15:12 on this site, after the login card
+  // and the dashboard. It comes from the shared verse source now, so it names
+  // its Bible version and follows the reader's language.
+  const verse = resolveVerse(i18n.language);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0d0d0d] text-[#1a1c1c] dark:text-white font-sans antialiased">
@@ -700,7 +706,7 @@ export default function KairosLanding() {  const { t } = useTranslation(['market
                       <ul className="space-y-1.5">
                         <li className="flex items-center gap-1.5 text-[8px]">
                           <span className="w-1 h-1 rounded-full bg-[#16a34a] shrink-0" />
-                          <span className="text-black/75 dark:text-white/80 truncate">5 new members approved</span>
+                          <span className="text-black/75 dark:text-white/80 truncate">{t('marketing:newMembersApproved', { count: 5 })}</span>
                         </li>
                         <li className="flex items-center gap-1.5 text-[8px]">
                           <span className="w-1 h-1 rounded-full bg-[#5D3FD3] shrink-0" />
@@ -793,9 +799,11 @@ export default function KairosLanding() {  const { t } = useTranslation(['market
                           <span className="text-[8px] uppercase tracking-wider text-[#f8b537] font-bold">{t('marketing:dailyVerse2')}</span>
                         </div>
                         <p className="text-[8px] text-black/75 dark:text-white/80 italic leading-snug">
-                          &ldquo;Love one another as I have loved you.&rdquo;
+                          &ldquo;{verse.text}&rdquo;
                         </p>
-                        <p className="text-[8px] text-[#f8b537] mt-1 font-bold">— John 15:12</p>
+                        <p className="text-[8px] text-[#f8b537] mt-1 font-bold">
+                          — {verse.ref} ({verse.version})
+                        </p>
                       </div>
                     </div>
                   </div>

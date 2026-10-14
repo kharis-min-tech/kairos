@@ -1778,7 +1778,9 @@
     "noSpreadsheets": "Plus de tableurs.",
     "noGuesswork": "Plus d'approximations.",
     "getStartedToday": "Commencer aujourd'hui",
-    "onePlatformEveryBranchEveryMember": "Une seule plateforme. Toutes les antennes. Tous les membres."
+    "onePlatformEveryBranchEveryMember": "Une seule plateforme. Toutes les antennes. Tous les membres.",
+    "newMembersApproved_one": "{{count}} nouveau membre approuvé",
+    "newMembersApproved_other": "{{count}} nouveaux membres approuvés"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Avis de confidentialité",

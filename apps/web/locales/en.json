@@ -1778,7 +1778,9 @@
     "noSpreadsheets": "No spreadsheets.",
     "noGuesswork": "No guesswork.",
     "getStartedToday": "Get Started Today",
-    "onePlatformEveryBranchEveryMember": "One platform. Every branch. Every member."
+    "onePlatformEveryBranchEveryMember": "One platform. Every branch. Every member.",
+    "newMembersApproved_one": "{{count}} new member approved",
+    "newMembersApproved_other": "{{count}} new members approved"
   },
   "legalAcceptableUse": {
     "whoThisPolicyAppliesTo": "1. Who this policy applies to",

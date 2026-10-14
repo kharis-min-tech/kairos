@@ -1778,7 +1778,9 @@
     "noSpreadsheets": "Spreadsheet biara nni hɔ.",
     "noGuesswork": "Nsusuiɛ hunu biara nni hɔ.",
     "getStartedToday": "Fi Aseɛ Ɛnnɛ",
-    "onePlatformEveryBranchEveryMember": "Platform baako. Asɔre baa biara. Ɔmanfoɔ biara."
+    "onePlatformEveryBranchEveryMember": "Platform baako. Asɔre baa biara. Ɔmanfoɔ biara.",
+    "newMembersApproved_one": "Ɔmanfoɔ foforɔ {{count}} a wɔapene so",
+    "newMembersApproved_other": "Amanfoɔ foforɔ {{count}} a wɔapene so"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",

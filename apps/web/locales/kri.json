@@ -1778,7 +1778,9 @@
     "noGuesswork": "Nɔ mɔ gɛs wok.",
     "getStartedToday": "Bigin tide",
     "onePlatformEveryBranchEveryMember": "Wan platfɔm. Ɛvri branch. Ɛvri mɛmba.",
-    "branch": "Branch"
+    "branch": "Branch",
+    "newMembersApproved_one": "{{count}} nyu mɛmba we wi apruv",
+    "newMembersApproved_other": "{{count}} nyu mɛmba dɛn we wi apruv"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Praivasi Notis",

@@ -169,11 +169,16 @@ for (const app of APPS) {
   malformed.slice(0, 5).forEach((m) => line(`       ${m}`));
   if (malformed.length) hardFailures++;
 
+  // A plural key is stored per i18next plural category, so t('ns:thing') is
+  // satisfied by thing_one / thing_other and never by a bare `thing`.
+  const PLURAL_SUFFIXES = ['zero', 'one', 'two', 'few', 'many', 'other'];
   const absent = [...referenced]
     .filter((k) => !k.includes('${')) // skip template-built keys
     .filter((k) => {
       const [ns, rest] = k.split(':');
-      return base[ns] === undefined || valueAt(base[ns], rest) === undefined;
+      if (base[ns] === undefined) return true;
+      if (valueAt(base[ns], rest) !== undefined) return false;
+      return !PLURAL_SUFFIXES.some((sfx) => valueAt(base[ns], `${rest}_${sfx}`) !== undefined);
     });
   line(`${absent.length ? 'FAIL' : 'ok  '} referenced but absent from '${app.base}': ${absent.length}`);
   absent.slice(0, 8).forEach((k) => line(`       ${k}`));
