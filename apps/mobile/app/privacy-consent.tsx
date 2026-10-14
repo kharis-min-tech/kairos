@@ -182,7 +182,7 @@ export default function PrivacyConsent() {  const { t } = useTranslation(['secur
 
                 {isMarketing ? (
                   <Button
-                    label={status.granted ? 'Unsubscribe' : 'Subscribe'}
+                    label={status.granted ? t('security:unsubscribe') : t('security:subscribe')}
                     variant={status.granted ? 'outline' : 'primary'}
                     size="sm"
                     loading={isPending}

@@ -320,7 +320,7 @@ export default function OutreachProgramsPage() {  const { t } = useTranslation([
                           disabled={registering === program.id}
                         >
                           <UserPlus className="mr-1 h-3 w-3" />
-                          {registering === program.id ? 'Registering...' : 'Register'}
+                          {registering === program.id ? t('outreach:registering') : t('outreach:register')}
                         </Button>
                       )}
                       

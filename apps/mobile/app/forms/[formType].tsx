@@ -410,7 +410,7 @@ function DeclarativeForm({
           {submitError ? <Text style={styles.errorLine}>{submitError}</Text> : null}
 
           <Button
-            label={submit.isPending ? 'Submitting…' : 'Submit'}
+            label={submit.isPending ? t('forms:submitting') : t('forms:submit')}
             variant="primary"
             size="lg"
             fullWidth
@@ -859,6 +859,7 @@ function MemberField({
   onTypeName?: (name: string) => void;
   error?: string;
 }) {
+  const { t } = useTranslation(['forms', 'common']);
   const styles = useThemedStyles(makeStyles);
   const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
@@ -885,7 +886,7 @@ function MemberField({
         name={state === 'linked' ? (pickedName ?? 'A directory record') : typedName}
         placeholder={
           field.placeholder ??
-          (onTypeName ? 'Search the directory, or type a name' : 'Search for a person')
+          (onTypeName ? t('forms:searchDirectoryTypeName') : t('forms:searchPerson'))
         }
         linkedTag="Directory member"
         namedTag="Name only — not in the directory"

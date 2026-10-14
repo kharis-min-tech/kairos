@@ -22,6 +22,7 @@ import {
   OAuthProviderIcon,
   OAUTH_PROVIDER_LABEL,
 } from './oauth-provider-icon';
+import { useTranslation } from 'react-i18next';
 
 const PROVIDERS: {
   id: OAuthProviderId;
@@ -72,9 +73,10 @@ export function OAuthButtonGroup({
   variant = 'full',
   entranceStart,
 }: OAuthButtonGroupProps) {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const [busy, setBusy] = useState<OAuthProviderId | null>(null);
-  const prefix = actionLabel === 'continue' ? 'Continue with' : 'Sign in with';
+  const prefix = actionLabel === 'continue' ? t('auth:continue') : t('auth:sign');
 
   async function handlePress(provider: OAuthProviderId) {
     if (busy || disabled) return;

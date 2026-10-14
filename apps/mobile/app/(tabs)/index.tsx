@@ -190,7 +190,7 @@ export default function Home() {
   );
   const tailBlock = (
     <GroupsBlock
-      label={altitude === 'church' ? 'All branches' : 'Groups I lead'}
+      label={altitude === 'church' ? t('common:allBranches') : t('common:groupsILead')}
       groups={data?.groups ?? []}
       onPress={openGroup}
     />

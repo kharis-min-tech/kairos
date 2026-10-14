@@ -315,7 +315,7 @@ export default function CheckIn() {
               <ScanLine color={c.primary} size={16} strokeWidth={2} />
             )}
             <Text style={styles.scanLabel}>
-              {checkInQr.isPending ? 'Checking in…' : 'Scan QR at the desk'}
+              {checkInQr.isPending ? t('attendance:checking') : t('attendance:scanQrDesk')}
             </Text>
           </Pressable>
         ) : null}

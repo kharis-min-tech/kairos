@@ -184,7 +184,7 @@ export default function ChangeEmail() {  const { t } = useTranslation(['security
           {serverError ? <Text style={styles.errorLine}>{serverError}</Text> : null}
 
           <Button
-            label={request.isPending ? 'Sending…' : 'Send confirmation link'}
+            label={request.isPending ? t('security:sending') : t('security:sendConfirmationLink')}
             variant="primary"
             size="lg"
             fullWidth

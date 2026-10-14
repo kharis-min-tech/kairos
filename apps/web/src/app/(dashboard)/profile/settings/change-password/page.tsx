@@ -147,7 +147,7 @@ export default function ChangePasswordSettingsPage() {  const { t } = useTransla
                 className="rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] text-white"
                 disabled={submitting}
               >
-                {submitting ? 'Updating…' : 'Update password'}
+                {submitting ? t('settings:updatingPassword') : t('settings:updatePassword')}
               </Button>
             </form>
           )}

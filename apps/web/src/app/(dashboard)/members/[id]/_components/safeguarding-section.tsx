@@ -266,7 +266,7 @@ function HealthRecordForm({
           disabled={upsert.isPending}
           className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white shadow-[#5d3fd3]/20"
         >
-          {upsert.isPending ? 'Saving…' : 'Save'}
+          {upsert.isPending ? t('members:saving') : t('members:save')}
         </Button>
       </div>
     </form>

@@ -269,7 +269,7 @@ export function EnrollmentDetailDrawer({
                             : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                         }`}
                       >
-                        {a.attended ? 'Present' : 'Absent'}
+                        {a.attended ? t('newBelievers:present') : t('newBelievers:absent')}
                       </span>
                     </li>
                   ))}
@@ -344,7 +344,7 @@ export function EnrollmentDetailDrawer({
               onClick={handleConfirmAdvanceWithFeedback}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {updateEnrollment.isPending ? 'Saving...' : 'Confirm & Advance'}
+              {updateEnrollment.isPending ? t('newBelievers:saving') : t('newBelievers:confirmAdvance')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -395,7 +395,7 @@ export function EnrollmentDetailDrawer({
               onClick={handleConfirmRemove}
               className="bg-rose-600 text-white hover:bg-rose-700 border-0"
             >
-              {removeEnrollment.isPending ? 'Removing...' : 'Confirm removal'}
+              {removeEnrollment.isPending ? t('newBelievers:removing') : t('newBelievers:confirmRemoval')}
             </Button>
           </DialogFooter>
         </DialogContent>

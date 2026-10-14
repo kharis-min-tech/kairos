@@ -115,6 +115,12 @@ function hardcoded(file) {
   for (const m of src.matchAll(/toast\.(?:success|error|info|warning|message)\(\s*['"`]([^'"`]{3,})/g)) {
     if (/[A-Za-z]{3}/.test(m[1])) n++;
   }
+  // English on both arms of a ternary -- button labels that flip while saving,
+  // show/hide aria-labels, empty states. These sit inside a JSX expression, so
+  // stripping {...} hid every one of them; there were 141.
+  for (const m of src.matchAll(/\?\s*'([A-Z][^']{2,90})'\s*:\s*'([A-Z][^']{2,90})'/g)) {
+    if (/[A-Za-z]{3}/.test(m[1]) && /[A-Za-z]{3}/.test(m[2])) n += 2;
+  }
   return n;
 }
 

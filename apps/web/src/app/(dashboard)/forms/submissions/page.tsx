@@ -105,7 +105,7 @@ export default function SubmissionsPage() {  const { t } = useTranslation(['form
           className="bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
           <Download className="mr-2 h-4 w-4" />
-          {exportCsv.isPending ? 'Exporting…' : 'Export CSV'}
+          {exportCsv.isPending ? t('forms:exporting') : t('forms:exportCsv')}
         </Button>
       </div>
 

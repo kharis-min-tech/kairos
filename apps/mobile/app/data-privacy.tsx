@@ -188,7 +188,7 @@ ${sections}
             </View>
           </View>
           <Button
-            label={exporting ? 'Preparing…' : 'Export'}
+            label={exporting ? t('security:preparing') : t('security:export')}
             variant="outline"
             size="sm"
             loading={exporting}
@@ -269,7 +269,7 @@ ${sections}
                 onPress={deleteMutation.isPending ? undefined : handleDelete}
               >
                 <Text style={styles.destructiveButtonLabel}>
-                  {deleteMutation.isPending ? 'Deleting…' : 'Permanently delete'}
+                  {deleteMutation.isPending ? t('security:deleting') : t('security:permanentlyDelete')}
                 </Text>
               </Pressable>
             </View>

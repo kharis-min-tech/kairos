@@ -165,7 +165,7 @@ export default function MembershipInterestPage() {  const { t } = useTranslation
               />
             </div>
             <Button size="sm" disabled={admit.isPending || !cohortId} onClick={admitSelected}>
-              {admit.isPending ? 'Admitting…' : 'Admit'}
+              {admit.isPending ? t('membership:admitting') : t('membership:admit')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{t('membership:clear')}</Button>
           </CardContent>

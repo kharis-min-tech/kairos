@@ -164,12 +164,13 @@ export function PulseBlock({
   pulse: HomePulse;
   onWarningPress: (warning: HomePulseWarning) => void;
 }) {
+  const { t } = useTranslation(['common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
 
   return (
     <View style={styles.block}>
-      <SectionHeader label={pulse.scope === 'church' ? 'Church pulse' : 'Branch pulse'} />
+      <SectionHeader label={pulse.scope === 'church' ? t('common:churchPulse') : t('common:branchPulse')} />
       {/* One card per metric, two per row — the same partitioned treatment as
           web. Four numbers sharing a single card read as one run-on bar at
           phone width. */}

@@ -521,7 +521,7 @@ export function DeclarativeForm({
           disabled={submitForm.isPending || !consentAck}
           className="w-full bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
-          {submitForm.isPending ? 'Submitting…' : 'Submit'}
+          {submitForm.isPending ? t('forms:submitting') : t('forms:submit')}
         </Button>
       </form>
     </FormShell>

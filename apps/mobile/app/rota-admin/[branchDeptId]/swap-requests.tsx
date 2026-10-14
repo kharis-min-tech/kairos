@@ -310,7 +310,7 @@ function ReviewSheet({
   });
 
   const label =
-    data.decision === 'approved' ? 'Approve swap' : 'Reject swap';
+    data.decision === 'approved' ? t('rota:approveSwap') : t('rota:rejectSwap');
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>

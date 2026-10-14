@@ -163,7 +163,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {  const { t 
             </div>
           ) : !roster || roster.data.length === 0 ? (
             <p className="px-2 py-6 text-center text-sm text-muted-foreground">
-              {search ? 'No members match your search.' : 'No members on this roster.'}
+              {search ? t('attendance:noMembersMatchSearch') : t('attendance:noMembersRoster')}
             </p>
           ) : (
             <div className="space-y-0.5">
@@ -195,7 +195,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {  const { t 
           {saveError && <span role="alert" className="ml-3 font-medium text-destructive">{saveError}</span>}
         </div>
         <Button onClick={handleSave} disabled={record.isPending || markedCount === 0}>
-          {record.isPending ? 'Saving…' : 'Save attendance'}
+          {record.isPending ? t('attendance:saving') : t('attendance:saveAttendance')}
         </Button>
       </div>
     </div>

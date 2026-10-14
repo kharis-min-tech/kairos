@@ -634,7 +634,7 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
               onClick={handleConfirmStageMove}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {updateEnrollment.isPending ? 'Saving...' : 'Confirm Move'}
+              {updateEnrollment.isPending ? t('newBelievers:saving') : t('newBelievers:confirmMove')}
             </Button>
           </DialogFooter>
         </DialogContent>

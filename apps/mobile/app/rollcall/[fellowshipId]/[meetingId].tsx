@@ -494,7 +494,7 @@ export default function RollcallMeeting() {  const { t } = useTranslation(['atte
           memberRows.length > 0 ? (
             <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
               <Button
-                label={record.isPending ? 'Saving…' : 'Save attendance'}
+                label={record.isPending ? t('common:saving') : t('common:saveAttendance')}
                 variant="primary"
                 size="lg"
                 fullWidth

@@ -65,7 +65,19 @@
     "you": "You",
     "cameraPermissionNeeded": "Camera permission needed",
     "allowCamera": "Allow camera",
-    "reading": "Reading…"
+    "reading": "Reading…",
+    "allBranches": "All branches",
+    "groupsILead": "Groups I lead",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "active": "Active",
+    "onProbation": "On probation",
+    "trying": "Trying…",
+    "saveAttendance": "Save attendance",
+    "churchPulse": "Church pulse",
+    "branchPulse": "Branch pulse",
+    "settings": "Settings",
+    "appInfo": "App info"
   },
   "more": {
     "sections": {
@@ -188,7 +200,10 @@
     "thisIsPermanent": "This is permanent",
     "deletingYourAccountRemovesYourProfile": "Deleting your account removes your profile and revokes your access. Aggregated attendance / participation history is retained in an anonymised form for church record-keeping.",
     "currentPassword": "Current password",
-    "typeDeleteToConfirm": "Type DELETE to confirm"
+    "typeDeleteToConfirm": "Type DELETE to confirm",
+    "deleting": "Deleting…",
+    "preparing": "Preparing…",
+    "prepareExport": "Prepare export"
   },
   "auth": {
     "shared": {
@@ -329,7 +344,13 @@
     "genders": {
       "Male": "Male",
       "Female": "Female"
-    }
+    },
+    "signIssue": "Sign-in issue",
+    "signing": "Signing you in…",
+    "saving": "Saving…",
+    "changePassword": "Change password",
+    "continue": "Continue with",
+    "sign": "Sign in with"
   },
   "forms": {
     "formNotFound": "Form not found",
@@ -355,7 +376,11 @@
     "openForm": "Open form",
     "formSubmissions": "Form submissions",
     "noSubmissions": "No submissions",
-    "nothingMatchesTheseFiltersYet": "Nothing matches these filters yet."
+    "nothingMatchesTheseFiltersYet": "Nothing matches these filters yet.",
+    "submitting": "Submitting…",
+    "submit": "Submit",
+    "searchDirectoryTypeName": "Search the directory, or type a name",
+    "searchPerson": "Search for a person"
   },
   "myGroups": {},
   "rollcall": {},
@@ -474,7 +499,18 @@
     "memberCreated": "Member created",
     "temporaryPassword": "Temporary password",
     "longPressThePasswordToSelect": "Long-press the password to select and copy, or use Share below.",
-    "theyArenTInTheDirectory": "They aren’t in the directory, so we’ll record the name without a record."
+    "theyArenTInTheDirectory": "They aren’t in the directory, so we’ll record the name without a record.",
+    "currentlyVisiting": "Currently visiting",
+    "registered": "Registered",
+    "noRolesAssignedTapAdd": "No roles assigned. Tap + to add one.",
+    "noRolesAssigned": "No roles assigned.",
+    "working": "Working…",
+    "deactivating": "Deactivating…",
+    "reactivating": "Reactivating…",
+    "reactivateMember": "Reactivate member",
+    "inactiveGdn": "Inactive gdn.",
+    "noGdn": "No gdn.",
+    "attendees": "Attendees"
   },
   "fellowships": {
     "activeMembers": "Active members",
@@ -588,7 +624,15 @@
     "appleMaps": "Apple Maps",
     "googleMaps": "Google Maps",
     "waze": "Waze",
-    "createFellowship": "Create fellowship"
+    "createFellowship": "Create fellowship",
+    "overdue": "Overdue",
+    "allFollowUps": "All follow-ups",
+    "contact": "Contact",
+    "visit": "Visit",
+    "saving": "Saving…",
+    "saveFollowUp": "Save follow-up",
+    "logMeeting": "Log meeting",
+    "deleting": "Deleting…"
   },
   "departments": {
     "newFollowUp": "New follow-up",
@@ -706,7 +750,36 @@
     "createDepartment": "Create department",
     "requiresTheDepartmentleaderCapabilityOnThe": "Requires the DepartmentLeader capability on the chosen branch, or admin/pastor access. Members can be added after the department is created.",
     "notInADepartmentYet": "You're not in a department yet",
-    "joinAMinistryDepartmentViaYourBranchAdmin": "Join a ministry department (Worship, Ushering, Media, Children, …) via your branch admin. Your team, lead, and rota will land here."
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Join a ministry department (Worship, Ushering, Media, Children, …) via your branch admin. Your team, lead, and rota will land here.",
+    "overdue": "Overdue",
+    "allFollowUps": "All follow-ups",
+    "contact": "Contact",
+    "visit": "Visit",
+    "saving": "Saving…",
+    "saveFollowUp": "Save follow-up",
+    "passed": "Passed",
+    "didPass": "Did not pass",
+    "scheduling": "Scheduling…",
+    "schedule": "Schedule",
+    "saveOutcome": "Save outcome",
+    "sending": "Sending…",
+    "sendOffer": "Send offer",
+    "saveDecision": "Save decision",
+    "failed": "Failed",
+    "rejecting": "Rejecting…",
+    "upcoming": "Upcoming",
+    "outfits": "Outfits",
+    "newOutfit": "New outfit",
+    "editOutfit": "Edit outfit",
+    "changePhoto": "Change photo",
+    "chooseLibrary": "Choose from library",
+    "addOutfit": "Add outfit",
+    "assigning": "Assigning…",
+    "assign": "Assign",
+    "chooseLead": "Choose a lead",
+    "chooseBranchFirst": "Choose a branch first",
+    "chooseDeputyOptional": "Choose a deputy (optional)",
+    "deactivating": "Deactivating…"
   },
   "branches": {
     "branchName": "Branch name",
@@ -768,7 +841,8 @@
     "noHomeBranchSet": "No home branch set",
     "setYourHomeBranchFromYour": "Set your home branch from your profile, or ask an admin to set one for you.",
     "whenOffMembersWontSeeTheImHereButton": "When off, members won’t see the “I’m here” button. Attendance is only recorded by a desk volunteer.",
-    "home": "HOME"
+    "home": "HOME",
+    "deactivating": "Deactivating…"
   },
   "security": {
     "currentPassword": "Current password",
@@ -819,7 +893,15 @@
     "skipYourPassword": "Skip your password.",
     "consentHistory": "Consent history",
     "optional": "OPTIONAL",
-    "aNewerVersionIsAvailableToggle": "A newer version is available. Toggle to re-accept."
+    "aNewerVersionIsAvailableToggle": "A newer version is available. Toggle to re-accept.",
+    "preparing": "Preparing…",
+    "export": "Export",
+    "deleting": "Deleting…",
+    "permanentlyDelete": "Permanently delete",
+    "unsubscribe": "Unsubscribe",
+    "subscribe": "Subscribe",
+    "sending": "Sending…",
+    "sendConfirmationLink": "Send confirmation link"
   },
   "admin": {
     "showToCongregation": "Show to congregation",
@@ -859,7 +941,10 @@
     "tapToCreateTheFirstOne": "Tap + to create the first one.",
     "regionName": "Region name *",
     "country": "Country *",
-    "country2": "Country"
+    "country2": "Country",
+    "editRegion": "Edit region",
+    "save": "Save",
+    "create": "Create"
   },
   "help": {},
   "home": {
@@ -945,7 +1030,10 @@
     "fellowshipAttendance": "Fellowship attendance",
     "takeTheRegister": "Take the register",
     "pickAFellowshipThenMarkAttendance": "Pick a fellowship, then mark attendance for its next meeting.",
-    "noFellowshipsToLead": "No fellowships to lead"
+    "noFellowshipsToLead": "No fellowships to lead",
+    "checking": "Checking in…",
+    "scanQrDesk": "Scan QR at the desk",
+    "creating": "Creating…"
   },
   "concerns": {
     "welfare": "Welfare",
@@ -1030,7 +1118,30 @@
     "nobodyEntersACohortOnTheir": "Nobody enters a cohort on their own. Pick who goes into the next intake. Entries lapse after six months, so somebody who has been away for a season drops off rather than rolling forward.",
     "noCohortIsOpenToAdmissions": "No cohort is open to admissions. Create one on the web dashboard first.",
     "createCohort": "Create cohort",
-    "scheduleTheFourSessionsAndAdmit": "Schedule the four sessions and admit people from the interest pool once the cohort exists."
+    "scheduleTheFourSessionsAndAdmit": "Schedule the four sessions and admit people from the interest pool once the cohort exists.",
+    "saving": "Saving…",
+    "saveSession": "Save session",
+    "closeRegister": "Close register",
+    "openRegister": "Open register",
+    "saveRegister": "Save register",
+    "graduating": "Graduating…",
+    "graduateAnyway": "Graduate anyway",
+    "archiving": "Archiving…",
+    "archiveCohort": "Archive cohort",
+    "readyGraduate": "Ready to graduate",
+    "inProgress": "In progress",
+    "removing": "Removing…",
+    "takeMeOffList": "Take me off the list",
+    "yourPlaceListEnded": "Your place on the list has ended",
+    "interestedBecomingMember": "Interested in becoming a Member?",
+    "joinAgain": "Join again",
+    "joinList": "Join the list",
+    "yourPeopleWaiting": "Your people waiting",
+    "branchWaitlist": "Branch waitlist",
+    "yourPeopleAdmitted": "Your people admitted",
+    "admittedBranch": "Admitted from your branch",
+    "admitting": "Admitting…",
+    "admit": "Admit"
   },
   "newBelievers": {
     "markSessionComplete": "Mark session complete",
@@ -1080,7 +1191,24 @@
     "createAnyway": "Create anyway?",
     "createAnyway2": "Create anyway",
     "newSession": "New session",
-    "sessionAlreadyExists": "Session already exists"
+    "sessionAlreadyExists": "Session already exists",
+    "sessionComplete": "Session complete",
+    "sessionProgress": "Session in progress",
+    "done": "Done",
+    "active": "Active",
+    "saving": "Saving…",
+    "saveFollowUp": "Save follow-up",
+    "sessionFeedbackRequired": "Session feedback required",
+    "confirmAdvance": "Confirm & advance",
+    "confirmComplete": "Confirm & complete",
+    "pickTeacher": "Pick a teacher",
+    "pickMentor": "Pick a mentor",
+    "myNewBelieverJourney": "My New Believer journey",
+    "newBelieversPipeline": "New Believers pipeline",
+    "youReEnrolled": "You’re not enrolled",
+    "noActiveEnrollments": "No active enrollments",
+    "creating": "Creating…",
+    "createSession": "Create session"
   },
   "outreach": {
     "registerWorker": "Register worker",
@@ -1110,12 +1238,13 @@
     "owningBranch": "Owning branch",
     "newProgram": "New program",
     "afterCreatingTheProgramYouCan": "After creating the program you can register workers and start capturing souls reached during the outreach.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "adding": "Adding…",
+    "creating": "Creating…",
+    "createProgram": "Create program"
   },
   "rota": {
     "upcoming": "Upcoming",
-    "published": "Published",
-    "draft": "Draft",
     "startDate": "Start date",
     "cancel": "Cancel",
     "templates": "Templates",
@@ -1191,7 +1320,21 @@
     "myRota": "My rota",
     "noUpcomingDuties": "No upcoming duties",
     "nothingScheduledInTheNextDays": "Nothing scheduled in the next 180 days.",
-    "requestASwap": "Request a swap"
+    "requestASwap": "Request a swap",
+    "generating": "Generating…",
+    "unpublish": "Unpublish",
+    "publish": "Publish",
+    "approveSwap": "Approve swap",
+    "rejectSwap": "Reject swap",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "creating": "Creating…",
+    "createTemplate": "Create template",
+    "confirmed": "Confirmed",
+    "confirm": "Confirm",
+    "sending": "Sending…",
+    "published": "Published",
+    "draft": "Draft"
   },
   "souls": {
     "convertToMember": "Convert to member?",
@@ -1248,6 +1391,9 @@
     "soulsDashboard": "Souls dashboard",
     "byStatus": "By status",
     "followUps": "Follow-ups",
-    "jumpTo": "Jump to"
+    "jumpTo": "Jump to",
+    "converting": "Converting…",
+    "convertMember": "Convert to member",
+    "saving": "Saving…"
   }
 }

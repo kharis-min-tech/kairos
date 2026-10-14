@@ -79,7 +79,7 @@ export default function ExportSettings() {  const { t } = useTranslation(['setti
             it. On a slow connection it can take up to 20 seconds.
           </Text>
           <Button
-            label={busy ? 'Preparing…' : 'Prepare export'}
+            label={busy ? t('settings:preparing') : t('settings:prepareExport')}
             size="lg"
             fullWidth
             loading={busy}

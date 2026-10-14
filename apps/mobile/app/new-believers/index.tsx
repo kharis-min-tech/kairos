@@ -83,7 +83,7 @@ export default function NewBelievers() {  const { t } = useTranslation(['newBeli
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle}>
-          {personalScope ? 'My New Believer journey' : 'New Believers pipeline'}
+          {personalScope ? t('newBelievers:myNewBelieverJourney') : t('newBelievers:newBelieversPipeline')}
         </Text>
         {personalScope ? (
           <View style={{ width: 24 }} />
@@ -113,7 +113,7 @@ export default function NewBelievers() {  const { t } = useTranslation(['newBeli
         ) : (enrollments.data ?? []).length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>
-              {personalScope ? 'You’re not enrolled' : 'No active enrollments'}
+              {personalScope ? t('newBelievers:youReEnrolled') : t('newBelievers:noActiveEnrollments')}
             </Text>
             <Text style={styles.emptyMeta}>
               {personalScope

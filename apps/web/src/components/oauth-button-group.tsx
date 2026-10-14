@@ -3,6 +3,7 @@
 import type { OAuthProviderId } from '@kairos/types';
 import { api } from '@/lib/api';
 import { OAuthProviderIcon, oauthButtonClassName } from './oauth-provider-icon';
+import { useTranslation } from 'react-i18next';
 
 interface OAuthButtonGroupProps {
   /** Where the API should send the browser after a successful link. */
@@ -42,7 +43,8 @@ export function OAuthButtonGroup({
   disabled = false,
   variant = 'full',
 }: OAuthButtonGroupProps) {
-  const prefix = actionLabel === 'continue' ? 'Continue with' : 'Sign in with';
+  const { t } = useTranslation(['auth', 'common']);
+  const prefix = actionLabel === 'continue' ? t('auth:continueWith') : t('auth:signInWith');
 
   if (variant === 'icons') {
     return (

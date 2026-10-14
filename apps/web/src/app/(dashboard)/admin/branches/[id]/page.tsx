@@ -245,7 +245,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" variant="success" disabled={!isDirty || isSubmitting || updateBranch.isPending}>
-                {updateBranch.isPending ? 'Saving...' : 'Save Changes'}
+                {updateBranch.isPending ? t('branches:saving') : t('branches:saveChanges')}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>{t('branches:back')}</Button>
               {isAdmin && (
@@ -279,7 +279,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
             <div>
               <CardTitle>{t('branches:leadership')}</CardTitle>
               <CardDescription className="mt-0.5">
-                {showHistory ? 'All leadership assignments (including past)' : 'Current branch leadership assignments'}
+                {showHistory ? t('branches:allLeadershipAssignmentsIncludingPast') : t('branches:currentBranchLeadershipAssignments')}
               </CardDescription>
             </div>
             <div className="flex shrink-0 items-center gap-3">
@@ -362,7 +362,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                     );
                   }}
                 >
-                  {assignLeadership.isPending ? 'Assigning...' : 'Confirm'}
+                  {assignLeadership.isPending ? t('branches:assigning') : t('branches:confirm')}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setShowAssignDialog(false)}>{t('branches:cancel')}</Button>
               </div>
@@ -396,7 +396,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                           leader.isCurrent ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
                         }`}>
-                          {leader.isCurrent ? 'Current' : 'Past'}
+                          {leader.isCurrent ? t('branches:current') : t('branches:past')}
                         </span>
                       </td>
                     </tr>

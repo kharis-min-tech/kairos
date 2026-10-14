@@ -300,7 +300,7 @@ function RegionFormSheet({
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>
-            {mode === 'edit' ? 'Edit region' : 'New region'}
+            {mode === 'edit' ? t('admin:editRegion') : t('admin:newRegion')}
           </Text>
 
           <View style={{ gap: spacing.sm }}>
@@ -348,7 +348,7 @@ function RegionFormSheet({
               style={{ flex: 1 }}
             />
             <Button
-              label={submitting ? 'Saving…' : mode === 'edit' ? 'Save' : 'Create'}
+              label={submitting ? 'Saving…' : mode === 'edit' ? t('admin:save') : t('admin:create')}
               variant="primary"
               size="md"
               loading={submitting}

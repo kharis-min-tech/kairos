@@ -161,7 +161,7 @@ export default function MembersDirectory() {  const { t } = useTranslation(['mem
                 style={[styles.filterChip, selected && styles.filterChipActive]}
               >
                 <Text style={[styles.filterLabel, selected && styles.filterLabelActive]}>
-                  {f === 'all' ? 'All' : f === 'member' ? 'Members' : 'Attendees'}
+                  {f === 'all' ? 'All' : f === 'member' ? t('members:members') : t('members:attendees')}
                 </Text>
               </Pressable>
             );

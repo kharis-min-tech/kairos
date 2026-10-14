@@ -126,7 +126,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              {dialog.kind === 'edit' ? 'Edit Region' : 'Create Region'}
+              {dialog.kind === 'edit' ? t('admin:editRegion') : t('admin:createRegion')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -164,8 +164,8 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
                 onClick={handleSubmit}
               >
                 {activeMutation.isPending
-                  ? (dialog.kind === 'edit' ? 'Saving…' : 'Creating…')
-                  : (dialog.kind === 'edit' ? 'Save changes' : 'Create Region')}
+                  ? (dialog.kind === 'edit' ? t('admin:saving') : t('admin:creating'))
+                  : (dialog.kind === 'edit' ? t('admin:saveChanges') : t('admin:createRegion'))}
               </Button>
               <Button variant="outline" onClick={closeDialog}>{t('admin:cancel')}</Button>
             </div>

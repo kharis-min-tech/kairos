@@ -157,7 +157,7 @@ export default function MyRota() {  const { t } = useTranslation(['rota', 'commo
               </View>
               <View style={styles.heroActions}>
                 <Button
-                  label={next.status.toLowerCase().includes('confirm') ? 'Confirmed' : 'Confirm'}
+                  label={next.status.toLowerCase().includes('confirm') ? t('rota:confirmed') : t('rota:confirm')}
                   size="sm"
                   variant="secondary"
                   loading={confirm.isPending}
@@ -284,7 +284,7 @@ function SwapRequestSheet({
               </View>
               <View style={{ flex: 1 }}>
                 <Button
-                  label={submitting ? 'Sending…' : 'Request swap'}
+                  label={submitting ? t('rota:sending') : t('rota:requestSwap')}
                   onPress={onConfirm}
                   loading={submitting}
                 />

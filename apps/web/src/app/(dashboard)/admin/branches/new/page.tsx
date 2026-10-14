@@ -98,7 +98,7 @@ export default function NewBranchPage() {  const { t } = useTranslation(['branch
                 id="regionId"
                 value={watch('regionId') ?? ''}
                 onValueChange={(v) => setValue('regionId', v)}
-                placeholder={regionsLoading ? 'Loading regions...' : 'Select a region'}
+                placeholder={regionsLoading ? t('branches:loadingRegions') : t('branches:selectRegion')}
                 options={(regions ?? []).map((r) => ({ value: r.id, label: r.regionName }))}
               />
               {errors.regionId && <p className="text-sm text-destructive">{errors.regionId.message}</p>}
@@ -164,7 +164,7 @@ export default function NewBranchPage() {  const { t } = useTranslation(['branch
 
             <div className="flex gap-3 pt-2">
               <Button type="submit" disabled={isSubmitting || createBranch.isPending}>
-                {createBranch.isPending ? 'Creating...' : 'Create Branch'}
+                {createBranch.isPending ? t('branches:creating') : t('branches:createBranch')}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>{t('branches:cancel')}</Button>
             </div>

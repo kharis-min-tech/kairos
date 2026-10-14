@@ -389,7 +389,7 @@ function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {  c
         />
 
         <Button
-          label={save.isPending ? 'Saving…' : 'Save changes'}
+          label={save.isPending ? t('common:saving') : t('common:saveChanges')}
           onPress={() => save.mutate()}
           loading={save.isPending}
           disabled={!dirty || save.isPending}

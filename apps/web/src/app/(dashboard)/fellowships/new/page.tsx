@@ -186,7 +186,7 @@ export default function NewFellowshipPage() {  const { t } = useTranslation(['fe
                   id="branchId"
                   value={watch('branchId') ?? ''}
                   onValueChange={(v) => setValue('branchId', v)}
-                  placeholder={branchesLoading ? 'Loading branches...' : 'Select a branch...'}
+                  placeholder={branchesLoading ? t('fellowships:loadingBranches') : t('fellowships:selectBranch')}
                   options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
                 />
                 {errors.branchId && (

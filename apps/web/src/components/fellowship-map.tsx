@@ -123,7 +123,11 @@ const NEAREST_LINE_LAYER = 'kairos-nearest-line-layer';
 // ── Component ──────────────────────────────────────────────
 
 // Helper: compute next meeting date from schedule string like "Every Wednesday, 7:00 PM"
-function getNextMeetingDate(schedule: string): string | null {
+/**
+ * A plain helper, not a component, so it cannot call the hook. The two words
+ * it needs are passed in by the caller, which does have the translator.
+ */
+function getNextMeetingDate(schedule: string, thisWord: string, nextWord: string): string | null {
   const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
   const lower = schedule.toLowerCase();
@@ -157,7 +161,7 @@ function getNextMeetingDate(schedule: string): string | null {
     : date === 2 || date === 22 ? 'nd'
     : date === 3 || date === 23 ? 'rd' : 'th';
 
-  const label = daysUntil <= 7 ? 'This' : 'Next';
+  const label = daysUntil <= 7 ? thisWord : nextWord;
 
   return `${label} ${capitalDay}, ${date}${suffix} ${month}${timeStr}`;
 }
@@ -491,7 +495,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       mapRef.current.flyTo({ center: ll(latLng), zoom: 12, duration: 1200 });
 
       const color = TYPE_COLORS[fellowshipType] || '#6366f1';
-      const nextMeeting = meetingSchedule ? getNextMeetingDate(meetingSchedule) : null;
+      const nextMeeting = meetingSchedule ? getNextMeetingDate(meetingSchedule, t('fellowships:this'), t('fellowships:next')) : null;
       const scheduleInfo = nextMeeting
         ? `<div style="margin-top:6px;font-size:12px;color:#374151;">{t('fellowships:nextMeeting')}<strong style="color:#111827;">${nextMeeting}</strong></div>`
         : meetingSchedule
@@ -578,7 +582,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
           let detailCards: string;
           if (apiMatching.length > 0) {
             detailCards = apiMatching.map((f) => {
-              const nextMeeting = f.meetingSchedule ? getNextMeetingDate(f.meetingSchedule) : null;
+              const nextMeeting = f.meetingSchedule ? getNextMeetingDate(f.meetingSchedule, t('fellowships:this'), t('fellowships:next')) : null;
               return `
                 <div style="padding:8px 10px;border:1px solid rgba(148,163,184,0.2);border-radius:8px;margin-top:6px;background:rgba(99,102,241,0.04);">
                   <div style="display:flex;align-items:center;gap:6px;">
@@ -593,7 +597,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
             }).join('');
           } else {
             detailCards = staticMatching.map((f) => {
-              const nextMeeting = getNextMeetingDate(f.schedule);
+              const nextMeeting = getNextMeetingDate(f.schedule, t('fellowships:this'), t('fellowships:next'));
               return `
                 <div style="padding:8px 10px;border:1px solid rgba(148,163,184,0.2);border-radius:8px;margin-top:6px;background:rgba(99,102,241,0.04);">
                   <div style="display:flex;align-items:center;gap:6px;">
@@ -906,7 +910,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                   onClick={handleJoinRequest}
                   disabled={createJoinRequest.isPending}
                 >
-                  {createJoinRequest.isPending ? 'Sending...' : 'Request to Join'}
+                  {createJoinRequest.isPending ? t('fellowships:sending') : t('fellowships:requestJoin')}
                 </Button>
               ) : (
                 <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5">
@@ -993,7 +997,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                 <div className="space-y-2">
                   {nearestBranch.branch.fellowshipDetails.map((f) => {
                     const color = TYPE_COLORS[f.type] || '#6366f1';
-                    const nextMeeting = getNextMeetingDate(f.schedule);
+                    const nextMeeting = getNextMeetingDate(f.schedule, t('fellowships:this'), t('fellowships:next'));
                     return (
                       <details key={f.name} className="w-full">
                         <summary

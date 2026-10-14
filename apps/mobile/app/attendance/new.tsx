@@ -214,7 +214,7 @@ export default function CreateService() {  const { t } = useTranslation(['attend
           </Card>
 
           <Button
-            label={create.isPending ? 'Creating…' : 'Create service'}
+            label={create.isPending ? t('attendance:creating') : t('attendance:createService')}
             size="lg"
             fullWidth
             loading={create.isPending}

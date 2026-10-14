@@ -516,7 +516,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {user?.firstName} {user?.lastName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {user?.honorific ?? (user?.systemRole === 'admin' ? 'Administrator' : 'Member')}
+              {user?.honorific ?? (user?.systemRole === 'admin' ? t('common:administrator') : t('common:member'))}
             </p>
           </div>
           <Link

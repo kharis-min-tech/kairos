@@ -235,7 +235,7 @@ export default function AcceptPoliciesPage() {
           onClick={handleContinue}
           disabled={!allAccepted || submitting}
         >
-          {submitting ? 'Saving…' : 'Accept & continue'}
+          {submitting ? t('legal:saving') : t('legal:acceptContinue')}
         </Button>
       </div>
     </div>

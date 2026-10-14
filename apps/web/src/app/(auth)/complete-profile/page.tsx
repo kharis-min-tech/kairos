@@ -239,7 +239,7 @@ export default function CompleteProfilePage() {  const { t } = useTranslation(['
                   setBranchError(null);
                 }}
                 placeholder={
-                  branches.isLoading ? 'Loading branches…' : 'Please pick…'
+                  branches.isLoading ? t('auth:loadingBranches') : t('auth:pleasePick')
                 }
                 options={(branches.data ?? []).map((b) => ({
                   value: b.id,
@@ -406,16 +406,16 @@ export default function CompleteProfilePage() {  const { t } = useTranslation(['
                   className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#5D3FD3]"
                 />
                 <span className="text-sm text-muted-foreground">
-                  I accept the{' '}
+                  {t('auth:iAcceptThe')}{' '}
                   <a
                     href="/legal/terms"
                     target="_blank"
                     rel="noreferrer"
                     className="font-medium text-[#5D3FD3] hover:opacity-80"
                   >
-                    Terms &amp; Conditions
+                    {t('auth:termsAndConditions')}
                   </a>{' '}
-                  and{' '}
+                  {t('auth:andLower')}{' '}
                   <a
                     href="/legal/privacy"
                     target="_blank"
@@ -432,7 +432,7 @@ export default function CompleteProfilePage() {  const { t } = useTranslation(['
           ) : null}
 
           <Button type="submit" className="w-full" disabled={busy}>
-            {busy ? 'Saving…' : 'Save & continue'}
+            {busy ? t('auth:saving') : t('auth:saveContinue')}
           </Button>
         </form>
 

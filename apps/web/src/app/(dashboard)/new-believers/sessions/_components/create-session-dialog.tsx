@@ -219,7 +219,7 @@ export function CreateSessionDialog({
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('newBelievers:cancel')}</Button>
             <Button type="submit" disabled={createSession.isPending}>
-              {createSession.isPending ? 'Creating...' : 'Create Session'}
+              {createSession.isPending ? t('newBelievers:creating') : t('newBelievers:createSession')}
             </Button>
           </DialogFooter>
         </form>

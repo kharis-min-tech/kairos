@@ -209,7 +209,7 @@ export default function NewOutreachProgram() {  const { t } = useTranslation(['o
           {serverError ? <Text style={styles.errorLine}>{serverError}</Text> : null}
 
           <Button
-            label={create.isPending ? 'Creating…' : 'Create program'}
+            label={create.isPending ? t('outreach:creating') : t('outreach:createProgram')}
             variant="primary"
             size="lg"
             fullWidth

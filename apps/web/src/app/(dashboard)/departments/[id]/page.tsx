@@ -248,7 +248,7 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
               }
               disabled={createJoinRequest.isPending}
             >
-              {createJoinRequest.isPending ? 'Requesting...' : 'Request to Join'}
+              {createJoinRequest.isPending ? t('departments:requesting') : t('departments:requestJoin')}
             </Button>
           )}
           {hasMyOpenRequestPill(myOpenRequest) && (

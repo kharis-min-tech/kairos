@@ -245,7 +245,7 @@ export default function RotaInstanceDetail() {  const { t } = useTranslation(['r
               <View style={styles.actionRow}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label={status === 'Published' ? 'Unpublish' : 'Publish'}
+                    label={status === 'Published' ? t('rota:unpublish') : t('rota:publish')}
                     variant={status === 'Published' ? 'ghost' : 'primary'}
                     size="sm"
                     loading={publish.isPending}

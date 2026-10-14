@@ -93,7 +93,7 @@ function ResetPasswordContent() {  const { t } = useTranslation(['auth', 'common
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                aria-label={showNew ? 'Hide password' : 'Show password'}
+                aria-label={showNew ? t('auth:hidePassword') : t('auth:showPassword')}
                 aria-pressed={showNew}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -130,7 +130,7 @@ function ResetPasswordContent() {  const { t } = useTranslation(['auth', 'common
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                aria-label={showConfirm ? 'Hide confirmation password' : 'Show confirmation password'}
+                aria-label={showConfirm ? t('auth:hideConfirmationPassword') : t('auth:showConfirmationPassword')}
                 aria-pressed={showConfirm}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -154,7 +154,7 @@ function ResetPasswordContent() {  const { t } = useTranslation(['auth', 'common
             disabled={isSubmitting}
             className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
+            {isSubmitting ? t('auth:resettingPassword') : t('auth:resetPasswordAction')}
           </button>
 
           <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">

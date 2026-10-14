@@ -114,7 +114,7 @@ export default function DeleteAccountSettings() {  const { t } = useTranslation(
               />
             </View>
             <Button
-              label={mutate.isPending ? 'Deleting…' : 'Delete my account'}
+              label={mutate.isPending ? t('settings:deleting') : t('settings:deleteMyAccount')}
               size="lg"
               fullWidth
               loading={mutate.isPending}

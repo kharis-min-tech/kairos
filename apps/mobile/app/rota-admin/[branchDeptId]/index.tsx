@@ -466,7 +466,7 @@ function GenerateSheet({
               </View>
               <View style={{ flex: 1 }}>
                 <Button
-                  label={submitting ? 'Generating…' : 'Generate'}
+                  label={submitting ? t('rota:generating') : t('rota:generate')}
                   onPress={onConfirm}
                   loading={submitting}
                   disabled={

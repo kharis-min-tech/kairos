@@ -142,7 +142,7 @@ export default function NewDepartmentPage() {  const { t } = useTranslation(['de
                 id="departmentId"
                 value={watch('departmentId') ?? ''}
                 onValueChange={(v) => setValue('departmentId', v)}
-                placeholder={catalogueLoading ? 'Loading ministries...' : 'Select a ministry...'}
+                placeholder={catalogueLoading ? t('departments:loadingMinistries') : t('departments:selectMinistry')}
                 options={(catalogue ?? [])
                   .filter((d) => d.isActive)
                   .map((d) => ({ value: d.id, label: d.departmentName }))}
@@ -159,7 +159,7 @@ export default function NewDepartmentPage() {  const { t } = useTranslation(['de
                   id="branchId"
                   value={watch('branchId') ?? ''}
                   onValueChange={(v) => setValue('branchId', v)}
-                  placeholder={branchesLoading ? 'Loading branches...' : 'Select a branch...'}
+                  placeholder={branchesLoading ? t('departments:loadingBranches') : t('departments:selectBranch')}
                   options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
                 />
                 {errors.branchId && (
@@ -219,7 +219,7 @@ export default function NewDepartmentPage() {  const { t } = useTranslation(['de
                 <Button type="button" variant="outline" className="w-full">{t('departments:cancel')}</Button>
               </Link>
               <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating...' : 'Create Department'}
+                {isSubmitting ? t('departments:creating') : t('departments:createDepartment')}
               </Button>
             </div>
           </form>

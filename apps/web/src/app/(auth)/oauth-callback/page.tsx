@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { MemberProfile } from '@kairos/types';
 import { persistAuthSuccess } from '@/hooks/use-auth';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -15,6 +16,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
  * fragment out of the address bar, then route the user on.
  */
 export default function OAuthCallbackPage() {
+  const { t } = useTranslation(['auth', 'common']);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const ran = useRef(false);
@@ -85,7 +87,7 @@ export default function OAuthCallbackPage() {
   return (
     <>
       <KharisCardHeader
-        heading={error ? 'Sign-in issue' : 'Signing you in…'}
+        heading={error ? t('auth:signIssue') : t('auth:signing')}
         subtitle={error ? error : 'Finalising your session with your provider'}
       />
       <div
@@ -103,7 +105,7 @@ export default function OAuthCallbackPage() {
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
         <p className="text-sm text-muted-foreground">
-          {error ? 'Redirecting you back to sign-in…' : 'One moment please'}
+          {error ? t('auth:redirectingBackSign') : t('auth:oneMoment')}
         </p>
       </div>
     </>

@@ -133,7 +133,7 @@ export function EnrollDialog({
               value={memberId}
               onValueChange={(v) => setValue('memberId', v, { shouldValidate: true })}
               options={memberPool.map(toOption)}
-              placeholder={memberPool.length === 0 ? 'No members available' : 'Select a member...'}
+              placeholder={memberPool.length === 0 ? t('newBelievers:noMembersAvailable') : t('newBelievers:selectMember')}
               disabled={memberPool.length === 0}
             />
             {errors.memberId && (
@@ -183,7 +183,7 @@ export function EnrollDialog({
               disabled={!memberId || createEnrollment.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {createEnrollment.isPending ? 'Enrolling...' : 'Enrol'}
+              {createEnrollment.isPending ? t('newBelievers:enrolling') : t('newBelievers:enrol')}
             </Button>
           </DialogFooter>
         </form>

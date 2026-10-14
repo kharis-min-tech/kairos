@@ -275,7 +275,7 @@ export default function AddMemberPage() {  const { t } = useTranslation(['member
                   <Input id="systemRole" value="Member" disabled className="mt-1 cursor-not-allowed" />
                 )}
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {isAdmin ? 'Promote new admins or pastors here.' : 'Only admins can assign pastor or admin roles.'}
+                  {isAdmin ? t('members:promoteNewAdminsPastorsHere') : t('members:onlyAdminsAssignPastorAdmin')}
                 </p>
               </div>
             </div>

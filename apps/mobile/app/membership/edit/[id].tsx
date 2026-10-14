@@ -169,7 +169,7 @@ export default function EditCohort() {  const { t } = useTranslation(['membershi
           >
             <Archive color={c.danger} size={18} strokeWidth={1.6} />
             <Text style={styles.destructiveLabel}>
-              {archiving ? 'Archiving…' : 'Archive cohort'}
+              {archiving ? t('membership:archiving') : t('membership:archiveCohort')}
             </Text>
           </Pressable>
         }

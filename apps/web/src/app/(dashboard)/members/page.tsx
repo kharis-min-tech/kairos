@@ -161,7 +161,7 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
           )}
           {(isAdmin || isPastor) && (
             <Button variant="outline" size="sm" onClick={handleExport} disabled={exportLoading}>
-              {exportLoading ? 'Exporting…' : 'Export CSV'}
+              {exportLoading ? t('members:exporting') : t('members:exportCsv')}
             </Button>
           )}
           {canSeeSafeguarding && (

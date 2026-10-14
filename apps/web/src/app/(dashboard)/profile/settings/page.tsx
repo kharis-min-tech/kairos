@@ -249,7 +249,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
                 onClick={() => handleExport('html')}
                 disabled={exporting !== null}
               >
-                {exporting === 'html' ? 'Preparing…' : 'Download'}
+                {exporting === 'html' ? t('settings:preparing') : t('settings:download')}
               </Button>
             </div>
             <div className="mt-2 pl-7">
@@ -259,7 +259,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
                 disabled={exporting !== null}
                 className="text-xs text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-[#5D3FD3] disabled:opacity-50"
               >
-                {exporting === 'json' ? 'Preparing…' : 'Advanced: download as JSON'}
+                {exporting === 'json' ? t('settings:preparing') : t('settings:advancedDownloadJson')}
               </button>
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? 'Deleting…' : 'Permanently delete'}
+              {deleteMutation.isPending ? t('settings:deleting') : t('settings:permanentlyDelete')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -187,7 +187,7 @@ export default function CreateSession() {  const { t } = useTranslation(['newBel
           ) : null}
 
           <Button
-            label={create.isPending ? 'Creating…' : 'Create session'}
+            label={create.isPending ? t('newBelievers:creating') : t('newBelievers:createSession')}
             size="lg"
             fullWidth
             loading={create.isPending}

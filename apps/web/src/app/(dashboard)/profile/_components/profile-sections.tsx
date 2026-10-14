@@ -123,7 +123,7 @@ export function WhereIBelongCard({
                   onClick={onSwitchBranch}
                   disabled={switchPending}
                 >
-                  {switchPending ? 'Switching…' : 'Switch'}
+                  {switchPending ? t('settings:switching') : t('settings:switch')}
                 </Button>
               )}
             </div>

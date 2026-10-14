@@ -105,7 +105,7 @@ export default function EmailChangePage() {  const { t } = useTranslation(['sett
                 className="rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] text-white"
                 disabled={mutation.isPending}
               >
-                {mutation.isPending ? 'Sending…' : 'Send confirmation'}
+                {mutation.isPending ? t('settings:sending') : t('settings:sendConfirmation')}
               </Button>
             </form>
           )}

@@ -202,7 +202,7 @@ export function MemberCombobox({
           disabled={disabled}
           placeholder={
             placeholder ??
-            (allowTypedName ? 'Search the directory, or type a name' : 'Search by name or phone…')
+            (allowTypedName ? t('members:searchDirectoryTypeName') : t('members:searchNamePhone'))
           }
           value={disabled ? '' : text}
           onChange={(e) => handleText(e.target.value)}

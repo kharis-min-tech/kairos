@@ -108,7 +108,7 @@ export default function ChangePasswordPage() {  const { t } = useTranslation(['a
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                aria-label={showCurrentPassword ? 'Hide temporary password' : 'Show temporary password'}
+                aria-label={showCurrentPassword ? t('auth:hideTemporaryPassword') : t('auth:showTemporaryPassword')}
                 aria-pressed={showCurrentPassword}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -142,7 +142,7 @@ export default function ChangePasswordPage() {  const { t } = useTranslation(['a
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                aria-label={showNewPassword ? t('auth:hideNewPassword') : t('auth:showNewPassword')}
                 aria-pressed={showNewPassword}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -188,7 +188,7 @@ export default function ChangePasswordPage() {  const { t } = useTranslation(['a
             disabled={isSubmitting}
             className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {isSubmitting ? 'Updating...' : 'Set New Password'}
+            {isSubmitting ? t('auth:updating') : t('auth:setNewPassword')}
           </button>
         </form>
       </div>

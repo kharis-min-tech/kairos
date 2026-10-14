@@ -66,7 +66,7 @@ function EnrollmentCardContent({
                 ? 'bg-foreground/10 border border-foreground/60 shadow-[0_0_0_2px_hsl(var(--foreground)/0.15)]'
                 : 'border border-foreground/30 bg-transparent hover:border-foreground/50 disabled:opacity-30 disabled:cursor-not-allowed'
             }`}
-            aria-label={isSelected ? 'Deselect enrollment' : 'Select enrollment'}
+            aria-label={isSelected ? t('newBelievers:deselectEnrollment') : t('newBelievers:selectEnrollment')}
             aria-pressed={isSelected}
           >
             {isSelected && <Check className="h-3 w-3 text-foreground" strokeWidth={2.5} />}

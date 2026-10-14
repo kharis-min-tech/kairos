@@ -605,7 +605,7 @@ export default function FellowshipDetail() {  const { t } = useTranslation(['fel
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label={createMeeting.isPending ? 'Saving…' : 'Log meeting'}
+                    label={createMeeting.isPending ? t('fellowships:saving') : t('fellowships:logMeeting')}
                     onPress={() => createMeeting.mutate()}
                     loading={createMeeting.isPending}
                     disabled={!meetingDate.trim()}

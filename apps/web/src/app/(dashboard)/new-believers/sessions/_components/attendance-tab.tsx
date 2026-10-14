@@ -169,7 +169,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
                 }}
               >
                 <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                {attended ? 'Present' : 'Absent'}
+                {attended ? t('newBelievers:present') : t('newBelievers:absent')}
               </Button>
             </div>
           );
@@ -189,7 +189,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
             size="sm"
           >
             <ClipboardCheck className="mr-1.5 h-4 w-4" />
-            {recordAttendance.isPending ? 'Saving...' : 'Save Attendance'}
+            {recordAttendance.isPending ? t('newBelievers:saving') : t('newBelievers:saveAttendance')}
           </Button>
         </div>
       )}

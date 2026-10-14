@@ -200,7 +200,7 @@ export function DepartmentForm({
           <FieldLabel label={t('departments:lead')} required />
           <PickerField
             value={leadName}
-            placeholder={branchId ? 'Choose a lead' : 'Choose a branch first'}
+            placeholder={branchId ? t('departments:chooseLead') : t('departments:chooseBranchFirst')}
             onPress={branchId ? () => setOpenPicker('lead') : undefined}
             disabled={!branchId}
             error={errors['leadMemberId']}
@@ -211,7 +211,7 @@ export function DepartmentForm({
             <View style={{ flex: 1, minWidth: 0 }}>
               <PickerField
                 value={deputyName}
-                placeholder={branchId ? 'Choose a deputy (optional)' : 'Choose a branch first'}
+                placeholder={branchId ? t('departments:chooseDeputyOptional') : t('departments:chooseBranchFirst')}
                 onPress={branchId ? () => setOpenPicker('deputy') : undefined}
                 disabled={!branchId}
               />

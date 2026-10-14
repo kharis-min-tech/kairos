@@ -528,7 +528,7 @@ export function UnifiedDashboard({
                   onClick={(data) => {
                     const name = data.name ?? '';
                     const ragStatus = name.includes('Critical') ? 'RED' : 
-                                     name.includes('Monitor') ? 'AMBER' : 'GREEN';
+                                     name.includes('Monitor') ? t('common:amber') : t('common:green');
                     showFollowUps(
                       followUpsData?.data?.filter((f) => f.ragStatus === ragStatus) || [],
                       name
@@ -727,7 +727,7 @@ export function UnifiedDashboard({
                 {recentFollowUps.map((followUp) => {
                   const statusLabel =
                     followUp.ragStatus === 'RED' ? 'Critical' :
-                    followUp.ragStatus === 'AMBER' ? 'Monitor' : 'On Track';
+                    followUp.ragStatus === 'AMBER' ? t('common:monitor') : t('common:onTrack');
                   const statusClasses =
                     followUp.ragStatus === 'RED' ? 'bg-destructive/10 text-destructive' :
                     followUp.ragStatus === 'AMBER' ? 'bg-accent/15 text-accent' :

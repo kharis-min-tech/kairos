@@ -180,7 +180,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
               }}
               disabled={deleteFellowship.isPending}
             >
-              {deleteFellowship.isPending ? 'Deactivating…' : 'Deactivate'}
+              {deleteFellowship.isPending ? t('fellowships:deactivating') : t('fellowships:deactivate')}
             </Button>
           </div>
         )}
@@ -205,7 +205,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
             )}
             disabled={createJoinRequest.isPending}
           >
-            {createJoinRequest.isPending ? 'Requesting…' : 'Request to Join'}
+            {createJoinRequest.isPending ? t('fellowships:requesting') : t('fellowships:requestJoin')}
           </Button>
         )}
         {hasPendingRequest && (
@@ -282,7 +282,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                     : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                 }`}>
-                  {fellowship.isActive ? 'Active' : 'Inactive'}
+                  {fellowship.isActive ? t('fellowships:active') : t('fellowships:inactive')}
                 </span>
               </div>
             </CardContent>
@@ -534,7 +534,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                     }}
                     className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    {createMeeting.isPending ? 'Creating...' : 'Create'}
+                    {createMeeting.isPending ? t('fellowships:creating') : t('fellowships:create')}
                   </button>
                 </div>
               </CardContent>
@@ -577,7 +577,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                           }}
                           className="rounded-lg border border-input/15 px-2.5 py-1 text-xs font-medium text-primary hover:bg-muted"
                         >
-                          {attendanceMeetingId === meeting.id ? 'Close' : 'Record Attendance'}
+                          {attendanceMeetingId === meeting.id ? t('fellowships:close') : t('fellowships:recordAttendance')}
                         </button>
                       )}
                     </div>
@@ -849,7 +849,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                             ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                             : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                         }`}>
-                          {req.status === 'approved' ? 'Approved' : 'Rejected'}
+                          {req.status === 'approved' ? t('fellowships:approved') : t('fellowships:rejected')}
                         </span>
                       )}
                     </CardContent>
@@ -928,7 +928,7 @@ function AttendanceForm({
             }}
             className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
           >
-            {recordAttendance.isPending ? 'Saving...' : 'Save Attendance'}
+            {recordAttendance.isPending ? t('fellowships:savingEllipsis') : t('fellowships:saveAttendance')}
           </button>
         </div>
       )}

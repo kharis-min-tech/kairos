@@ -829,7 +829,7 @@ function FollowupForm({
 
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Saving…' : 'Save follow-up'}
+              {isPending ? t('departments:saving') : t('departments:saveFollowUp')}
             </Button>
           </div>
         </form>

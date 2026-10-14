@@ -313,7 +313,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   );
                 }}
               >
-                {setMembershipClass.isPending ? 'Saving…' : 'Mark Membership Class Complete'}
+                {setMembershipClass.isPending ? t('members:saving') : t('members:markMembershipClassComplete')}
               </Button>
             </div>
           )}
@@ -406,7 +406,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   }}
                   className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                 >
-                  {assignRole.isPending ? 'Assigning…' : 'Assign'}
+                  {assignRole.isPending ? t('members:assigning') : t('members:assign')}
                 </button>
               </div>
             </div>
@@ -419,10 +419,12 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
             <CardTitle>{t('members:fellowships')}</CardTitle>
             <CardDescription>
               {alreadyInFellowship
-                ? (isSelf ? 'Your fellowship membership' : 'This member\'s fellowship membership')
+                ? isSelf
+                  ? t('members:yourFellowshipMembership')
+                  : t('members:thisMembersFellowshipMembership')
                 : canManage
-                  ? 'Assign this member to a fellowship in their branch'
-                  : 'You haven\'t joined a fellowship yet'}
+                  ? t('members:assignMemberToFellowshipInBranch')
+                  : t('members:youHaventJoinedAFellowshipYet')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -473,7 +475,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                       );
                     }}
                   >
-                    {addToFellowship.isPending ? 'Adding…' : 'Assign'}
+                    {addToFellowship.isPending ? t('members:adding') : t('members:assign')}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">{t('members:toViewRemoveFellowshipMembershipsOpen')}</p>

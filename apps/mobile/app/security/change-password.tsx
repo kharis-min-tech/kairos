@@ -164,7 +164,7 @@ export default function ChangePassword() {  const { t } = useTranslation(['secur
           {serverError ? <Text style={styles.errorLine}>{serverError}</Text> : null}
 
           <Button
-            label={change.isPending ? 'Saving…' : 'Change password'}
+            label={change.isPending ? t('auth:saving') : t('auth:changePassword')}
             variant="primary"
             size="lg"
             fullWidth

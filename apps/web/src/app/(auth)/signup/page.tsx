@@ -305,7 +305,7 @@ export default function SignupPage() {  const { t } = useTranslation(['auth', 'c
                       id="homeBranchId"
                       value={field.value ?? ''}
                       onValueChange={field.onChange}
-                      placeholder={branchesLoadFailed ? 'Unable to load branches' : branches.length === 0 ? 'Loading branches…' : 'Select a branch...'}
+                      placeholder={branchesLoadFailed ? 'Unable to load branches' : branches.length === 0 ? t('auth:loadingBranches') : t('auth:selectBranch')}
                       options={branches.map((b) => ({ value: b.id, label: b.branchName }))}
                     />
                   )}

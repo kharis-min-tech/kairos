@@ -169,10 +169,10 @@ export default function MyDepartment() {  const { t } = useTranslation(['departm
                 <Text style={styles.sectionEyebrow}>{t('common:yourMembership')}</Text>
                 <View style={styles.membershipRow}>
                   <Text style={styles.membershipStatus}>
-                    {myMembership.membershipStatus === 'active' ? 'Active' : 'On probation'}
+                    {myMembership.membershipStatus === 'active' ? t('common:active') : t('common:onProbation')}
                   </Text>
                   <Badge
-                    label={myMembership.membershipStatus === 'active' ? 'Active' : 'Probation'}
+                    label={myMembership.membershipStatus === 'active' ? t('common:active') : t('common:probation')}
                     variant={myMembership.membershipStatus === 'active' ? 'success' : 'gold'}
                     size="sm"
                   />

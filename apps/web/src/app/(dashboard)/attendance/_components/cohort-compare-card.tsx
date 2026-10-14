@@ -210,7 +210,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {  const
             disabled={!canSubmit || cohort.isPending}
             className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
           >
-            {cohort.isPending ? 'Comparing…' : 'Run comparison'}
+            {cohort.isPending ? t('attendance:comparing') : t('attendance:runComparison')}
           </Button>
           {cohort.isSuccess && (
             <span className="text-xs text-muted-foreground">

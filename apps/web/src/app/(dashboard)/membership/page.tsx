@@ -189,7 +189,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
               {t('membership:yourProgressIn', { name: mine.enrollment.cohortName })}
             </p>
             <Badge variant={readiness?.eligible ? 'default' : 'secondary'}>
-              {readiness?.eligible ? 'Ready to graduate' : 'In progress'}
+              {readiness?.eligible ? t('membership:readyGraduate') : t('membership:inProgress')}
             </Badge>
           </div>
           {readiness && readiness.outstanding.length > 0 ? (
@@ -234,7 +234,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
               })
             }
           >
-            {withdraw.isPending ? 'Removing…' : 'Take me off'}
+            {withdraw.isPending ? t('membership:removing') : t('membership:takeMeOff')}
           </Button>
         </CardContent>
       </Card>
@@ -248,7 +248,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
       <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
         <div>
           <p className="text-sm font-medium text-foreground">
-            {ended ? 'Your place on the list has ended' : 'Interested in becoming a Member?'}
+            {ended ? t('membership:yourPlaceListEnded') : t('membership:interestedBecomingMember')}
           </p>
           <p className="text-xs text-muted-foreground">
             {interest?.status === 'lapsed'
@@ -269,7 +269,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
             })
           }
         >
-          {express.isPending ? 'Joining…' : ended ? 'Join again' : 'Join the list'}
+          {express.isPending ? 'Joining…' : ended ? t('membership:joinAgain') : t('membership:joinList')}
         </Button>
       </CardContent>
     </Card>
@@ -305,7 +305,7 @@ function ChampionBranchView({
           <div className="flex items-center gap-2">
             <Users className="size-4 text-[#5D3FD3]" />
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {isGroup ? 'Your people waiting' : 'Branch waitlist'} ({waitlist.length})
+              {isGroup ? t('membership:yourPeopleWaiting') : t('membership:branchWaitlist')} ({waitlist.length})
             </h2>
           </div>
           {waitlist.length === 0 ? (
@@ -337,7 +337,7 @@ function ChampionBranchView({
           <div className="flex items-center gap-2">
             <GraduationCap className="size-4 text-[#5D3FD3]" />
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {isGroup ? 'Your people admitted' : 'Admitted from your branch'} ({enrolled.length})
+              {isGroup ? t('membership:yourPeopleAdmitted') : t('membership:admittedBranch')} ({enrolled.length})
             </h2>
           </div>
           {enrolled.length === 0 ? (

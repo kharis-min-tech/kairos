@@ -15,6 +15,7 @@ import {
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, parseCallbackUrl } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Fallback OAuth callback route. `WebBrowser.openAuthSessionAsync` is
@@ -28,6 +29,7 @@ import { useAuthStore } from '@/store/auth';
  * targets `app/index.tsx` uses.
  */
 export default function OAuthCallbackScreen() {
+  const { t } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -92,7 +94,7 @@ export default function OAuthCallbackScreen() {
       <View style={styles.card}>
         <ActivityIndicator size="large" color={c.primary} />
         <Text style={styles.title}>
-          {error ? 'Sign-in issue' : 'Signing you in…'}
+          {error ? t('auth:signIssue') : t('auth:signing')}
         </Text>
         <Text style={styles.subtitle}>
           {error ?? 'Finalising your session with your provider'}

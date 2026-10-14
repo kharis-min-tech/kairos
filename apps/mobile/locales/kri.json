@@ -65,7 +65,19 @@
     "you": "Yu",
     "cameraPermissionNeeded": "Wi nid pamishɔn fɔ di kamra",
     "allowCamera": "Alaw di kamra",
-    "reading": "I de rid…"
+    "reading": "I de rid…",
+    "allBranches": "Ol di branch dɛn",
+    "groupsILead": "Di grup dɛn we a de lid",
+    "saving": "I de sev…",
+    "saveChanges": "Sev di chenj dɛn",
+    "active": "I de aktiv",
+    "onProbation": "I de pan probeshɔn",
+    "saveAttendance": "Sev di atɛndans",
+    "churchPulse": "Aw di chɔch de du",
+    "branchPulse": "Aw di branch de du",
+    "settings": "Sɛtin",
+    "trying": "I de tray…",
+    "appInfo": "App infɔmeshɔn"
   },
   "more": {
     "title": "Mɔ",
@@ -188,7 +200,10 @@
     "thisIsPermanent": "Dis na fɔ gud",
     "deletingYourAccountRemovesYourProfile": "If yu dilit yu akawnt, yu profayl go go ɛn yu nɔ go ebul fɔ ɛnta igen. Di atɛndans ɛn patisipeshɔn histri go de bɔt nɔbɔdi nɔ go no se na yu, fɔ di church rikɔd.",
     "currentPassword": "Paswɔd we yu de yuz naw",
-    "typeDeleteToConfirm": "Tayp DILIT fɔ kɔnfɛm"
+    "typeDeleteToConfirm": "Tayp DILIT fɔ kɔnfɛm",
+    "deleting": "I de dilit…",
+    "preparing": "I de rɛdi am…",
+    "prepareExport": "Rɛdi di ɛkspɔt"
   },
   "home": {
     "today": "Tide",
@@ -366,7 +381,13 @@
     "genders": {
       "Male": "Man",
       "Female": "Uman"
-    }
+    },
+    "signIssue": "Sayn-in prɔblɛm",
+    "signing": "Wi de sayn yu in…",
+    "saving": "I de sev…",
+    "changePassword": "Chenj paswɔd",
+    "continue": "Kɔntinyu wit",
+    "sign": "Sayn in wit"
   },
   "forms": {
     "cancel": "Kansul",
@@ -392,7 +413,11 @@
     "captureAltarCallResponsesBaptismAnd": "Kach di pipul we ansa di alta kɔl, baptizim ɛn dedikeshɔn rikwɛst, ɛn tɛstimoni.",
     "openForm": "Opin di fɔm",
     "noSubmissions": "Nɔbɔdi nɔ sɛn natin",
-    "nothingMatchesTheseFiltersYet": "Natin nɔ mach dɛn filta ya yet."
+    "nothingMatchesTheseFiltersYet": "Natin nɔ mach dɛn filta ya yet.",
+    "submitting": "I de sɛn…",
+    "submit": "Sɛn am",
+    "searchDirectoryTypeName": "Luk na di dayrɛktri, ɔ rayt wan nem",
+    "searchPerson": "Luk fɔ wan pɔsin"
   },
   "reports": {
     "reports": "Ripɔt",
@@ -509,7 +534,18 @@
     "temporaryPassword": "Paswɔd fɔ smɔl tɛm",
     "longPressThePasswordToSelect": "Prɛs lɔng pan di paswɔd fɔ pik ɛn kɔpi am, ɔ yuz Shɛa dɔng ya.",
     "theyArenTInTheDirectory": "Dɛn nem nɔ de na di dayrɛktri, so wi go rikɔd di nem nɔmɔ widawt wan rikɔd.",
-    "branch": "Branch"
+    "branch": "Branch",
+    "registered": "I dɔn rejista",
+    "noRolesAssigned": "Nɔ rol nɔ gi am.",
+    "deactivating": "I de lɔk am…",
+    "attendees": "Pipul we kam",
+    "currentlyVisiting": "I de vizit naw",
+    "noRolesAssignedTapAdd": "Nɔ rol nɔ gi am. Tɔch + fɔ ad wan.",
+    "working": "I de wok…",
+    "reactivating": "I de opin am bak…",
+    "reactivateMember": "Opin di mɛmba bak",
+    "inactiveGdn": "Gadian we nɔ de aktiv",
+    "noGdn": "Nɔ gadian"
   },
   "fellowships": {
     "followUps": "Fɔlo ɔp",
@@ -623,7 +659,15 @@
     "appleMaps": "Apple Maps",
     "googleMaps": "Google Maps",
     "waze": "Waze",
-    "createFellowship": "Mek di fɛloship"
+    "createFellowship": "Mek di fɛloship",
+    "contact": "Tɔk to am",
+    "visit": "Vizit",
+    "saving": "I de sev…",
+    "saveFollowUp": "Sev di fɔlo ɔp",
+    "deleting": "I de dilit…",
+    "overdue": "Dɔn let",
+    "allFollowUps": "Ol di fɔlo ɔp dɛn",
+    "logMeeting": "Rɛkɔd wan mitin"
   },
   "departments": {
     "followUps": "Fɔlo ɔp",
@@ -741,7 +785,36 @@
     "requiresTheDepartmentleaderCapabilityOnThe": "Yu fɔ gɛt di DepartmentLeader kapabiliti na di branch we yu pik, ɔ admin/pasta akses. Yu kin put mɛmba dɛn afta yu mek di dipatmɛnt.",
     "branch": "Branch",
     "notInADepartmentYet": "Yu nɔ de na ɛni dipatmɛnt yet",
-    "joinAMinistryDepartmentViaYourBranchAdmin": "Jɔyn wan ministri dipatmɛnt (Wɔship, Ɔsharin, Midia, Pikin dɛn, …) tru yu branch admin. Yu tim, yu lid, ɛn yu rota go sho ya."
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Jɔyn wan ministri dipatmɛnt (Wɔship, Ɔsharin, Midia, Pikin dɛn, …) tru yu branch admin. Yu tim, yu lid, ɛn yu rota go sho ya.",
+    "contact": "Tɔk to am",
+    "visit": "Vizit",
+    "saving": "I de sev…",
+    "saveFollowUp": "Sev di fɔlo ɔp",
+    "passed": "I pas",
+    "scheduling": "I de sɛt am…",
+    "schedule": "Skejul",
+    "sending": "I de sɛn…",
+    "failed": "I nɔ wok",
+    "rejecting": "I de rifyuz…",
+    "upcoming": "We de kam",
+    "addOutfit": "Ad klɔt",
+    "assigning": "I de gi am…",
+    "assign": "Gi am",
+    "deactivating": "I de lɔk am…",
+    "overdue": "Dɔn let",
+    "allFollowUps": "Ol di fɔlo ɔp dɛn",
+    "didPass": "I nɔ pas",
+    "saveOutcome": "Sev di risɔlt",
+    "sendOffer": "Sɛn di ɔfa",
+    "saveDecision": "Sev di disizhɔn",
+    "outfits": "Klɔt dɛn",
+    "newOutfit": "Nyu klɔt",
+    "editOutfit": "Chenj di klɔt",
+    "changePhoto": "Chenj di pikchɔ",
+    "chooseLibrary": "Pik frɔm di laybri",
+    "chooseLead": "Pik wan lid",
+    "chooseBranchFirst": "Pik wan branch fɔs",
+    "chooseDeputyOptional": "Pik wan dɛpyuti (yu nɔ fɔ)"
   },
   "branches": {
     "phone": "Fon",
@@ -803,7 +876,8 @@
     "noHomeBranchSet": "Nɔ om branch de sɛt",
     "setYourHomeBranchFromYour": "Sɛt yu om branch frɔm yu profayl, ɔ aks wan admin fɔ sɛt am fɔ yu.",
     "whenOffMembersWontSeeTheImHereButton": "If dis ɔf, mɛmba dɛn nɔ go si di “A de ya” bɔtin. Na dɛsk vɔlɔntia nɔmɔ go rɛkɔd di atɛndans.",
-    "home": "OM"
+    "home": "OM",
+    "deactivating": "I de lɔk am…"
   },
   "security": {
     "cancel": "Kansul",
@@ -854,7 +928,15 @@
     "skipYourPassword": "Yu nɔ nid fɔ tayp paswɔd.",
     "consentHistory": "Kɔnsɛnt histri",
     "optional": "IF YU WANT",
-    "aNewerVersionIsAvailableToggle": "Wan nyu vɛshɔn de. Tɔch am fɔ gri bak."
+    "aNewerVersionIsAvailableToggle": "Wan nyu vɛshɔn de. Tɔch am fɔ gri bak.",
+    "preparing": "I de rɛdi am…",
+    "deleting": "I de dilit…",
+    "permanentlyDelete": "Dilit am fɔ ɔltɛm",
+    "unsubscribe": "Pul yusɛf awt",
+    "subscribe": "Jɔyn",
+    "sending": "I de sɛn…",
+    "export": "Ɛkspɔt",
+    "sendConfirmationLink": "Sɛn di kɔnfameshɔn link"
   },
   "admin": {
     "retry": "Tray bak",
@@ -894,7 +976,10 @@
     "tapToCreateTheFirstOne": "Tɔch + fɔ mek di fɔs wan.",
     "regionName": "Rijɔn nem *",
     "country": "Kɔntri *",
-    "country2": "Kɔntri"
+    "country2": "Kɔntri",
+    "save": "Sev",
+    "create": "Mek am",
+    "editRegion": "Chenj di rijɔn"
   },
   "attendance": {
     "thisWeek": "Dis wik",
@@ -942,7 +1027,10 @@
     "noMeetingsYet": "Nɔ mitin de yet",
     "takeTheRegister": "Tek di rejista",
     "pickAFellowshipThenMarkAttendance": "Pik wan fɛloship, dɛn mak di atɛndans fɔ in nɛks mitin.",
-    "noFellowshipsToLead": "Nɔ fɛloship fɔ yu fɔ lid"
+    "noFellowshipsToLead": "Nɔ fɛloship fɔ yu fɔ lid",
+    "scanQrDesk": "Skan di QR na di dɛsk",
+    "creating": "I de mek am…",
+    "checking": "I de chɛk yu in…"
   },
   "concerns": {
     "concerns": "Kɔnsan",
@@ -1027,7 +1115,30 @@
     "nobodyEntersACohortOnTheir": "Nɔbɔdi nɔ de ɛnta wan kɔhɔt bay insɛf. Pik udat go ɛnta di nɛks wan. Nem dɛn de dɛd afta siks mɔnt, so if sɔmbɔdi nɔ kam fɔ lɔng tɛm, in nem de drɔp instɛd ɔf i rol ɔn.",
     "noCohortIsOpenToAdmissions": "Nɔ kɔhɔt nɔ opin fɔ admit pipul. Mek wan fɔs na di wɛb dashbɔd.",
     "createCohort": "Mek di kɔhɔt",
-    "scheduleTheFourSessionsAndAdmit": "Plan di fɔ sɛshɔn dɛn ɛn admit pipul frɔm di intrɛs pul wans di kɔhɔt de."
+    "scheduleTheFourSessionsAndAdmit": "Plan di fɔ sɛshɔn dɛn ɛn admit pipul frɔm di intrɛs pul wans di kɔhɔt de.",
+    "saving": "I de sev…",
+    "saveSession": "Sev di sɛshɔn",
+    "closeRegister": "Klos di rɛjista",
+    "openRegister": "Opin di rɛjista",
+    "saveRegister": "Sev di rɛjista",
+    "graduateAnyway": "Gradyuet am ɛnibaw",
+    "archiving": "I de akayv am…",
+    "archiveCohort": "Akayv di grup",
+    "readyGraduate": "I rɛdi fɔ gradyuet",
+    "inProgress": "I de apin naw",
+    "removing": "I de pul am…",
+    "yourPlaceListEnded": "Yu ples pan di lis dɔn kaba",
+    "interestedBecomingMember": "Yu want fɔ bikam Mɛmba?",
+    "joinAgain": "Jɔyn igen",
+    "joinList": "Jɔyn di lis",
+    "yourPeopleWaiting": "Yu pipul we de wet",
+    "branchWaitlist": "Di branch wet lis",
+    "yourPeopleAdmitted": "Yu pipul we dɛn tek in",
+    "admittedBranch": "Dɛn tek dɛn in frɔm yu branch",
+    "admitting": "I de put am insay…",
+    "admit": "Put am insay",
+    "graduating": "I de gradyuet am…",
+    "takeMeOffList": "Pul mi awt pan di lis"
   },
   "newBelievers": {
     "cancel": "Kansul",
@@ -1077,7 +1188,24 @@
     "createAnyway": "Mek am ɛniwe?",
     "createAnyway2": "Mek am ɛniwe",
     "newSession": "Nyu sɛshɔn",
-    "sessionAlreadyExists": "Di sɛshɔn dɔn de"
+    "sessionAlreadyExists": "Di sɛshɔn dɔn de",
+    "done": "I dɔn",
+    "active": "I de aktiv",
+    "saving": "I de sev…",
+    "saveFollowUp": "Sev di fɔlo ɔp",
+    "pickTeacher": "Pik wan ticha",
+    "myNewBelieverJourney": "Mi nyu biliva jɔni",
+    "newBelieversPipeline": "Nyu biliva payplayn",
+    "creating": "I de mek am…",
+    "sessionComplete": "Di sɛshɔn dɔn",
+    "sessionProgress": "Di sɛshɔn de apin",
+    "sessionFeedbackRequired": "Yu fɔ gi sɛshɔn fidbak",
+    "confirmAdvance": "Kɔnfam ɛn muv",
+    "confirmComplete": "Kɔnfam ɛn finish",
+    "pickMentor": "Pik wan mɛntɔ",
+    "youReEnrolled": "Yu nɔ rejista",
+    "noActiveEnrollments": "Nɔ aktiv rejistreshɔn nɔ de",
+    "createSession": "Mek wan sɛshɔn"
   },
   "outreach": {
     "done": "I dɔn",
@@ -1107,7 +1235,10 @@
     "city": "Siti",
     "owningBranch": "Branch we on am",
     "newProgram": "Nyu program",
-    "afterCreatingTheProgramYouCan": "Afta yu mek di program, yu go ebul fɔ rejista wɔka dɛn ɛn bigin fɔ kach di sol dɛn we una rich."
+    "afterCreatingTheProgramYouCan": "Afta yu mek di program, yu go ebul fɔ rejista wɔka dɛn ɛn bigin fɔ kach di sol dɛn we una rich.",
+    "adding": "I de ad am…",
+    "creating": "I de mek am…",
+    "createProgram": "Mek wan program"
   },
   "rota": {
     "cancel": "Kansul",
@@ -1118,8 +1249,6 @@
     "notes": "Not dɛn",
     "myRota": "Mi rota",
     "upcoming": "We de kam",
-    "published": "Dɛn dɔn put am awt",
-    "draft": "Drafṭ",
     "startDate": "De we i stat",
     "templates": "Tɛmplet dɛn",
     "new": "Nyu",
@@ -1188,7 +1317,21 @@
     "optionalWhyYouCanTMake": "If yu want: wetin mek yu nɔ go ebul fɔ kam",
     "noUpcomingDuties": "Nɔ divti de kam",
     "nothingScheduledInTheNextDays": "Natin nɔ de plan fɔ di nɛks 180 de dɛn.",
-    "requestASwap": "Aks fɔ wan swap"
+    "requestASwap": "Aks fɔ wan swap",
+    "saving": "I de sev…",
+    "saveChanges": "Sev di chenj dɛn",
+    "creating": "I de mek am…",
+    "confirm": "Kɔnfam",
+    "sending": "I de sɛn…",
+    "generating": "I de mek am…",
+    "unpublish": "Pul am frɔm pɔblik",
+    "publish": "Pɔblish am",
+    "approveSwap": "Apruv di swap",
+    "rejectSwap": "Rifyuz di swap",
+    "createTemplate": "Mek wan tɛmplet",
+    "confirmed": "I dɔn kɔnfam",
+    "published": "Dɔn pɔblish",
+    "draft": "Draft"
   },
   "souls": {
     "firstName": "Fɔs nem",
@@ -1245,6 +1388,9 @@
     "allSouls": "Ɔl di sol dɛn",
     "followUpsQueue": "Fɔlo ɔp lis",
     "byStatus": "Bay stetɔs",
-    "jumpTo": "Jɔmp to"
+    "jumpTo": "Jɔmp to",
+    "saving": "I de sev…",
+    "converting": "I de kɔnvat…",
+    "convertMember": "Mek am bi mɛmba"
   }
 }

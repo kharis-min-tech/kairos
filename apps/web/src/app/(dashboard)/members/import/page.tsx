@@ -137,7 +137,7 @@ export default function MembersImportPage() {  const { t } = useTranslation(['me
             disabled={!file || isLoading}
             variant="success"
           >
-            {isLoading ? 'Importing…' : 'Import Members'}
+            {isLoading ? t('members:importing') : t('members:importMembers')}
           </Button>
         </CardContent>
       </Card>

@@ -87,13 +87,13 @@ export default function ConcernsInbox() {  const { t } = useTranslation(['concer
       </View>
 
       <View style={styles.tabs}>
-        {visibleTabs.map((t) => {
-          const isActive = t === tab;
-          const Icon = t === 'welfare' ? HeartHandshake : ShieldAlert;
+        {visibleTabs.map((tabKey) => {
+          const isActive = tabKey === tab;
+          const Icon = tabKey === 'welfare' ? HeartHandshake : ShieldAlert;
           return (
             <Pressable
-              key={t}
-              onPress={() => setTab(t)}
+              key={tabKey}
+              onPress={() => setTab(tabKey)}
               style={[styles.tab, isActive && styles.tabActive]}
             >
               <Icon
@@ -102,7 +102,7 @@ export default function ConcernsInbox() {  const { t } = useTranslation(['concer
                 strokeWidth={1.5}
               />
               <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                {t === 'welfare' ? 'Welfare' : 'Safeguarding'}
+                {tabKey === 'welfare' ? t('concerns:welfare') : t('concerns:safeguarding')}
               </Text>
             </Pressable>
           );

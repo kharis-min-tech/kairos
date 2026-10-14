@@ -958,7 +958,7 @@ function CandidateDetailDialog({
                           : 'text-destructive font-medium'
                       }
                     >
-                      {r.offerResponse === 'accepted' ? 'Accepted' : 'Declined'}
+                      {r.offerResponse === 'accepted' ? t('departments:accepted') : t('departments:declined')}
                     </span>
                   ) : (
                     <span className="text-[#9a6b04] dark:text-[#f8b537]">{t('departments:awaiting')}</span>
@@ -1125,7 +1125,7 @@ function ScheduleInterviewDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Scheduling…' : 'Schedule'}
+            {mutation.isPending ? t('departments:scheduling') : t('departments:schedule')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1193,7 +1193,7 @@ function RecordInterviewDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Saving…' : 'Save'}
+            {mutation.isPending ? t('departments:saving') : t('departments:save')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1265,7 +1265,7 @@ function ExtendOfferDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Sending…' : 'Send Offer'}
+            {mutation.isPending ? t('departments:sending') : t('departments:sendOffer')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1319,7 +1319,7 @@ function RejectDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Rejecting…' : 'Reject'}
+            {mutation.isPending ? t('departments:rejecting') : t('departments:reject')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1387,7 +1387,7 @@ function EvaluateProbationDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Saving…' : 'Save'}
+            {mutation.isPending ? t('departments:saving') : t('departments:save')}
           </Button>
         </DialogFooter>
       </DialogContent>

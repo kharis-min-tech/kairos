@@ -133,7 +133,7 @@ function SoulCard({
                   ? 'bg-foreground/10 border border-foreground/60 shadow-[0_0_0_2px_hsl(var(--foreground)/0.15)]'
                   : 'border border-foreground/30 bg-transparent hover:border-foreground/50'
               }`}
-              aria-label={isSelected ? 'Deselect soul' : 'Select soul'}
+              aria-label={isSelected ? t('souls:deselectSoul') : t('souls:selectSoul')}
             >
               {isSelected && <Check className="h-3 w-3 text-foreground" strokeWidth={2.5} />}
             </button>
@@ -606,9 +606,9 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
               size="sm"
               value={filters.fellowshipId ?? ''}
               onValueChange={(v) => setFilters({ fellowshipId: v || undefined })}
-              placeholder={isLeader ? 'My Fellowships' : 'All Fellowships'}
+              placeholder={isLeader ? t('souls:myFellowships') : t('souls:allFellowships')}
               options={[
-                { value: '', label: isLeader ? 'My Fellowships' : 'All Fellowships' },
+                { value: '', label: isLeader ? t('souls:myFellowships') : t('souls:allFellowships') },
                 ...allFellowships.map((f) => ({ value: f.id, label: f.fellowshipName })),
               ]}
             />
@@ -616,9 +616,9 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
               size="sm"
               value={filters.branchDepartmentId ?? ''}
               onValueChange={(v) => setFilters({ branchDepartmentId: v || undefined })}
-              placeholder={isLeader ? 'My Departments' : 'All Departments'}
+              placeholder={isLeader ? t('souls:myDepartments') : t('souls:allDepartments')}
               options={[
-                { value: '', label: isLeader ? 'My Departments' : 'All Departments' },
+                { value: '', label: isLeader ? t('souls:myDepartments') : t('souls:allDepartments') },
                 ...allDepartments.map((d) => ({
                   value: d.id,
                   label: `${d.departmentName}${isAdmin && d.branchName ? ` · ${d.branchName}` : ''}`,
@@ -778,7 +778,7 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
                 onClick={handleBulkAssign} 
                 disabled={bulkAssigning || !bulkAssignMemberId || loadingMembers}
               >
-                {bulkAssigning ? 'Assigning...' : 'Assign Souls'}
+                {bulkAssigning ? t('souls:assigning') : t('souls:assignSouls')}
               </Button>
               <Button 
                 variant="outline" 

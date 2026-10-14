@@ -356,7 +356,7 @@ function ConfirmArchiveDialog({
             disabled={isPending}
             className="bg-[#5D3FD3] hover:bg-[#451ebb]"
           >
-            {isPending ? 'Archiving…' : 'Archive'}
+            {isPending ? t('forms:archiving') : t('forms:archive')}
           </Button>
         </DialogFooter>
       </DialogContent>

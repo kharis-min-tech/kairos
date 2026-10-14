@@ -60,7 +60,7 @@ export function BulkActionBar({
           disabled={!targetStage || isAdvancing || requiresIndividualFeedback}
           className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
         >
-          {isAdvancing ? 'Advancing...' : 'Advance'}
+          {isAdvancing ? t('newBelievers:advancing') : t('newBelievers:advance')}
         </Button>
         <Button variant="outline" onClick={onClear} disabled={isAdvancing}>{t('newBelievers:clear')}</Button>
       </div>

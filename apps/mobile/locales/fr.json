@@ -65,7 +65,19 @@
     "you": "Vous",
     "cameraPermissionNeeded": "Autorisation de la caméra requise",
     "allowCamera": "Autoriser la caméra",
-    "reading": "Lecture…"
+    "reading": "Lecture…",
+    "allBranches": "Toutes les antennes",
+    "groupsILead": "Les groupes que je dirige",
+    "saving": "Enregistrement…",
+    "saveChanges": "Enregistrer les modifications",
+    "active": "Actif",
+    "onProbation": "À l'essai",
+    "saveAttendance": "Enregistrer les présences",
+    "churchPulse": "Pouls de l'église",
+    "branchPulse": "Pouls de l'antenne",
+    "settings": "Paramètres",
+    "trying": "Tentative…",
+    "appInfo": "Infos sur l'application"
   },
   "more": {
     "sections": {
@@ -188,7 +200,10 @@
     "thisIsPermanent": "C'est définitif",
     "deletingYourAccountRemovesYourProfile": "Supprimer votre compte retire votre profil et révoque votre accès. L'historique agrégé de présence et de participation est conservé sous forme anonymisée pour les registres de l'église.",
     "currentPassword": "Mot de passe actuel",
-    "typeDeleteToConfirm": "Tapez SUPPRIMER pour confirmer"
+    "typeDeleteToConfirm": "Tapez SUPPRIMER pour confirmer",
+    "deleting": "Suppression…",
+    "preparing": "Préparation…",
+    "prepareExport": "Préparer l'export"
   },
   "auth": {
     "shared": {
@@ -329,7 +344,13 @@
     "genders": {
       "Male": "Homme",
       "Female": "Femme"
-    }
+    },
+    "signIssue": "Problème de connexion",
+    "signing": "Connexion en cours…",
+    "saving": "Enregistrement…",
+    "changePassword": "Changer le mot de passe",
+    "continue": "Continuer avec",
+    "sign": "Se connecter avec"
   },
   "forms": {
     "cancel": "Annuler",
@@ -355,10 +376,12 @@
     "captureAltarCallResponsesBaptismAnd": "Enregistrez les réponses à l'appel, les demandes de baptême et de dédicace, et les témoignages.",
     "openForm": "Ouvrir le formulaire",
     "noSubmissions": "Aucun envoi",
-    "nothingMatchesTheseFiltersYet": "Rien ne correspond à ces filtres pour l'instant."
+    "nothingMatchesTheseFiltersYet": "Rien ne correspond à ces filtres pour l'instant.",
+    "submitting": "Envoi…",
+    "submit": "Envoyer",
+    "searchDirectoryTypeName": "Rechercher dans le répertoire, ou saisir un nom",
+    "searchPerson": "Rechercher une personne"
   },
-  "myGroups": {},
-  "rollcall": {},
   "reports": {
     "reports": "Rapports",
     "departments": "Départements",
@@ -474,7 +497,18 @@
     "memberCreated": "Membre créé",
     "temporaryPassword": "Mot de passe temporaire",
     "longPressThePasswordToSelect": "Appui long sur le mot de passe pour le sélectionner et le copier, ou utilisez Partager ci-dessous.",
-    "theyArenTInTheDirectory": "Ils ne sont pas dans l'annuaire : nous enregistrerons donc le nom sans dossier."
+    "theyArenTInTheDirectory": "Ils ne sont pas dans l'annuaire : nous enregistrerons donc le nom sans dossier.",
+    "registered": "Inscrit",
+    "noRolesAssigned": "Aucun rôle attribué.",
+    "deactivating": "Désactivation…",
+    "attendees": "Participants",
+    "currentlyVisiting": "En visite actuellement",
+    "noRolesAssignedTapAdd": "Aucun rôle attribué. Touchez + pour en ajouter un.",
+    "working": "En cours…",
+    "reactivating": "Réactivation…",
+    "reactivateMember": "Réactiver le membre",
+    "inactiveGdn": "Tuteur inactif",
+    "noGdn": "Aucun tuteur"
   },
   "fellowships": {
     "followUps": "Suivis",
@@ -588,7 +622,15 @@
     "appleMaps": "Apple Maps",
     "googleMaps": "Google Maps",
     "waze": "Waze",
-    "createFellowship": "Créer la cellule"
+    "createFellowship": "Créer la cellule",
+    "visit": "Visite",
+    "saving": "Enregistrement…",
+    "saveFollowUp": "Enregistrer le suivi",
+    "deleting": "Suppression…",
+    "overdue": "En retard",
+    "allFollowUps": "Tous les suivis",
+    "contact": "Contact",
+    "logMeeting": "Enregistrer une réunion"
   },
   "departments": {
     "followUps": "Suivis",
@@ -706,7 +748,36 @@
     "createDepartment": "Créer le département",
     "requiresTheDepartmentleaderCapabilityOnThe": "Nécessite la capacité DepartmentLeader sur l'antenne choisie, ou un accès admin/pasteur. Les membres peuvent être ajoutés après la création du département.",
     "notInADepartmentYet": "Vous n'êtes pas encore dans un département",
-    "joinAMinistryDepartmentViaYourBranchAdmin": "Rejoignez un département de ministère (Louange, Accueil, Média, Enfants, …) via l'administrateur de votre antenne. Votre équipe, votre responsable et votre planning apparaîtront ici."
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Rejoignez un département de ministère (Louange, Accueil, Média, Enfants, …) via l'administrateur de votre antenne. Votre équipe, votre responsable et votre planning apparaîtront ici.",
+    "visit": "Visite",
+    "saving": "Enregistrement…",
+    "saveFollowUp": "Enregistrer le suivi",
+    "passed": "Réussi",
+    "scheduling": "Planification…",
+    "schedule": "Fréquence",
+    "sending": "Envoi…",
+    "failed": "Échec",
+    "rejecting": "Refus…",
+    "upcoming": "À venir",
+    "addOutfit": "Ajouter une tenue",
+    "assigning": "Attribution…",
+    "assign": "Attribuer",
+    "deactivating": "Désactivation…",
+    "overdue": "En retard",
+    "allFollowUps": "Tous les suivis",
+    "contact": "Contact",
+    "didPass": "N'a pas réussi",
+    "saveOutcome": "Enregistrer le résultat",
+    "sendOffer": "Envoyer la proposition",
+    "saveDecision": "Enregistrer la décision",
+    "outfits": "Tenues",
+    "newOutfit": "Nouvelle tenue",
+    "editOutfit": "Modifier la tenue",
+    "changePhoto": "Changer la photo",
+    "chooseLibrary": "Choisir dans la galerie",
+    "chooseLead": "Choisir un responsable",
+    "chooseBranchFirst": "Choisissez d'abord une antenne",
+    "chooseDeputyOptional": "Choisir un adjoint (facultatif)"
   },
   "branches": {
     "phone": "Téléphone",
@@ -768,7 +839,8 @@
     "noHomeBranchSet": "Aucune antenne d'attache définie",
     "setYourHomeBranchFromYour": "Définissez votre antenne d'attache dans votre profil, ou demandez à un administrateur de le faire.",
     "whenOffMembersWontSeeTheImHereButton": "Désactivé, les membres ne verront pas le bouton « Je suis là ». La présence est alors enregistrée uniquement par un bénévole à l'accueil.",
-    "home": "PRINCIPALE"
+    "home": "PRINCIPALE",
+    "deactivating": "Désactivation…"
   },
   "security": {
     "cancel": "Annuler",
@@ -819,7 +891,15 @@
     "skipYourPassword": "Passez le mot de passe.",
     "consentHistory": "Historique des consentements",
     "optional": "FACULTATIF",
-    "aNewerVersionIsAvailableToggle": "Une version plus récente est disponible. Basculez pour l'accepter à nouveau."
+    "aNewerVersionIsAvailableToggle": "Une version plus récente est disponible. Basculez pour l'accepter à nouveau.",
+    "preparing": "Préparation…",
+    "deleting": "Suppression…",
+    "permanentlyDelete": "Supprimer définitivement",
+    "unsubscribe": "Se désabonner",
+    "subscribe": "S'abonner",
+    "sending": "Envoi…",
+    "export": "Exporter",
+    "sendConfirmationLink": "Envoyer le lien de confirmation"
   },
   "admin": {
     "retry": "Réessayer",
@@ -859,9 +939,11 @@
     "tapToCreateTheFirstOne": "Touchez + pour créer la première.",
     "regionName": "Nom de la région *",
     "country": "Pays *",
-    "country2": "Pays"
+    "country2": "Pays",
+    "save": "Enregistrer",
+    "create": "Créer",
+    "editRegion": "Modifier la région"
   },
-  "help": {},
   "home": {
     "today": "Aujourd'hui",
     "thisWeek": "Cette semaine",
@@ -945,7 +1027,10 @@
     "noMeetingsYet": "Aucune rencontre pour l'instant",
     "takeTheRegister": "Faire l'appel",
     "pickAFellowshipThenMarkAttendance": "Choisissez une cellule, puis marquez la présence pour sa prochaine rencontre.",
-    "noFellowshipsToLead": "Aucune cellule à diriger"
+    "noFellowshipsToLead": "Aucune cellule à diriger",
+    "scanQrDesk": "Scanner le QR à l'accueil",
+    "creating": "Création…",
+    "checking": "Enregistrement…"
   },
   "concerns": {
     "concerns": "Préoccupations",
@@ -1030,7 +1115,30 @@
     "nobodyEntersACohortOnTheir": "Personne n'entre dans une promotion de lui-même. Choisissez qui rejoint la prochaine session. Les inscriptions expirent après six mois, pour qu'une personne absente une saison disparaisse plutôt que d'être reportée.",
     "noCohortIsOpenToAdmissions": "Aucune promotion n'est ouverte aux admissions. Créez-en une d'abord sur le tableau de bord web.",
     "createCohort": "Créer la promotion",
-    "scheduleTheFourSessionsAndAdmit": "Programmez les quatre sessions et admettez des personnes depuis la liste d'intérêt une fois la promotion créée."
+    "scheduleTheFourSessionsAndAdmit": "Programmez les quatre sessions et admettez des personnes depuis la liste d'intérêt une fois la promotion créée.",
+    "saving": "Enregistrement…",
+    "saveSession": "Enregistrer la séance",
+    "closeRegister": "Fermer la feuille de présence",
+    "openRegister": "Ouvrir la feuille de présence",
+    "saveRegister": "Enregistrer la feuille de présence",
+    "graduateAnyway": "Diplômer malgré tout",
+    "archiving": "Archivage…",
+    "archiveCohort": "Archiver la promotion",
+    "readyGraduate": "Prêt à être diplômé",
+    "inProgress": "En cours",
+    "removing": "Retrait…",
+    "yourPlaceListEnded": "Votre place sur la liste a pris fin",
+    "interestedBecomingMember": "Vous souhaitez devenir membre ?",
+    "joinAgain": "S'inscrire à nouveau",
+    "joinList": "S'inscrire sur la liste",
+    "yourPeopleWaiting": "Vos personnes en attente",
+    "branchWaitlist": "Liste d'attente de l'antenne",
+    "yourPeopleAdmitted": "Vos personnes admises",
+    "admittedBranch": "Admis depuis votre antenne",
+    "admitting": "Admission…",
+    "admit": "Admettre",
+    "graduating": "Remise du diplôme…",
+    "takeMeOffList": "Me retirer de la liste"
   },
   "newBelievers": {
     "cancel": "Annuler",
@@ -1080,7 +1188,24 @@
     "createAnyway": "Créer quand même ?",
     "createAnyway2": "Créer quand même",
     "newSession": "Nouvelle session",
-    "sessionAlreadyExists": "Cette session existe déjà"
+    "sessionAlreadyExists": "Cette session existe déjà",
+    "done": "Terminé",
+    "active": "Actif",
+    "saving": "Enregistrement…",
+    "saveFollowUp": "Enregistrer le suivi",
+    "pickTeacher": "Choisir un enseignant",
+    "myNewBelieverJourney": "Mon parcours de nouveau croyant",
+    "newBelieversPipeline": "Parcours des nouveaux croyants",
+    "creating": "Création…",
+    "sessionComplete": "Séance terminée",
+    "sessionProgress": "Séance en cours",
+    "sessionFeedbackRequired": "Retour sur la séance requis",
+    "confirmAdvance": "Confirmer et faire avancer",
+    "confirmComplete": "Confirmer et terminer",
+    "pickMentor": "Choisir un mentor",
+    "youReEnrolled": "Vous n'êtes pas inscrit",
+    "noActiveEnrollments": "Aucune inscription active",
+    "createSession": "Créer une séance"
   },
   "outreach": {
     "done": "Terminé",
@@ -1110,7 +1235,10 @@
     "city": "Ville",
     "owningBranch": "Antenne responsable",
     "newProgram": "Nouveau programme",
-    "afterCreatingTheProgramYouCan": "Après avoir créé le programme, vous pourrez inscrire des ouvriers et commencer à enregistrer les âmes touchées."
+    "afterCreatingTheProgramYouCan": "Après avoir créé le programme, vous pourrez inscrire des ouvriers et commencer à enregistrer les âmes touchées.",
+    "adding": "Ajout…",
+    "creating": "Création…",
+    "createProgram": "Créer un programme"
   },
   "rota": {
     "cancel": "Annuler",
@@ -1120,8 +1248,6 @@
     "remove": "Retirer",
     "myRota": "Mon planning",
     "upcoming": "À venir",
-    "published": "Publié",
-    "draft": "Brouillon",
     "startDate": "Date de début",
     "templates": "Modèles",
     "new": "Nouveau",
@@ -1191,7 +1317,21 @@
     "optionalWhyYouCanTMake": "Facultatif : pourquoi vous ne pouvez pas venir",
     "noUpcomingDuties": "Aucune fonction à venir",
     "nothingScheduledInTheNextDays": "Rien de prévu dans les 180 prochains jours.",
-    "requestASwap": "Demander un échange"
+    "requestASwap": "Demander un échange",
+    "saving": "Enregistrement…",
+    "saveChanges": "Enregistrer les modifications",
+    "creating": "Création…",
+    "confirm": "Confirmer",
+    "sending": "Envoi…",
+    "generating": "Génération…",
+    "unpublish": "Dépublier",
+    "publish": "Publier",
+    "approveSwap": "Approuver l'échange",
+    "rejectSwap": "Refuser l'échange",
+    "createTemplate": "Créer un modèle",
+    "confirmed": "Confirmé",
+    "published": "Publié",
+    "draft": "Brouillon"
   },
   "souls": {
     "firstName": "Prénom",
@@ -1248,6 +1388,9 @@
     "allSouls": "Toutes les âmes",
     "followUpsQueue": "File des suivis",
     "byStatus": "Par statut",
-    "jumpTo": "Aller à"
+    "jumpTo": "Aller à",
+    "saving": "Enregistrement…",
+    "converting": "Conversion…",
+    "convertMember": "Convertir en membre"
   }
 }

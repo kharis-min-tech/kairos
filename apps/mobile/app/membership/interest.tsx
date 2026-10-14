@@ -255,7 +255,7 @@ export default function MembershipInterestScreen() {  const { t } = useTranslati
             ))}
           </View>
           <Button
-            label={admit.isPending ? 'Admitting…' : 'Admit'}
+            label={admit.isPending ? t('membership:admitting') : t('membership:admit')}
             onPress={() => {
               if (!cohortId) {
                 alert.info('Pick a cohort', 'Choose which intake to admit them into.');

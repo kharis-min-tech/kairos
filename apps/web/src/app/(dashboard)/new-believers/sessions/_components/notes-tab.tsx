@@ -64,7 +64,7 @@ export function NotesTab({ session, canEdit }: Props) {  const { t } = useTransl
           onClick={handleSave}
           disabled={updateSession.isPending}
         >
-          {updateSession.isPending ? 'Saving...' : 'Save Notes'}
+          {updateSession.isPending ? t('newBelievers:saving') : t('newBelievers:saveNotes')}
         </Button>
         {saved && (
           <span className="text-xs font-medium text-emerald-600">{t('newBelievers:notesSaved')}</span>

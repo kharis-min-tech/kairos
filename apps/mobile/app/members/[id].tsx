@@ -456,7 +456,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
             <InfoRow
               icon={<Building2 color={c.primary} size={14} strokeWidth={1.5} />}
               label={t('members:secondaryBranch')}
-              value={m.isAtSecondaryBranch ? 'Currently visiting' : 'Registered'}
+              value={m.isAtSecondaryBranch ? t('members:currentlyVisiting') : t('members:registered')}
             />
           ) : null}
           {!m.redacted && m.dateOfBirth ? (
@@ -548,7 +548,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
               <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.sm }} />
             ) : (roles.data ?? []).length === 0 ? (
               <Text style={styles.emptyLine}>
-                {canManageRoles ? 'No roles assigned. Tap + to add one.' : 'No roles assigned.'}
+                {canManageRoles ? t('members:noRolesAssignedTapAdd') : t('members:noRolesAssigned')}
               </Text>
             ) : (
               <>
@@ -629,7 +629,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
                   >
                     <Check color="#ffffff" size={14} strokeWidth={2} />
                     <Text style={styles.manageBtnLabelPrimary}>
-                      {approve.isPending ? 'Working…' : 'Approve'}
+                      {approve.isPending ? t('members:working') : t('members:approve')}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -698,7 +698,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
                 >
                   <UserCheck color="#ffffff" size={14} strokeWidth={1.5} />
                   <Text style={styles.manageBtnLabelPrimary}>
-                    {reactivate.isPending ? 'Reactivating…' : 'Reactivate member'}
+                    {reactivate.isPending ? t('members:reactivating') : t('members:reactivateMember')}
                   </Text>
                 </Pressable>
               )

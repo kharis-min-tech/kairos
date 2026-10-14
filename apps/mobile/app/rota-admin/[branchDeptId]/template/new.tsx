@@ -160,7 +160,7 @@ export default function NewRotaTemplate() {  const { t } = useTranslation(['rota
           <Text style={styles.footnote}>{t('rota:afterCreatingTheTemplateAddRole')}</Text>
 
           <Button
-            label={create.isPending ? 'Creating…' : 'Create template'}
+            label={create.isPending ? t('rota:creating') : t('rota:createTemplate')}
             size="lg"
             fullWidth
             loading={create.isPending}

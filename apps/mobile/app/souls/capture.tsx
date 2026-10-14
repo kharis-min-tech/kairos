@@ -297,7 +297,7 @@ export default function CaptureSoul() {  const { t } = useTranslation(['souls', 
           </Card>
 
           <Button
-            label={capture.isPending ? 'Saving…' : 'Capture soul'}
+            label={capture.isPending ? t('souls:saving') : t('souls:captureSoul')}
             size="lg"
             fullWidth
             loading={capture.isPending}

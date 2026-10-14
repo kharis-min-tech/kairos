@@ -285,7 +285,7 @@ function MyMembership({
         <View style={styles.cardHead}>
           <Text style={styles.cardTitle}>{t('membership:yourProgress')}</Text>
           <Badge
-            label={mine.readiness?.eligible ? 'Ready to graduate' : 'In progress'}
+            label={mine.readiness?.eligible ? t('membership:readyGraduate') : t('membership:inProgress')}
             variant={mine.readiness?.eligible ? 'success' : 'neutral'}
           />
         </View>
@@ -317,7 +317,7 @@ function MyMembership({
           in a cohort. Your place holds until {formatShortDate(interest.expiresAt)}.
         </Text>
         <Button
-          label={leaving ? 'Removing…' : 'Take me off the list'}
+          label={leaving ? t('membership:removing') : t('membership:takeMeOffList')}
           variant="secondary"
           onPress={onLeave}
           disabled={leaving}
@@ -331,7 +331,7 @@ function MyMembership({
   return (
     <Card style={styles.card}>
       <Text style={styles.confirmedTitle}>
-        {ended ? 'Your place on the list has ended' : 'Interested in becoming a Member?'}
+        {ended ? t('membership:yourPlaceListEnded') : t('membership:interestedBecomingMember')}
       </Text>
       <Text style={styles.metaText}>
         {interest?.status === 'lapsed'
@@ -341,7 +341,7 @@ function MyMembership({
             : 'Join the list and a membership admin will place you in an upcoming cohort.'}
       </Text>
       <Button
-        label={joining ? 'Joining…' : ended ? 'Join again' : 'Join the list'}
+        label={joining ? 'Joining…' : ended ? t('membership:joinAgain') : t('membership:joinList')}
         onPress={onJoin}
         disabled={joining}
       />
@@ -365,6 +365,7 @@ function ChampionBranchView({
   styles: ReturnType<typeof makeStyles>;
   c: ReturnType<typeof useColors>;
 }) {
+  const { t } = useTranslation(['membership', 'common']);
   const { waitlist, enrolled } = view;
   // A Champion is reading a branch; a group leader is reading the people they
   // lead. Say which, so a partial list is never mistaken for the whole one.
@@ -374,7 +375,7 @@ function ChampionBranchView({
       <View style={styles.cardHead}>
         <Users color={c.primary} size={16} strokeWidth={1.8} />
         <Text style={styles.cardTitle}>
-          {isGroup ? 'Your people waiting' : 'Branch waitlist'} ({waitlist.length})
+          {isGroup ? t('membership:yourPeopleWaiting') : t('membership:branchWaitlist')} ({waitlist.length})
         </Text>
       </View>
       {waitlist.length === 0 ? (
@@ -399,7 +400,7 @@ function ChampionBranchView({
       <View style={[styles.cardHead, { marginTop: spacing.md }]}>
         <GraduationCap color={c.primary} size={16} strokeWidth={1.8} />
         <Text style={styles.cardTitle}>
-          {isGroup ? 'Your people admitted' : 'Admitted from your branch'} ({enrolled.length})
+          {isGroup ? t('membership:yourPeopleAdmitted') : t('membership:admittedBranch')} ({enrolled.length})
         </Text>
       </View>
       {enrolled.length === 0 ? (

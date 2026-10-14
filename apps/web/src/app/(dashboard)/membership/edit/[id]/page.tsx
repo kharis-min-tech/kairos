@@ -150,7 +150,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
                 }}
               >
                 <Archive className="mr-1 size-4" />
-                {archive.isPending ? 'Archiving…' : 'Archive cohort'}
+                {archive.isPending ? t('membership:archiving') : t('membership:archiveCohort')}
               </Button>
             </div>
           </div>

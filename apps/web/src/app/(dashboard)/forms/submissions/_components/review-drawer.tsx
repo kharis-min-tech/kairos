@@ -257,7 +257,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
             disabled={update.isPending}
             className="bg-[#5D3FD3] hover:bg-[#451ebb]"
           >
-            {update.isPending ? 'Saving…' : 'Save'}
+            {update.isPending ? t('forms:saving') : t('forms:save')}
           </Button>
         </DialogFooter>
       </DialogContent>

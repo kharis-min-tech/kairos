@@ -79,14 +79,14 @@ export default function ConcernsInboxPage() {  const { t } = useTranslation(['co
       </div>
 
       <div className="flex gap-2">
-        {visibleTabs.map((t) => {
-          const isActive = t === tab;
-          const Icon = t === 'welfare' ? HeartHandshake : ShieldAlert;
+        {visibleTabs.map((tabKey) => {
+          const isActive = tabKey === tab;
+          const Icon = tabKey === 'welfare' ? HeartHandshake : ShieldAlert;
           return (
             <button
-              key={t}
+              key={tabKey}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => setTab(tabKey)}
               className={cn(
                 'inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-semibold transition-colors',
                 isActive
@@ -95,7 +95,7 @@ export default function ConcernsInboxPage() {  const { t } = useTranslation(['co
               )}
             >
               <Icon className="h-4 w-4" strokeWidth={1.75} />
-              {t === 'welfare' ? 'Welfare' : 'Safeguarding'}
+              {tabKey === 'welfare' ? t('concerns:welfare') : t('concerns:safeguarding')}
             </button>
           );
         })}

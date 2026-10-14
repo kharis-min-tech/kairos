@@ -388,7 +388,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
               onClick={() => setShowFollowUpForm(!showFollowUpForm)}
               disabled={loading}
             >
-              {showFollowUpForm ? 'Cancel' : 'Log Follow-up'}
+              {showFollowUpForm ? t('souls:cancel') : t('souls:logFollowUp')}
             </Button>
           </div>
         </CardHeader>
@@ -497,7 +497,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
               </div>
 
               <Button type="submit" disabled={loading}>
-                {loading ? 'Logging...' : 'Log Follow-up'}
+                {loading ? t('souls:logging') : t('souls:logFollowUp')}
               </Button>
             </form>
           )}

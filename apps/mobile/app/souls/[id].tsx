@@ -432,7 +432,7 @@ export default function SoulDetail() {  const { t } = useTranslation(['souls', '
               >
                 <BadgeCheck color="#ffffff" size={16} strokeWidth={1.5} />
                 <Text style={styles.convertBtnLabel}>
-                  {convert.isPending ? 'Converting…' : 'Convert to member'}
+                  {convert.isPending ? t('souls:converting') : t('souls:convertMember')}
                 </Text>
               </Pressable>
             ) : s.convertedMemberFirstName ? (

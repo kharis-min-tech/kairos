@@ -94,7 +94,7 @@ export function ConsentBanner() {  const { t } = useTranslation(['security', 'co
           onClick={acceptAll}
           disabled={record.isPending || accepting !== null}
         >
-          {record.isPending ? 'Saving…' : 'Accept & continue'}
+          {record.isPending ? t('security:saving') : t('security:acceptContinue')}
         </Button>
       </div>
     </div>

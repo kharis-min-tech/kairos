@@ -216,7 +216,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
                 disabled={loading}
                 className="bg-accent hover:bg-accent/80 text-accent-foreground"
               >
-                {loading ? 'Creating...' : 'Continue Anyway'}
+                {loading ? t('outreach:creating') : t('outreach:continueAnyway')}
               </Button>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
               id="branchId"
               value={formData.branchId}
               onValueChange={(v) => handleChange('branchId', v)}
-              placeholder={isAdmin ? 'Select a branch' : 'Auto-assigned for Pastor/Leader'}
+              placeholder={isAdmin ? t('outreach:selectBranch') : t('outreach:autoAssignedPastorLeader')}
               options={branches.map((branch) => ({ value: branch.id, label: branch.branchName }))}
             />
             {errors.branchId && (
@@ -399,7 +399,7 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
 
         <div className="flex gap-4">
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Creating...' : 'Create Program'}
+            {loading ? t('outreach:creating') : t('outreach:createProgram')}
           </Button>
           <Button
             type="button"

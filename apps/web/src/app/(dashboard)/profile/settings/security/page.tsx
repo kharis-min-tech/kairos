@@ -228,7 +228,7 @@ function ConnectedAccountsCard() {  const { t } = useTranslation(['security', 'c
               disabled={disconnect.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90"
             >
-              {disconnect.isPending ? 'Disconnecting…' : 'Disconnect'}
+              {disconnect.isPending ? t('security:disconnecting') : t('security:disconnect')}
             </Button>
           </DialogFooter>
         </DialogContent>

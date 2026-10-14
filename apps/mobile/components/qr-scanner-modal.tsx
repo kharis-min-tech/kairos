@@ -160,7 +160,7 @@ export function QrScannerModal({
               <Text style={styles.permissionMeta}>
                 {permission.canAskAgain
                   ? 'Tap allow so we can scan the QR code.'
-                  : `Enable camera access for Kairos in ${Platform.OS === 'ios' ? 'Settings' : 'App info'} to scan.`}
+                  : `Enable camera access for Kairos in ${Platform.OS === 'ios' ? t('common:settings') : t('common:appInfo')} to scan.`}
               </Text>
               {permission.canAskAgain ? (
                 <Pressable style={styles.permissionBtn} onPress={requestPermission}>

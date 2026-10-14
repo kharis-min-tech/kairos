@@ -31,7 +31,7 @@ export function SessionDetailPane({ session, branchId, userMemberId }: Props) { 
   const [tab, setTab] = useState<Tab>('attendance');
   const stageDef = getSessionStageDef(session.sessionStage);
   const upcoming = isUpcomingSession(session.sessionDate);
-  const status = upcoming ? 'Upcoming' : 'Past';
+  const status = upcoming ? t('newBelievers:upcoming') : t('newBelievers:past');
 
   // Mirrors the server gate in apps/api/src/new-believers/service.ts: the
   // session's own teacher, or anyone holding branch:read.

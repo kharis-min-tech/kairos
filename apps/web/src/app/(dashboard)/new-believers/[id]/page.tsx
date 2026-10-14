@@ -284,7 +284,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                   : 'bg-[#f8b537]/20 text-[#f8b537]'
               }`}
             >
-              {currentSessionDone ? 'Session Completed' : 'Session In Progress'}
+              {currentSessionDone ? t('newBelievers:sessionCompleted') : t('newBelievers:sessionProgress')}
             </span>
           )}
           {enrollment.teacherFirstName && (
@@ -429,7 +429,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                     disabled={updateEnrollment.isPending}
                     className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
                   >
-                    {updateEnrollment.isPending ? 'Saving...' : 'Save Changes'}
+                    {updateEnrollment.isPending ? t('newBelievers:saving') : t('newBelievers:saveChanges')}
                   </Button>
                 </div>
               </CardContent>
@@ -524,7 +524,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                             : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                         }`}
                       >
-                        {a.attended ? 'Present' : 'Absent'}
+                        {a.attended ? t('newBelievers:present') : t('newBelievers:absent')}
                       </span>
                     </div>
                   ))}
@@ -591,7 +591,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                                 : 'bg-[#f8b537]/20 text-[#f8b537]'
                             }`}
                           >
-                            {sessionDone ? 'Done' : 'Active'}
+                            {sessionDone ? t('newBelievers:done') : t('newBelievers:active')}
                           </span>
                         )}
                       </div>
@@ -618,7 +618,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>
-              {markCompleteShouldAdvance ? 'Session Feedback Required' : 'Mark Session Complete'}
+              {markCompleteShouldAdvance ? t('newBelievers:sessionFeedbackRequired') : t('newBelievers:markSessionComplete')}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               {markCompleteShouldAdvance
@@ -690,7 +690,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
               disabled={updateEnrollment.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {updateEnrollment.isPending ? 'Saving...' : 'Confirm'}
+              {updateEnrollment.isPending ? t('newBelievers:saving') : t('newBelievers:confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

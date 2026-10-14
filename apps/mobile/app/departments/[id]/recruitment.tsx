@@ -389,7 +389,7 @@ function ApplicantCard({
         <Text style={styles.stageDetail}>
           Outcome:{' '}
           <Text style={{ fontWeight: '700' }}>
-            {row.interviewOutcome === 'pass' ? 'Passed' : 'Did not pass'}
+            {row.interviewOutcome === 'pass' ? t('departments:passed') : t('departments:didPass')}
           </Text>
           {row.interviewNotes ? `, ${row.interviewNotes}` : ''}
         </Text>
@@ -609,7 +609,7 @@ function ScheduleInterviewSheet({
       footer={
         <>
           <Button
-            label={mutate.isPending ? 'Scheduling…' : 'Schedule'}
+            label={mutate.isPending ? t('departments:scheduling') : t('departments:schedule')}
             size="lg"
             fullWidth
             loading={mutate.isPending}
@@ -710,7 +710,7 @@ function RecordInterviewSheet({
       footer={
         <>
           <Button
-            label={mutate.isPending ? 'Saving…' : 'Save outcome'}
+            label={mutate.isPending ? t('departments:saving') : t('departments:saveOutcome')}
             size="lg"
             fullWidth
             loading={mutate.isPending}
@@ -734,7 +734,7 @@ function RecordInterviewSheet({
                 onPress={() => setOutcome(o)}
               >
                 <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>
-                  {o === 'pass' ? 'Passed' : 'Did not pass'}
+                  {o === 'pass' ? t('departments:passed') : t('departments:didPass')}
                 </Text>
               </Pressable>
             );
@@ -800,7 +800,7 @@ function ExtendOfferSheet({
       footer={
         <>
           <Button
-            label={mutate.isPending ? 'Sending…' : 'Send offer'}
+            label={mutate.isPending ? t('departments:sending') : t('departments:sendOffer')}
             size="lg"
             fullWidth
             loading={mutate.isPending}
@@ -879,7 +879,7 @@ function ProbationSheet({
       footer={
         <>
           <Button
-            label={mutate.isPending ? 'Saving…' : 'Save decision'}
+            label={mutate.isPending ? t('departments:saving') : t('departments:saveDecision')}
             size="lg"
             fullWidth
             loading={mutate.isPending}
@@ -903,7 +903,7 @@ function ProbationSheet({
                 onPress={() => setOutcome(o)}
               >
                 <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>
-                  {o === 'passed' ? 'Passed' : 'Failed'}
+                  {o === 'passed' ? t('departments:passed') : t('departments:failed')}
                 </Text>
               </Pressable>
             );
@@ -963,7 +963,7 @@ function RejectSheet({
       footer={
         <>
           <Button
-            label={mutate.isPending ? 'Rejecting…' : 'Reject application'}
+            label={mutate.isPending ? t('departments:rejecting') : t('departments:rejectApplication')}
             size="lg"
             fullWidth
             loading={mutate.isPending}

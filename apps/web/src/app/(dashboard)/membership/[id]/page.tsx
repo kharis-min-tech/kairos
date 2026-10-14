@@ -375,7 +375,7 @@ function SessionsTab({
                   }
                 >
                   <Pencil className="mr-1 size-4" />
-                  {editingNumber === s.sessionNumber ? 'Cancel' : 'Edit'}
+                  {editingNumber === s.sessionNumber ? t('membership:cancel') : t('membership:edit')}
                 </Button>
                 <Button
                   size="sm"
@@ -383,7 +383,7 @@ function SessionsTab({
                   onClick={() => setOpenSessionId(openSessionId === s.id ? null : s.id)}
                 >
                   <ClipboardCheck className="mr-1 size-4" />
-                  {openSessionId === s.id ? 'Close register' : 'Open register'}
+                  {openSessionId === s.id ? t('membership:closeRegister') : t('membership:openRegister')}
                 </Button>
               </div>
             </div>
@@ -517,7 +517,7 @@ function SessionEditor({
           disabled={save.isPending}
           onClick={submit}
         >
-          {save.isPending ? 'Saving…' : 'Save session'}
+          {save.isPending ? t('membership:saving') : t('membership:saveSession')}
         </Button>
         <Button size="sm" variant="ghost" onClick={onDone}>{t('membership:cancel')}</Button>
       </div>
@@ -655,7 +655,7 @@ function SessionRegister({
         disabled={save.isPending}
         onClick={submit}
       >
-        {save.isPending ? 'Saving…' : 'Save register'}
+        {save.isPending ? t('membership:saving') : t('membership:saveRegister')}
       </Button>
     </div>
   );

@@ -531,7 +531,7 @@ function EditTemplateSheet({
         />
       </View>
       <Button
-        label={mutate.isPending ? 'Saving…' : 'Save changes'}
+        label={mutate.isPending ? t('rota:saving') : t('rota:saveChanges')}
         size="lg"
         fullWidth
         loading={mutate.isPending}
@@ -606,7 +606,7 @@ function SlotSheet({
   return (
     <SheetShell
       open={open}
-      title={mode === 'new' ? 'Add role' : 'Edit role'}
+      title={mode === 'new' ? t('rota:addRole') : t('rota:editRole')}
       onClose={onClose}
     >
       <View style={{ gap: 4 }}>
@@ -640,7 +640,7 @@ function SlotSheet({
         />
       </View>
       <Button
-        label={mutate.isPending ? 'Saving…' : mode === 'new' ? 'Add role' : 'Save changes'}
+        label={mutate.isPending ? 'Saving…' : mode === 'new' ? t('rota:addRole') : t('rota:saveChanges')}
         size="lg"
         fullWidth
         loading={mutate.isPending}

@@ -144,7 +144,7 @@ export function ProgramHealthStrip({ branchId }: Props) {  const { t } = useTran
           size="sm"
           onClick={() => setExpanded((value) => !value)}
           aria-pressed={expanded}
-          aria-label={expanded ? 'Collapse programme health' : 'Expand programme health'}
+          aria-label={expanded ? t('newBelievers:collapseProgrammeHealth') : t('newBelievers:expandProgrammeHealth')}
         >
           {expanded ? (
             <>

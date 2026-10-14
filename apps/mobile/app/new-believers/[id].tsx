@@ -225,7 +225,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
     try {
       await update.mutateAsync(payload);
       alert.info(
-        `${kind === 'teacher' ? 'Teacher' : 'Mentor'} ${memberId ? 'updated' : 'cleared'}`,
+        `${kind === 'teacher' ? t('newBelievers:teacher') : t('newBelievers:mentor')} ${memberId ? 'updated' : 'cleared'}`,
         undefined,
       );
     } catch (e) {
@@ -335,7 +335,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
                         : styles.sessionChipInProgressText,
                     ]}
                   >
-                    {currentSessionDone ? 'Session complete' : 'Session in progress'}
+                    {currentSessionDone ? t('newBelievers:sessionComplete') : t('newBelievers:sessionProgress')}
                   </Text>
                 </View>
               ) : null}
@@ -462,7 +462,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
                               : styles.journeyBadgeActiveText,
                           ]}
                         >
-                          {sDone ? 'Done' : 'Active'}
+                          {sDone ? t('newBelievers:done') : t('newBelievers:active')}
                         </Text>
                       </View>
                     ) : null}
@@ -553,7 +553,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label={recordMentorFollowup.isPending ? 'Saving…' : 'Save follow-up'}
+                    label={recordMentorFollowup.isPending ? t('newBelievers:saving') : t('newBelievers:saveFollowUp')}
                     onPress={() => recordMentorFollowup.mutate()}
                     disabled={!mentorNote.trim() || recordMentorFollowup.isPending}
                   />
@@ -616,7 +616,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
             <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
               <View style={styles.sheetHandle} />
               <Text style={styles.sheetTitle}>
-                {advanceAfter ? 'Session feedback required' : 'Mark session complete'}
+                {advanceAfter ? t('newBelievers:sessionFeedbackRequired') : t('newBelievers:markSessionComplete')}
               </Text>
               <Text style={styles.sheetHint}>
                 {advanceAfter
@@ -641,7 +641,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label={advanceAfter ? 'Confirm & advance' : 'Confirm & complete'}
+                    label={advanceAfter ? t('newBelievers:confirmAdvance') : t('newBelievers:confirmComplete')}
                     onPress={confirmMarkComplete}
                     disabled={!feedback.trim() || update.isPending}
                   />
@@ -658,7 +658,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
           open={!!pickerOpen}
           onClose={() => setPickerOpen(null)}
           branchId={data.branchId}
-          title={pickerOpen === 'teacher' ? 'Pick a teacher' : 'Pick a mentor'}
+          title={pickerOpen === 'teacher' ? t('newBelievers:pickTeacher') : t('newBelievers:pickMentor')}
           subtitle={
             pickerOpen === 'teacher'
               ? 'Search members in this branch. Teachers can\'t be currently enrolled as students.'

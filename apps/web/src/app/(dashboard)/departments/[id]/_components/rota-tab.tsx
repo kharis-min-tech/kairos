@@ -247,7 +247,7 @@ function ScheduleSection({
         </div>
         {canManage && activeTemplates.length > 0 && (
           <Button onClick={() => setShowGenerate((v) => !v)} variant="default">
-            {showGenerate ? 'Cancel' : 'Generate Schedule'}
+            {showGenerate ? t('departments:cancel') : t('departments:generateSchedule')}
           </Button>
         )}
       </div>
@@ -550,7 +550,7 @@ function GenerateForm({
           </div>
           <div className="md:col-span-3">
             <Button type="submit" disabled={generate.isPending}>
-              {generate.isPending ? 'Generating...' : 'Generate'}
+              {generate.isPending ? t('departments:generating') : t('departments:generate')}
             </Button>
           </div>
         </form>
@@ -677,11 +677,11 @@ function InstanceDetail({
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-medium">{a.roleName ?? 'Unassigned slot'}</p>
+                  <p className="text-sm font-medium">{a.roleName ?? t('departments:unassignedSlot')}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.memberId
                       ? `${a.memberFirstName ?? ''} ${a.memberLastName ?? ''}`.trim()
-                      : 'Open slot'}
+                      : t('departments:openSlot')}
                   </p>
                 </div>
               </div>
@@ -768,7 +768,7 @@ function TemplatesSection({
         </div>
         {canManage && (
           <Button onClick={() => setShowCreate((v) => !v)}>
-            {showCreate ? 'Cancel' : 'New Template'}
+            {showCreate ? t('departments:cancel') : t('departments:newTemplate')}
           </Button>
         )}
       </div>
@@ -909,7 +909,7 @@ function CreateTemplateForm({
           </div>
           <div className="md:col-span-2">
             <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? 'Saving...' : 'Create'}
+              {create.isPending ? t('departments:savingEllipsis') : t('departments:create')}
             </Button>
           </div>
         </form>

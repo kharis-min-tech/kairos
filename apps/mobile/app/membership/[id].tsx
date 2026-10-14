@@ -364,7 +364,7 @@ function Sessions({
           ) : null}
 
           <Button
-            label={openId === s.id ? 'Close register' : 'Open register'}
+            label={openId === s.id ? t('membership:closeRegister') : t('membership:openRegister')}
             variant="secondary"
             onPress={() => setOpenId(openId === s.id ? null : s.id)}
           />
@@ -486,7 +486,7 @@ function Register({
       })}
 
       <Button
-        label={save.isPending ? 'Saving…' : 'Save register'}
+        label={save.isPending ? t('membership:saving') : t('membership:saveRegister')}
         onPress={() => save.mutate()}
         disabled={save.isPending}
       />
@@ -637,7 +637,7 @@ function Graduation({
                   }}
                 />
                 <Button
-                  label={graduate.isPending ? 'Graduating…' : 'Graduate anyway'}
+                  label={graduate.isPending ? t('membership:graduating') : t('membership:graduateAnyway')}
                   // The API rejects an override with no reason, so do not let
                   // the request leave without one.
                   disabled={!overrideReason.trim() || graduate.isPending}

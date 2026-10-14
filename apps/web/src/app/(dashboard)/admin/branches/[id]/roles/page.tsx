@@ -292,7 +292,7 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
                 );
               }}
             >
-              {assignBranchRole.isPending ? 'Assigning...' : 'Assign'}
+              {assignBranchRole.isPending ? t('branches:assigning') : t('branches:assign')}
             </Button>
           </DialogFooter>
         </DialogContent>

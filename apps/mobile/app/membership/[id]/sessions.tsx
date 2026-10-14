@@ -294,7 +294,7 @@ function SessionEditor({
             </Card>
 
             <Button
-              label={save.isPending ? 'Saving…' : 'Save session'}
+              label={save.isPending ? t('membership:saving') : t('membership:saveSession')}
               onPress={submit}
               disabled={save.isPending}
             />

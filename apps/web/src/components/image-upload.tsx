@@ -116,7 +116,7 @@ export function ImageUpload({
     }
   }
 
-  const triggerText = uploading ? 'Uploading…' : triggerLabel ?? (showPreview ? 'Replace image' : 'Choose image');
+  const triggerText = uploading ? 'Uploading…' : triggerLabel ?? (showPreview ? t('common:replaceImage') : t('common:chooseImage'));
 
   if (variant === 'avatar') {
     return (

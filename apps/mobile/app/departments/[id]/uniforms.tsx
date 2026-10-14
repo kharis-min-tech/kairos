@@ -143,16 +143,16 @@ export default function DepartmentUniforms() {  const { t } = useTranslation(['d
       </View>
 
       <View style={styles.tabs}>
-        {(['schedule', 'outfits'] as Tab[]).map((t) => {
-          const active = t === tab;
+        {(['schedule', 'outfits'] as Tab[]).map((tabKey) => {
+          const active = tabKey === tab;
           return (
             <Pressable
-              key={t}
-              onPress={() => setTab(t)}
+              key={tabKey}
+              onPress={() => setTab(tabKey)}
               style={[styles.tab, active && styles.tabActive]}
             >
               <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                {t === 'schedule' ? 'Upcoming' : 'Outfits'}
+                {tabKey === 'schedule' ? t('departments:upcoming') : t('departments:outfits')}
               </Text>
             </Pressable>
           );
@@ -424,7 +424,7 @@ function OutfitSheet({
   });
 
   return (
-    <SheetShell open title={mode === 'new' ? 'New outfit' : 'Edit outfit'} onClose={onClose}>
+    <SheetShell open title={mode === 'new' ? t('departments:newOutfit') : t('departments:editOutfit')} onClose={onClose}>
       <View style={{ gap: 4 }}>
         <Text style={styles.label}>{t('departments:name')}</Text>
         <Input value={name} onChangeText={setName} placeholder={t('departments:eGWhiteShirtBlackTrousers')} />
@@ -454,7 +454,7 @@ function OutfitSheet({
             >
               <Plus color={c.primary} size={14} strokeWidth={2} />
               <Text style={styles.uploadBtnLabel}>
-                {imageUrl ? 'Change photo' : 'Choose from library'}
+                {imageUrl ? t('departments:changePhoto') : t('departments:chooseLibrary')}
               </Text>
             </Pressable>
             <Pressable
@@ -500,7 +500,7 @@ function OutfitSheet({
         />
       </View>
       <Button
-        label={mutate.isPending ? 'Saving…' : mode === 'new' ? 'Add outfit' : 'Save changes'}
+        label={mutate.isPending ? 'Saving…' : mode === 'new' ? t('departments:addOutfit') : t('departments:saveChanges')}
         size="lg"
         fullWidth
         loading={mutate.isPending}
@@ -610,7 +610,7 @@ function AssignSheet({
             />
           </View>
           <Button
-            label={mutate.isPending ? 'Assigning…' : 'Assign'}
+            label={mutate.isPending ? t('departments:assigning') : t('departments:assign')}
             size="lg"
             fullWidth
             loading={mutate.isPending}

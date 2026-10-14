@@ -251,7 +251,7 @@ export default function MembersAdmin() {  const { t } = useTranslation(['members
                     </View>
                     <Badge
                       label={
-                        m.guardianStatus === 'inactive' ? 'Inactive gdn.' : 'No gdn.'
+                        m.guardianStatus === 'inactive' ? t('members:inactiveGdn') : t('members:noGdn')
                       }
                       variant="danger"
                       size="sm"

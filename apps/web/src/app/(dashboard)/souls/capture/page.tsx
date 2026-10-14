@@ -316,7 +316,7 @@ export default function CaptureSoulPage() {  const { t } = useTranslation(['soul
 
         <div className="flex gap-4">
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Capturing...' : 'Capture Soul'}
+            {loading ? t('souls:capturing') : t('souls:captureSoul')}
           </Button>
           <Button
             type="button"

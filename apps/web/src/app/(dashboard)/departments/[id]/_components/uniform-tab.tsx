@@ -538,7 +538,7 @@ function UploadForm({
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onDone} disabled={create.isPending}>{t('departments:cancel')}</Button>
         <Button type="submit" disabled={create.isPending || !imageUrl}>
-          {create.isPending ? 'Saving…' : 'Add outfit'}
+          {create.isPending ? t('departments:saving') : t('departments:addOutfit')}
         </Button>
       </div>
     </form>
@@ -629,7 +629,7 @@ function AssignForm({
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onDone} disabled={assign.isPending}>{t('departments:cancel')}</Button>
         <Button type="submit" disabled={assign.isPending}>
-          {assign.isPending ? 'Saving…' : 'Schedule'}
+          {assign.isPending ? t('departments:saving') : t('departments:schedule')}
         </Button>
       </div>
     </form>

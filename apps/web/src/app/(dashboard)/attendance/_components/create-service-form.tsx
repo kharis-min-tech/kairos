@@ -307,7 +307,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating…' : 'Create service'}
+          {isSubmitting ? t('attendance:creating') : t('attendance:createService')}
         </Button>
       </div>
     </form>

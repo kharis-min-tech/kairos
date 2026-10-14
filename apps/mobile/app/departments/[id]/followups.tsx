@@ -137,16 +137,16 @@ export default function DepartmentFollowups() {  const { t } = useTranslation(['
       </View>
 
       <View style={styles.tabs}>
-        {(['overdue', 'all'] as Tab[]).map((t) => {
-          const active = t === tab;
+        {(['overdue', 'all'] as Tab[]).map((tabKey) => {
+          const active = tabKey === tab;
           return (
             <Pressable
-              key={t}
-              onPress={() => setTab(t)}
+              key={tabKey}
+              onPress={() => setTab(tabKey)}
               style={[styles.tab, active && styles.tabActive]}
             >
               <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                {t === 'overdue' ? 'Overdue' : 'All follow-ups'}
+                {tabKey === 'overdue' ? t('departments:overdue') : t('departments:allFollowUps')}
               </Text>
             </Pressable>
           );
@@ -502,19 +502,19 @@ function CreateSheet({
         <View style={{ gap: 4 }}>
           <Text style={styles.fieldLabel}>{t('departments:type')}</Text>
           <View style={styles.chipRow}>
-            {(['contact', 'visit'] as FollowupTypeChoice[]).map((t) => {
-              const active = t === type;
+            {(['contact', 'visit'] as FollowupTypeChoice[]).map((tabKey) => {
+              const active = tabKey === type;
               return (
                 <Pressable
-                  key={t}
+                  key={tabKey}
                   onPress={() => {
-                    setType(t);
+                    setType(tabKey);
                     setErrors({});
                   }}
                   style={[styles.chip, active && styles.chipActive]}
                 >
                   <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                    {t === 'contact' ? 'Contact' : 'Visit'}
+                    {tabKey === 'contact' ? t('departments:contact') : t('departments:visit')}
                   </Text>
                 </Pressable>
               );
@@ -767,7 +767,7 @@ function CreateSheet({
         />
 
         <Button
-          label={mutate.isPending ? 'Saving…' : 'Save follow-up'}
+          label={mutate.isPending ? t('departments:saving') : t('departments:saveFollowUp')}
           size="lg"
           fullWidth
           loading={mutate.isPending}

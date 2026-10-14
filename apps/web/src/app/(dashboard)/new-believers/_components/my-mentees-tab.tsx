@@ -99,7 +99,7 @@ export function MyMenteesTab({ enrollments }: MyMenteesTabProps) {  const { t } 
               disabled={!note.trim() || createFollowup.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {createFollowup.isPending ? 'Saving...' : 'Save follow-up'}
+              {createFollowup.isPending ? t('newBelievers:saving') : t('newBelievers:saveFollowUp')}
             </Button>
           </DialogFooter>
         </DialogContent>

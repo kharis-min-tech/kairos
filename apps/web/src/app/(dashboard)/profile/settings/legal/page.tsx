@@ -120,7 +120,7 @@ export default function LegalSettingsPage() {  const { t } = useTranslation(['se
                       }
                       disabled={record.isPending}
                     >
-                      {status.granted ? 'Unsubscribe' : 'Subscribe'}
+                      {status.granted ? t('legal:unsubscribe') : t('legal:subscribe')}
                     </Button>
                   </div>
                 )}

@@ -247,7 +247,7 @@ export default function EditFellowshipPage() {  const { t } = useTranslation(['f
                   id="branchId"
                   value={watch('branchId') ?? ''}
                   onValueChange={(v) => setValue('branchId', v)}
-                  placeholder={branchesLoading ? 'Loading branches...' : 'Select a branch...'}
+                  placeholder={branchesLoading ? t('fellowships:loadingBranches') : t('fellowships:selectBranch')}
                   options={(branches ?? []).map((branch) => ({ value: branch.id, label: branch.branchName }))}
                 />
                 {errors.branchId && (
@@ -359,7 +359,7 @@ export default function EditFellowshipPage() {  const { t } = useTranslation(['f
                 variant="success"
                 disabled={isSubmitting || updateFellowship.isPending}
               >
-                {isSubmitting || updateFellowship.isPending ? 'Saving…' : 'Save Changes'}
+                {isSubmitting || updateFellowship.isPending ? t('fellowships:saving') : t('fellowships:saveChanges')}
               </Button>
             </div>
           </form>
