@@ -79,7 +79,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
           <ArrowLeft className="size-3.5" />{t('membership:backToCohort')}</Link>
         <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold text-foreground">
           <GraduationCap className="size-5 text-[#5D3FD3]" />
-          Edit {cohort.data.name}
+          {t('membership:editCohortNamed', { name: cohort.data.name })}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{t('membership:changesSaveImmediatelyPassMarksApply')}</p>
       </div>

@@ -28,9 +28,9 @@ export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps)
         <p>{t('forms:kharisChurchCommittedRespectingPrivacySecurity')}</p>
         <p>{t('forms:pleaseTickTheBoxBelowTo')}</p>
         <p>
-          To find out more about how we handle your personal data or to{' '}
-          <span className="italic">{t('forms:optOut')}</span> of us using it, please read our
-          Privacy Policy at{' '}
+          {t('forms:toFindOutMoreOrTo')}{' '}
+          <span className="italic">{t('forms:optOut')}</span>{' '}
+          {t('forms:ofUsUsingItReadPolicyAt')}{' '}
           <a
             href="https://kharis.org"
             target="_blank"

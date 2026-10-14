@@ -548,7 +548,12 @@ export default function ProgramDetailPage() {  const { t } = useTranslation(['ou
                 ))}
               {program.souls.filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id).length > 5 && (
                 <p className="text-sm text-muted-foreground text-center pt-2">
-                  And {program.souls.filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id).length - 5} more...
+                  {t('outreach:andMore', {
+                    count:
+                      program.souls.filter(
+                        (soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id,
+                      ).length - 5,
+                  })}
                 </p>
               )}
               {isMember && program.souls.filter((soul: ProgramSoul) => soul.assignedMemberId === user?.id).length === 0 && (

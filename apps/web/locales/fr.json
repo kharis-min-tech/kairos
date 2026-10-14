@@ -372,7 +372,10 @@
     "currentlyAt": "Actuellement à {{name}}",
     "homeBranchFallback": "votre antenne d'origine",
     "myFellowshipsCount": "Mes cellules ({{count}})",
-    "myDepartmentsCount": "Mes départements ({{count}})"
+    "myDepartmentsCount": "Mes départements ({{count}})",
+    "checkNewEmailForLink": "Consultez la nouvelle adresse pour y trouver un lien de vérification. Votre adresse actuelle reste active jusqu'à ce que vous cliquiez dessus. Nous avons également prévenu votre ancienne adresse. Si vous n'êtes pas à l'origine de cette demande, cliquez sur",
+    "thisWasntMe": "Ce n'était pas moi",
+    "actionNeededVersionCurrent": "Action requise : la version {{version}} est désormais en vigueur."
   },
   "auth": {
     "finishSettingUp": "Terminer la configuration",
@@ -507,7 +510,10 @@
     "oneHour": "1 heure",
     "youllReceiveNotificationWhenActivated": "Vous recevrez une notification dès l'activation de votre compte.",
     "yourEmailFallback": "votre e-mail",
-    "enterPasswordToLinkProvider": "Saisissez votre mot de passe pour le lier à votre compte {{provider}}."
+    "enterPasswordToLinkProvider": "Saisissez votre mot de passe pour le lier à votre compte {{provider}}.",
+    "iHaveReadAndAcceptThe": "J'ai lu et j'accepte les",
+    "termsAndConditions": "Conditions générales",
+    "andLower": "et"
   },
   "branches": {
     "deactivate": "Désactiver",
@@ -587,7 +593,8 @@
     "noLeadershipRecordsYet": "Aucun historique de responsables pour l'instant.",
     "noLeadershipAssignedYet2": "Aucun responsable désigné pour l'instant.",
     "noBranchSystemAdminsYet": "Aucun administrateur système d'antenne désigné pour l'instant.",
-    "addOneToGetStarted": "Ajoutez-en un pour commencer."
+    "addOneToGetStarted": "Ajoutez-en un pour commencer.",
+    "typedBranch": "Antenne {{type}}"
   },
   "admin": {
     "delete": "Supprimer",
@@ -707,7 +714,8 @@
     "attendedOfServices": "{{attended}} présences sur {{total}} cultes",
     "lastSeenAt": "Vu pour la dernière fois à",
     "onDate": "le {{date}}",
-    "typedService": "Culte {{type}}"
+    "typedService": "Culte {{type}}",
+    "preacherSetTo": "Prédicateur défini sur {{name}}."
   },
   "reports": {
     "weeklyAttendance": "Présences hebdomadaires",
@@ -1143,7 +1151,10 @@
     "myDepartments": "Mes départements",
     "departments": "Départements",
     "memberCount_one": "{{count}} membre",
-    "memberCount_other": "{{count}} membres"
+    "memberCount_other": "{{count}} membres",
+    "noOutfitsYet2": "Aucune tenue pour l'instant.",
+    "uploadFirstOutfit": "Chargez votre première tenue pour commencer à planifier.",
+    "moreViewAllInDepartment": "+ {{count}} de plus, tout voir dans ce département"
   },
   "fellowships": {
     "serviceAttendance": "Présence aux cultes",
@@ -1409,7 +1420,9 @@
     "formsDataCapture": "Formulaires et collecte de données",
     "submittingForBranch": "Envoi pour l'antenne",
     "isntAFormWeRecognise": "« {{name}} » n'est pas un formulaire que nous reconnaissons.",
-    "noOneInBranchMatches": "Personne dans votre antenne ne correspond à « {{query}} »."
+    "noOneInBranchMatches": "Personne dans votre antenne ne correspond à « {{query}} ».",
+    "toFindOutMoreOrTo": "Pour en savoir plus sur la manière dont nous traitons vos données personnelles, ou pour",
+    "ofUsUsingItReadPolicyAt": "de notre utilisation de celles-ci, veuillez lire notre politique de confidentialité sur"
   },
   "members": {
     "theyArenTInTheDirectory": "Ils ne sont pas dans l'annuaire : nous enregistrerons donc le nom sans dossier.",
@@ -1715,7 +1728,8 @@
     "sessionNumber": "Séance {{number}}",
     "sessionNumberTitled": "Séance {{number}} : {{title}}",
     "dateToBeConfirmed": "Date à confirmer",
-    "didNotMeetTheGate": "{{name}} n'a pas rempli les conditions"
+    "didNotMeetTheGate": "{{name}} n'a pas rempli les conditions",
+    "editCohortNamed": "Modifier {{name}}"
   },
   "newBelievers": {
     "unassigned": "Non attribué",
@@ -1873,7 +1887,10 @@
     "candidatesOnlySuffix": " · candidats {{stage}} uniquement",
     "assignedAsBothStudentAndTeacher": "{{name}} est à la fois l'élève et l'enseignant sur cette inscription. Veuillez réattribuer l'enseignant via Modifier.",
     "enrolmentsNoProgress_one": "{{count}} inscription n'a connu aucun progrès depuis plus de 7 jours.",
-    "enrolmentsNoProgress_other": "{{count}} inscriptions n'ont connu aucun progrès depuis plus de 7 jours."
+    "enrolmentsNoProgress_other": "{{count}} inscriptions n'ont connu aucun progrès depuis plus de 7 jours.",
+    "advanceToStageButton": "Faire avancer à {{stage}}",
+    "enrolledOnDate": "Inscrit le {{date}}",
+    "lastSessionsActive": "{{sessions}} dernières séances · {{active}} actifs"
   },
   "outreach": {
     "completed": "Terminé",
@@ -1964,7 +1981,10 @@
     "descriptionOptional": "Description (facultatif)",
     "addressOptional": "Adresse (facultatif)",
     "notesOptional": "Notes (facultatif)",
-    "cityOptional": "Ville (facultatif)"
+    "cityOptional": "Ville (facultatif)",
+    "andMore": "Et {{count}} de plus...",
+    "someonesBranch": "l'antenne de {{name}}",
+    "otherBranchesCannotSeeOrRegister": "Les pasteurs et responsables des autres antennes ne pourront PAS voir ce programme ni s'y inscrire."
   },
   "security": {
     "connectedAccounts": "Comptes associés",
@@ -2078,7 +2098,8 @@
     "genderOptional": "Sexe (facultatif)",
     "emailOptional": "E-mail (facultatif)",
     "notesOptional": "Notes (facultatif)",
-    "cityOptional": "Ville (facultatif)"
+    "cityOptional": "Ville (facultatif)",
+    "nextFollowUpOn": "Prochain suivi : {{date}}"
   },
   "legal": {
     "privacyNotice": "Avis de confidentialité",
@@ -2355,7 +2376,8 @@
     "youAgreePersonallyToBeBound": "vous acceptez, à titre personnel, d'être lié par les obligations ci-dessus ;",
     "youUnderstandARecordIsKept": "vous comprenez que Kharis Ministries / Kharis Church conservera un relevé horodaté de votre acceptation, à titre de preuve exigée par l'article 32(4) du UK GDPR.",
     "questionsCanBeSentTo": "Les questions relatives au présent engagement peuvent être envoyées à",
-    "thisDocumentIsAnInitialDraft": "Ce document est une première version rédigée pour satisfaire à l'article 32(4) du UK GDPR et pour donner à l'église une base documentée, individuelle, permettant de tenir les responsables à un devoir de confidentialité. Il n'a pas encore été relu par la direction de Kharis Church ni par un professionnel de la protection des données. Veuillez le considérer comme un point de départ et non comme un engagement définitif."
+    "thisDocumentIsAnInitialDraft": "Ce document est une première version rédigée pour satisfaire à l'article 32(4) du UK GDPR et pour donner à l'église une base documentée, individuelle, permettant de tenir les responsables à un devoir de confidentialité. Il n'a pas encore été relu par la direction de Kharis Church ni par un professionnel de la protection des données. Veuillez le considérer comme un point de départ et non comme un engagement définitif.",
+    "thisUndertakingIsAgreementBetween": "Le présent engagement est un accord écrit entre"
   },
   "legalPrivacy": {
     "privacyNotice": "Avis de confidentialité",

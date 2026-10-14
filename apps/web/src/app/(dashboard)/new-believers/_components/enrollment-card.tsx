@@ -85,7 +85,7 @@ function EnrollmentCardContent({
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
-            Enrolled {formatShortDate(enrollment.enrolledAt)}
+            {t('newBelievers:enrolledOnDate', { date: formatShortDate(enrollment.enrolledAt) })}
           </p>
         </div>
       </div>

@@ -355,7 +355,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
               disabled={updateEnrollment.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              Advance to {nextStage.label}
+              {t('newBelievers:advanceToStageButton', { stage: nextStage.label })}
             </Button>
           )}
           <Button variant="outline" onClick={startEdit}>{t('newBelievers:edit')}</Button>

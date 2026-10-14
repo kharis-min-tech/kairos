@@ -256,8 +256,8 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {  cons
             <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loadingGallery')}</p>
           ) : outfits.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No outfits yet.{' '}
-              {canManage ? 'Upload your first outfit to start scheduling.' : ''}
+              {t('departments:noOutfitsYet2')}{' '}
+              {canManage ? t('departments:uploadFirstOutfit') : ''}
             </p>
           ) : filteredOutfits.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:noOutfitsInThisCategory')}</p>

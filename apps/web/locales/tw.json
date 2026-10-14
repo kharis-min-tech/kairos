@@ -372,7 +372,10 @@
     "currentlyAt": "Seesei wowɔ {{name}}",
     "homeBranchFallback": "wo fie asɔre baa",
     "myFellowshipsCount": "M'Nkabomfekuo ({{count}})",
-    "myDepartmentsCount": "M'Adwumakuo ({{count}})"
+    "myDepartmentsCount": "M'Adwumakuo ({{count}})",
+    "checkNewEmailForLink": "Hwɛ email foforɔ no mu hwehwɛ nhwehwɛmu link. W'email a wode redi dwuma no da so yɛ adwuma kɔsi sɛ wobɛklike. Yɛabɔ w'email dada no nso amaneɛ. Sɛ ɛnyɛ wo na wobisaeɛ a, klike",
+    "thisWasntMe": "Ɛnyɛ me",
+    "actionNeededVersionCurrent": "Ɛsɛ sɛ woyɛ biribi: nhwɛsoɔ {{version}} na ɛwɔ hɔ seesei."
   },
   "auth": {
     "finishSettingUp": "Wie nhyehyɛeɛ no",
@@ -507,7 +510,10 @@
     "oneHour": "dɔnhwere 1",
     "youllReceiveNotificationWhenActivated": "Wobɛnya nkrasɛm sɛ wɔbue w'akawnt a.",
     "yourEmailFallback": "w'email",
-    "enterPasswordToLinkProvider": "Hyɛ wo password na bata no wo {{provider}} akawnt ho."
+    "enterPasswordToLinkProvider": "Hyɛ wo password na bata no wo {{provider}} akawnt ho.",
+    "iHaveReadAndAcceptThe": "Makenkan na megye",
+    "termsAndConditions": "Nhyehyɛeɛ ne Mmara",
+    "andLower": "ne"
   },
   "branches": {
     "deactivate": "Gyae",
@@ -587,7 +593,8 @@
     "noLeadershipRecordsYet": "Akannie nkrataa biara nni hɔ ɛnnɛ.",
     "noLeadershipAssignedYet2": "Wɔnhyɛɛ ɔkannifoɔ biara ɛnnɛ.",
     "noBranchSystemAdminsYet": "Wɔnhyɛɛ Asɔre Baa Sistem Sohwɛfoɔ biara ɛnnɛ.",
-    "addOneToGetStarted": "Fa bi ka ho na fi aseɛ."
+    "addOneToGetStarted": "Fa bi ka ho na fi aseɛ.",
+    "typedBranch": "{{type}} asɔre baa"
   },
   "admin": {
     "delete": "Yi firi hɔ",
@@ -707,7 +714,8 @@
     "attendedOfServices": "Wobaa {{attended}} wɔ ɔsom {{total}} mu",
     "lastSeenAt": "Berɛ a yɛhunuu wo a ɛtwa toɔ wɔ",
     "onDate": "wɔ {{date}}",
-    "typedService": "{{type}} Ɔsom"
+    "typedService": "{{type}} Ɔsom",
+    "preacherSetTo": "Yɛahyɛ {{name}} sɛ ɔsɛnkafoɔ."
   },
   "reports": {
     "weeklyAttendance": "Dapɛn biara mmaeɛ",
@@ -1143,7 +1151,10 @@
     "myDepartments": "M'Adwumakuo",
     "departments": "Adwumakuo",
     "memberCount_one": "Ɔmanfoɔ {{count}}",
-    "memberCount_other": "Amanfoɔ {{count}}"
+    "memberCount_other": "Amanfoɔ {{count}}",
+    "noOutfitsYet2": "Ntadeɛ biara nni hɔ ɛnnɛ.",
+    "uploadFirstOutfit": "Fa wo ntadeɛ a ɛdi kan kɔ soro na fi aseɛ hyehyɛ.",
+    "moreViewAllInDepartment": "+ {{count}} bio, hwɛ ne nyinaa wɔ adwumakuo yi mu"
   },
   "fellowships": {
     "serviceAttendance": "Ɔsom mmaeɛ",
@@ -1409,7 +1420,9 @@
     "formsDataCapture": "Fɔm ne Nsɛm Gyeɛ",
     "submittingForBranch": "Wode rebrɛ asɔre baa",
     "isntAFormWeRecognise": "“{{name}}” nyɛ fɔm a yɛnim.",
-    "noOneInBranchMatches": "Obiara nni w'asɔre baa mu a ɔhyia “{{query}}”."
+    "noOneInBranchMatches": "Obiara nni w'asɔre baa mu a ɔhyia “{{query}}”.",
+    "toFindOutMoreOrTo": "Sɛ wopɛ sɛ wohunu pii fa sɛdeɛ yɛdi wo ankasa nsɛm ho dwuma anaa sɛ wopɛ sɛ",
+    "ofUsUsingItReadPolicyAt": "yɛamfa anni dwuma a, yɛsrɛ wo kenkan yɛn Kokoamsɛm Nhyehyɛeɛ wɔ"
   },
   "members": {
     "theyArenTInTheDirectory": "Wɔnni din nhoma no mu, enti yɛbɛkyerɛw din no nko ara.",
@@ -1715,7 +1728,8 @@
     "sessionNumber": "Adesua {{number}}",
     "sessionNumberTitled": "Adesua {{number}}: {{title}}",
     "dateToBeConfirmed": "Yɛbɛka da no akyerɛ",
-    "didNotMeetTheGate": "{{name}} anni deɛ ɛhia so"
+    "didNotMeetTheGate": "{{name}} anni deɛ ɛhia so",
+    "editCohortNamed": "Sesa {{name}}"
   },
   "newBelievers": {
     "unassigned": "Wɔmmfaa mmaa obiara",
@@ -1873,7 +1887,10 @@
     "candidatesOnlySuffix": " · {{stage}} wɔn nko ara",
     "assignedAsBothStudentAndTeacher": "{{name}} yɛ osuani ne ɔkyerɛkyerɛni nyinaa wɔ din kyerɛw yi mu. Yɛsrɛ wo fa Sesa so sesa ɔkyerɛkyerɛni no.",
     "enrolmentsNoProgress_one": "Din kyerɛw {{count}} nnyaa nkɔso biara nna 7 ni.",
-    "enrolmentsNoProgress_other": "Din kyerɛw {{count}} nnyaa nkɔso biara nna 7 ni."
+    "enrolmentsNoProgress_other": "Din kyerɛw {{count}} nnyaa nkɔso biara nna 7 ni.",
+    "advanceToStageButton": "Kɔ {{stage}} so",
+    "enrolledOnDate": "Ɔkyerɛw ne din {{date}}",
+    "lastSessionsActive": "Adesua {{sessions}} a atwam · {{active}} a wɔrekɔ so"
   },
   "outreach": {
     "completed": "Awie",
@@ -1964,7 +1981,10 @@
     "descriptionOptional": "Nkyerɛkyerɛmu (ɛho nhia)",
     "addressOptional": "Akyerɛw (ɛho nhia)",
     "notesOptional": "Nsɛm (ɛho nhia)",
-    "cityOptional": "Kuropɔn (ɛho nhia)"
+    "cityOptional": "Kuropɔn (ɛho nhia)",
+    "andMore": "Ne {{count}} bio...",
+    "someonesBranch": "{{name}} asɔre baa",
+    "otherBranchesCannotSeeOrRegister": "Asɔfoɔ ne akannifoɔ a wɔwɔ asɔre baa foforɔ mu RENTUMI nhunu anaa nkyerɛw wɔn din mma nhyehyɛeɛ yi."
   },
   "security": {
     "connectedAccounts": "Akawnt a wɔaka abom",
@@ -2078,7 +2098,8 @@
     "genderOptional": "Ɔbarima anaa Ɔbaa (ɛho nhia)",
     "emailOptional": "Email (ɛho nhia)",
     "notesOptional": "Nsɛm (ɛho nhia)",
-    "cityOptional": "Kuropɔn (ɛho nhia)"
+    "cityOptional": "Kuropɔn (ɛho nhia)",
+    "nextFollowUpOn": "Nkɔdi akyi a ɛdi hɔ: {{date}}"
   },
   "legal": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",
@@ -2355,7 +2376,8 @@
     "youAgreePersonallyToBeBound": "wo ankasa wopene so sɛ asodie a ɛwɔ soro hɔ bɛkyekyere wo;",
     "youUnderstandARecordIsKept": "wote aseɛ sɛ Kharis Ministries / Kharis Church bɛkora krataa a berɛ wɔ so a ɛkyerɛ sɛ wopenee so, sɛ adanseɛ a UK GDPR Nkyekyɛmu 32(4) hia.",
     "questionsCanBeSentTo": "Wobɛtumi de nsɛmmisa a ɛfa bɔhyɛ yi ho asoma",
-    "thisDocumentIsAnInitialDraft": "Krataa yi yɛ nhwɛsoɔ a ɛdi kan a yɛkyerɛwee sɛ ɛbɛdi UK GDPR Nkyekyɛmu 32(4) so na ɛbɛma asɔre no nnyinasoɔ a wɔakyerɛw, a ɛfa obiara ho, a ɔde bɛkura akannifoɔ mu wɔ kokoamsɛm asodie mu. Kharis Church akannifoɔ anaa nsɛm ahobammɔ nimdefoɔ bi nhwɛɛ no ɛnnɛ. Yɛsrɛ wo fa no sɛ mfitiaseɛ, na ɛnyɛ bɔhyɛ a asi pi."
+    "thisDocumentIsAnInitialDraft": "Krataa yi yɛ nhwɛsoɔ a ɛdi kan a yɛkyerɛwee sɛ ɛbɛdi UK GDPR Nkyekyɛmu 32(4) so na ɛbɛma asɔre no nnyinasoɔ a wɔakyerɛw, a ɛfa obiara ho, a ɔde bɛkura akannifoɔ mu wɔ kokoamsɛm asodie mu. Kharis Church akannifoɔ anaa nsɛm ahobammɔ nimdefoɔ bi nhwɛɛ no ɛnnɛ. Yɛsrɛ wo fa no sɛ mfitiaseɛ, na ɛnyɛ bɔhyɛ a asi pi.",
+    "thisUndertakingIsAgreementBetween": "Bɔhyɛ yi yɛ nhyehyɛeɛ a wɔakyerɛw a ɛda"
   },
   "legalPrivacy": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",

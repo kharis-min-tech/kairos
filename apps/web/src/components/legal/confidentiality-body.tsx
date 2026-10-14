@@ -31,7 +31,7 @@ export function ConfidentialityBody() {  const { t, i18n } = useTranslation(['le
 
       <section className="space-y-3">
         <p>
-          This undertaking is a written agreement between{' '}
+          {t('legalConfidentiality:thisUndertakingIsAgreementBetween')}{' '}
           <strong>{t('legalConfidentiality:kharisMinistriesKharisChurch')}</strong> {t('legalConfidentiality:andAnyPersonGrantedARole')}
         </p>
         <p>{t('legalConfidentiality:youAreAskedToAcceptThis')}</p>

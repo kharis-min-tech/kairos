@@ -372,7 +372,10 @@
     "currentlyAt": "Naw yu de na {{name}}",
     "homeBranchFallback": "yu om branch",
     "myFellowshipsCount": "Mi Fɛloship dɛn ({{count}})",
-    "myDepartmentsCount": "Mi Dipatmɛnt dɛn ({{count}})"
+    "myDepartmentsCount": "Mi Dipatmɛnt dɛn ({{count}})",
+    "checkNewEmailForLink": "Chɛk di nyu imel fɔ wan vɛrifikeshɔn link. Yu imel we yu de yuz naw stil de wok te yu klik am. Wi dɔn tɛl yu old imel tu. If nɔto yu aks fɔ dis, klik",
+    "thisWasntMe": "Nɔto mi",
+    "actionNeededVersionCurrent": "Yu fɔ du sɔntin: vɛshɔn {{version}} na di wan we de naw."
   },
   "auth": {
     "finishSettingUp": "Finish fɔ sɛt ɔp",
@@ -507,7 +510,10 @@
     "oneHour": "1 awa",
     "youllReceiveNotificationWhenActivated": "Yu go gɛt wan notifikeshɔn we dɛn opin yu akawnt.",
     "yourEmailFallback": "yu imel",
-    "enterPasswordToLinkProvider": "Put yu paswɔd fɔ link am wit yu {{provider}} akawnt."
+    "enterPasswordToLinkProvider": "Put yu paswɔd fɔ link am wit yu {{provider}} akawnt.",
+    "iHaveReadAndAcceptThe": "A dɔn rid ɛn a gri to di",
+    "termsAndConditions": "Tam ɛn Kɔndishɔn dɛn",
+    "andLower": "ɛn"
   },
   "branches": {
     "deactivate": "Stɔp am",
@@ -587,7 +593,8 @@
     "noLeadershipRecordsYet": "Nɔ lidaship rɛkɔd nɔ de yet.",
     "noLeadershipAssignedYet2": "Nɔbɔdi nɔ gɛt lidaship yet.",
     "noBranchSystemAdminsYet": "Nɔ Branch Sistɛm Admin nɔ gi yet.",
-    "addOneToGetStarted": "Ad wan fɔ bigin."
+    "addOneToGetStarted": "Ad wan fɔ bigin.",
+    "typedBranch": "{{type}} branch"
   },
   "admin": {
     "delete": "Dilit",
@@ -707,7 +714,8 @@
     "attendedOfServices": "Yu kam {{attended}} awt pan {{total}} sɛvis",
     "lastSeenAt": "Di las tɛm wi si yu na",
     "onDate": "pan {{date}}",
-    "typedService": "{{type}} Sɛvis"
+    "typedService": "{{type}} Sɛvis",
+    "preacherSetTo": "Wi sɛt {{name}} as di pricha."
   },
   "reports": {
     "weeklyAttendance": "Wikli atɛndans",
@@ -1143,7 +1151,10 @@
     "myDepartments": "Mi Dipatmɛnt dɛn",
     "departments": "Dipatmɛnt dɛn",
     "memberCount_one": "{{count}} mɛmba",
-    "memberCount_other": "{{count}} mɛmba dɛn"
+    "memberCount_other": "{{count}} mɛmba dɛn",
+    "noOutfitsYet2": "Nɔ klɔt nɔ de yet.",
+    "uploadFirstOutfit": "Ɔplod yu fɔs klɔt fɔ bigin sɛt dɛn.",
+    "moreViewAllInDepartment": "+ {{count}} mɔ, si ɔl na dis dipatmɛnt"
   },
   "fellowships": {
     "serviceAttendance": "Sɛvis atɛndans",
@@ -1409,7 +1420,9 @@
     "formsDataCapture": "Fɔm ɛn Data Kapchɔ",
     "submittingForBranch": "Yu de sɛn am fɔ di branch",
     "isntAFormWeRecognise": "“{{name}}” nɔto wan fɔm we wi no.",
-    "noOneInBranchMatches": "Nɔbɔdi na yu branch nɔ fit “{{query}}”."
+    "noOneInBranchMatches": "Nɔbɔdi na yu branch nɔ fit “{{query}}”.",
+    "toFindOutMoreOrTo": "Fɔ no mɔ bɔt aw wi de an yu pɔsinal infɔmeshɔn ɔ fɔ",
+    "ofUsUsingItReadPolicyAt": "se wi nɔ fɔ yuz am, duya rid wi Praivasi Pɔlisi na"
   },
   "members": {
     "theyArenTInTheDirectory": "Dɛn nem nɔ de na di dayrɛktri, so wi go rikɔd di nem nɔmɔ widawt wan rikɔd.",
@@ -1715,7 +1728,8 @@
     "sessionNumber": "Sɛshɔn {{number}}",
     "sessionNumberTitled": "Sɛshɔn {{number}}: {{title}}",
     "dateToBeConfirmed": "Wi go tɛl yu di de leta",
-    "didNotMeetTheGate": "{{name}} nɔ mit di rikwayamɛnt dɛn"
+    "didNotMeetTheGate": "{{name}} nɔ mit di rikwayamɛnt dɛn",
+    "editCohortNamed": "Chenj {{name}}"
   },
   "newBelievers": {
     "unassigned": "Dɛn nɔ gi am to ɛnibɔdi",
@@ -1873,7 +1887,10 @@
     "candidatesOnlySuffix": " · {{stage}} kandidet dɛn nɔmɔ",
     "assignedAsBothStudentAndTeacher": "{{name}} na di stɔdɛnt ɛn di tisha pan dis rejistreshɔn. Duya chenj di tisha wit Chenj am.",
     "enrolmentsNoProgress_one": "{{count}} rejistreshɔn nɔ muv fɔ mɔ dan 7 de.",
-    "enrolmentsNoProgress_other": "{{count}} rejistreshɔn nɔ muv fɔ mɔ dan 7 de."
+    "enrolmentsNoProgress_other": "{{count}} rejistreshɔn nɔ muv fɔ mɔ dan 7 de.",
+    "advanceToStageButton": "Muv go na {{stage}}",
+    "enrolledOnDate": "I rejista pan {{date}}",
+    "lastSessionsActive": "Las {{sessions}} sɛshɔn · {{active}} de aktiv"
   },
   "outreach": {
     "completed": "I dɔn",
@@ -1964,7 +1981,10 @@
     "descriptionOptional": "Wetin i bɔt (yu nɔ fɔ ful)",
     "addressOptional": "Adrɛs (yu nɔ fɔ ful)",
     "notesOptional": "Not dɛn (yu nɔ fɔ ful)",
-    "cityOptional": "Siti (yu nɔ fɔ ful)"
+    "cityOptional": "Siti (yu nɔ fɔ ful)",
+    "andMore": "Ɛn {{count}} mɔ...",
+    "someonesBranch": "{{name}} in branch",
+    "otherBranchesCannotSeeOrRegister": "Pastɔ dɛn ɛn lida dɛn frɔm ɔda branch dɛn NƆ go ebul fɔ si ɔ rejista fɔ dis program."
   },
   "security": {
     "connectedAccounts": "Akawnt dɛn we jɔyn",
@@ -2078,7 +2098,8 @@
     "genderOptional": "Man ɔ uman (yu nɔ fɔ ful)",
     "emailOptional": "Imel (yu nɔ fɔ ful)",
     "notesOptional": "Not dɛn (yu nɔ fɔ ful)",
-    "cityOptional": "Siti (yu nɔ fɔ ful)"
+    "cityOptional": "Siti (yu nɔ fɔ ful)",
+    "nextFollowUpOn": "Di nɛks fɔlo ɔp: {{date}}"
   },
   "legal": {
     "privacyNotice": "Praivasi Notis",
@@ -2355,7 +2376,8 @@
     "youAgreePersonallyToBeBound": "yusɛf gri fɔ folo di dyuti dɛn we de ɔp tɔp;",
     "youUnderstandARecordIsKept": "yu ɔndastand se Kharis Ministries / Kharis Church go kip wan rɛkɔd wit di tɛm we yu gri, as di ɛvidɛns we UK GDPR Atikul 32(4) nid.",
     "questionsCanBeSentTo": "Yu kin sɛn kwɛstyɔn dɛn bɔt dis prɔmis to",
-    "thisDocumentIsAnInitialDraft": "Dis pepa na di fɔs draft we dɛn rayt fɔ satisfay UK GDPR Atikul 32(4) ɛn fɔ gi di chɔch wan rayt-dɔn, pɔsin-bay-pɔsin bes fɔ ɔl lida dɛn to wan dyuti fɔ kip tin sikrit. Di Kharis Church lidaship ɔ wan data-protɛkshɔn pɔsin nɔ rid am yet. Duya tek am as wan ples fɔ stat, nɔto as wan prɔmis we dɔn sɛtul."
+    "thisDocumentIsAnInitialDraft": "Dis pepa na di fɔs draft we dɛn rayt fɔ satisfay UK GDPR Atikul 32(4) ɛn fɔ gi di chɔch wan rayt-dɔn, pɔsin-bay-pɔsin bes fɔ ɔl lida dɛn to wan dyuti fɔ kip tin sikrit. Di Kharis Church lidaship ɔ wan data-protɛkshɔn pɔsin nɔ rid am yet. Duya tek am as wan ples fɔ stat, nɔto as wan prɔmis we dɔn sɛtul.",
+    "thisUndertakingIsAgreementBetween": "Dis prɔmis na wan rayt-dɔn agrimɛnt bitwin"
   },
   "legalPrivacy": {
     "privacyNotice": "Praivasi Notis",

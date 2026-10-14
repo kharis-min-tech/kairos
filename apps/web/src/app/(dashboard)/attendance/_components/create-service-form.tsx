@@ -249,7 +249,9 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
               )}
             </div>
             {preacherId && (
-              <p className="text-xs font-medium text-[#16A34A]">Preacher set to {preacherName}.</p>
+              <p className="text-xs font-medium text-[#16A34A]">
+                {t('attendance:preacherSetTo', { name: preacherName })}
+              </p>
             )}
             {preacherOpen && preacherSearch.trim().length >= 2 && !preacherId && (
               <div className="rounded-lg border border-input/15">

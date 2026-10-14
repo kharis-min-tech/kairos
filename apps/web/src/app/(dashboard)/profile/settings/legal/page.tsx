@@ -102,7 +102,7 @@ export default function LegalSettingsPage() {  const { t } = useTranslation(['se
                   </p>
                   {status.needsAccept && status.required && (
                     <p className="mt-1 text-xs text-destructive">
-                      Action needed: version {status.currentVersion} is now current.
+                      {t('settings:actionNeededVersionCurrent', { version: status.currentVersion })}
                     </p>
                   )}
                 </div>

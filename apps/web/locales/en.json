@@ -372,7 +372,10 @@
     "currentlyAt": "Currently at {{name}}",
     "homeBranchFallback": "home branch",
     "myFellowshipsCount": "My Fellowships ({{count}})",
-    "myDepartmentsCount": "My Departments ({{count}})"
+    "myDepartmentsCount": "My Departments ({{count}})",
+    "checkNewEmailForLink": "Check the new email for a verification link. Your current email is still active until you click it. We've also notified your old email. If you didn't request this, click",
+    "thisWasntMe": "This wasn't me",
+    "actionNeededVersionCurrent": "Action needed: version {{version}} is now current."
   },
   "auth": {
     "dailyVerse": "DAILY VERSE",
@@ -507,7 +510,10 @@
     "oneHour": "1 hour",
     "youllReceiveNotificationWhenActivated": "You'll receive a notification once your account is activated.",
     "yourEmailFallback": "your email",
-    "enterPasswordToLinkProvider": "Enter your password to link it with your {{provider}} account."
+    "enterPasswordToLinkProvider": "Enter your password to link it with your {{provider}} account.",
+    "iHaveReadAndAcceptThe": "I have read and accept the",
+    "termsAndConditions": "Terms & Conditions",
+    "andLower": "and"
   },
   "branches": {
     "selectARegion": "Select a region",
@@ -587,7 +593,8 @@
     "noLeadershipRecordsYet": "No leadership records yet.",
     "noLeadershipAssignedYet2": "No leadership assigned yet.",
     "noBranchSystemAdminsYet": "No Branch System Admins assigned yet.",
-    "addOneToGetStarted": "Add one to get started."
+    "addOneToGetStarted": "Add one to get started.",
+    "typedBranch": "{{type}} branch"
   },
   "admin": {
     "selectContinent": "Select continent…",
@@ -707,7 +714,8 @@
     "attendedOfServices": "{{attended}} attended of {{total}} services",
     "lastSeenAt": "Last seen at",
     "onDate": "on {{date}}",
-    "typedService": "{{type}} Service"
+    "typedService": "{{type}} Service",
+    "preacherSetTo": "Preacher set to {{name}}."
   },
   "reports": {
     "allBranches": "All branches",
@@ -1143,7 +1151,10 @@
     "myDepartments": "My Departments",
     "departments": "Departments",
     "memberCount_one": "{{count}} member",
-    "memberCount_other": "{{count}} members"
+    "memberCount_other": "{{count}} members",
+    "noOutfitsYet2": "No outfits yet.",
+    "uploadFirstOutfit": "Upload your first outfit to start scheduling.",
+    "moreViewAllInDepartment": "+ {{count}} more, view all in this department"
   },
   "fellowships": {
     "serviceAttendance": "Service attendance",
@@ -1409,7 +1420,9 @@
     "formsDataCapture": "Forms & Data Capture",
     "submittingForBranch": "Submitting for branch",
     "isntAFormWeRecognise": "“{{name}}” isn’t a form we recognise.",
-    "noOneInBranchMatches": "No one in your branch matches “{{query}}”."
+    "noOneInBranchMatches": "No one in your branch matches “{{query}}”.",
+    "toFindOutMoreOrTo": "To find out more about how we handle your personal data or to",
+    "ofUsUsingItReadPolicyAt": "of us using it, please read our Privacy Policy at"
   },
   "members": {
     "directoryMember": "Directory member",
@@ -1715,7 +1728,8 @@
     "sessionNumber": "Session {{number}}",
     "sessionNumberTitled": "Session {{number}}: {{title}}",
     "dateToBeConfirmed": "Date to be confirmed",
-    "didNotMeetTheGate": "{{name}} did not meet the gate"
+    "didNotMeetTheGate": "{{name}} did not meet the gate",
+    "editCohortNamed": "Edit {{name}}"
   },
   "newBelievers": {
     "unassigned": "Unassigned",
@@ -1873,7 +1887,10 @@
     "candidatesOnlySuffix": " · {{stage}} candidates only",
     "assignedAsBothStudentAndTeacher": "{{name}} is assigned as both the student and the teacher on this enrolment. Please reassign the teacher using Edit.",
     "enrolmentsNoProgress_one": "{{count}} enrolment has had no progress in over 7 days.",
-    "enrolmentsNoProgress_other": "{{count}} enrolments have had no progress in over 7 days."
+    "enrolmentsNoProgress_other": "{{count}} enrolments have had no progress in over 7 days.",
+    "advanceToStageButton": "Advance to {{stage}}",
+    "enrolledOnDate": "Enrolled {{date}}",
+    "lastSessionsActive": "Last {{sessions}} sessions · {{active}} active"
   },
   "outreach": {
     "failedToLoadProgram": "Failed to load program",
@@ -1964,7 +1981,10 @@
     "descriptionOptional": "Description (Optional)",
     "addressOptional": "Address (Optional)",
     "notesOptional": "Notes (Optional)",
-    "cityOptional": "City (Optional)"
+    "cityOptional": "City (Optional)",
+    "andMore": "And {{count}} more...",
+    "someonesBranch": "{{name}}'s branch",
+    "otherBranchesCannotSeeOrRegister": "Pastors and leaders from other branches will NOT be able to see or register for this program."
   },
   "security": {
     "connectedAccounts": "Connected accounts",
@@ -2078,7 +2098,8 @@
     "genderOptional": "Gender (Optional)",
     "emailOptional": "Email (Optional)",
     "notesOptional": "Notes (Optional)",
-    "cityOptional": "City (Optional)"
+    "cityOptional": "City (Optional)",
+    "nextFollowUpOn": "Next follow-up: {{date}}"
   },
   "legal": {
     "privacyNotice": "Privacy Notice",
@@ -2355,7 +2376,8 @@
     "youAgreePersonallyToBeBound": "you agree, personally, to be bound by the obligations above;",
     "youUnderstandARecordIsKept": "you understand that Kharis Ministries / Kharis Church will keep a timestamped record of your acceptance as the evidence required by UK GDPR Article 32(4).",
     "questionsCanBeSentTo": "Questions about this undertaking can be sent to",
-    "thisDocumentIsAnInitialDraft": "This document is an initial draft written to satisfy UK GDPR Article 32(4) and to give the church a documented, per-person basis for holding leaders to a duty of confidentiality. It has not yet been reviewed by Kharis Church leadership or a data-protection professional. Please treat it as a starting point rather than a settled undertaking."
+    "thisDocumentIsAnInitialDraft": "This document is an initial draft written to satisfy UK GDPR Article 32(4) and to give the church a documented, per-person basis for holding leaders to a duty of confidentiality. It has not yet been reviewed by Kharis Church leadership or a data-protection professional. Please treat it as a starting point rather than a settled undertaking.",
+    "thisUndertakingIsAgreementBetween": "This undertaking is a written agreement between"
   },
   "legalPrivacy": {
     "whoThisNoticeAppliesTo": "1. Who this notice applies to",

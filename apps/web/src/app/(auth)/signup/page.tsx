@@ -434,16 +434,16 @@ export default function SignupPage() {  const { t } = useTranslation(['auth', 'c
                     {...register('acceptedPolicies')}
                   />
                   <span className="text-foreground">
-                    I have read and accept the{' '}
+                    {t('auth:iHaveReadAndAcceptThe')}{' '}
                     <Link
                       href="/legal/terms"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-[#5D3FD3] hover:underline"
                     >
-                      Terms &amp; Conditions
+                      {t('auth:termsAndConditions')}
                     </Link>{' '}
-                    and{' '}
+                    {t('auth:andLower')}{' '}
                     <Link
                       href="/legal/privacy"
                       target="_blank"

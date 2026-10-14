@@ -62,9 +62,8 @@ export default function EmailChangePage() {  const { t } = useTranslation(['sett
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-4 text-sm">
               <p className="font-semibold text-emerald-700 dark:text-emerald-400">{t('settings:confirmationSent')}</p>
               <p className="text-muted-foreground">
-                Check the new email for a verification link. Your current email is
-                still active until you click it. We&apos;ve also notified your old
-                email. If you didn&apos;t request this, click <strong>This wasn&apos;t me</strong>{t('settings:inThatMessage')}</p>
+                {t('settings:checkNewEmailForLink')}{' '}
+                <strong>{t('settings:thisWasntMe')}</strong>{t('settings:inThatMessage')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

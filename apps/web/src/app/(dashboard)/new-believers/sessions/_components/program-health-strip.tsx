@@ -132,8 +132,10 @@ export function ProgramHealthStrip({ branchId }: Props) {  const { t } = useTran
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:programmeHealth')}</h2>
           <p className="text-xs text-muted-foreground">
-            Last {data.attendanceTrend.length || 0} session
-            {data.attendanceTrend.length === 1 ? '' : 's'} · {data.summary.activeEnrollments} active
+            {t('newBelievers:lastSessionsActive', {
+              sessions: data.attendanceTrend.length || 0,
+              active: data.summary.activeEnrollments,
+            })}
           </p>
         </div>
         <Button

@@ -562,7 +562,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     )}
                     {followUp.nextFollowUpDate && (
                       <p className="text-xs text-muted-foreground">
-                        Next follow-up: {formatShortDate(followUp.nextFollowUpDate)}
+                        {t('souls:nextFollowUpOn', { date: formatShortDate(followUp.nextFollowUpDate) })}
                       </p>
                     )}
                   </div>

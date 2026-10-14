@@ -196,7 +196,10 @@ export default function CreateProgramPage() {  const { t } = useTranslation(['ou
                 <p className="text-sm text-muted-foreground mb-4">{t('outreach:youHaveSelected')}<span className="font-semibold text-foreground">{selectedCoordinator?.firstName} {selectedCoordinator?.lastName}</span>{t('outreach:asTheCoordinator')}</p>
                 <div className="bg-[#f8b537]/10 rounded-lg p-3 mb-4">
                   <p className="text-sm text-[#7a5a00] dark:text-[#f8b537]">
-                    <strong>{t('outreach:important')}</strong>{t('outreach:thisProgramWillOnlyBeVisible')}<span className="font-semibold">{selectedCoordinator?.firstName}'s branch</span>. Pastors and leaders from other branches will NOT be able to see or register for this program.
+                    <strong>{t('outreach:important')}</strong>{t('outreach:thisProgramWillOnlyBeVisible')}<span className="font-semibold">
+                      {t('outreach:someonesBranch', { name: selectedCoordinator?.firstName ?? '' })}
+                    </span>
+                    . {t('outreach:otherBranchesCannotSeeOrRegister')}
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground">{t('outreach:toMakeThisProgramAvailableTo')}<span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">{t('outreach:kharis')}</span>{t('outreach:asTheCoordinatorInstead')}</p>

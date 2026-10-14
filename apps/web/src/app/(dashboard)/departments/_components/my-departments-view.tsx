@@ -166,7 +166,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {  const { 
 
                   {remaining > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      + {remaining} more, view all in this department
+                      {t('departments:moreViewAllInDepartment', { count: remaining })}
                     </p>
                   )}
                 </div>

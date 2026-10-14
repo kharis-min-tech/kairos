@@ -151,7 +151,9 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
       <div className="flex items-start justify-between gap-3 pb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{branch.branchName}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground capitalize">{branch.branchType} branch</p>
+          <p className="mt-0.5 text-sm text-muted-foreground capitalize">
+            {t('branches:typedBranch', { type: branch.branchType })}
+          </p>
         </div>
         {canSeeRolesLink && (
           <Link href={`/admin/branches/${id}/roles`}>
