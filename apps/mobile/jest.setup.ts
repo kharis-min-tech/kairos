@@ -1,7 +1,28 @@
-// Load the translation catalogue for every test. The app gets this via the
-// root layout; a test that renders one screen would otherwise see t() return
-// the key path instead of the English string.
-import '@/lib/i18n';
+// Load the catalogues for every test. The app gets this via the root layout;
+// a test that renders one screen would otherwise see t() return the key path.
+//
+// Initialised here directly rather than by importing `@/lib/i18n`, because
+// that module imports expo-localization, and importing it from setup resolves
+// the real one before a test file can mock it — which silently broke device
+// language detection in store/locale.test.ts.
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import en from './locales/en.json';
+import fr from './locales/fr.json';
+import kri from './locales/kri.json';
+import tw from './locales/tw.json';
+
+if (!i18next.isInitialized) {
+  void i18next.use(initReactI18next).init({
+    resources: { en, fr, kri, tw },
+    lng: 'en',
+    fallbackLng: 'en',
+    defaultNS: 'common',
+    returnEmptyString: false,
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+}
 
 /**
  * SecureStore mock that models the ONE behaviour biometric sign-in depends on:
