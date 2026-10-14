@@ -25,6 +25,12 @@ export interface StatePayload {
   verifier: string;
   /** Optional post-login destination the frontend passes into /start. */
   returnTo?: string;
+  /**
+   * Set when the flow was started from the native app. The app can't take an
+   * https return address inside iOS's auth session (that needs a
+   * `webcredentials` association), so these flows finish at `kairos://`.
+   */
+  client?: 'mobile';
   /** Random nonce echoed back as the `state` query param and matched at callback. */
   nonce: string;
 }
@@ -89,7 +95,8 @@ export async function parseStateCookie(cookie: string, secret: string): Promise<
     throw new Error('Invalid OAuth state payload');
   }
   const returnTo = typeof payload['returnTo'] === 'string' ? (payload['returnTo'] as string) : undefined;
-  return { provider, verifier, nonce, ...(returnTo ? { returnTo } : {}) };
+  const client = payload['client'] === 'mobile' ? ('mobile' as const) : undefined;
+  return { provider, verifier, nonce, ...(returnTo ? { returnTo } : {}), ...(client ? { client } : {}) };
 }
 
 /**

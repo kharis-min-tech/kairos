@@ -33,10 +33,15 @@ jest.mock('@/lib/api-client', () => ({
   api: {
     auth: {
       oauth: {
-        startUrl: (provider: string, returnTo?: string) =>
-          `https://api.example/api/auth/oauth/${provider}/start${
-            returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''
-          }`,
+        startUrl: (provider: string, returnTo?: string, client?: string) => {
+          const parts = [
+            returnTo ? `returnTo=${encodeURIComponent(returnTo)}` : '',
+            client ? `client=${client}` : '',
+          ].filter(Boolean);
+          return `https://api.example/api/auth/oauth/${provider}/start${
+            parts.length ? `?${parts.join('&')}` : ''
+          }`;
+        },
       },
     },
   },
@@ -115,8 +120,8 @@ describe('startOAuthFlow', () => {
       kind: 'cancelled',
     });
     expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
-      'https://api.example/api/auth/oauth/google/start?returnTo=%2Foauth-callback',
-      'https://frontend.example/oauth-callback',
+      'https://api.example/api/auth/oauth/google/start?returnTo=%2Foauth-callback&client=mobile',
+      'kairos://oauth-callback',
       expect.objectContaining({ preferEphemeralSession: true }),
     );
   });
@@ -130,6 +135,39 @@ describe('startOAuthFlow', () => {
       kind: 'signed_in',
       tokens: { accessToken: 'AAA', refreshToken: 'BBB' },
       method: 'google',
+    });
+  });
+
+  it('reads the kairos:// form the server ends app-started flows with', async () => {
+    WebBrowser.openAuthSessionAsync.mockResolvedValue({
+      type: 'success',
+      url: 'kairos://oauth-callback#accessToken=AAA&refreshToken=BBB&method=apple',
+    });
+    await expect(startOAuthFlow('apple')).resolves.toEqual({
+      kind: 'signed_in',
+      tokens: { accessToken: 'AAA', refreshToken: 'BBB' },
+      method: 'apple',
+    });
+  });
+
+  it('reads confirm-link and error landings on the app scheme', async () => {
+    WebBrowser.openAuthSessionAsync.mockResolvedValueOnce({
+      type: 'success',
+      url: 'kairos://oauth-confirm-link?token=T1&email=x%40y.co&provider=google',
+    });
+    await expect(startOAuthFlow('google')).resolves.toEqual({
+      kind: 'confirm_link',
+      confirmationToken: 'T1',
+      email: 'x@y.co',
+      provider: 'google',
+    });
+    WebBrowser.openAuthSessionAsync.mockResolvedValueOnce({
+      type: 'success',
+      url: 'kairos://login?oauth_error=state_mismatch',
+    });
+    await expect(startOAuthFlow('google')).resolves.toEqual({
+      kind: 'error',
+      slug: 'state_mismatch',
     });
   });
 

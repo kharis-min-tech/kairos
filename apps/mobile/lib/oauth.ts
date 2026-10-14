@@ -2,7 +2,6 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import type { AuthTokens, OAuthProviderId } from '@kairos/types';
 import { api } from './api-client';
-import { frontendBaseUrl } from './config';
 
 // Required for `openAuthSessionAsync` on web / Expo Go to clear a completed
 // auth session on module load. No-op on native builds — safe to always call.
@@ -27,16 +26,20 @@ export type OAuthStartResult =
   | { kind: 'error'; slug: string }
   | { kind: 'cancelled' };
 
+// The app's own scheme, not the website. iOS only returns an https URL from
+// the sign-in browser to an app holding a `webcredentials` association; without
+// one it refuses to start the session and the tap looks like a cancel.
+const APP_SCHEME_PREFIX = 'kairos://';
+
 function callbackUrl(): string {
-  return `${frontendBaseUrl.replace(/\/$/, '')}${CALLBACK_PATH}`;
+  return `${APP_SCHEME_PREFIX}${CALLBACK_PATH.slice(1)}`;
 }
 
 /**
  * Kick off a Kairos-only Better-Auth OAuth flow: opens the system browser
  * (or in-app SFAuthenticationSession / Chrome Custom Tab) at the API's
  * `/api/auth/oauth/:provider/start`, then waits for the OS to route the
- * server's `https://${FRONTEND_URL}/oauth-callback#…` universal-link back
- * into the app.
+ * server's `kairos://oauth-callback#…` redirect back into the app.
  *
  * `returnTo` is threaded through to the API so the server can preserve
  * where in the app the user was before starting sign-in — defaults to
@@ -46,7 +49,7 @@ export async function startOAuthFlow(
   provider: OAuthProviderId,
   returnTo: string = CALLBACK_PATH,
 ): Promise<OAuthStartResult> {
-  const startUrl = api.auth.oauth.startUrl(provider, returnTo);
+  const startUrl = api.auth.oauth.startUrl(provider, returnTo, 'mobile');
   const redirectUrl = callbackUrl();
 
   const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectUrl, {
@@ -77,11 +80,16 @@ export function parseCallbackUrl(
   // `Linking.parse` gives scheme + hostname + path + queryParams but drops
   // the URL fragment — the OAuth tokens land in the fragment on purpose so
   // they never appear in server access logs. Split raw for the hash.
-  const parsed = Linking.parse(rawUrl);
+  // The server ends app-started flows at `kairos://<path>`; read them the same
+  // way as the https form so one set of path checks covers both.
+  const normalized = rawUrl.startsWith(APP_SCHEME_PREFIX)
+    ? `https://app.invalid/${rawUrl.slice(APP_SCHEME_PREFIX.length)}`
+    : rawUrl;
+  const parsed = Linking.parse(normalized);
   const path = normalizePath(parsed.path);
 
   if (path === CALLBACK_PATH) {
-    const fragment = extractFragment(rawUrl);
+    const fragment = extractFragment(normalized);
     const params = new URLSearchParams(fragment);
     const accessToken = params.get('accessToken');
     const refreshToken = params.get('refreshToken');
