@@ -166,7 +166,7 @@ function LoginContent() {  const { t } = useTranslation(['auth', 'common']);
                   </svg>{t('auth:signingIn')}</>
               ) : (
                 <>
-                  Sign in
+                  {t('auth:signInAction')}
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
@@ -193,7 +193,7 @@ function LoginContent() {  const { t } = useTranslation(['auth', 'common']);
             <OAuthButtonGroup returnTo="/dashboard" actionLabel="sign-in" disabled={isSubmitting} variant="icons" />
 
             <p className="text-center text-sm text-muted-foreground/70">
-              Don&apos;t have an account?{' '}
+              {t('auth:dontHaveAnAccount')}{' '}
               <Link href="/signup" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:createAccount')}</Link>
             </p>
           </form>

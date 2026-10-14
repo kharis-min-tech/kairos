@@ -176,7 +176,9 @@
         "membership_graduated": "{{subject}} dɔn du di mɛmbaship klas",
         "fellowship_met": "{{subject}} dɔn mit"
       }
-    }
+    },
+    "darkMode": "Dak mod",
+    "lightMode": "Layt mod"
   },
   "nav": {
     "sections": {
@@ -431,7 +433,9 @@
     "couldnTReachServerRefreshPage": "Wi nɔ ebul fɔ rich di sava. Fris di pej ɔ tray igen sun.",
     "youLlPickBranchDuringOnboarding": "Yu go pik yu branch we yu de stat.",
     "weVeSentVerificationLinkEmail": "Wi dɔn sɛn wan vɛrifikeshɔn link to yu imel adrɛs. Klik di link fɔ kɔnfam yu imel ɛn finish di rejistreshɔn.",
-    "theLinkMayExpiredVeAlready": "Di link kin dɔn spɔyl, ɔ yu dɔn vɛrifay dis imel bifo."
+    "theLinkMayExpiredVeAlready": "Di link kin dɔn spɔyl, ɔ yu dɔn vɛrifay dis imel bifo.",
+    "signInAction": "Sayn in",
+    "dontHaveAnAccount": "Yu nɔ gɛt akawnt?"
   },
   "branches": {
     "deactivate": "Stɔp am",

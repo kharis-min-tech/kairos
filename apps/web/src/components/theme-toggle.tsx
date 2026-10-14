@@ -3,6 +3,7 @@
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { cn } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
 interface ThemeToggleProps {
   className?: string;
@@ -11,6 +12,7 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
+  const { t } = useTranslation(['common']);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -42,7 +44,7 @@ export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
         )}
       >
         {isDark ? <SunIcon /> : <MoonIcon />}
-        {isDark ? 'Light mode' : 'Dark mode'}
+        {isDark ? t('common:lightMode') : t('common:darkMode')}
       </button>
     );
   }

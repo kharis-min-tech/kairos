@@ -176,7 +176,9 @@
         "membership_graduated": "{{subject}} completed the membership class",
         "fellowship_met": "{{subject}} met"
       }
-    }
+    },
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "nav": {
     "sections": {
@@ -431,7 +433,9 @@
     "couldnTReachServerRefreshPage": "Couldn't reach the server. Refresh the page or try again shortly.",
     "youLlPickBranchDuringOnboarding": "You'll pick your branch during onboarding.",
     "weVeSentVerificationLinkEmail": "We've sent a verification link to your email address. Click the link to confirm your email and complete registration.",
-    "theLinkMayExpiredVeAlready": "The link may have expired, or you've already verified this email."
+    "theLinkMayExpiredVeAlready": "The link may have expired, or you've already verified this email.",
+    "signInAction": "Sign in",
+    "dontHaveAnAccount": "Don't have an account?"
   },
   "branches": {
     "selectARegion": "Select a region",

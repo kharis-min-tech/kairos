@@ -176,7 +176,9 @@
         "membership_graduated": "{{subject}} a terminé la classe d'adhésion",
         "fellowship_met": "{{subject}} s'est réuni"
       }
-    }
+    },
+    "darkMode": "Mode sombre",
+    "lightMode": "Mode clair"
   },
   "nav": {
     "sections": {
@@ -431,7 +433,9 @@
     "couldnTReachServerRefreshPage": "Impossible de joindre le serveur. Actualisez la page ou réessayez dans un instant.",
     "youLlPickBranchDuringOnboarding": "Vous choisirez votre antenne lors de l'intégration.",
     "weVeSentVerificationLinkEmail": "Nous avons envoyé un lien de vérification à votre adresse e-mail. Cliquez sur ce lien pour confirmer votre e-mail et terminer votre inscription.",
-    "theLinkMayExpiredVeAlready": "Le lien a peut-être expiré, ou vous avez déjà vérifié cet e-mail."
+    "theLinkMayExpiredVeAlready": "Le lien a peut-être expiré, ou vous avez déjà vérifié cet e-mail.",
+    "signInAction": "Se connecter",
+    "dontHaveAnAccount": "Vous n'avez pas de compte ?"
   },
   "branches": {
     "deactivate": "Désactiver",

@@ -176,7 +176,9 @@
         "membership_graduated": "{{subject}} awie ɔmanfoɔyɛ adesuakuo no",
         "fellowship_met": "{{subject}} ahyia"
       }
-    }
+    },
+    "darkMode": "Esum mu",
+    "lightMode": "Hann mu"
   },
   "nav": {
     "sections": {
@@ -431,7 +433,9 @@
     "couldnTReachServerRefreshPage": "Yɛantumi nnuru server no so. San pɛnsɛn kratafa no anaa sɔ hwɛ bio nnansa yi.",
     "youLlPickBranchDuringOnboarding": "Wobɛyi w'asɔre baa berɛ a wofiri aseɛ.",
     "weVeSentVerificationLinkEmail": "Yɛde nhwehwɛmu link akɔ w'email akyerɛw so. Klike link no na fa hyɛ w'email mu den na wie din kyerɛw no.",
-    "theLinkMayExpiredVeAlready": "Ebia link no atwam, anaasɛ woahwɛ email yi dada."
+    "theLinkMayExpiredVeAlready": "Ebia link no atwam, anaasɛ woahwɛ email yi dada.",
+    "signInAction": "Hyɛn mu",
+    "dontHaveAnAccount": "Wonni akawnt?"
   },
   "branches": {
     "deactivate": "Gyae",
