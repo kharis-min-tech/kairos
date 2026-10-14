@@ -50,17 +50,38 @@ const paths = (o, prefix = '') =>
 
 const valueAt = (o, dotted) => dotted.split('.').reduce((n, k) => (n == null ? n : n[k]), o);
 
-/** Rough count of user-facing strings still written into the source. */
+/**
+ * Rough count of user-facing strings still written into the source.
+ *
+ * Scans the body of each prose element rather than only uninterrupted text
+ * runs. An earlier version matched `>text<` with no `{`, `}` or `<` inside,
+ * which silently skipped every paragraph containing an HTML entity, an
+ * interpolated version number, or an inline <strong>/<Link> -- that is most of
+ * a legal document, so four long documents read as fully translated while ~100
+ * strings were still hardcoded. Here the inline tags, interpolations and
+ * entities are stripped out and whatever prose is left over is what counts.
+ */
+const PROSE_TAGS = 'p|li|h1|h2|h3|h4|td|th|strong|em|figcaption|blockquote|label|option|summary';
+
 function hardcoded(file) {
   const src = readFileSync(file, 'utf8');
   let n = 0;
   // display props
   n += (src.match(/\b(?:label|placeholder|title|accessibilityLabel|subtitle|heading|emptyText)="[A-Z][^"]{1,120}"/g) ?? []).length;
-  // JSX text, single or multi-line, with no expression inside
-  for (const m of src.matchAll(/(?<![=!<>|&-])>\s*([A-Za-z][^<>{}]{2,300}?)\s*</gs)) {
-    const body = m[1].replace(/\s+/g, ' ').trim();
-    if (/[;()[\]=]|=>|&&|\|\||\breturn\b|\bconst\b/.test(body)) continue;
-    if (!/[A-Za-z]{2}/.test(body)) continue;
+
+  const re = new RegExp(`<(${PROSE_TAGS})\\b[^>]*>([\\s\\S]*?)</\\1>`, 'g');
+  for (const m of src.matchAll(re)) {
+    const text = m[2]
+      .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, ' ') // {/* jsx comment */}
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')            // /* block comment */
+      .replace(/(^|\s)\/\/[^\n]*/g, ' ')             // // line comment
+      .replace(/<[^>]+>/g, ' ')      // inline elements
+      .replace(/\{[^{}]*\}/g, ' ')   // interpolations, including t(...) calls
+      .replace(/&[a-z]+;/g, ' ')     // HTML entities
+      .replace(/\s+/g, ' ')
+      .trim();
+    // Two or more real words left over means prose nobody has keyed yet.
+    if (!/[A-Za-z]{3}\s+\S|^[A-Za-z]{4,}$/.test(text)) continue;
     n++;
   }
   return n;
