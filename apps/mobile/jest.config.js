@@ -4,6 +4,9 @@ const workspaceRoot = path.resolve(__dirname, '../..');
 
 module.exports = {
   preset: 'jest-expo',
+  // The first test in a file pays the whole jest-expo transform cost, which
+  // blew the 5s default on a CI runner. Timing, not a defect.
+  testTimeout: 30000,
   setupFiles: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',

@@ -47,8 +47,17 @@ jobs:
       - name: Build
         run: npx turbo build
 
-      - name: Lint, typecheck, test
-        run: npx turbo lint typecheck test
+      # --continue reports every failing task in one run instead of turbo
+      # cancelling the rest at the first failure (which once hid the API suite
+      # behind a mobile failure).
+      - name: Lint and typecheck
+        run: npx turbo lint typecheck --continue
+
+      # One suite at a time. The web, mobile and API suites are each heavy and
+      # each spawns its own workers; run together on a 2-4 core runner they
+      # starve each other into timeouts that have nothing to do with the code.
+      - name: Test
+        run: npx turbo test --continue --concurrency=1
 
   # `next build` passing does not mean Cloudflare Pages will accept the app:
   # next-on-pages rejects any dynamic route that is not on the edge runtime,
