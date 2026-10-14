@@ -107,7 +107,24 @@ const WARNING_HREF: Record<string, string> = {
 };
 
 /** Numbers across the top. Branch and church altitude only. */
+/**
+ * The home payload is composed server-side, in English, because the API has no
+ * idea what language the reader uses. Every row carries a stable discriminant
+ * (`key` or `kind`) next to the sentence, so the label is looked up from the
+ * catalogue by that and only falls back to the server's wording when a new
+ * discriminant has not been given a key yet.
+ */
+function useHomeLabel() {
+  const { t } = useTranslation(['common']);
+  return (prefix: string, id: string, fallback: string, vars?: Record<string, unknown>) => {
+    const key = `common:home.${prefix}.${id}`;
+    const out = t(key, { ...vars, defaultValue: '' });
+    return out || fallback;
+  };
+}
+
 export function PulseBlock({ pulse }: { pulse: HomePulse }) {
+  const label = useHomeLabel();
   return (
     <section>
       <SectionLabel>{pulse.scope === 'church' ? 'Church pulse' : 'Branch pulse'}</SectionLabel>
@@ -120,7 +137,7 @@ export function PulseBlock({ pulse }: { pulse: HomePulse }) {
             <p className="text-3xl font-bold tracking-tight text-foreground">
               {metric.value.toLocaleString()}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">{metric.label}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{label('metric', metric.key, metric.label)}</p>
             {metric.delta ? (
               <p className="mt-0.5 text-xs text-muted-foreground/70">{metric.delta}</p>
             ) : null}
@@ -205,7 +222,9 @@ export function AgendaBlock({
  * Things waiting on the caller. Web had no equivalent — approvals were a stat
  * card you had to notice and concerns lived on their own page.
  */
-export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {  const { t } = useTranslation(['common']);
+export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {
+  const { t } = useTranslation(['common']);
+  const label = useHomeLabel();
 
   if (items.length === 0) return null;
   const total = items.reduce((sum, i) => sum + i.count, 0);
@@ -234,7 +253,9 @@ export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {  const { t
                 </span>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                <p className="truncate text-sm font-medium text-foreground">
+                  {label('task', item.kind, item.title, { count: item.count })}
+                </p>
                 {item.subtitle ? (
                   <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>
                 ) : null}
@@ -296,7 +317,9 @@ export function GroupsBlock({
 }
 
 /** Replaces an empty agenda for a brand-new member. */
-export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[] }) {  const { t } = useTranslation(['common']);
+export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[] }) {
+  const { t } = useTranslation(['common']);
+  const label = useHomeLabel();
 
   if (items.length === 0) return null;
 
@@ -315,7 +338,7 @@ export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[]
                 aria-hidden
                 className="h-4 w-4 shrink-0 rounded-full border border-muted-foreground/40"
               />
-              <p className="flex-1 text-sm font-medium text-foreground">{item.title}</p>
+              <p className="flex-1 text-sm font-medium text-foreground">{label('start', item.key, item.title)}</p>
               <span aria-hidden className="text-muted-foreground">
                 &rarr;
               </span>
@@ -355,7 +378,9 @@ function whenLabel(iso: string): string {
 }
 
 /** What has already happened, newest first. Empty at personal altitude. */
-export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {  const { t } = useTranslation(['common']);
+export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {
+  const { t } = useTranslation(['common']);
+  const label = useHomeLabel();
 
   return (
     <section>
@@ -378,7 +403,14 @@ export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) { 
                   }`}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm leading-snug text-foreground">{item.title}</p>
+                  <p className="text-sm leading-snug text-foreground">
+                    {/* No subject means an older payload that only carries the
+                        English sentence; use it rather than rendering a row
+                        with the name missing. */}
+                    {item.subject
+                      ? label('activity', item.kind, item.title, { subject: item.subject })
+                      : item.title}
+                  </p>
                   <p className="mt-0.5 text-xs text-muted-foreground/70">
                     {[whenLabel(item.at), item.subtitle].filter(Boolean).join(' · ')}
                   </p>

@@ -138,7 +138,45 @@
     "formulaConvertedSoulsTotalSouls100": "Formula: (Converted Souls / Total Souls) × 100",
     "criticalRed": "Critical (Red)",
     "onTrackGreen": "On Track (Green)",
-    "monitorAmber": "Monitor (Amber)"
+    "monitorAmber": "Monitor (Amber)",
+    "home": {
+      "metric": {
+        "branches": "Branches",
+        "congregation": "Total congregation",
+        "members": "Confirmed members",
+        "fellowships": "Fellowships",
+        "attendance_rate": "Attendance last week"
+      },
+      "task": {
+        "member_approval_one": "{{count}} member approval",
+        "member_approval_other": "{{count}} member approvals",
+        "fellowship_join_one": "{{count}} fellowship join request",
+        "fellowship_join_other": "{{count}} fellowship join requests",
+        "department_join_one": "{{count}} department join request",
+        "department_join_other": "{{count}} department join requests",
+        "followup_due_one": "{{count}} follow-up due",
+        "followup_due_other": "{{count}} follow-ups due",
+        "register_missing": "Register not taken",
+        "welfare_concern_one": "{{count}} welfare concern",
+        "welfare_concern_other": "{{count}} welfare concerns",
+        "safeguarding_concern_one": "{{count}} safeguarding matter",
+        "safeguarding_concern_other": "{{count}} safeguarding matters",
+        "first_timer_followup_one": "{{count}} first-timer needs a first visit",
+        "first_timer_followup_other": "{{count}} first-timers need a first visit"
+      },
+      "start": {
+        "join_fellowship": "Join a fellowship",
+        "membership_interest": "Express interest in the membership class",
+        "complete_profile": "Complete your profile"
+      },
+      "activity": {
+        "member_joined": "{{subject}} registered",
+        "soul_captured": "{{subject}} was reached",
+        "form_submitted": "{{subject}} form submitted",
+        "membership_graduated": "{{subject}} completed the membership class",
+        "fellowship_met": "{{subject}} met"
+      }
+    }
   },
   "nav": {
     "sections": {

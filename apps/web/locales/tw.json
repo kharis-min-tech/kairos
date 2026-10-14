@@ -138,7 +138,45 @@
     "formulaConvertedSoulsTotalSouls100": "Akontabuo: (Akra a wɔasakra / Akra nyinaa) × 100",
     "criticalRed": "Ɛho hia (Kɔkɔɔ)",
     "onTrackGreen": "Ɛrekɔ yie (Ahabammono)",
-    "monitorAmber": "Hwɛ so (Akokɔsradeɛ)"
+    "monitorAmber": "Hwɛ so (Akokɔsradeɛ)",
+    "home": {
+      "metric": {
+        "branches": "Asɔre baa ahorow",
+        "congregation": "Asafo no nyinaa",
+        "members": "Amanfoɔ ankasa",
+        "fellowships": "Nkabomfekuo",
+        "attendance_rate": "Nnawɔtwe a atwam mmaeɛ"
+      },
+      "task": {
+        "member_approval_one": "Ɔmanfoɔ {{count}} a ɛsɛ sɛ wopene so",
+        "member_approval_other": "Amanfoɔ {{count}} a ɛsɛ sɛ wopene so",
+        "fellowship_join_one": "Fekuo mu kɔ abisadeɛ {{count}}",
+        "fellowship_join_other": "Fekuo mu kɔ abisadeɛ {{count}}",
+        "department_join_one": "Adwumakuo mu kɔ abisadeɛ {{count}}",
+        "department_join_other": "Adwumakuo mu kɔ abisadeɛ {{count}}",
+        "followup_due_one": "Nkɔdi akyi {{count}} a ɛsɛ sɛ wɔyɛ",
+        "followup_due_other": "Nkɔdi akyi {{count}} a ɛsɛ sɛ wɔyɛ",
+        "register_missing": "Wɔankyerɛw nhwehwɛmu no",
+        "welfare_concern_one": "Yiedie asɛm {{count}}",
+        "welfare_concern_other": "Yiedie nsɛm {{count}}",
+        "safeguarding_concern_one": "Ahobammɔ asɛm {{count}}",
+        "safeguarding_concern_other": "Ahobammɔ nsɛm {{count}}",
+        "first_timer_followup_one": "Onipa {{count}} a ɔbaa a ɛdi kan hia nsrahwɛ a ɛdi kan",
+        "first_timer_followup_other": "Nnipa {{count}} a wɔbaa a ɛdi kan hia nsrahwɛ a ɛdi kan"
+      },
+      "start": {
+        "join_fellowship": "Ka fekuo bi ho",
+        "membership_interest": "Kyerɛ sɛ w'ani gye ɔmanfoɔyɛ adesuakuo ho",
+        "complete_profile": "Wie wo profael"
+      },
+      "activity": {
+        "member_joined": "{{subject}} akyerɛw ne din",
+        "soul_captured": "Yɛduruu {{subject}} nkyɛn",
+        "form_submitted": "Wɔde {{subject}} fɔm abrɛ",
+        "membership_graduated": "{{subject}} awie ɔmanfoɔyɛ adesuakuo no",
+        "fellowship_met": "{{subject}} ahyia"
+      }
+    }
   },
   "nav": {
     "sections": {

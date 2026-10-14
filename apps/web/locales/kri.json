@@ -138,7 +138,45 @@
     "formulaConvertedSoulsTotalSouls100": "Fɔmyula: (Sol dɛn we kɔnvat / Ɔl di sol dɛn) × 100",
     "criticalRed": "Sirios (Rɛd)",
     "onTrackGreen": "I de go fayn (Grin)",
-    "monitorAmber": "Wach am (Amba)"
+    "monitorAmber": "Wach am (Amba)",
+    "home": {
+      "metric": {
+        "branches": "Branch dɛn",
+        "congregation": "Ol di kɔngrigeshɔn",
+        "members": "Mɛmba dɛn we dɔn kɔnfam",
+        "fellowships": "Fɛloship dɛn",
+        "attendance_rate": "Atɛndans las wik"
+      },
+      "task": {
+        "member_approval_one": "{{count}} mɛmba fɔ apruv",
+        "member_approval_other": "{{count}} mɛmba dɛn fɔ apruv",
+        "fellowship_join_one": "{{count}} rikwɛst fɔ jɔyn fɛloship",
+        "fellowship_join_other": "{{count}} rikwɛst dɛn fɔ jɔyn fɛloship",
+        "department_join_one": "{{count}} rikwɛst fɔ jɔyn dipatmɛnt",
+        "department_join_other": "{{count}} rikwɛst dɛn fɔ jɔyn dipatmɛnt",
+        "followup_due_one": "{{count}} fɔlo ɔp fɔ du",
+        "followup_due_other": "{{count}} fɔlo ɔp fɔ du",
+        "register_missing": "Dɛn nɔ tek di rɛjista",
+        "welfare_concern_one": "{{count}} wɛlfɛa kɔnsɔn",
+        "welfare_concern_other": "{{count}} wɛlfɛa kɔnsɔn dɛn",
+        "safeguarding_concern_one": "{{count}} sefgadin mata",
+        "safeguarding_concern_other": "{{count}} sefgadin mata dɛn",
+        "first_timer_followup_one": "{{count}} pɔsin we kam fɔs tɛm nid di fɔs vizit",
+        "first_timer_followup_other": "{{count}} pipul we kam fɔs tɛm nid di fɔs vizit"
+      },
+      "start": {
+        "join_fellowship": "Jɔyn wan fɛloship",
+        "membership_interest": "Sho se yu want fɔ du di mɛmbaship klas",
+        "complete_profile": "Finish yu prɔfayl"
+      },
+      "activity": {
+        "member_joined": "{{subject}} dɔn rejista",
+        "soul_captured": "Wi rich {{subject}}",
+        "form_submitted": "Dɛn sɛn di {{subject}} fɔm",
+        "membership_graduated": "{{subject}} dɔn du di mɛmbaship klas",
+        "fellowship_met": "{{subject}} dɔn mit"
+      }
+    }
   },
   "nav": {
     "sections": {

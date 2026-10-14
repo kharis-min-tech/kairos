@@ -138,7 +138,45 @@
     "formulaConvertedSoulsTotalSouls100": "Formule : (âmes converties / total des âmes) × 100",
     "criticalRed": "Critique (rouge)",
     "onTrackGreen": "Sur la bonne voie (vert)",
-    "monitorAmber": "À surveiller (orange)"
+    "monitorAmber": "À surveiller (orange)",
+    "home": {
+      "metric": {
+        "branches": "Antennes",
+        "congregation": "Assemblée totale",
+        "members": "Membres confirmés",
+        "fellowships": "Cellules",
+        "attendance_rate": "Présence la semaine dernière"
+      },
+      "task": {
+        "member_approval_one": "{{count}} adhésion à approuver",
+        "member_approval_other": "{{count}} adhésions à approuver",
+        "fellowship_join_one": "{{count}} demande d'adhésion à une cellule",
+        "fellowship_join_other": "{{count}} demandes d'adhésion à une cellule",
+        "department_join_one": "{{count}} demande d'adhésion à un département",
+        "department_join_other": "{{count}} demandes d'adhésion à un département",
+        "followup_due_one": "{{count}} suivi à faire",
+        "followup_due_other": "{{count}} suivis à faire",
+        "register_missing": "Registre non rempli",
+        "welfare_concern_one": "{{count}} situation de bien-être",
+        "welfare_concern_other": "{{count}} situations de bien-être",
+        "safeguarding_concern_one": "{{count}} question de protection",
+        "safeguarding_concern_other": "{{count}} questions de protection",
+        "first_timer_followup_one": "{{count}} nouveau venu attend une première visite",
+        "first_timer_followup_other": "{{count}} nouveaux venus attendent une première visite"
+      },
+      "start": {
+        "join_fellowship": "Rejoindre une cellule",
+        "membership_interest": "Manifester son intérêt pour la classe d'adhésion",
+        "complete_profile": "Compléter votre profil"
+      },
+      "activity": {
+        "member_joined": "{{subject}} s'est inscrit",
+        "soul_captured": "{{subject}} a été touché",
+        "form_submitted": "Formulaire {{subject}} envoyé",
+        "membership_graduated": "{{subject}} a terminé la classe d'adhésion",
+        "fellowship_met": "{{subject}} s'est réuni"
+      }
+    }
   },
   "nav": {
     "sections": {

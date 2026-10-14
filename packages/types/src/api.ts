@@ -1743,7 +1743,17 @@ export interface HomeActivityItem {
     | 'membership_graduated'
     | 'fellowship_met';
   id: string;
+  /**
+   * English sentence, kept so older clients and tests keep working.
+   *
+   * Prefer `subject` + the `kind` discriminant: the server has no idea what
+   * language the reader uses, so a sentence composed here can never be
+   * translated. The web renders t(kind, { subject }) and only falls back to
+   * this when a kind has no catalogue entry yet.
+   */
   title: string;
+  /** The person, form or fellowship the row is about, with no verb attached. */
+  subject?: string | null;
   subtitle: string | null;
   at: string;
   refs: HomeRefs;
