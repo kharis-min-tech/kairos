@@ -1,0 +1,72 @@
+name: CI
+
+# The gate every change must pass before it can reach staging or production:
+# build, lint, typecheck and test the whole monorepo, and prove the web app
+# builds for Cloudflare Pages. Deploy workflows depend on this one.
+
+on:
+  pull_request:
+  push:
+    branches: [staging, main]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # Build-time public values. Real values are only needed where a build is
+  # deployed; CI just needs the build to succeed.
+  NEXT_PUBLIC_API_URL: http://localhost:3001
+  NEXT_PUBLIC_MAPBOX_TOKEN: ${{ vars.NEXT_PUBLIC_MAPBOX_TOKEN }}
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  check:
+    name: Build, lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Build first, then the rest. Run together, the web typecheck reads
+      # .next/types while `next build` is still rewriting it and fails with
+      # TS6053 "file not found" — a race, not a real error.
+      - name: Build
+        run: npx turbo build
+
+      - name: Lint, typecheck, test
+        run: npx turbo lint typecheck test
+
+  # `next build` passing does not mean Cloudflare Pages will accept the app:
+  # next-on-pages rejects any dynamic route that is not on the edge runtime,
+  # and that only fails at deploy time. This job reproduces the Pages build.
+  pages:
+    name: Cloudflare Pages build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build workspace packages
+        run: npx turbo build --filter=@kairos/web^...
+
+      - name: next-on-pages build
+        run: npm run pages:build --workspace=@kairos/web
