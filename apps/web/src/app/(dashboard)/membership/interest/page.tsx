@@ -26,6 +26,7 @@ import {
 } from '@/hooks/use-membership';
 import { CHURCH_SCOPE } from '@kairos/types';
 import type { MembershipInterestStatus, MembershipInterestWithMember } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The interest pool: who is waiting, and admitting them into a cohort.
@@ -41,7 +42,8 @@ import type { MembershipInterestStatus, MembershipInterestWithMember } from '@ka
  * the list; entries lapse on their own so that outcome is the default rather
  * than something an admin has to remember to do.
  */
-export default function MembershipInterestPage() {
+export default function MembershipInterestPage() {  const { t } = useTranslation(['membership', 'common']);
+
   const router = useRouter();
   const caps = useCapabilities();
   const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
@@ -116,21 +118,12 @@ export default function MembershipInterestPage() {
         href="/membership"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" />
-        Membership classes
-      </Link>
+        <ArrowLeft className="size-4" />{t('membership:membershipClasses')}</Link>
 
       <header>
         <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground">
-          <ListChecks className="size-5 text-[#5D3FD3]" />
-          Interest pool
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          People waiting to be placed in a membership class. Nobody enters a cohort on
-          their own: pick who goes into the next intake. Entries lapse after six months,
-          so somebody who has been away for a season drops off rather than rolling
-          forward.
-        </p>
+          <ListChecks className="size-5 text-[#5D3FD3]" />{t('membership:interestPool')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('membership:peopleWaitingToBePlacedIn')}</p>
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -152,7 +145,7 @@ export default function MembershipInterestPage() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name"
+          placeholder={t('membership:searchByName')}
           className="h-8 w-full max-w-56 sm:ml-auto"
         />
       </div>
@@ -167,16 +160,14 @@ export default function MembershipInterestPage() {
               <CustomSelect
                 value={cohortId}
                 onValueChange={setCohortId}
-                placeholder="Admit into…"
+                placeholder={t('membership:admitInto')}
                 options={openCohorts.map((c) => ({ value: c.id, label: c.name }))}
               />
             </div>
             <Button size="sm" disabled={admit.isPending || !cohortId} onClick={admitSelected}>
               {admit.isPending ? 'Admitting…' : 'Admit'}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
-              Clear
-            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{t('membership:clear')}</Button>
           </CardContent>
         </Card>
       ) : null}
@@ -184,15 +175,12 @@ export default function MembershipInterestPage() {
       {openCohorts.length === 0 && status === 'waiting' ? (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="flex items-center gap-3 py-3 text-sm text-muted-foreground">
-            <TriangleAlert className="size-4 shrink-0 text-amber-600" />
-            No cohort is open to admissions. Create one, or reopen an existing cohort,
-            before you can place anybody.
-          </CardContent>
+            <TriangleAlert className="size-4 shrink-0 text-amber-600" />{t('membership:noCohortIsOpenToAdmissions')}</CardContent>
         </Card>
       ) : null}
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading the pool…</p>
+        <p className="text-sm text-muted-foreground">{t('membership:loadingThePool')}</p>
       ) : rows.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">

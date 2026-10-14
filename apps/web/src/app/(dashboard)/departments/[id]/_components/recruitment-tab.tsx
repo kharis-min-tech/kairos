@@ -50,6 +50,7 @@ import {
   type RecruitmentDragAction,
   type RecruitmentDragRequest,
 } from './recruitment-drag-rules';
+import { useTranslation } from 'react-i18next';
 
 const OPEN_STATUSES = [
   'applied',
@@ -158,7 +159,8 @@ export function RecruitmentTab({
   branchMembers,
   joinRequests,
   canManage,
-}: Props) {
+}: Props) {  const { t } = useTranslation(['departments', 'common']);
+
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('date_added');
@@ -235,9 +237,7 @@ export function RecruitmentTab({
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Only the department lead, deputy, branch pastor, or admin can manage recruitment.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('departments:onlyTheDepartmentLeadDeputyBranch')}</p>
         </CardContent>
       </Card>
     );
@@ -288,25 +288,17 @@ export function RecruitmentTab({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search candidates by name or phone…"
+            placeholder={t('departments:searchCandidatesByNameOrPhone')}
             className="pl-10"
           />
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Sort
-          </span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('departments:sort')}</span>
           <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
-            <SortTab active={sort === 'date_added'} onClick={() => setSort('date_added')}>
-              Date Added
-            </SortTab>
-            <SortTab active={sort === 'name'} onClick={() => setSort('name')}>
-              Name
-            </SortTab>
-            <SortTab active={sort === 'last_activity'} onClick={() => setSort('last_activity')}>
-              Last Activity
-            </SortTab>
+            <SortTab active={sort === 'date_added'} onClick={() => setSort('date_added')}>{t('departments:dateAdded')}</SortTab>
+            <SortTab active={sort === 'name'} onClick={() => setSort('name')}>{t('departments:name')}</SortTab>
+            <SortTab active={sort === 'last_activity'} onClick={() => setSort('last_activity')}>{t('departments:lastActivity')}</SortTab>
           </div>
         </div>
       </div>
@@ -325,7 +317,7 @@ export function RecruitmentTab({
         {/* Kanban columns — horizontal scroll like Souls Pipeline */}
         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
           <RecruitmentColumn
-            title="Applied"
+            title={t('departments:applied')}
             status="applied"
             requests={columns.applied}
             onAction={(req) => setDialog({ kind: 'schedule', request: req })}
@@ -335,7 +327,7 @@ export function RecruitmentTab({
             onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
           />
           <RecruitmentColumn
-            title="Interview Scheduled"
+            title={t('departments:interviewScheduled')}
             status="interview_scheduled"
             requests={columns.interview_scheduled}
             onAction={(req) => setDialog({ kind: 'record', request: req })}
@@ -345,7 +337,7 @@ export function RecruitmentTab({
             onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
           />
           <RecruitmentColumn
-            title="Interviewed"
+            title={t('departments:interviewed')}
             status="interviewed"
             requests={columns.interviewed}
             onAction={(req) => setDialog({ kind: 'offer', request: req })}
@@ -356,7 +348,7 @@ export function RecruitmentTab({
             onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
           />
           <RecruitmentColumn
-            title="Offer Extended"
+            title={t('departments:offerExtended')}
             status="offered"
             requests={columns.offered}
             actionLabel={null}
@@ -365,7 +357,7 @@ export function RecruitmentTab({
             onOpenDetail={(req) => setDialog({ kind: 'detail', request: req })}
           />
           <RecruitmentColumn
-            title="On Probation"
+            title={t('departments:onProbation')}
             status="probation"
             requests={columns.probation}
             onAction={(req) => setDialog({ kind: 'probation', request: req })}
@@ -387,7 +379,7 @@ export function RecruitmentTab({
       {terminal.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">History</CardTitle>
+            <CardTitle className="text-base">{t('departments:history')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {terminal.map((r) => (
@@ -491,7 +483,8 @@ function RecruitmentColumn({
   secondaryLabel,
   onSecondary,
   onOpenDetail,
-}: ColumnProps) {
+}: ColumnProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const { setNodeRef, isOver, active } = useDroppable({ id: status });
   const activeRequest = active?.data.current as RecruitmentDragRequest | undefined;
   const dropRule = getRecruitmentDropRule(activeRequest, status);
@@ -523,9 +516,7 @@ function RecruitmentColumn({
           }`}
         >
           {requests.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No candidates in this stage
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">{t('departments:noCandidatesInThisStage')}</p>
           ) : (
             requests.map((r) => (
               <DraggableCandidateCard
@@ -593,7 +584,8 @@ function CandidateCard({
   onOpenDetail,
   isDragging = false,
   variant = 'default',
-}: CandidateCardProps) {
+}: CandidateCardProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const interviewer = interviewerName(r);
 
   let footer: { label: string; tone?: 'default' | 'warn' | 'good' | 'bad' } | null = null;
@@ -605,9 +597,9 @@ function CandidateCard({
   } else if (status === 'interview_scheduled' && r.interviewScheduledAt) {
     footer = { label: `Interview ${formatStageDateTime(r.interviewScheduledAt)}` };
   } else if (status === 'interviewed' && r.interviewOutcome) {
-    if (r.interviewOutcome === 'pass') footer = { label: 'Interview passed', tone: 'good' };
-    else if (r.interviewOutcome === 'fail') footer = { label: 'Interview failed', tone: 'bad' };
-    else footer = { label: 'Outcome pending', tone: 'warn' };
+    if (r.interviewOutcome === 'pass') footer = { label: t('departments:interviewPassed'), tone: 'good' };
+    else if (r.interviewOutcome === 'fail') footer = { label: t('departments:interviewFailed'), tone: 'bad' };
+    else footer = { label: t('departments:outcomePending'), tone: 'warn' };
   } else if (status === 'offered') {
     if (r.offerExpiresAt) {
       const days = daysAgo(r.offerExpiresAt);
@@ -617,7 +609,7 @@ function CandidateCard({
           : `Offer expires ${formatStageDate(r.offerExpiresAt)}`;
       footer = { label, tone: days !== null && days >= 0 ? 'bad' : 'warn' };
     } else {
-      footer = { label: 'Awaiting response', tone: 'warn' };
+      footer = { label: t('departments:awaitingResponse'), tone: 'warn' };
     }
   } else if (status === 'probation' && r.probationEndDate) {
     const days = daysAgo(r.probationEndDate);
@@ -710,14 +702,12 @@ function CandidateCard({
                   {interviewerInitials}
                 </span>
                 <span className="text-xs text-muted-foreground truncate">
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/60">
-                    Interviewer:
-                  </span>{' '}
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-foreground/60">{t('departments:interviewer3')}</span>{' '}
                   {interviewer}
                 </span>
               </>
             ) : (
-              <span className="text-xs text-muted-foreground italic">No interviewer assigned</span>
+              <span className="text-xs text-muted-foreground italic">{t('departments:noInterviewerAssigned')}</span>
             )}
           </div>
           {footer && (
@@ -862,7 +852,8 @@ function CandidateDetailDialog({
 }: {
   request: DepartmentJoinRequestWithMember;
   onClose: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const fullName = `${r.memberFirstName} ${r.memberLastName}`;
   const status = r.status as OpenStatus;
   const dot = STAGE_DOT[status];
@@ -888,27 +879,27 @@ function CandidateDetailDialog({
 
         <div className="space-y-4">
           {/* Candidate */}
-          <DetailSection title="Candidate">
-            <DetailRow label="Phone" value={r.memberPhone || '—'} />
-            <DetailRow label="Email" value={r.memberEmail || '—'} />
-            <DetailRow label="Applied" value={fmtDateTime(r.createdAt)} />
-            {r.notes && <DetailRow label="Application notes" value={r.notes} />}
+          <DetailSection title={t('departments:candidate')}>
+            <DetailRow label={t('departments:phone')} value={r.memberPhone || '—'} />
+            <DetailRow label={t('departments:email')} value={r.memberEmail || '—'} />
+            <DetailRow label={t('departments:applied')} value={fmtDateTime(r.createdAt)} />
+            {r.notes && <DetailRow label={t('departments:applicationNotes')} value={r.notes} />}
           </DetailSection>
 
           {/* Review */}
           {(r.reviewedAt || r.reviewNotes) && (
-            <DetailSection title="Review">
-              <DetailRow label="Reviewed" value={fmtDateTime(r.reviewedAt)} />
-              {r.reviewNotes && <DetailRow label="Notes" value={r.reviewNotes} />}
+            <DetailSection title={t('departments:review')}>
+              <DetailRow label={t('departments:reviewed')} value={fmtDateTime(r.reviewedAt)} />
+              {r.reviewNotes && <DetailRow label={t('departments:notes')} value={r.reviewNotes} />}
             </DetailSection>
           )}
 
           {/* Interview */}
           {(r.interviewScheduledAt || r.interviewOutcome || interviewer1) && (
-            <DetailSection title="Interview">
-              <DetailRow label="Scheduled" value={fmtDateTime(r.interviewScheduledAt)} />
+            <DetailSection title={t('departments:interview')}>
+              <DetailRow label={t('departments:scheduled')} value={fmtDateTime(r.interviewScheduledAt)} />
               <DetailRow
-                label="Format"
+                label={t('departments:format')}
                 value={
                   r.interviewFormat === 'in_person'
                     ? 'In Person'
@@ -918,12 +909,12 @@ function CandidateDetailDialog({
                 }
               />
               {r.interviewLocation && (
-                <DetailRow label="Location" value={r.interviewLocation} />
+                <DetailRow label={t('departments:location')} value={r.interviewLocation} />
               )}
-              <DetailRow label="Interviewer 1" value={interviewer1 ?? '—'} />
-              {interviewer2 && <DetailRow label="Interviewer 2" value={interviewer2} />}
+              <DetailRow label={t('departments:interviewer')} value={interviewer1 ?? '—'} />
+              {interviewer2 && <DetailRow label={t('departments:interviewer2')} value={interviewer2} />}
               <DetailRow
-                label="Outcome"
+                label={t('departments:outcome')}
                 value={
                   r.interviewOutcome ? (
                     <span
@@ -946,18 +937,18 @@ function CandidateDetailDialog({
                   )
                 }
               />
-              {r.interviewNotes && <DetailRow label="Notes" value={r.interviewNotes} />}
+              {r.interviewNotes && <DetailRow label={t('departments:notes')} value={r.interviewNotes} />}
             </DetailSection>
           )}
 
           {/* Offer */}
           {(r.offeredAt || r.offerExpiresAt || r.offerResponse) && (
-            <DetailSection title="Offer">
-              <DetailRow label="Offered" value={fmtDateTime(r.offeredAt)} />
-              <DetailRow label="Expires" value={fmtDate(r.offerExpiresAt)} />
-              {r.offerMessage && <DetailRow label="Message" value={r.offerMessage} />}
+            <DetailSection title={t('departments:offer')}>
+              <DetailRow label={t('departments:offered')} value={fmtDateTime(r.offeredAt)} />
+              <DetailRow label={t('departments:expires')} value={fmtDate(r.offerExpiresAt)} />
+              {r.offerMessage && <DetailRow label={t('departments:message')} value={r.offerMessage} />}
               <DetailRow
-                label="Response"
+                label={t('departments:response')}
                 value={
                   r.offerResponse ? (
                     <span
@@ -970,26 +961,26 @@ function CandidateDetailDialog({
                       {r.offerResponse === 'accepted' ? 'Accepted' : 'Declined'}
                     </span>
                   ) : (
-                    <span className="text-[#9a6b04] dark:text-[#f8b537]">Awaiting</span>
+                    <span className="text-[#9a6b04] dark:text-[#f8b537]">{t('departments:awaiting')}</span>
                   )
                 }
               />
               {r.offerRespondedAt && (
-                <DetailRow label="Responded" value={fmtDateTime(r.offerRespondedAt)} />
+                <DetailRow label={t('departments:responded')} value={fmtDateTime(r.offerRespondedAt)} />
               )}
             </DetailSection>
           )}
 
           {/* Probation */}
           {(r.probationStartDate || r.probationEndDate || r.probationOutcome) && (
-            <DetailSection title="Probation">
-              <DetailRow label="Started" value={fmtDate(r.probationStartDate)} />
-              <DetailRow label="Ends" value={fmtDate(r.probationEndDate)} />
+            <DetailSection title={t('departments:probation')}>
+              <DetailRow label={t('departments:started')} value={fmtDate(r.probationStartDate)} />
+              <DetailRow label={t('departments:ends')} value={fmtDate(r.probationEndDate)} />
               {r.probationDays !== null && (
-                <DetailRow label="Length" value={`${r.probationDays} days`} />
+                <DetailRow label={t('departments:length')} value={`${r.probationDays} days`} />
               )}
               <DetailRow
-                label="Outcome"
+                label={t('departments:outcome')}
                 value={
                   r.probationOutcome ? (
                     <span
@@ -1012,15 +1003,13 @@ function CandidateDetailDialog({
                   )
                 }
               />
-              {r.probationNotes && <DetailRow label="Notes" value={r.probationNotes} />}
+              {r.probationNotes && <DetailRow label={t('departments:notes')} value={r.probationNotes} />}
             </DetailSection>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('departments:close')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1039,7 +1028,8 @@ function ScheduleInterviewDialog({
   branchMembers: MemberWithBranch[];
   onClose: () => void;
   mutation: ReturnType<typeof useScheduleDepartmentInterview>;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [date, setDate] = useState(todayIso());
   const [time, setTime] = useState('18:00');
   const [format, setFormat] = useState<'in_person' | 'virtual'>('in_person');
@@ -1090,35 +1080,35 @@ function ScheduleInterviewDialog({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Date</Label>
+              <Label className="text-xs">{t('departments:date')}</Label>
               <DateSelect value={date} onChange={setDate} minDate={todayIso()} />
             </div>
             <div>
-              <Label className="text-xs">Time</Label>
+              <Label className="text-xs">{t('departments:time')}</Label>
               <TimeSelect value={time} onValueChange={setTime} />
             </div>
           </div>
           <div>
-            <Label className="text-xs">Format</Label>
+            <Label className="text-xs">{t('departments:format')}</Label>
             <CustomSelect
               value={format}
               onValueChange={(v) => setFormat(v as 'in_person' | 'virtual')}
               options={[
-                { value: 'in_person', label: 'In Person' },
-                { value: 'virtual', label: 'Virtual' },
+                { value: 'in_person', label: t('departments:inPerson') },
+                { value: 'virtual', label: t('departments:virtual') },
               ]}
             />
           </div>
           <div>
-            <Label className="text-xs">Location / link</Label>
+            <Label className="text-xs">{t('departments:locationLink')}</Label>
             <Input value={location} onChange={(e) => setLocation(e.target.value)} />
           </div>
           <div>
-            <Label className="text-xs">Interviewer 1</Label>
+            <Label className="text-xs">{t('departments:interviewer')}</Label>
             <CustomSelect
               value={interviewerOneId}
               onValueChange={setInterviewerOneId}
-              placeholder="Pick interviewer..."
+              placeholder={t('departments:pickInterviewer')}
               options={memberOptions}
             />
           </div>
@@ -1127,15 +1117,13 @@ function ScheduleInterviewDialog({
             <CustomSelect
               value={interviewerTwoId}
               onValueChange={setInterviewerTwoId}
-              placeholder="Pick interviewer..."
+              placeholder={t('departments:pickInterviewer')}
               options={memberOptions.filter((o) => o.value !== interviewerOneId)}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
             {mutation.isPending ? 'Scheduling…' : 'Schedule'}
           </Button>
@@ -1155,7 +1143,8 @@ function RecordInterviewDialog({
   request: DepartmentJoinRequestWithMember;
   onClose: () => void;
   mutation: ReturnType<typeof useRecordDepartmentInterview>;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [outcome, setOutcome] = useState<'pass' | 'fail'>('pass');
   const [notes, setNotes] = useState('');
 
@@ -1186,25 +1175,23 @@ function RecordInterviewDialog({
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-xs">Outcome</Label>
+            <Label className="text-xs">{t('departments:outcome')}</Label>
             <CustomSelect
               value={outcome}
               onValueChange={(v) => setOutcome(v as 'pass' | 'fail')}
               options={[
-                { value: 'pass', label: 'Pass' },
-                { value: 'fail', label: 'Fail' },
+                { value: 'pass', label: t('departments:pass') },
+                { value: 'fail', label: t('departments:fail') },
               ]}
             />
           </div>
           <div>
-            <Label className="text-xs">Notes</Label>
+            <Label className="text-xs">{t('departments:notes')}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
             {mutation.isPending ? 'Saving…' : 'Save'}
           </Button>
@@ -1226,7 +1213,8 @@ function ExtendOfferDialog({
   defaultProbationDays: number;
   onClose: () => void;
   mutation: ReturnType<typeof useExtendDepartmentOffer>;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [expiry, setExpiry] = useState('');
   const [message, setMessage] = useState('');
   const [days, setDays] = useState(defaultProbationDays);
@@ -1275,9 +1263,7 @@ function ExtendOfferDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
             {mutation.isPending ? 'Sending…' : 'Send Offer'}
           </Button>
@@ -1297,7 +1283,8 @@ function RejectDialog({
   request: DepartmentJoinRequestWithMember;
   onClose: () => void;
   mutation: ReturnType<typeof useRejectDepartmentJoinRequest>;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [notes, setNotes] = useState('');
 
   const submit = () => {
@@ -1330,9 +1317,7 @@ function RejectDialog({
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
             {mutation.isPending ? 'Rejecting…' : 'Reject'}
           </Button>
@@ -1352,7 +1337,8 @@ function EvaluateProbationDialog({
   request: DepartmentJoinRequestWithMember;
   onClose: () => void;
   mutation: ReturnType<typeof useEvaluateDepartmentProbation>;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [outcome, setOutcome] = useState<'passed' | 'failed'>('passed');
   const [notes, setNotes] = useState('');
 
@@ -1383,13 +1369,13 @@ function EvaluateProbationDialog({
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-xs">Outcome</Label>
+            <Label className="text-xs">{t('departments:outcome')}</Label>
             <CustomSelect
               value={outcome}
               onValueChange={(v) => setOutcome(v as 'passed' | 'failed')}
               options={[
-                { value: 'passed', label: 'Passed, promote to full member' },
-                { value: 'failed', label: 'Failed, remove from team' },
+                { value: 'passed', label: t('departments:passedPromoteToFullMember') },
+                { value: 'failed', label: t('departments:failedRemoveFromTeam') },
               ]}
             />
           </div>
@@ -1399,9 +1385,7 @@ function EvaluateProbationDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onClose}>{t('departments:cancel')}</Button>
           <Button onClick={submit} disabled={mutation.isPending}>
             {mutation.isPending ? 'Saving…' : 'Save'}
           </Button>

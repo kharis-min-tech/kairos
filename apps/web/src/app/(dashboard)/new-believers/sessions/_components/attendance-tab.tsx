@@ -16,6 +16,7 @@ import type {
   NewBelieverStageValue,
 } from '@kairos/types';
 import { getSessionStageDef } from './session-helpers';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   session: NewBelieverSession;
@@ -23,7 +24,8 @@ interface Props {
   canRecordAttendance: boolean;
 }
 
-export function AttendanceTab({ session, branchId, canRecordAttendance }: Props) {
+export function AttendanceTab({ session, branchId, canRecordAttendance }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState(false);
   const sessionStage = session.sessionStage as NewBelieverStageValue;
@@ -102,17 +104,13 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
 
   if (attendanceLoading || enrollmentsLoading) {
     return (
-      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Loading attendance...
-      </p>
+      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('newBelievers:loadingAttendance')}</p>
     );
   }
 
   if (mergedRows.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        No enrolled members are currently in the active class pipeline.
-      </p>
+      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('newBelievers:noEnrolledMembersAreCurrentlyIn')}</p>
     );
   }
 
@@ -131,18 +129,14 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
               size="sm"
               onClick={() => setAll(true)}
               disabled={allPresent}
-            >
-              Mark all present
-            </Button>
+            >{t('newBelievers:markAllPresent')}</Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setAll(false)}
               disabled={nonePresent}
-            >
-              Mark all absent
-            </Button>
+            >{t('newBelievers:markAllAbsent')}</Button>
           </div>
         )}
       </div>
@@ -182,7 +176,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
       {canRecordAttendance && (
         <div className="flex items-center justify-between">
           {saved ? (
-            <p className="text-xs font-medium text-emerald-600">Attendance saved.</p>
+            <p className="text-xs font-medium text-emerald-600">{t('newBelievers:attendanceSaved')}</p>
           ) : (
             <span />
           )}

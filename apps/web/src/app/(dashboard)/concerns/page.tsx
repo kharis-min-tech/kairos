@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useAuthStore } from '@/lib/auth-store';
 import type { ConcernInboxItem } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'welfare' | 'safeguarding';
 
@@ -27,7 +28,8 @@ type Tab = 'welfare' | 'safeguarding';
  *   GET /api/me/followups/welfare
  *   GET /api/me/followups/safeguarding
  */
-export default function ConcernsInboxPage() {
+export default function ConcernsInboxPage() {  const { t } = useTranslation(['concerns', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -72,13 +74,8 @@ export default function ConcernsInboxPage() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-          <ShieldAlert className="h-6 w-6 text-[#5D3FD3]" strokeWidth={1.75} />
-          Concerns
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Follow-ups flagged for pastoral welfare or safeguarding attention. Tap
-          a card to open the member profile.
-        </p>
+          <ShieldAlert className="h-6 w-6 text-[#5D3FD3]" strokeWidth={1.75} />{t('concerns:concerns')}</h1>
+        <p className="text-sm text-muted-foreground">{t('concerns:followUpsFlaggedForPastoralWelfare')}</p>
       </div>
 
       <div className="flex gap-2">
@@ -113,7 +110,7 @@ export default function ConcernsInboxPage() {
       {active.isLoading ? (
         <Card>
           <CardContent className="flex items-center justify-center py-10">
-            <p className="text-sm text-muted-foreground">Loading concerns…</p>
+            <p className="text-sm text-muted-foreground">{t('concerns:loadingConcerns')}</p>
           </CardContent>
         </Card>
       ) : items.length === 0 ? (
@@ -137,7 +134,8 @@ export default function ConcernsInboxPage() {
   );
 }
 
-function ConcernRow({ row }: { row: ConcernInboxItem }) {
+function ConcernRow({ row }: { row: ConcernInboxItem }) {  const { t } = useTranslation(['concerns', 'common']);
+
   const isVisit = row.type === 'visit';
   const Icon = isVisit
     ? Home
@@ -195,18 +193,14 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {
             {row.notes}
           </p>
         ) : (
-          <p className="mt-3 text-xs italic text-muted-foreground">
-            No notes recorded on this follow-up.
-          </p>
+          <p className="mt-3 text-xs italic text-muted-foreground">{t('concerns:noNotesRecordedOnThisFollow')}</p>
         )}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {row.welfareConcern && (
-            <Badge variant="secondary" className="bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]">
-              Welfare
-            </Badge>
+            <Badge variant="secondary" className="bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]">{t('concerns:welfare')}</Badge>
           )}
           {row.safeguardingConcern && (
-            <Badge variant="destructive">Safeguarding</Badge>
+            <Badge variant="destructive">{t('concerns:safeguarding')}</Badge>
           )}
         </div>
       </Link>

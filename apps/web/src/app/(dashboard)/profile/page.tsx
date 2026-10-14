@@ -19,6 +19,7 @@ import {
   MyCommunityCard,
   MyLeadershipCard,
 } from './_components/profile-sections';
+import { useTranslation } from 'react-i18next';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -29,7 +30,8 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-export default function ProfilePage() {
+export default function ProfilePage() {  const { t } = useTranslation(['settings', 'common']);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, setUser, setTokens } = useAuthStore();
@@ -281,18 +283,14 @@ export default function ProfilePage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                >
-                  Settings
-                </Button>
+                >{t('settings:settings')}</Button>
               </Link>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={openEditMode}
-              >
-                Edit Profile
-              </Button>
+              >{t('settings:editProfile')}</Button>
             </div>
           )}
         </div>
@@ -305,29 +303,24 @@ export default function ProfilePage() {
               <p className="text-sm font-semibold text-[#5D3FD3]">
                 Welcome! Let&apos;s finish setting up your account.
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                We got some details from your provider. Please review and fill
-                anything missing before you continue. Your phone number and
-                home branch are required.
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{t('settings:weGotSomeDetailsFromYour')}</p>
             </div>
           )}
 
           {isOnboarding && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">
-                  Home branch <span className="text-destructive">*</span>
+                <CardTitle className="text-base">{t('settings:homeBranch')}<span className="text-destructive">*</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-1.5">
-                  <Label htmlFor="homeBranchId">Which branch do you attend?</Label>
+                  <Label htmlFor="homeBranchId">{t('settings:whichBranchDoYouAttend')}</Label>
                   <CustomSelect
                     id="homeBranchId"
                     value={onboardingBranchId}
                     onValueChange={(v) => setOnboardingBranchId(v)}
-                    placeholder="Please pick…"
+                    placeholder={t('settings:pleasePick')}
                     options={(branchList ?? []).map((b) => ({
                       value: b.id,
                       label: b.branchName,
@@ -344,22 +337,22 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Personal Information</CardTitle>
+              <CardTitle className="text-base">{t('settings:personalInformation')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">{t('settings:firstName')}</Label>
                   <Input id="firstName" {...register('firstName', { required: 'Required' })} />
                   {errors.firstName && <p className="text-xs text-destructive">{errors.firstName.message}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">{t('settings:lastName')}</Label>
                   <Input id="lastName" {...register('lastName', { required: 'Required' })} />
                   {errors.lastName && <p className="text-xs text-destructive">{errors.lastName.message}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="middleName">Middle Name</Label>
+                  <Label htmlFor="middleName">{t('settings:middleName')}</Label>
                   <Input id="middleName" {...register('middleName')} />
                 </div>
                 <div className="space-y-1.5">
@@ -375,16 +368,16 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Gender</Label>
+                  <Label>{t('settings:gender')}</Label>
                   <CustomSelect
                     value={watch('gender') ?? ''}
                     onValueChange={(v) => setValue('gender', v === '' ? undefined : (v as 'Male' | 'Female'))}
-                    placeholder="Select gender"
-                    options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+                    placeholder={t('settings:selectGender')}
+                    options={[{ value: 'Male', label: t('settings:male') }, { value: 'Female', label: t('settings:female') }]}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Date of Birth</Label>
+                  <Label>{t('settings:dateOfBirth')}</Label>
                   <DateSelect
                     value={dobValue}
                     onChange={(val) => setValue('dateOfBirth', val)}
@@ -396,7 +389,7 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Address</CardTitle>
+              <CardTitle className="text-base">{t('settings:address')}</CardTitle>
             </CardHeader>
             <CardContent>
               <AddressAutofillGroup
@@ -419,7 +412,7 @@ export default function ProfilePage() {
           {fullProfile?.secondaryBranchId && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Secondary Address</CardTitle>
+                <CardTitle className="text-base">{t('settings:secondaryAddress')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <AddressAutofillGroup
@@ -442,26 +435,26 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Emergency Contact</CardTitle>
+              <CardTitle className="text-base">{t('settings:emergencyContact')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="emergencyContactName">Contact Name</Label>
+                  <Label htmlFor="emergencyContactName">{t('settings:contactName')}</Label>
                   <Input id="emergencyContactName" {...register('emergencyContactName')} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="emergencyContactRelationship">Relationship</Label>
+                  <Label htmlFor="emergencyContactRelationship">{t('settings:relationship')}</Label>
                   <CustomSelect
                     id="emergencyContactRelationship"
                     value={watch('emergencyContactRelationship') ?? ''}
                     onValueChange={(v) => setValue('emergencyContactRelationship', v)}
-                    placeholder="Select relationship..."
+                    placeholder={t('settings:selectRelationship')}
                     options={['Spouse','Partner','Parent','Child','Sibling','Grandparent','Guardian','Friend','Other'].map((r) => ({ value: r, label: r }))}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
+                  <Label htmlFor="emergencyContactPhone">{t('settings:contactPhone')}</Label>
                   <Input id="emergencyContactPhone" {...register('emergencyContactPhone')} />
                 </div>
               </div>
@@ -492,9 +485,7 @@ export default function ProfilePage() {
                       href="/legal/privacy"
                       target="_blank"
                       className="font-semibold text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
-                    >
-                      Privacy Notice
-                    </Link>
+                    >{t('settings:privacyNotice')}</Link>
                     .
                   </span>
                 </label>
@@ -522,9 +513,7 @@ export default function ProfilePage() {
                   : 'Save Changes'}
             </Button>
             {!isOnboarding && (
-              <Button type="button" variant="outline" onClick={cancelEdit}>
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={cancelEdit}>{t('settings:cancel')}</Button>
             )}
           </div>
         </form>
@@ -532,30 +521,30 @@ export default function ProfilePage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Personal Information</CardTitle>
+              <CardTitle className="text-base">{t('settings:personalInformation')}</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="grid gap-4 sm:grid-cols-2">
-                <Field label="First Name" value={profile?.firstName} />
-                <Field label="Last Name" value={profile?.lastName} />
-                <Field label="Middle Name" value={(profile as { middleName?: string | null })?.middleName} />
-                <Field label="Email" value={profile?.email} />
-                <Field label="Phone" value={profile?.phone} />
-                <Field label="Gender" value={profile?.gender} />
-                <Field label="Date of Birth" value={(profile as { dateOfBirth?: string | null })?.dateOfBirth} />
+                <Field label={t('settings:firstName')} value={profile?.firstName} />
+                <Field label={t('settings:lastName')} value={profile?.lastName} />
+                <Field label={t('settings:middleName')} value={(profile as { middleName?: string | null })?.middleName} />
+                <Field label={t('settings:email')} value={profile?.email} />
+                <Field label={t('settings:phone')} value={profile?.phone} />
+                <Field label={t('settings:gender')} value={profile?.gender} />
+                <Field label={t('settings:dateOfBirth')} value={(profile as { dateOfBirth?: string | null })?.dateOfBirth} />
               </dl>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Address</CardTitle>
+              <CardTitle className="text-base">{t('settings:address')}</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="grid gap-4 sm:grid-cols-2">
-                <Field label="Street Address" value={(profile as { address?: string | null })?.address} />
-                <Field label="City" value={(profile as { city?: string | null })?.city} />
-                <Field label="Postal Code" value={(profile as { postalCode?: string | null })?.postalCode} />
+                <Field label={t('settings:streetAddress')} value={(profile as { address?: string | null })?.address} />
+                <Field label={t('settings:city')} value={(profile as { city?: string | null })?.city} />
+                <Field label={t('settings:postalCode')} value={(profile as { postalCode?: string | null })?.postalCode} />
               </dl>
             </CardContent>
           </Card>
@@ -579,13 +568,13 @@ export default function ProfilePage() {
           {fullProfile?.secondaryBranchId && (fullProfile.secondaryAddress || fullProfile.secondaryCity || fullProfile.secondaryPostalCode) && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Secondary Address</CardTitle>
+                <CardTitle className="text-base">{t('settings:secondaryAddress')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <dl className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Street Address" value={fullProfile.secondaryAddress} />
-                  <Field label="City" value={fullProfile.secondaryCity} />
-                  <Field label="Postal Code" value={fullProfile.secondaryPostalCode} />
+                  <Field label={t('settings:streetAddress')} value={fullProfile.secondaryAddress} />
+                  <Field label={t('settings:city')} value={fullProfile.secondaryCity} />
+                  <Field label={t('settings:postalCode')} value={fullProfile.secondaryPostalCode} />
                 </dl>
               </CardContent>
             </Card>
@@ -593,13 +582,13 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Emergency Contact</CardTitle>
+              <CardTitle className="text-base">{t('settings:emergencyContact')}</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="grid gap-4 sm:grid-cols-2">
-                <Field label="Contact Name" value={(profile as { emergencyContactName?: string | null })?.emergencyContactName} />
-                <Field label="Relationship" value={(profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship} />
-                <Field label="Contact Phone" value={(profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone} />
+                <Field label={t('settings:contactName')} value={(profile as { emergencyContactName?: string | null })?.emergencyContactName} />
+                <Field label={t('settings:relationship')} value={(profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship} />
+                <Field label={t('settings:contactPhone')} value={(profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone} />
               </dl>
             </CardContent>
           </Card>

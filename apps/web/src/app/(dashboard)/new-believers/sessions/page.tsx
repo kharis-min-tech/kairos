@@ -17,8 +17,10 @@ import {
   formatSessionTime,
   isUpcomingSession,
 } from './_components/session-helpers';
+import { useTranslation } from 'react-i18next';
 
-export default function SessionsPage() {
+export default function SessionsPage() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const { user, activeRole } = useAuthStore();
   const branchId = user?.homeBranchId ?? '';
   const userMemberId = user?.id ?? '';
@@ -86,11 +88,9 @@ export default function SessionsPage() {
             href="/new-believers"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            New Believers
-          </Link>
+            <ArrowLeft className="h-3.5 w-3.5" />{t('newBelievers:newBelievers')}</Link>
           <div>
-            <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers Sessions</h1>
+            <h1 className="text-3xl font-semibold tracking-[-0.02em]">{t('newBelievers:newBelieversSessions')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {sessions.length} session{sessions.length === 1 ? '' : 's'}
               {nextSession && (
@@ -108,23 +108,17 @@ export default function SessionsPage() {
 
         {canManageSessions && (
           <Button onClick={() => setShowCreate(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Session
-          </Button>
+            <Plus className="mr-2 h-4 w-4" />{t('newBelievers:newSession')}</Button>
         )}
       </div>
 
       <ProgramHealthStrip branchId={branchId || undefined} />
 
       {isLoading ? (
-        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-          Loading sessions...
-        </p>
+        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">{t('newBelievers:loadingSessions')}</p>
       ) : sessions.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <p className="text-sm font-medium text-muted-foreground">
-            No sessions scheduled yet.
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">{t('newBelievers:noSessionsScheduledYet')}</p>
           {canManageSessions && (
             <Button
               type="button"
@@ -132,14 +126,12 @@ export default function SessionsPage() {
               className="mt-3"
               onClick={() => setShowCreate(true)}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Session
-            </Button>
+              <Plus className="mr-2 h-4 w-4" />{t('newBelievers:createSession')}</Button>
           )}
         </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-[320px_1fr]">
-          <aside aria-label="Sessions list" className="space-y-5">
+          <aside aria-label={t('newBelievers:sessionsList')} className="space-y-5">
             {upcoming.length > 0 && (
               <section>
                 <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -185,9 +177,7 @@ export default function SessionsPage() {
                 userMemberId={userMemberId}
               />
             ) : (
-              <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                Select a session to see details.
-              </div>
+              <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">{t('newBelievers:selectASessionToSeeDetails')}</div>
             )}
           </main>
         </div>

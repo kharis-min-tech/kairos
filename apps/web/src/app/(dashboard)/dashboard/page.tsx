@@ -17,6 +17,7 @@ import {
   PulseBlock,
   StreakBlock,
 } from '@/components/dashboard/home-blocks';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The control centre.
@@ -120,7 +121,8 @@ function BranchScopePicker({
 }: {
   adminBranchIds: string[];
   allBranches: Array<{ id: string; branchName: string }>;
-}) {
+}) {  const { t } = useTranslation(['common', 'common']);
+
   const scope = useAuthStore((s) => s.scope);
   const setScope = useAuthStore((s) => s.setScope);
 
@@ -128,7 +130,7 @@ function BranchScopePicker({
 
   const branchById = new Map(allBranches.map((b) => [b.id, b.branchName]));
   const options = [
-    { value: '__all__', label: 'All my branches' },
+    { value: '__all__', label: t('common:allMyBranches') },
     ...adminBranchIds.map((id) => ({ value: id, label: branchById.get(id) ?? id })),
   ];
   const currentValue = scope?.kind === 'branch' ? scope.id : '__all__';
@@ -141,7 +143,7 @@ function BranchScopePicker({
         else setScope({ kind: 'branch', id: value });
       }}
       options={options}
-      placeholder="Pick a branch"
+      placeholder={t('common:pickABranch')}
       className="h-7 px-2 text-xs"
     />
   );
@@ -149,7 +151,8 @@ function BranchScopePicker({
 
 // ── Page ───────────────────────────────────────────────────
 
-export default function DashboardPage() {
+export default function DashboardPage() {  const { t } = useTranslation(['common', 'common']);
+
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
   const activeRole = useAuthStore((s) => s.activeRole);
@@ -247,9 +250,7 @@ export default function DashboardPage() {
             type="button"
             onClick={() => home.refetch()}
             className="mt-3 rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-3 py-1.5 text-sm font-medium text-white"
-          >
-            Retry
-          </button>
+          >{t('common:retry')}</button>
         </div>
       </div>
     );
@@ -263,8 +264,8 @@ export default function DashboardPage() {
   const pulse = data.pulse ? <PulseBlock pulse={data.pulse} /> : null;
   const agenda = (
     <>
-      <AgendaBlock label="Today" items={data.today} />
-      <AgendaBlock label="This week" items={data.thisWeek} withDay />
+      <AgendaBlock label={t('common:today')} items={data.today} />
+      <AgendaBlock label={t('common:thisWeek')} items={data.thisWeek} withDay />
       {data.gettingStarted.length > 0 ? (
         <GettingStartedBlock items={data.gettingStarted} />
       ) : null}
@@ -307,9 +308,7 @@ export default function DashboardPage() {
       )}
 
       <div className="rounded-lg border border-primary/20 bg-card p-4 shadow-ambient">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          Daily verse
-        </p>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('common:dailyVerse')}</p>
         <p className="mb-2 text-sm italic leading-relaxed text-foreground/80">
           &ldquo;{verse.text}&rdquo;
         </p>

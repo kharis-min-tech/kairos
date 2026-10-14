@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@kairos/ui';
 import { useFrequencyBuckets } from '@/hooks/use-attendance';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   branchId?: string;
@@ -27,7 +28,8 @@ export function FrequencyBucketsCard({
   departmentId,
   fellowshipId,
   engagedWindowMonths,
-}: Props) {
+}: Props) {  const { t } = useTranslation(['attendance', 'common']);
+
   const q = useFrequencyBuckets({
     branchId,
     departmentId,
@@ -39,8 +41,7 @@ export function FrequencyBucketsCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <BarChart3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Attendance frequency
-        </CardTitle>
+          <BarChart3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:attendanceFrequency')}</CardTitle>
         <CardDescription>
           How often engaged members show up over the last {q.data?.windowMonths ?? engagedWindowMonths}
           &nbsp;months ({q.data?.servicesConsidered ?? '…'} services). Dormant = on
@@ -59,9 +60,7 @@ export function FrequencyBucketsCard({
             {q.error instanceof Error ? q.error.message : 'Could not load frequency buckets.'}
           </p>
         ) : (q.data?.servicesConsidered ?? 0) === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            No services on the branch in the window.
-          </p>
+          <p className="py-6 text-center text-sm text-muted-foreground">{t('attendance:noServicesOnTheBranchIn')}</p>
         ) : (
           <BucketBars buckets={q.data!.buckets} />
         )}

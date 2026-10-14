@@ -8,6 +8,7 @@ import { Search, X, UserCheck, PenLine } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useFormMemberSearch } from '@/hooks/use-forms';
 import { FieldError, FieldLabel } from './field';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The one way to find a person anywhere in the forms surface.
@@ -76,7 +77,8 @@ export function MemberCombobox({
   disabled = false,
   disabledHint,
   id,
-}: MemberComboboxProps) {
+}: MemberComboboxProps) {  const { t } = useTranslation(['members', 'common']);
+
   const user = useAuthStore((s) => s.user);
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -154,17 +156,13 @@ export function MemberCombobox({
           <Badge
             variant="outline"
             className="shrink-0 border-[#5D3FD3]/25 bg-[#5D3FD3]/10 text-[#5D3FD3]"
-          >
-            Directory member
-          </Badge>
+          >{t('members:directoryMember')}</Badge>
           <button
             type="button"
             onClick={handleUnlink}
             aria-label={`Change ${label.toLowerCase()}`}
             className="shrink-0 text-sm font-medium text-[#5D3FD3] hover:underline"
-          >
-            Change
-          </button>
+          >{t('members:change')}</button>
         </div>
         {linkedNote ? (
           <p className="text-xs font-medium text-[#16A34A]">{linkedNote}</p>
@@ -230,11 +228,9 @@ export function MemberCombobox({
           className="overflow-hidden rounded-lg border border-input/15 dark:border-white/10"
         >
           {!canSearch ? (
-            <p className="px-3 py-2 text-sm text-muted-foreground">
-              Keep typing to search the directory.
-            </p>
+            <p className="px-3 py-2 text-sm text-muted-foreground">{t('members:keepTypingToSearchTheDirectory')}</p>
           ) : searching ? (
-            <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>
+            <p className="px-3 py-2 text-sm text-muted-foreground">{t('members:searching')}</p>
           ) : results && results.length > 0 ? (
             results.map((r) => (
               <button
@@ -278,9 +274,7 @@ export function MemberCombobox({
                 <span className="font-medium text-foreground">
                   Use “{text.trim()}” as a name only
                 </span>
-                <span className="block text-xs text-muted-foreground">
-                  They aren’t in the directory, so we’ll record the name without a record.
-                </span>
+                <span className="block text-xs text-muted-foreground">{t('members:theyArenTInTheDirectory')}</span>
               </span>
             </button>
           ) : null}
@@ -296,14 +290,12 @@ export function MemberCombobox({
       ) : expanded ? null : named ? (
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <PenLine className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
-          <span>Recorded as a name only — not linked to anyone in the directory.</span>
+          <span>{t('members:recordedAsANameOnlyNot')}</span>
         </p>
       ) : helpText ? (
         <p className="text-xs text-muted-foreground">{helpText}</p>
       ) : allowTypedName ? (
-        <p className="text-xs text-muted-foreground">
-          Pick them from the directory so they can be followed up, or just type their name.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('members:pickThemFromTheDirectorySo')}</p>
       ) : null}
 
       <FieldError message={errorMessage} />

@@ -10,8 +10,10 @@ import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
 import { Card, CardContent } from '@kairos/ui';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
-export default function MemberApprovalPage() {
+export default function MemberApprovalPage() {  const { t } = useTranslation(['members', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -41,11 +43,9 @@ export default function MemberApprovalPage() {
           <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Members
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Approval Queue</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Review and approve pending member registrations</p>
+            </svg>{t('members:backToMembers')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('members:approvalQueue')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('members:reviewAndApprovePendingMemberRegistrations')}</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export default function MemberApprovalPage() {
       ) : members.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No pending members to review.</p>
+            <p className="text-muted-foreground">{t('members:noPendingMembersToReview')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -108,7 +108,7 @@ export default function MemberApprovalPage() {
                         const ok = await confirm({
                           title: `Reject ${member.firstName} ${member.lastName}?`,
                           description: 'Their registration request will be marked as rejected.',
-                          confirmLabel: 'Reject',
+                          confirmLabel: t('members:reject'),
                           variant: 'destructive',
                         });
                         if (!ok) return;
@@ -120,9 +120,7 @@ export default function MemberApprovalPage() {
                           },
                         );
                       }}
-                    >
-                      Reject
-                    </Button>
+                    >{t('members:reject')}</Button>
                     <Button
                       size="sm"
                       className="bg-emerald-600 text-white hover:bg-emerald-700"
@@ -136,9 +134,7 @@ export default function MemberApprovalPage() {
                           },
                         );
                       }}
-                    >
-                      Approve
-                    </Button>
+                    >{t('members:approve')}</Button>
                   </div>
                 </CardContent>
               </Card>

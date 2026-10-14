@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@kairos/ui';
 import type { MediaPurpose } from '@kairos/types';
 import { useMintUploadUrl } from '@/hooks/use-media';
+import { useTranslation } from 'react-i18next';
 
 interface ImageUploadProps {
   purpose: MediaPurpose;
@@ -78,7 +79,8 @@ export function ImageUpload({
   variant = 'card',
   triggerLabel,
   className = '',
-}: ImageUploadProps) {
+}: ImageUploadProps) {  const { t } = useTranslation(['common', 'common']);
+
   const mint = useMintUploadUrl();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -127,7 +129,7 @@ export function ImageUpload({
           title={triggerText}
         >
           {uploading ? (
-            <span className="text-xs font-medium text-white">Uploading…</span>
+            <span className="text-xs font-medium text-white">{t('common:uploading')}</span>
           ) : (
             <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -156,9 +158,7 @@ export function ImageUpload({
           <img src={showPreview} alt="preview" className="h-full w-full object-cover" />
         </div>
       ) : (
-        <div className="flex h-20 w-20 items-center justify-center rounded-[4px] bg-surface-container-low text-xs text-muted-foreground">
-          No image
-        </div>
+        <div className="flex h-20 w-20 items-center justify-center rounded-[4px] bg-surface-container-low text-xs text-muted-foreground">{t('common:noImage')}</div>
       )}
       <div className="flex flex-col gap-2">
         <input

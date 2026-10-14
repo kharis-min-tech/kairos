@@ -6,6 +6,7 @@ import { Card, CardContent } from '@kairos/ui';
 import { formatShortDate } from '@kairos/core';
 import { STAGES, getStaleDays } from './stage-config';
 import type { EnrollmentCardData } from './types';
+import { useTranslation } from 'react-i18next';
 
 interface EnrollmentCardProps {
   enrollment: EnrollmentCardData;
@@ -40,7 +41,8 @@ function EnrollmentCardContent({
   isSelected,
   selectionDisabled,
   onToggleSelect,
-}: EnrollmentCardContentProps) {
+}: EnrollmentCardContentProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const stage = STAGES.find((s) => s.value === enrollment.stage);
   const staleDays = getStaleDays(enrollment.updatedAt, enrollment.stage);
 
@@ -123,7 +125,7 @@ function EnrollmentCardContent({
         </div>
       ) : (
         <div className="space-y-1.5">
-          <p className="text-xs italic text-muted-foreground">No support team assigned</p>
+          <p className="text-xs italic text-muted-foreground">{t('newBelievers:noSupportTeamAssigned')}</p>
           {staleDays !== null && (
             <div className="flex items-center gap-1.5">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500 flex-shrink-0" aria-hidden />

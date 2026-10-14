@@ -8,6 +8,7 @@ import type { FollowupQueueRow } from '@kairos/types';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useFirstTimerQueue, useNoGroupQueue, useDueFollowups } from '@/hooks/use-followups';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The follow-up surface for people who belong to no group.
@@ -29,7 +30,8 @@ const QUEUES: Array<{ value: Queue; label: string }> = [
   { value: 'due', label: 'Due' },
 ];
 
-export default function FollowUpsPage() {
+export default function FollowUpsPage() {  const { t } = useTranslation(['concerns', 'common']);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const caps = useCapabilities();
@@ -55,11 +57,8 @@ export default function FollowUpsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Follow-ups</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          People who need contact and belong to no fellowship or department. Group
-          follow-ups live on each fellowship and department page.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('concerns:followUps')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('concerns:peopleWhoNeedContactAndBelong')}</p>
       </div>
 
       <Tabs
@@ -69,7 +68,7 @@ export default function FollowUpsPage() {
           router.replace(`/follow-ups?queue=${v}`);
         }}
       >
-        <TabsList aria-label="Follow-up queues">
+        <TabsList aria-label={t('concerns:followUpQueues')}>
           {QUEUES.map((q) => (
             <TabsTrigger key={q.value} value={q.value}>
               {q.label}
@@ -81,7 +80,7 @@ export default function FollowUpsPage() {
           <QueueList
             rows={firstTimers.data ?? []}
             isLoading={firstTimers.isLoading}
-            emptyText="No first-timers waiting on a first visit."
+            emptyText={t('concerns:noFirstTimersWaitingOnA')}
             showInviter
           />
         </TabsContent>
@@ -90,7 +89,7 @@ export default function FollowUpsPage() {
           <QueueList
             rows={noGroup.data ?? []}
             isLoading={noGroup.isLoading}
-            emptyText="Everyone in this branch belongs to a fellowship or department."
+            emptyText={t('concerns:everyoneInThisBranchBelongsTo')}
           />
         </TabsContent>
 

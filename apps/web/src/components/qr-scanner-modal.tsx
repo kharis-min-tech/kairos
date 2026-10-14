@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@kairos/ui';
 import { BrowserQRCodeReader, type IScannerControls } from '@zxing/browser';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Web QR scanner. Uses `getUserMedia` via `@zxing/browser` — no native camera
@@ -22,7 +23,8 @@ export function QrScannerModal({
   onScan: (payload: string) => void;
   title: string;
   description?: string;
-}) {
+}) {  const { t } = useTranslation(['common', 'common']);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const decodedRef = useRef(false);
@@ -109,9 +111,7 @@ export function QrScannerModal({
             {/* Framing corners so the user knows where to aim. */}
             <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-white/80" />
             {starting ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-medium text-white">
-                Starting camera…
-              </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-medium text-white">{t('common:startingCamera')}</div>
             ) : null}
           </div>
         )}

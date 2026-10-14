@@ -10,6 +10,7 @@ import { ArrowLeft, KeyRound, ShieldCheck } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
 import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
+import { useTranslation } from 'react-i18next';
 
 const schema = z
   .object({
@@ -30,7 +31,8 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-export default function ChangePasswordSettingsPage() {
+export default function ChangePasswordSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+
   const router = useRouter();
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -66,30 +68,24 @@ export default function ChangePasswordSettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Change password</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Enter your current password, then choose a new one.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings:changePassword')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:enterYourCurrentPasswordThenChoose')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <KeyRound className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> New password
-          </CardTitle>
+            <KeyRound className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:newPassword')}</CardTitle>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-4 text-sm">
-              <p className="font-semibold text-emerald-700 dark:text-emerald-400">
-                Password updated
-              </p>
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400">{t('settings:passwordUpdated')}</p>
               <p className="text-muted-foreground">
                 We&apos;ve emailed you a confirmation. Returning to settings…
               </p>
@@ -97,7 +93,7 @@ export default function ChangePasswordSettingsPage() {
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <Label htmlFor="currentPassword">Current password</Label>
+                <Label htmlFor="currentPassword">{t('settings:currentPassword')}</Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -111,7 +107,7 @@ export default function ChangePasswordSettingsPage() {
                 )}
               </div>
               <div>
-                <Label htmlFor="newPassword">New password</Label>
+                <Label htmlFor="newPassword">{t('settings:newPassword')}</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -130,7 +126,7 @@ export default function ChangePasswordSettingsPage() {
                 </div>
               )}
               <div>
-                <Label htmlFor="confirmPassword">Confirm new password</Label>
+                <Label htmlFor="confirmPassword">{t('settings:confirmNewPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"

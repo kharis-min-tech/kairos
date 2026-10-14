@@ -25,10 +25,12 @@ import {
   Label,
 } from '@kairos/ui';
 import { downloadMyDataExportHtml, downloadMyDataExportJson, useDeleteMyAccount } from '@/hooks/use-me';
+import { useTranslation } from 'react-i18next';
 
 const DELETE_CONFIRM_PHRASE = 'DELETE MY ACCOUNT';
 
-export default function SettingsPage() {
+export default function SettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const { logout } = useAuthStore();
@@ -98,10 +100,8 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">App Settings</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage how the app looks, behaves, and protects your data
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('settings:appSettings')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:manageHowTheAppLooksBehaves')}</p>
         </div>
       </div>
 
@@ -109,47 +109,36 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Lock className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Account & Security
-          </CardTitle>
+            <Lock className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:accountSecurity')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Change password</p>
+              <p className="text-sm font-medium">{t('settings:changePassword')}</p>
               <p className="text-xs text-muted-foreground">
                 Update your login password. You&apos;ll need your current one.
               </p>
             </div>
             <Link href="/profile/settings/change-password">
-              <Button variant="outline" size="sm" className="rounded-lg">
-                Change
-              </Button>
+              <Button variant="outline" size="sm" className="rounded-lg">{t('settings:change')}</Button>
             </Link>
           </div>
           <div className="flex items-center justify-between border-t pt-4">
             <div>
-              <p className="text-sm font-medium">Change email</p>
-              <p className="text-xs text-muted-foreground">
-                Move your account to a new email. Both addresses get notified.
-              </p>
+              <p className="text-sm font-medium">{t('settings:changeEmail')}</p>
+              <p className="text-xs text-muted-foreground">{t('settings:moveYourAccountToANew')}</p>
             </div>
             <Link href="/profile/settings/email-change">
-              <Button variant="outline" size="sm" className="rounded-lg">
-                Change
-              </Button>
+              <Button variant="outline" size="sm" className="rounded-lg">{t('settings:change')}</Button>
             </Link>
           </div>
           <div className="flex items-center justify-between border-t pt-4">
             <div>
-              <p className="text-sm font-medium">Recent sign-ins</p>
-              <p className="text-xs text-muted-foreground">
-                Sign-ins, password changes, and role updates on your account.
-              </p>
+              <p className="text-sm font-medium">{t('settings:recentSignIns')}</p>
+              <p className="text-xs text-muted-foreground">{t('settings:signInsPasswordChangesAndRole')}</p>
             </div>
             <Link href="/profile/settings/security">
-              <Button variant="outline" size="sm" className="rounded-lg">
-                View
-              </Button>
+              <Button variant="outline" size="sm" className="rounded-lg">{t('settings:view')}</Button>
             </Link>
           </div>
         </CardContent>
@@ -159,13 +148,12 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Palette className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Display
-          </CardTitle>
+            <Palette className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:display')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium">Theme</p>
+              <p className="text-sm font-medium">{t('settings:theme')}</p>
               <p className="text-xs text-muted-foreground">
                 Light, dark, or match your device&apos;s preference.
               </p>
@@ -175,26 +163,24 @@ export default function SettingsPage() {
                 value={mounted ? (theme ?? 'system') : 'system'}
                 onValueChange={(v) => setTheme(v)}
                 options={[
-                  { value: 'light', label: 'Light' },
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'system', label: 'System' },
+                  { value: 'light', label: t('settings:light') },
+                  { value: 'dark', label: t('settings:dark') },
+                  { value: 'system', label: t('settings:system') },
                 ]}
               />
             </div>
           </div>
           <div className="flex items-center justify-between gap-4 border-t pt-4">
             <div>
-              <p className="text-sm font-medium">Language</p>
-              <p className="text-xs text-muted-foreground">
-                Currently English only. More languages coming.
-              </p>
+              <p className="text-sm font-medium">{t('settings:language')}</p>
+              <p className="text-xs text-muted-foreground">{t('settings:currentlyEnglishOnlyMoreLanguagesComing')}</p>
             </div>
             <div className="w-40">
               <CustomSelect
                 disabled
                 value="English"
                 onValueChange={() => {}}
-                options={[{ value: 'English', label: 'English' }]}
+                options={[{ value: 'English', label: t('settings:english') }]}
               />
             </div>
           </div>
@@ -205,21 +191,16 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Notifications
-          </CardTitle>
+            <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:notifications')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Email preferences</p>
-              <p className="text-xs text-muted-foreground">
-                Choose which categories reach your inbox and how often.
-              </p>
+              <p className="text-sm font-medium">{t('settings:emailPreferences')}</p>
+              <p className="text-xs text-muted-foreground">{t('settings:chooseWhichCategoriesReachYourInbox')}</p>
             </div>
             <Link href="/profile/settings/notifications">
-              <Button variant="outline" size="sm" className="rounded-lg">
-                Manage
-              </Button>
+              <Button variant="outline" size="sm" className="rounded-lg">{t('settings:manage')}</Button>
             </Link>
           </div>
         </CardContent>
@@ -229,21 +210,16 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Privacy & Data
-          </CardTitle>
+            <FileText className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:privacyData')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium">Legal &amp; consent</p>
-              <p className="text-xs text-muted-foreground">
-                Review the Terms, Privacy Notice, and marketing preferences.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('settings:reviewTheTermsPrivacyNoticeAnd')}</p>
             </div>
             <Link href="/profile/settings/legal">
-              <Button variant="outline" size="sm" className="rounded-lg">
-                Manage
-              </Button>
+              <Button variant="outline" size="sm" className="rounded-lg">{t('settings:manage')}</Button>
             </Link>
           </div>
           <div className="border-t pt-4">
@@ -251,11 +227,8 @@ export default function SettingsPage() {
               <div className="flex items-start gap-3">
                 <Download className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
                 <div>
-                  <p className="text-sm font-medium">Export my data</p>
-                  <p className="text-xs text-muted-foreground">
-                    Download a readable report of your personal data. Open it in
-                    any browser and print or save as PDF.
-                  </p>
+                  <p className="text-sm font-medium">{t('settings:exportMyData')}</p>
+                  <p className="text-xs text-muted-foreground">{t('settings:downloadAReadableReportOfYour')}</p>
                 </div>
               </div>
               <Button
@@ -283,11 +256,8 @@ export default function SettingsPage() {
             <div className="flex items-start gap-3">
               <Trash2 className="mt-0.5 h-4 w-4 text-destructive" aria-hidden />
               <div>
-                <p className="text-sm font-medium">Delete my account</p>
-                <p className="text-xs text-muted-foreground">
-                  Permanently scrub your personal data. Attendance and
-                  consent history are anonymised, not fully removed.
-                </p>
+                <p className="text-sm font-medium">{t('settings:deleteMyAccount')}</p>
+                <p className="text-xs text-muted-foreground">{t('settings:permanentlyScrubYourPersonalDataAttendance')}</p>
               </div>
             </div>
             <Button
@@ -295,9 +265,7 @@ export default function SettingsPage() {
               size="sm"
               className="rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10"
               onClick={openDeleteDialog}
-            >
-              Delete
-            </Button>
+            >{t('settings:delete')}</Button>
           </div>
         </CardContent>
       </Card>
@@ -305,20 +273,13 @@ export default function SettingsPage() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-destructive">Delete my account</DialogTitle>
-            <DialogDescription>
-              This will scrub your name, email, phone, address, photo and other
-              personal details from Kharis Church. Your attendance history and
-              consent audit trail stay in place but are anonymised. This action
-              cannot be undone.
-            </DialogDescription>
+            <DialogTitle className="text-destructive">{t('settings:deleteMyAccount')}</DialogTitle>
+            <DialogDescription>{t('settings:thisWillScrubYourNameEmail')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="deleteConfirm">
-                Type <span className="font-mono font-semibold">{DELETE_CONFIRM_PHRASE}</span> to confirm
-              </Label>
+              <Label htmlFor="deleteConfirm">{t('settings:type')}<span className="font-mono font-semibold">{DELETE_CONFIRM_PHRASE}</span>{t('settings:toConfirm')}</Label>
               <Input
                 id="deleteConfirm"
                 value={confirmPhrase}
@@ -327,7 +288,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="deletePassword">Current password</Label>
+              <Label htmlFor="deletePassword">{t('settings:currentPassword')}</Label>
               <Input
                 id="deletePassword"
                 type="password"
@@ -348,9 +309,7 @@ export default function SettingsPage() {
               variant="outline"
               onClick={() => setDeleteOpen(false)}
               disabled={deleteMutation.isPending}
-            >
-              Cancel
-            </Button>
+            >{t('settings:cancel')}</Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
@@ -368,8 +327,7 @@ export default function SettingsPage() {
         className="h-11 w-full rounded-lg font-semibold"
         onClick={handleLogout}
       >
-        <LogOut className="mr-2 h-4 w-4" aria-hidden /> Log Out
-      </Button>
+        <LogOut className="mr-2 h-4 w-4" aria-hidden />{t('settings:logOut')}</Button>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { useMyAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
 import type { MyAttendanceSnapshot } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 function getTone(rate: number, missedCount: number, servicesInWindow: number) {
   if (servicesInWindow === 0) return { kind: 'neutral' as const, label: 'Window just started', tone: 'text-muted-foreground' };
@@ -36,17 +37,15 @@ function getTone(rate: number, missedCount: number, servicesInWindow: number) {
   };
 }
 
-export default function MyAttendancePage() {
+export default function MyAttendancePage() {  const { t } = useTranslation(['attendance', 'common']);
+
   const { data, isLoading, isError, error } = useMyAttendance({ weeks: 12 });
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">My Attendance</h1>
-        <p className="text-sm text-muted-foreground">
-          Your service-attendance picture over the last 12 weeks. Only you, your pastor,
-          and the church admin team can see this.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t('attendance:myAttendance')}</h1>
+        <p className="text-sm text-muted-foreground">{t('attendance:yourServiceAttendancePictureOverThe')}</p>
       </header>
 
       {isLoading ? (
@@ -56,7 +55,7 @@ export default function MyAttendancePage() {
             <div className="h-40 animate-pulse rounded-xl bg-muted/60" />
             <div className="h-40 animate-pulse rounded-xl bg-muted/60" />
           </div>
-          <span className="sr-only">Loading your attendance snapshot</span>
+          <span className="sr-only">{t('attendance:loadingYourAttendanceSnapshot')}</span>
         </div>
       ) : isError ? (
         <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
@@ -69,7 +68,8 @@ export default function MyAttendancePage() {
   );
 }
 
-function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
+function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {  const { t } = useTranslation(['attendance', 'common']);
+
   const tone = getTone(snapshot.rate, snapshot.missedCount, snapshot.servicesInWindow);
   const ratePct = Math.round(snapshot.rate * 100);
 
@@ -113,8 +113,7 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Punctuality breakdown
-            </CardTitle>
+              <Sparkles className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:punctualityBreakdown')}</CardTitle>
             <CardDescription>How your {snapshot.servicesInWindow} services split.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -159,17 +158,14 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Service history
-          </CardTitle>
-          <CardDescription>Every service in the window, oldest first.</CardDescription>
+            <Calendar className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:serviceHistory')}</CardTitle>
+          <CardDescription>{t('attendance:everyServiceInTheWindowOldest')}</CardDescription>
         </CardHeader>
         <CardContent>
           {snapshot.history.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No services in this window yet.
-            </p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('attendance:noServicesInThisWindowYet')}</p>
           ) : (
-            <ul className="divide-y rounded-lg border bg-card" aria-label="My service history">
+            <ul className="divide-y rounded-lg border bg-card" aria-label={t('attendance:myServiceHistory')}>
               {snapshot.history.map((h) => (
                 <li key={h.serviceId} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <span>
@@ -187,13 +183,14 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
   );
 }
 
-function PunctualityBars({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
+function PunctualityBars({ snapshot }: { snapshot: MyAttendanceSnapshot }) {  const { t } = useTranslation(['attendance', 'common']);
+
   const total = snapshot.servicesInWindow || 1;
   const buckets = [
-    { label: 'Present', count: snapshot.presentOnTimeCount, tone: 'bg-emerald-500' },
-    { label: 'Late', count: snapshot.lateCount, tone: 'bg-[#f8b537]' },
-    { label: 'Virtual', count: snapshot.virtualCount, tone: 'bg-[#5D3FD3]' },
-    { label: 'Missed', count: snapshot.missedCount, tone: 'bg-rose-500' },
+    { label: t('attendance:present'), count: snapshot.presentOnTimeCount, tone: 'bg-emerald-500' },
+    { label: t('attendance:late'), count: snapshot.lateCount, tone: 'bg-[#f8b537]' },
+    { label: t('attendance:virtual'), count: snapshot.virtualCount, tone: 'bg-[#5D3FD3]' },
+    { label: t('attendance:missed'), count: snapshot.missedCount, tone: 'bg-rose-500' },
   ];
   return (
     <ul className="space-y-2">

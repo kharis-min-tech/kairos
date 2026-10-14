@@ -10,6 +10,7 @@ import { BranchType } from '@kairos/types';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   branchName: z.string().min(1, 'Branch name is required'),
@@ -27,7 +28,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export default function NewBranchPage() {
+export default function NewBranchPage() {  const { t } = useTranslation(['branches', 'common']);
+
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
   const createBranch = useCreateBranch();
@@ -72,26 +74,26 @@ export default function NewBranchPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Create Branch</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Add a new church branch</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('branches:createBranch')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('branches:addANewChurchBranch')}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Branch Details</CardTitle>
-          <CardDescription>Fill in the details for the new branch</CardDescription>
+          <CardTitle>{t('branches:branchDetails')}</CardTitle>
+          <CardDescription>{t('branches:fillInTheDetailsForThe')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="branchName">Branch Name *</Label>
+              <Label htmlFor="branchName">{t('branches:branchName')}</Label>
               <Input id="branchName" {...register('branchName')} />
               {errors.branchName && <p className="text-sm text-destructive">{errors.branchName.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="regionId">Region *</Label>
+              <Label htmlFor="regionId">{t('branches:region')}</Label>
               <CustomSelect
                 id="regionId"
                 value={watch('regionId') ?? ''}
@@ -103,12 +105,12 @@ export default function NewBranchPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="branchType">Branch Type</Label>
+              <Label htmlFor="branchType">{t('branches:branchType')}</Label>
               <CustomSelect
                 id="branchType"
                 value={watch('branchType') ?? ''}
                 onValueChange={(v) => setValue('branchType', v as FormValues['branchType'])}
-                placeholder="Select type"
+                placeholder={t('branches:selectType')}
                 options={Object.values(BranchType).map((t) => ({ value: t, label: t }))}
               />
             </div>
@@ -132,18 +134,18 @@ export default function NewBranchPage() {
             />
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t('branches:phone')}</Label>
               <Input id="phone" type="tel" {...register('phone')} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('branches:email')}</Label>
                 <Input id="email" type="email" {...register('email')} />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Established Date</Label>
+                <Label>{t('branches:establishedDate')}</Label>
                 <Controller
                   name="establishedDate"
                   control={control}
@@ -164,9 +166,7 @@ export default function NewBranchPage() {
               <Button type="submit" disabled={isSubmitting || createBranch.isPending}>
                 {createBranch.isPending ? 'Creating...' : 'Create Branch'}
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>
-                Cancel
-              </Button>
+              <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>{t('branches:cancel')}</Button>
             </div>
           </form>
         </CardContent>

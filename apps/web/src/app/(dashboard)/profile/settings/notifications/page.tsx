@@ -14,6 +14,7 @@ import {
   useNotificationPreferences,
   useUpdateNotificationPreference,
 } from '@/hooks/use-notification-preferences';
+import { useTranslation } from 'react-i18next';
 
 type SelectValue = 'off' | 'immediate' | 'digest_daily';
 
@@ -33,7 +34,8 @@ const SELECT_OPTIONS = [
   { value: 'off', label: 'Off' },
 ];
 
-export default function NotificationsSettingsPage() {
+export default function NotificationsSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+
   const { data, isLoading, isError, error } = useNotificationPreferences();
   const updateMutation = useUpdateNotificationPreference();
 
@@ -46,29 +48,23 @@ export default function NotificationsSettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Choose which categories reach your inbox and how often.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings:notifications')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:chooseWhichCategoriesReachYourInbox')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Email preferences
-          </CardTitle>
+            <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:emailPreferences')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           {isLoading && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Loading preferences…
-            </div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('settings:loadingPreferences')}</div>
           )}
           {isError && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -92,8 +88,7 @@ export default function NotificationsSettingsPage() {
                     </p>
                     {isSecurity && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-                        <Lock className="h-2.5 w-2.5" /> Always on
-                      </span>
+                        <Lock className="h-2.5 w-2.5" />{t('settings:alwaysOn')}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">

@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
 const signupSchema = z.object({
   // Step 1
@@ -103,7 +104,8 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
   );
 }
 
-export default function SignupPage() {
+export default function SignupPage() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const signupMutation = useSignup();
   const [step, setStep] = useState(0);
@@ -168,7 +170,7 @@ export default function SignupPage() {
   return (
     <>
       {/* Heading — outside card */}
-      <KharisCardHeader heading="Create account" subtitle="Join your church community" />
+      <KharisCardHeader heading={t('auth:createAccount')} subtitle={t('auth:joinYourChurchCommunity')} />
 
       <Card className="auth-halo rounded-2xl border-0 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <CardHeader className="pb-4 pt-6">
@@ -190,14 +192,14 @@ export default function SignupPage() {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
+                  <Label htmlFor="firstName">{t('auth:firstName')}</Label>
                   <Input id="firstName" className="h-11" {...register('firstName')} />
                   {errors.firstName && (
                     <p className="text-xs text-destructive">{errors.firstName.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Label htmlFor="lastName">{t('auth:lastName')}</Label>
                   <Input id="lastName" className="h-11" {...register('lastName')} />
                   {errors.lastName && (
                     <p className="text-xs text-destructive">{errors.lastName.message}</p>
@@ -206,26 +208,26 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="middleName">Middle Name</Label>
+                <Label htmlFor="middleName">{t('auth:middleName')}</Label>
                 <Input id="middleName" className="h-11" {...register('middleName')} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" className="h-11" placeholder="you@example.co.uk" {...register('email')} />
+                <Label htmlFor="email">{t('auth:email')}</Label>
+                <Input id="email" type="email" className="h-11" placeholder={t('auth:youExampleCoUk')} {...register('email')} />
                 {errors.email && (
                   <p className="text-xs text-destructive">{errors.email.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone *</Label>
+                <Label htmlFor="phone">{t('auth:phone')}</Label>
                 <Input id="phone" type="tel" className="h-11" {...register('phone')} />
                 {errors.phone && <p className="text-xs text-rose-600">{errors.phone.message}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label>Date of Birth</Label>
+                <Label>{t('auth:dateOfBirth')}</Label>
                 <Controller
                   name="dateOfBirth"
                   control={control}
@@ -240,7 +242,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
+                <Label htmlFor="gender">{t('auth:gender')}</Label>
                 <Controller
                   name="gender"
                   control={control}
@@ -249,8 +251,8 @@ export default function SignupPage() {
                       id="gender"
                       value={field.value ?? ''}
                       onValueChange={field.onChange}
-                      placeholder="Select..."
-                      options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+                      placeholder={t('auth:select')}
+                      options={[{ value: 'Male', label: t('auth:male') }, { value: 'Female', label: t('auth:female') }]}
                     />
                   )}
                 />
@@ -294,7 +296,7 @@ export default function SignupPage() {
               />
 
               <div className="space-y-2">
-                <Label htmlFor="homeBranchId">Home Branch *</Label>
+                <Label htmlFor="homeBranchId">{t('auth:homeBranch')}</Label>
                 <Controller
                   name="homeBranchId"
                   control={control}
@@ -319,8 +321,8 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
-                <p className="text-xs text-muted-foreground">Optional. For example, if you also attend a branch near your university or workplace</p>
+                <Label htmlFor="secondaryBranchId">{t('auth:secondaryBranch')}</Label>
+                <p className="text-xs text-muted-foreground">{t('auth:optionalForExampleIfYouAlso')}</p>
                 <Controller
                   name="secondaryBranchId"
                   control={control}
@@ -329,7 +331,7 @@ export default function SignupPage() {
                       id="secondaryBranchId"
                       value={field.value ?? ''}
                       onValueChange={field.onChange}
-                      placeholder="None"
+                      placeholder={t('auth:none')}
                       options={branches.map((b) => ({ value: b.id, label: b.branchName }))}
                     />
                   )}
@@ -338,7 +340,7 @@ export default function SignupPage() {
 
               {secondaryBranchId && (
                 <div className="space-y-3 rounded-lg bg-muted/40 p-4">
-                  <p className="text-xs font-medium text-muted-foreground">Secondary Branch Address <span className="font-normal">(optional)</span></p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('auth:secondaryBranchAddress')}<span className="font-normal">(optional)</span></p>
                   <Controller
                     name="secondaryAddress"
                     control={control}
@@ -379,12 +381,12 @@ export default function SignupPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
+                <Label htmlFor="emergencyContactName">{t('auth:emergencyContactName')}</Label>
                 <Input id="emergencyContactName" className="h-11" {...register('emergencyContactName')} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="emergencyContactRelationship">Relationship to Member</Label>
+                <Label htmlFor="emergencyContactRelationship">{t('auth:relationshipToMember')}</Label>
                 <Controller
                   name="emergencyContactRelationship"
                   control={control}
@@ -393,7 +395,7 @@ export default function SignupPage() {
                       id="emergencyContactRelationship"
                       value={field.value ?? ''}
                       onValueChange={field.onChange}
-                      placeholder="Select relationship..."
+                      placeholder={t('auth:selectRelationship')}
                       options={['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other'].map((r) => ({ value: r, label: r }))}
                     />
                   )}
@@ -401,7 +403,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="emergencyContactPhone">Emergency Contact Phone</Label>
+                <Label htmlFor="emergencyContactPhone">{t('auth:emergencyContactPhone')}</Label>
                 <Input id="emergencyContactPhone" type="tel" className="h-11" {...register('emergencyContactPhone')} />
               </div>
             </>
@@ -411,7 +413,7 @@ export default function SignupPage() {
           {step === 2 && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">{t('auth:password')}</Label>
                 <Input id="password" type="password" className="h-11" {...register('password')} />
                 {errors.password && (
                   <p className="text-xs text-destructive">{errors.password.message}</p>
@@ -420,7 +422,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword">{t('auth:confirmPassword')}</Label>
                 <Input id="confirmPassword" type="password" className="h-11" {...register('confirmPassword')} />
                 {errors.confirmPassword && (
                   <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
@@ -449,9 +451,7 @@ export default function SignupPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-[#5D3FD3] hover:underline"
-                    >
-                      Privacy Notice
-                    </Link>
+                    >{t('auth:privacyNotice')}</Link>
                     .
                   </span>
                 </label>
@@ -467,14 +467,10 @@ export default function SignupPage() {
           {/* Navigation */}
           <div className="flex gap-3 pt-2">
             {step > 0 && (
-              <Button type="button" variant="outline" className="h-11 flex-1 rounded-lg" onClick={() => setStep((s) => s - 1)}>
-                Back
-              </Button>
+              <Button type="button" variant="outline" className="h-11 flex-1 rounded-lg" onClick={() => setStep((s) => s - 1)}>{t('auth:back')}</Button>
             )}
             {step < 2 ? (
-              <button type="button" className="flex h-11 flex-1 items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90" onClick={nextStep}>
-                Continue
-              </button>
+              <button type="button" className="flex h-11 flex-1 items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90" onClick={nextStep}>{t('auth:continue')}</button>
             ) : (
               <button type="submit" className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50" disabled={isSubmitting}>
                 {isSubmitting ? (
@@ -482,9 +478,7 @@ export default function SignupPage() {
                     <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Creating account...
-                  </>
+                    </svg>{t('auth:creatingAccount')}</>
                 ) : (
                   'Create Account'
                 )}
@@ -503,7 +497,7 @@ export default function SignupPage() {
                   <span className="w-full border-t border-muted-foreground/10" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-muted-foreground/50">or continue with</span>
+                  <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-muted-foreground/50">{t('auth:orContinueWith')}</span>
                 </div>
               </div>
 
@@ -519,15 +513,13 @@ export default function SignupPage() {
               <span className="w-full border-t border-muted-foreground/10" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
+              <span className="bg-card px-2 text-muted-foreground">{t('auth:or')}</span>
             </div>
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">
-              Sign in
-            </Link>
+            <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:signIn')}</Link>
           </p>
         </form>
       </CardContent>

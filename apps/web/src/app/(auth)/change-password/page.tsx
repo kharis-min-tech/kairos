@@ -10,6 +10,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { PasswordStrength } from '@/components/password-strength';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
 const changePasswordSchema = z
   .object({
@@ -30,7 +31,8 @@ const changePasswordSchema = z
 
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
-export default function ChangePasswordPage() {
+export default function ChangePasswordPage() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const mustChangePassword = useAuthStore((s) => s.mustChangePassword);
@@ -74,7 +76,7 @@ export default function ChangePasswordPage() {
     <>
       {/* Heading — outside card */}
       <KharisCardHeader
-        heading="Change your password"
+        heading={t('auth:changeYourPassword')}
         subtitle={<>Hi {user?.firstName ?? 'there'}, your account has a temporary password. Set a new one to continue.</>}
       />
 
@@ -90,21 +92,17 @@ export default function ChangePasswordPage() {
           )}
 
           <div className="rounded-lg bg-[#f8b537]/10 p-3">
-            <p className="text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
-              Enter the temporary password you received, then choose a new secure password.
-            </p>
+            <p className="text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('auth:enterTheTemporaryPasswordYouReceived')}</p>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="currentPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Temporary Password
-            </label>
+            <label htmlFor="currentPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:temporaryPassword')}</label>
             <div className="relative">
               <Input
                 id="currentPassword"
                 type={showCurrentPassword ? 'text' : 'password'}
                 className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
-                placeholder="Enter temporary password"
+                placeholder={t('auth:enterTemporaryPassword')}
                 {...register('currentPassword')}
               />
               <button
@@ -132,15 +130,13 @@ export default function ChangePasswordPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              New Password
-            </label>
+            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:newPassword')}</label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showNewPassword ? 'text' : 'password'}
                 className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
-                placeholder="Choose a strong password"
+                placeholder={t('auth:chooseAStrongPassword')}
                 {...register('newPassword')}
               />
               <button
@@ -174,14 +170,12 @@ export default function ChangePasswordPage() {
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Confirm New Password
-            </label>
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:confirmNewPassword')}</label>
             <Input
               id="confirmPassword"
               type="password"
               className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
-              placeholder="Re-enter new password"
+              placeholder={t('auth:reEnterNewPassword')}
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (

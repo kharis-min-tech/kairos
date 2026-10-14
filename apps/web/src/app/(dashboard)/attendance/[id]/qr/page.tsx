@@ -9,13 +9,15 @@ import { ChevronLeft } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Card, CardContent } from '@kairos/ui';
 import { useService, useQrToken } from '@/hooks/use-attendance';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Admin QR display — polls the token every 30s and re-renders. Delegates
  * capability gating to the API: a non-admin who hits this URL gets 403 back
  * and sees the error state. See docs/self-check-in.md for the token shape.
  */
-export default function AttendanceQrPage() {
+export default function AttendanceQrPage() {  const { t } = useTranslation(['attendance', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const { data: service, isError: serviceError, error: svcErrorObj } = useService(id);
   const token = useQrToken(id);
@@ -45,14 +47,11 @@ export default function AttendanceQrPage() {
         href={`/attendance/${id}`}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ChevronLeft className="h-4 w-4" /> Back to service
-      </Link>
+        <ChevronLeft className="h-4 w-4" />{t('attendance:backToService')}</Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Self check-in QR</h1>
-        <p className="text-sm text-muted-foreground">
-          Show this on the desk screen. It refreshes every 30 seconds.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t('attendance:selfCheckInQr')}</h1>
+        <p className="text-sm text-muted-foreground">{t('attendance:showThisOnTheDeskScreen')}</p>
       </div>
 
       {serviceError ? (
@@ -76,10 +75,7 @@ export default function AttendanceQrPage() {
             <div className="rounded-2xl bg-white p-6 shadow-sm">
               <canvas ref={canvasRef} width={320} height={320} />
             </div>
-            <p className="max-w-sm text-center text-sm text-muted-foreground">
-              Members: open Kairos → Check in → Scan QR. The previous code stays valid for a moment
-              after each refresh so nobody misses it.
-            </p>
+            <p className="max-w-sm text-center text-sm text-muted-foreground">{t('attendance:membersOpenKairosCheckInScan')}</p>
           </CardContent>
         </Card>
       )}

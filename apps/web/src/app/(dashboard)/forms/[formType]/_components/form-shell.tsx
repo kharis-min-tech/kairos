@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Button, Card, CardContent, buttonVariants, cn } from '@kairos/ui';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FormShellProps {
   title: string;
@@ -24,13 +25,14 @@ export function FormShell({
   successMessage,
   onSubmitAnother,
   children,
-}: FormShellProps) {
+}: FormShellProps) {  const { t } = useTranslation(['forms', 'common']);
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-2">
       <div className="flex items-center gap-3">
         <Link
           href="/forms"
-          aria-label="Back to forms"
+          aria-label={t('forms:backToForms')}
           className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -57,12 +59,8 @@ export function FormShell({
               <p className="mt-1 text-sm text-muted-foreground">{successMessage}</p>
             </div>
             <div className="flex gap-3">
-              <Button onClick={onSubmitAnother} className="bg-[#5D3FD3] hover:bg-[#451ebb]">
-                Submit another
-              </Button>
-              <Link href="/forms" className={cn(buttonVariants({ variant: 'outline' }))}>
-                Back to forms
-              </Link>
+              <Button onClick={onSubmitAnother} className="bg-[#5D3FD3] hover:bg-[#451ebb]">{t('forms:submitAnother')}</Button>
+              <Link href="/forms" className={cn(buttonVariants({ variant: 'outline' }))}>{t('forms:backToForms')}</Link>
             </div>
           </CardContent>
         </Card>

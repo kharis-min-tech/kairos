@@ -16,6 +16,7 @@ import { api } from '@/lib/api';
 import type { MemberListParams } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 function MembersListSkeleton() {
   return (
@@ -42,7 +43,8 @@ function MembersListSkeleton() {
   );
 }
 
-export default function MembersPage() {
+export default function MembersPage() {  const { t } = useTranslation(['members', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -139,7 +141,7 @@ export default function MembersPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Members</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('members:members')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Church member directory{pagination ? `, ${pagination.total} total` : ''}
           </p>
@@ -152,7 +154,7 @@ export default function MembersPage() {
           )}
           {(isAdmin || isPastor) && (
             <Link href="/members/import">
-              <Button variant="outline" size="sm">Import CSV</Button>
+              <Button variant="outline" size="sm">{t('members:importCsv')}</Button>
             </Link>
           )}
           {(isAdmin || isPastor) && (
@@ -162,7 +164,7 @@ export default function MembersPage() {
           )}
           {canSeeSafeguarding && (
             <Link href="/members/safeguarding">
-              <Button variant="outline" size="sm">Safeguarding review</Button>
+              <Button variant="outline" size="sm">{t('members:safeguardingReview')}</Button>
             </Link>
           )}
           {isAdmin && (
@@ -183,25 +185,23 @@ export default function MembersPage() {
       {/* Search + Filters */}
       <div className="flex flex-wrap gap-2">
         <Input
-          placeholder="Search by name or email..."
+          placeholder={t('members:searchByNameOrEmail')}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="max-w-sm"
         />
-        <Button onClick={handleSearch}>Search</Button>
+        <Button onClick={handleSearch}>{t('members:search')}</Button>
         {params.search && (
-          <Button variant="ghost" onClick={() => { setSearchInput(''); setParams((p) => ({ ...p, search: undefined, page: 1 })); }}>
-            Clear
-          </Button>
+          <Button variant="ghost" onClick={() => { setSearchInput(''); setParams((p) => ({ ...p, search: undefined, page: 1 })); }}>{t('members:clear')}</Button>
         )}
         <CustomSelect
           size="sm"
           value={params.fellowshipId ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, fellowshipId: v || undefined, page: 1 }))}
-          placeholder="All Fellowships"
+          placeholder={t('members:allFellowships')}
           options={[
-            { value: '', label: 'All Fellowships' },
+            { value: '', label: t('members:allFellowships') },
             ...(fellowshipsData?.data ?? []).map((f) => ({ value: f.id, label: f.fellowshipName })),
           ]}
         />
@@ -210,9 +210,9 @@ export default function MembersPage() {
             size="sm"
             value={params.branchId ?? ''}
             onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
-            placeholder="All Branches"
+            placeholder={t('members:allBranches')}
             options={[
-              { value: '', label: 'All Branches' },
+              { value: '', label: t('members:allBranches') },
               ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
             ]}
           />
@@ -221,23 +221,23 @@ export default function MembersPage() {
           size="sm"
           value={params.approvalStatus ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, approvalStatus: (v || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
-          placeholder="All Statuses"
+          placeholder={t('members:allStatuses')}
           options={[
-            { value: '', label: 'All Statuses' },
-            { value: 'approved', label: 'Approved' },
-            { value: 'pending', label: 'Pending' },
-            { value: 'rejected', label: 'Rejected' },
+            { value: '', label: t('members:allStatuses') },
+            { value: 'approved', label: t('members:approved') },
+            { value: 'pending', label: t('members:pending') },
+            { value: 'rejected', label: t('members:rejected') },
           ]}
         />
         <CustomSelect
           size="sm"
           value={params.memberType ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, memberType: (v || undefined) as MemberListParams['memberType'], page: 1 }))}
-          placeholder="Members + Attendees"
+          placeholder={t('members:membersAttendees')}
           options={[
-            { value: '', label: 'Members + Attendees' },
-            { value: 'member', label: 'Members only' },
-            { value: 'attendee', label: 'Attendees only' },
+            { value: '', label: t('members:membersAttendees') },
+            { value: 'member', label: t('members:membersOnly') },
+            { value: 'attendee', label: t('members:attendeesOnly') },
           ]}
         />
       </div>
@@ -245,7 +245,7 @@ export default function MembersPage() {
       {!members || members.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No members found.</p>
+            <p className="text-muted-foreground">{t('members:noMembersFound')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -298,23 +298,17 @@ export default function MembersPage() {
                                 we don't trust it for display. */}
                             {member.membershipClassCompletedAt ? (
                               <span
-                                title="Confirmed Member, has completed the 4-week membership class"
+                                title={t('members:confirmedMemberHasCompletedTheWeek')}
                                 className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
-                              >
-                                Member
-                              </span>
+                              >{t('members:member')}</span>
                             ) : member.memberType === 'attendee' ? (
                               <span
-                                title="Approved attendee, has not completed the 4-week membership class yet"
+                                title={t('members:approvedAttendeeHasNotCompletedThe')}
                                 className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
-                              >
-                                Attendee
-                              </span>
+                              >{t('members:attendee')}</span>
                             ) : null}
                             {member.systemRole === 'admin' && (
-                              <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">
-                                Admin
-                              </span>
+                              <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">{t('members:admin')}</span>
                             )}
                           </div>
                         </div>
@@ -328,7 +322,7 @@ export default function MembersPage() {
                                 const ok = await confirm({
                                   title: `Deactivate ${member.firstName} ${member.lastName}?`,
                                   description: 'They will be removed from the active directory. You can reactivate them later from their profile.',
-                                  confirmLabel: 'Deactivate',
+                                  confirmLabel: t('members:deactivate'),
                                   variant: 'destructive',
                                 });
                                 if (!ok) return;
@@ -337,9 +331,7 @@ export default function MembersPage() {
                                   onError: () => toast.error('Failed to deactivate member. Please try again.'),
                                 });
                               }}
-                            >
-                              Deactivate
-                            </Button>
+                            >{t('members:deactivate')}</Button>
                           </div>
                         )}
                       </CardContent>
@@ -358,9 +350,7 @@ export default function MembersPage() {
                 size="sm"
                 disabled={pagination.page <= 1}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) - 1 }))}
-              >
-                Previous
-              </Button>
+              >{t('members:previous')}</Button>
               <span className="text-sm text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
@@ -369,9 +359,7 @@ export default function MembersPage() {
                 size="sm"
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) + 1 }))}
-              >
-                Next
-              </Button>
+              >{t('members:next')}</Button>
             </div>
           )}
         </>

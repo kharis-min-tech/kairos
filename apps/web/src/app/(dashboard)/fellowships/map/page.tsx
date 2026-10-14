@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { useTranslation } from 'react-i18next';
 
 const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
   ssr: false,
@@ -15,9 +16,10 @@ const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
   ),
 });
 
-export default function FellowshipMapPage() {
+export default function FellowshipMapPage() {  const { t } = useTranslation(['fellowships', 'common']);
+
   return (
-    <Suspense fallback={<div className="flex h-[calc(100vh-4rem)] items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>}>
+    <Suspense fallback={<div className="flex h-[calc(100vh-4rem)] items-center justify-center"><p className="text-muted-foreground">{t('fellowships:loading')}</p></div>}>
       <FellowshipMap />
     </Suspense>
   );

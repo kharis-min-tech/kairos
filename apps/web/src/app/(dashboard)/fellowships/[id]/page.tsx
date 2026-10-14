@@ -32,6 +32,7 @@ import { formatDate, formatShortDate } from '@kairos/core';
 import { useConfirm } from '@/components/confirm-dialog';
 import { NbStageChip } from '@/components/nb-stage-chip';
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'details' | 'members' | 'meetings' | 'attendance' | 'followups' | 'join-requests';
 
@@ -60,7 +61,8 @@ function FellowshipDetailSkeleton() {
   );
 }
 
-export default function FellowshipDetailPage() {
+export default function FellowshipDetailPage() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const caps = useCapabilities();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -111,9 +113,7 @@ export default function FellowshipDetailPage() {
         <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Fellowships
-        </Link>
+          </svg>{t('fellowships:backToFellowships')}</Link>
         <div role="alert" className="rounded-lg bg-destructive/10 p-4">
           <p className="text-sm text-destructive">
             {error instanceof Error ? error.message : 'Fellowship not found.'}
@@ -127,14 +127,14 @@ export default function FellowshipDetailPage() {
     isAdminOrPastor || fellowship.leaderId === user?.id || fellowship.coLeaderId === user?.id;
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'details', label: 'Details' },
+    { key: 'details', label: t('fellowships:details') },
     ...(!isRestrictedView ? [
       { key: 'members' as const, label: `Members${members ? ` (${members.length})` : ''}` },
     ] : []),
-    ...(canManageFollowups ? [{ key: 'followups' as const, label: 'Followups' }] : []),
+    ...(canManageFollowups ? [{ key: 'followups' as const, label: t('fellowships:followups') }] : []),
     ...(!isRestrictedView ? [
       { key: 'meetings' as const, label: `Meetings${meetings ? ` (${meetings.length})` : ''}` },
-      { key: 'attendance' as const, label: 'Attendance' },
+      { key: 'attendance' as const, label: t('fellowships:attendance') },
     ] : []),
     ...(isAdminOrPastor ? [{ key: 'join-requests' as const, label: `Requests${joinRequests ? ` (${joinRequests.filter((r) => r.status === 'pending').length})` : ''}` }] : []),
   ];
@@ -148,9 +148,7 @@ export default function FellowshipDetailPage() {
           <Link href="/fellowships" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Fellowships
-          </Link>
+            </svg>{t('fellowships:backToFellowships')}</Link>
           <h1 className="text-2xl font-bold tracking-tight">{fellowship.fellowshipName}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {fellowship.fellowshipType} &middot; {fellowship.branchName}
@@ -159,7 +157,7 @@ export default function FellowshipDetailPage() {
         {isAdminOrPastor && (
           <div className="flex shrink-0 gap-2">
             <Link href={`/fellowships/${id}/edit`}>
-              <Button variant="outline" size="sm">Edit</Button>
+              <Button variant="outline" size="sm">{t('fellowships:edit')}</Button>
             </Link>
             <Button
               variant="destructive"
@@ -168,7 +166,7 @@ export default function FellowshipDetailPage() {
                 const ok = await confirm({
                   title: `Deactivate "${fellowship.fellowshipName}"?`,
                   description: 'The fellowship will be hidden from the directory. Members will lose access to its meetings and history.',
-                  confirmLabel: 'Deactivate',
+                  confirmLabel: t('fellowships:deactivate'),
                   variant: 'destructive',
                 });
                 if (!ok) return;
@@ -211,14 +209,12 @@ export default function FellowshipDetailPage() {
           </Button>
         )}
         {hasPendingRequest && (
-          <span className="shrink-0 self-center rounded-full bg-[#f8b537]/15 px-3 py-1.5 text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
-            Request Pending
-          </span>
+          <span className="shrink-0 self-center rounded-full bg-[#f8b537]/15 px-3 py-1.5 text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('fellowships:requestPending')}</span>
         )}
       </div>
 
       {/* Tabs */}
-      <div role="tablist" aria-label="Fellowship sections" className="flex flex-wrap gap-1 border-b border-border/40">
+      <div role="tablist" aria-label={t('fellowships:fellowshipSections')} className="flex flex-wrap gap-1 border-b border-border/40">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -244,43 +240,43 @@ export default function FellowshipDetailPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Fellowship Info</CardTitle>
+              <CardTitle>{t('fellowships:fellowshipInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Type</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fellowships:type')}</p>
                 <p>{fellowship.fellowshipType}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Branch</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fellowships:branch')}</p>
                 <p>{fellowship.branchName}</p>
               </div>
               {fellowship.description && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Description</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('fellowships:description')}</p>
                   <p>{fellowship.description}</p>
                 </div>
               )}
               {fellowship.meetingSchedule && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Meeting Schedule</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('fellowships:meetingSchedule')}</p>
                   <p>{fellowship.meetingSchedule}</p>
                 </div>
               )}
               {(fellowship as { leaderFirstName?: string | null; leaderLastName?: string | null }).leaderFirstName && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Leader</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('fellowships:leader')}</p>
                   <p>{(fellowship as { leaderFirstName?: string | null; leaderLastName?: string | null }).leaderFirstName} {(fellowship as { leaderFirstName?: string | null; leaderLastName?: string | null }).leaderLastName}</p>
                 </div>
               )}
               {(fellowship as { coLeaderFirstName?: string | null; coLeaderLastName?: string | null }).coLeaderFirstName && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Co-Leader</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('fellowships:coLeader')}</p>
                   <p>{(fellowship as { coLeaderFirstName?: string | null; coLeaderLastName?: string | null }).coLeaderFirstName} {(fellowship as { coLeaderFirstName?: string | null; coLeaderLastName?: string | null }).coLeaderLastName}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Status</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('fellowships:status')}</p>
                 <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                   fellowship.isActive
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
@@ -302,8 +298,8 @@ export default function FellowshipDetailPage() {
                 <svg className="mb-3 h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
-                <p className="font-medium">Members list is private</p>
-                <p className="mt-1 text-sm text-muted-foreground">Join this fellowship to view its members.</p>
+                <p className="font-medium">{t('fellowships:membersListIsPrivate')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('fellowships:joinThisFellowshipToViewIts')}</p>
               </CardContent>
             </Card>
           ) : (<>
@@ -316,26 +312,24 @@ export default function FellowshipDetailPage() {
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Member
-              </Button>
+                </svg>{t('fellowships:addMember')}</Button>
             </div>
           )}
 
           {showAddMember && (
             <Card>
               <CardContent className="space-y-3 py-4">
-                <p className="text-sm font-medium">Search members in this branch</p>
+                <p className="text-sm font-medium">{t('fellowships:searchMembersInThisBranch')}</p>
                 <input
                   type="text"
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
-                  placeholder="Type a name or email..."
+                  placeholder={t('fellowships:typeANameOrEmail')}
                   className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
                 />
 {(() => {
                   if (branchMembersLoading) {
-                    return <p className="text-sm text-muted-foreground">Loading members…</p>;
+                    return <p className="text-sm text-muted-foreground">{t('fellowships:loadingMembers')}</p>;
                   }
                   const currentMemberIds = new Set(members?.map((m) => m.memberId) ?? []);
                   const available = branchMembers.filter((m) => !currentMemberIds.has(m.id));
@@ -347,10 +341,10 @@ export default function FellowshipDetailPage() {
                       )
                     : available;
                   if (available.length === 0) {
-                    return <p className="text-sm text-muted-foreground">All branch members are already in this fellowship.</p>;
+                    return <p className="text-sm text-muted-foreground">{t('fellowships:allBranchMembersAreAlreadyIn')}</p>;
                   }
                   if (filtered.length === 0) {
-                    return <p className="text-sm text-muted-foreground">No matching members found.</p>;
+                    return <p className="text-sm text-muted-foreground">{t('fellowships:noMatchingMembersFound')}</p>;
                   }
                   return (
                     <div className="max-h-64 space-y-1 overflow-y-auto">
@@ -387,7 +381,7 @@ export default function FellowshipDetailPage() {
           {!members || members.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No members in this fellowship yet.</p>
+                <p className="text-muted-foreground">{t('fellowships:noMembersInThisFellowshipYet')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -426,7 +420,7 @@ export default function FellowshipDetailPage() {
                             const ok = await confirm({
                               title: `Remove ${member.memberFirstName} from this fellowship?`,
                               description: 'They will no longer appear in this fellowship’s roster. You can re-add them later.',
-                              confirmLabel: 'Remove',
+                              confirmLabel: t('fellowships:remove'),
                               variant: 'destructive',
                             });
                             if (!ok) return;
@@ -462,8 +456,8 @@ export default function FellowshipDetailPage() {
                 <svg className="mb-3 h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
-                <p className="font-medium">Meetings are private</p>
-                <p className="mt-1 text-sm text-muted-foreground">Join this fellowship to view meeting records.</p>
+                <p className="font-medium">{t('fellowships:meetingsArePrivate')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('fellowships:joinThisFellowshipToViewMeeting')}</p>
               </CardContent>
             </Card>
           ) : (<>
@@ -476,34 +470,32 @@ export default function FellowshipDetailPage() {
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Schedule Meeting
-              </button>
+                </svg>{t('fellowships:scheduleMeeting')}</button>
             </div>
           )}
 
           {showMeetingDialog && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">New Meeting</CardTitle>
+                <CardTitle className="text-base">{t('fellowships:newMeeting')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Date *</label>
+                    <label className="text-sm font-medium">{t('fellowships:date')}</label>
                     <DateSelect value={meetingForm.meetingDate} onChange={(v) => setMeetingForm((f) => ({ ...f, meetingDate: v }))} />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Title</label>
-                    <input type="text" value={meetingForm.meetingTitle} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTitle: e.target.value }))} placeholder="e.g. Weekly meeting" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <label className="text-sm font-medium">{t('fellowships:title')}</label>
+                    <input type="text" value={meetingForm.meetingTitle} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTitle: e.target.value }))} placeholder={t('fellowships:eGWeeklyMeeting')} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Topic</label>
-                    <input type="text" value={meetingForm.meetingTopic} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTopic: e.target.value }))} placeholder="Discussion topic..." className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <label className="text-sm font-medium">{t('fellowships:topic')}</label>
+                    <input type="text" value={meetingForm.meetingTopic} onChange={(e) => setMeetingForm((f) => ({ ...f, meetingTopic: e.target.value }))} placeholder={t('fellowships:discussionTopic')} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">Location</label>
-                    <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder="e.g. Southwark Community Centre" className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
+                    <label className="text-sm font-medium">{t('fellowships:location')}</label>
+                    <input type="text" value={meetingForm.location} onChange={(e) => setMeetingForm((f) => ({ ...f, location: e.target.value }))} placeholder={t('fellowships:eGSouthwarkCommunityCentre')} className="flex h-10 w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Duration (mins)</label>
@@ -519,7 +511,7 @@ export default function FellowshipDetailPage() {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setShowMeetingDialog(false)} className="rounded-lg border border-input/15 px-3 py-1.5 text-sm">Cancel</button>
+                  <button onClick={() => setShowMeetingDialog(false)} className="rounded-lg border border-input/15 px-3 py-1.5 text-sm">{t('fellowships:cancel')}</button>
                   <button
                     disabled={!meetingForm.meetingDate || createMeeting.isPending}
                     onClick={() => {
@@ -552,7 +544,7 @@ export default function FellowshipDetailPage() {
           {!meetings || meetings.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No meetings recorded yet.</p>
+                <p className="text-muted-foreground">{t('fellowships:noMeetingsRecordedYet')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -627,8 +619,8 @@ export default function FellowshipDetailPage() {
                 <svg className="mb-3 h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
-                <p className="font-medium">Attendance data is private</p>
-                <p className="mt-1 text-sm text-muted-foreground">Join this fellowship to view attendance records.</p>
+                <p className="font-medium">{t('fellowships:attendanceDataIsPrivate')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('fellowships:joinThisFellowshipToViewAttendance')}</p>
               </CardContent>
             </Card>
           ) : (<>{(() => {
@@ -637,7 +629,7 @@ export default function FellowshipDetailPage() {
               return (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
-                    <p className="text-muted-foreground">No attendance data yet.</p>
+                    <p className="text-muted-foreground">{t('fellowships:noAttendanceDataYet')}</p>
                   </CardContent>
                 </Card>
               );
@@ -660,19 +652,19 @@ export default function FellowshipDetailPage() {
                 <div className="grid gap-3 sm:grid-cols-3">
                   <Card>
                     <CardContent className="py-4">
-                      <p className="text-sm font-medium text-muted-foreground">Total Meetings</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('fellowships:totalMeetings')}</p>
                       <p className="mt-1 text-2xl font-bold text-[#5D3FD3] dark:text-[#a392ed]">{totalMeetings}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="py-4">
-                      <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('fellowships:avgAttendance')}</p>
                       <p className="mt-1 text-2xl font-bold text-emerald-600">{avgAttendance}%</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="py-4">
-                      <p className="text-sm font-medium text-muted-foreground">Last Meeting Present</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('fellowships:lastMeetingPresent')}</p>
                       <p className="mt-1 text-2xl font-bold text-[#a07720] dark:text-[#f8b537]">{latestPresent}</p>
                     </CardContent>
                   </Card>
@@ -681,7 +673,7 @@ export default function FellowshipDetailPage() {
                 {/* Attendance Trend Chart */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Attendance Trend</CardTitle>
+                    <CardTitle className="text-base">{t('fellowships:attendanceTrend')}</CardTitle>
                     <CardDescription>Attendance rate (%) per meeting</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -702,7 +694,7 @@ export default function FellowshipDetailPage() {
                 {/* Per-Meeting Breakdown */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">Meeting Breakdown</CardTitle>
+                    <CardTitle className="text-base">{t('fellowships:meetingBreakdown')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {summary.slice().reverse().map((s) => {
@@ -758,9 +750,7 @@ export default function FellowshipDetailPage() {
                   }}
                   disabled={reviewJoinRequest.isPending}
                   className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                >
-                  Approve selected
-                </button>
+                >{t('fellowships:approveSelected')}</button>
                 <button
                   onClick={() => {
                     const ids = Array.from(selectedRequestIds);
@@ -777,9 +767,7 @@ export default function FellowshipDetailPage() {
                   }}
                   disabled={reviewJoinRequest.isPending}
                   className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
-                >
-                  Reject selected
-                </button>
+                >{t('fellowships:rejectSelected')}</button>
               </div>
             </div>
           )}
@@ -787,7 +775,7 @@ export default function FellowshipDetailPage() {
           {!joinRequests || joinRequests.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground">No join requests.</p>
+                <p className="text-muted-foreground">{t('fellowships:noJoinRequests')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -839,9 +827,7 @@ export default function FellowshipDetailPage() {
                             )}
                             disabled={reviewJoinRequest.isPending}
                             className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-                          >
-                            Approve
-                          </button>
+                          >{t('fellowships:approve')}</button>
                           <button
                             onClick={() => reviewJoinRequest.mutate(
                               { fellowshipId: id, requestId: req.id, data: { status: 'rejected' } },
@@ -855,9 +841,7 @@ export default function FellowshipDetailPage() {
                             )}
                             disabled={reviewJoinRequest.isPending}
                             className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
+                          >{t('fellowships:reject')}</button>
                         </div>
                       ) : (
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${
@@ -898,12 +882,13 @@ function AttendanceForm({
   setAttendanceRecords: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   recordAttendance: ReturnType<typeof useRecordAttendance>;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const statuses = ['Present', 'Absent', 'Excused', 'Late'] as const;
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">Mark attendance for each member</p>
+      <p className="text-sm font-medium">{t('fellowships:markAttendanceForEachMember')}</p>
       <div className="max-h-64 space-y-2 overflow-y-auto">
         {members.map((m) => (
           <div key={m.memberId} className="flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
@@ -917,10 +902,10 @@ function AttendanceForm({
           </div>
         ))}
       </div>
-      {members.length === 0 && <p className="text-sm text-muted-foreground">Add members to the fellowship first.</p>}
+      {members.length === 0 && <p className="text-sm text-muted-foreground">{t('fellowships:addMembersToTheFellowshipFirst')}</p>}
       {members.length > 0 && (
         <div className="flex justify-end gap-2">
-          <button onClick={onDone} className="rounded-lg border border-input/15 px-3 py-1.5 text-sm">Cancel</button>
+          <button onClick={onDone} className="rounded-lg border border-input/15 px-3 py-1.5 text-sm">{t('fellowships:cancel')}</button>
           <button
             disabled={recordAttendance.isPending}
             onClick={() => {

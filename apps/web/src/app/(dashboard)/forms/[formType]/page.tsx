@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@kairos/ui';
 import { DeclarativeForm } from './_components/declarative-form';
 import { FORM_DEFINITIONS, isFormType } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Every form renders from its definition.
@@ -23,7 +24,8 @@ export default function FormFillPage({
   params,
 }: {
   params: Promise<{ formType: string }>;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const { formType } = use(params);
 
   const definition = isFormType(formType) ? FORM_DEFINITIONS[formType] : undefined;
@@ -31,12 +33,12 @@ export default function FormFillPage({
   if (!definition) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-2xl font-bold text-foreground">Form not found</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('forms:formNotFound')}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           “{formType}” isn’t a form we recognise.
         </p>
         <Link href="/forms" className="mt-6 inline-block">
-          <Button className="bg-[#5D3FD3] hover:bg-[#451ebb]">Back to forms</Button>
+          <Button className="bg-[#5D3FD3] hover:bg-[#451ebb]">{t('forms:backToForms')}</Button>
         </Link>
       </div>
     );

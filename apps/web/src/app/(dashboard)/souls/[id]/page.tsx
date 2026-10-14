@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
 import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate, formatShortDateTime } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 interface FollowUpRecord {
   id: string;
@@ -64,7 +65,8 @@ function todayIso(): string {
   return `${today.getFullYear()}-${month}-${day}`;
 }
 
-export default function SoulDetailPage() {
+export default function SoulDetailPage() {  const { t } = useTranslation(['souls', 'common']);
+
   const params = useParams();
   const router = useRouter();
   const api = useApi();
@@ -122,7 +124,7 @@ export default function SoulDetailPage() {
     if (!api || !currentSoul) return;
     if (newStatus === 'Converted') {
       toast({
-        title: 'Use the conversion action',
+        title: t('souls:useTheConversionAction'),
         description: 'Converted souls need to be converted through the member creation flow.',
         variant: 'destructive',
       });
@@ -133,14 +135,14 @@ export default function SoulDetailPage() {
     try {
       await updateSoulStatus(api, currentSoul.id, newStatus);
       toast({
-        title: 'Status updated',
+        title: t('souls:statusUpdated'),
         description: `Soul status changed to ${newStatus}`,
       });
       // Refresh soul data
       await fetchSoul(api, currentSoul.id);
     } catch (error: unknown) {
       toast({
-        title: 'Failed to update status',
+        title: t('souls:failedToUpdateStatus'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -170,7 +172,7 @@ export default function SoulDetailPage() {
       await api.souls.logFollowUp(currentSoul.id, data);
 
       toast({
-        title: 'Follow-up logged',
+        title: t('souls:followUpLogged'),
         description: 'Follow-up has been recorded successfully',
       });
 
@@ -192,7 +194,7 @@ export default function SoulDetailPage() {
       await fetchFollowUps();
     } catch (error: unknown) {
       toast({
-        title: 'Failed to log follow-up',
+        title: t('souls:failedToLogFollowUp'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -207,7 +209,7 @@ export default function SoulDetailPage() {
     const ok = await confirm({
       title: `Convert ${currentSoul.firstName} ${currentSoul.lastName} to an attendee?`,
       description: 'A profile is created and linked to this soul record. They start as an attendee. Once they complete the 4-week membership class, you can mark them as a confirmed Member from their profile.',
-      confirmLabel: 'Convert',
+      confirmLabel: t('souls:convert'),
     });
     if (!ok) return;
 
@@ -216,7 +218,7 @@ export default function SoulDetailPage() {
       const response = await api.souls.convert(currentSoul.id);
 
       toast({
-        title: 'Soul converted',
+        title: t('souls:soulConverted'),
         description: `${currentSoul.firstName} ${currentSoul.lastName} now has a profile as an attendee. Mark them as a confirmed Member once they complete the 4-week class.`,
       });
 
@@ -229,7 +231,7 @@ export default function SoulDetailPage() {
       }
     } catch (error: unknown) {
       toast({
-        title: 'Failed to convert soul',
+        title: t('souls:failedToConvertSoul'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -269,7 +271,7 @@ export default function SoulDetailPage() {
           <h1 className="text-3xl font-bold">
             {currentSoul.firstName} {currentSoul.lastName}
           </h1>
-          <p className="text-muted-foreground">Soul Details</p>
+          <p className="text-muted-foreground">{t('souls:soulDetails')}</p>
         </div>
         <Badge variant={currentSoul.status === 'Converted' ? 'default' : 'secondary'}>
           {currentSoul.status}
@@ -279,7 +281,7 @@ export default function SoulDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Contact Information</CardTitle>
+            <CardTitle>{t('souls:contactInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
@@ -328,7 +330,7 @@ export default function SoulDetailPage() {
             {!currentSoul.lastFollowUpDate && currentSoul.status !== 'Converted' && (
               <div className="flex items-center gap-2 text-destructive">
                 <AlertCircle className="h-4 w-4" />
-                <span className="text-sm">No follow-up logged yet</span>
+                <span className="text-sm">{t('souls:noFollowUpLoggedYet')}</span>
               </div>
             )}
           </CardContent>
@@ -336,23 +338,23 @@ export default function SoulDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Assignment & Status</CardTitle>
+            <CardTitle>{t('souls:assignmentStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Assigned Worker</Label>
+              <Label>{t('souls:assignedWorker')}</Label>
               <p className="text-sm mt-1">
                 {currentSoul.assignedMemberName || 'Not assigned'}
               </p>
             </div>
             <div>
-              <Label>Outreach Program</Label>
+              <Label>{t('souls:outreachProgram')}</Label>
               <p className="text-sm mt-1">
                 {currentSoul.outreachName || 'Ad-hoc Evangelism'}
               </p>
             </div>
             <div>
-              <Label htmlFor="status">Stage / Outcome</Label>
+              <Label htmlFor="status">{t('souls:stageOutcome')}</Label>
               <CustomSelect
                 id="status"
                 value={currentSoul.status}
@@ -360,9 +362,7 @@ export default function SoulDetailPage() {
                 disabled={loading || currentSoul.status === 'Converted'}
                 options={STATUS_OPTIONS}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Use outcomes like Interested, Not Interested, or Lost Contact after a follow-up. Conversion is handled by the member conversion action.
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('souls:useOutcomesLikeInterestedNotInterested')}</p>
             </div>
           </CardContent>
         </Card>
@@ -371,7 +371,7 @@ export default function SoulDetailPage() {
       {currentSoul.notes && (
         <Card>
           <CardHeader>
-            <CardTitle>Notes</CardTitle>
+            <CardTitle>{t('souls:notes')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm whitespace-pre-wrap">{currentSoul.notes}</p>
@@ -382,7 +382,7 @@ export default function SoulDetailPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Follow-up History</CardTitle>
+            <CardTitle>{t('souls:followUpHistory')}</CardTitle>
             <Button
               size="sm"
               onClick={() => setShowFollowUpForm(!showFollowUpForm)}
@@ -397,12 +397,12 @@ export default function SoulDetailPage() {
             <form onSubmit={handleLogFollowUp} className="space-y-4 p-4 bg-muted rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contactMethod">Contact Method *</Label>
+                  <Label htmlFor="contactMethod">{t('souls:contactMethod')}</Label>
                   <CustomSelect
                     id="contactMethod"
                     value={followUpForm.contactMethod}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, contactMethod: v }))}
-                    placeholder="Select method"
+                    placeholder={t('souls:selectMethod')}
                     options={CONTACT_METHODS.map((m) => ({ value: m, label: m }))}
                   />
                   {followUpForm.contactMethod === 'Other' && (
@@ -413,7 +413,7 @@ export default function SoulDetailPage() {
                       onChange={(e) =>
                         setFollowUpForm((prev) => ({ ...prev, contactMethodOther: e.target.value }))
                       }
-                      placeholder="Specify contact method..."
+                      placeholder={t('souls:specifyContactMethod')}
                       required
                       className="mt-2"
                     />
@@ -421,12 +421,12 @@ export default function SoulDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactStatus">Contact Status *</Label>
+                  <Label htmlFor="contactStatus">{t('souls:contactStatus')}</Label>
                   <CustomSelect
                     id="contactStatus"
                     value={followUpForm.contactStatus}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, contactStatus: v }))}
-                    placeholder="Select status"
+                    placeholder={t('souls:selectStatus')}
                     options={CONTACT_STATUSES.map((s) => ({ value: s, label: s }))}
                   />
                 </div>
@@ -437,7 +437,7 @@ export default function SoulDetailPage() {
                     id="urgencyLevel"
                     value={followUpForm.urgencyLevel}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, urgencyLevel: v }))}
-                    placeholder="Select urgency (optional)"
+                    placeholder={t('souls:selectUrgencyOptional')}
                     options={URGENCY_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
                   />
                   <p className="text-xs text-muted-foreground">
@@ -454,9 +454,7 @@ export default function SoulDetailPage() {
                     placeholder={`Keep current status (${currentSoul.status})`}
                     options={STATUS_OPTIONS}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Optionally update the soul's stage or outcome based on this follow-up interaction
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('souls:optionallyUpdateTheSoulSStage')}</p>
                 </div>
               </div>
 
@@ -476,20 +474,20 @@ export default function SoulDetailPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t('souls:notes')}</Label>
                 <Textarea
                   id="notes"
                   value={followUpForm.notes}
                   onChange={(e) =>
                     setFollowUpForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
-                  placeholder="What was discussed..."
+                  placeholder={t('souls:whatWasDiscussed')}
                   rows={3}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nextFollowUpDate">Next Follow-up Date</Label>
+                <Label htmlFor="nextFollowUpDate">{t('souls:nextFollowUpDate')}</Label>
                 <DateSelect
                   id="nextFollowUpDate"
                   value={followUpForm.nextFollowUpDate}
@@ -508,32 +506,32 @@ export default function SoulDetailPage() {
 
           <div className="space-y-3">
             {followUps.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No follow-ups logged yet</p>
+              <p className="text-sm text-muted-foreground">{t('souls:noFollowUpsLoggedYet')}</p>
             ) : (
               followUps.map((followUp) => {
                 // Manual urgency level takes priority over automatic RAG
-                let ragStatus = { label: 'Monitor', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
+                let ragStatus = { label: t('souls:monitor'), bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                 
                 if (followUp.urgencyLevel) {
                   // Use manual urgency level set by worker
                   if (followUp.urgencyLevel === 'RED') {
-                    ragStatus = { label: 'Critical (Manual)', bgColor: 'bg-rose-500/10', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500' };
+                    ragStatus = { label: t('souls:criticalManual'), bgColor: 'bg-rose-500/10', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500' };
                   } else if (followUp.urgencyLevel === 'AMBER') {
-                    ragStatus = { label: 'Monitor (Manual)', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
+                    ragStatus = { label: t('souls:monitorManual'), bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                   } else if (followUp.urgencyLevel === 'GREEN') {
-                    ragStatus = { label: 'On Track (Manual)', bgColor: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-l-emerald-500' };
+                    ragStatus = { label: t('souls:onTrackManual'), bgColor: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-l-emerald-500' };
                   }
                 } else {
                   // Fall back to automatic RAG based on contact status
                   const getFollowUpRAG = (contactStatus: string) => {
                     if (contactStatus === 'Successful') {
-                      return { label: 'On Track', bgColor: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-l-emerald-500' };
+                      return { label: t('souls:onTrack'), bgColor: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-l-emerald-500' };
                     } else if (contactStatus === 'No Answer' || contactStatus === 'Busy') {
-                      return { label: 'Monitor', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
+                      return { label: t('souls:monitor'), bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                     } else if (contactStatus === 'Wrong Number' || contactStatus === 'Declined') {
-                      return { label: 'Critical', bgColor: 'bg-rose-500/10', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500' };
+                      return { label: t('souls:critical'), bgColor: 'bg-rose-500/10', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500' };
                     }
-                    return { label: 'Monitor', bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
+                    return { label: t('souls:monitor'), bgColor: 'bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]' };
                   };
                   ragStatus = getFollowUpRAG(followUp.contactStatus);
                 }
@@ -579,9 +577,7 @@ export default function SoulDetailPage() {
 
       {currentSoul.status !== 'Converted' && (
         <div className="flex justify-end">
-          <Button onClick={handleConvert} disabled={loading} variant="default">
-            Create profile
-          </Button>
+          <Button onClick={handleConvert} disabled={loading} variant="default">{t('souls:createProfile')}</Button>
         </div>
       )}
     </div>

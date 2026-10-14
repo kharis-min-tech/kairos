@@ -11,8 +11,10 @@ import { useBranches } from '@/hooks/use-branches';
 import { DateSelect } from '@/components/date-select';
 import { AddressAutofillGroup, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { CreateMemberRequest } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
-export default function AddMemberPage() {
+export default function AddMemberPage() {  const { t } = useTranslation(['members', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -59,24 +61,20 @@ export default function AddMemberPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="mt-4 text-2xl font-bold">Member Created!</h1>
-          <p className="mt-0.5 text-sm text-emerald-100">The new member account has been set up</p>
+          <h1 className="mt-4 text-2xl font-bold">{t('members:memberCreated')}</h1>
+          <p className="mt-0.5 text-sm text-emerald-100">{t('members:theNewMemberAccountHasBeen')}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Temporary Password</CardTitle>
+            <CardTitle>{t('members:temporaryPassword')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Share this temporary password with the new member. They will be required to change it on first login.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('members:shareThisTemporaryPasswordWithThe')}</p>
             <div className="rounded-lg bg-muted p-4">
               <p className="text-center font-mono text-lg font-bold text-foreground">{generatedPassword}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              This password will not be shown again. Make sure to save or share it now.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('members:thisPasswordWillNotBeShown')}</p>
           </CardContent>
         </Card>
 
@@ -84,9 +82,7 @@ export default function AddMemberPage() {
           <Button
             className="rounded-lg font-semibold"
             onClick={() => router.push('/members')}
-          >
-            Back to Members
-          </Button>
+          >{t('members:backToMembers')}</Button>
           <Button
             variant="outline"
             className="rounded-lg"
@@ -94,9 +90,7 @@ export default function AddMemberPage() {
               setGeneratedPassword(null);
               createMember.reset();
             }}
-          >
-            Add Another Member
-          </Button>
+          >{t('members:addAnotherMember')}</Button>
         </div>
       </div>
     );
@@ -110,11 +104,9 @@ export default function AddMemberPage() {
           <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Members
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Add New Member</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Create a new member account for your church</p>
+            </svg>{t('members:backToMembers')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('members:addNewMember')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('members:createANewMemberAccountFor')}</p>
         </div>
       </div>
 
@@ -132,12 +124,12 @@ export default function AddMemberPage() {
         {/* Section 1: Personal Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>{t('members:personalInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">{t('members:firstName')}</Label>
                 <Input
                   id="firstName"
                   className="mt-1"
@@ -146,7 +138,7 @@ export default function AddMemberPage() {
                 {errors.firstName && <p className="mt-1 text-xs text-destructive">{errors.firstName.message}</p>}
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">{t('members:lastName')}</Label>
                 <Input
                   id="lastName"
                   className="mt-1"
@@ -156,12 +148,12 @@ export default function AddMemberPage() {
               </div>
             </div>
             <div>
-              <Label htmlFor="middleName">Middle Name</Label>
+              <Label htmlFor="middleName">{t('members:middleName')}</Label>
               <Input id="middleName" className="mt-1" {...register('middleName')} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="email">{t('members:emailAddress')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -171,25 +163,25 @@ export default function AddMemberPage() {
                 {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
               </div>
               <div>
-                <Label htmlFor="phone">Phone Number *</Label>
+                <Label htmlFor="phone">{t('members:phoneNumber')}</Label>
                 <Input id="phone" type="tel" className="mt-1" {...register('phone', { required: 'Phone number is required' })} />
                 {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="gender">Gender *</Label>
+                <Label htmlFor="gender">{t('members:gender')}</Label>
                 <CustomSelect
                   id="gender"
                   value={watch('gender') ?? ''}
                   onValueChange={(v) => setValue('gender', v as 'Male' | 'Female')}
-                  placeholder="Select gender"
-                  options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+                  placeholder={t('members:selectGender')}
+                  options={[{ value: 'Male', label: t('members:male') }, { value: 'Female', label: t('members:female') }]}
                 />
                 {errors.gender && <p className="mt-1 text-xs text-destructive">{errors.gender.message}</p>}
               </div>
               <div>
-                <Label>Date of Birth</Label>
+                <Label>{t('members:dateOfBirth')}</Label>
                 <DateSelect
                   value={dobValue}
                   onChange={(iso) => setValue('dateOfBirth', iso)}
@@ -203,7 +195,7 @@ export default function AddMemberPage() {
         {/* Section 2: Address */}
         <Card>
           <CardHeader>
-            <CardTitle>Address</CardTitle>
+            <CardTitle>{t('members:address')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <AddressAutofillGroup
@@ -226,26 +218,26 @@ export default function AddMemberPage() {
         {/* Section 3: Emergency Contact */}
         <Card>
           <CardHeader>
-            <CardTitle>Emergency Contact</CardTitle>
+            <CardTitle>{t('members:emergencyContact')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="emergencyContactName">Contact Name</Label>
+                <Label htmlFor="emergencyContactName">{t('members:contactName')}</Label>
                 <Input id="emergencyContactName" className="mt-1" {...register('emergencyContactName')} />
               </div>
               <div>
-                <Label htmlFor="emergencyContactRelationship">Relationship</Label>
+                <Label htmlFor="emergencyContactRelationship">{t('members:relationship')}</Label>
                 <CustomSelect
                   id="emergencyContactRelationship"
                   value={watch('emergencyContactRelationship') ?? ''}
                   onValueChange={(v) => setValue('emergencyContactRelationship', v)}
-                  placeholder="Select relationship..."
+                  placeholder={t('members:selectRelationship')}
                   options={['Spouse','Partner','Parent','Child','Sibling','Grandparent','Guardian','Friend','Other'].map((r) => ({ value: r, label: r }))}
                 />
               </div>
               <div>
-                <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
+                <Label htmlFor="emergencyContactPhone">{t('members:contactPhone')}</Label>
                 <Input id="emergencyContactPhone" type="tel" className="mt-1" {...register('emergencyContactPhone')} />
               </div>
             </div>
@@ -255,29 +247,29 @@ export default function AddMemberPage() {
         {/* Section 4: Church Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Church Information</CardTitle>
+            <CardTitle>{t('members:churchInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="homeBranchId">Home Branch *</Label>
+                <Label htmlFor="homeBranchId">{t('members:homeBranch')}</Label>
                 <CustomSelect
                   id="homeBranchId"
                   value={watch('homeBranchId') ?? ''}
                   onValueChange={(v) => setValue('homeBranchId', v)}
-                  placeholder="Select a branch"
+                  placeholder={t('members:selectABranch')}
                   options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
                 />
                 {errors.homeBranchId && <p className="mt-1 text-xs text-destructive">{errors.homeBranchId.message}</p>}
               </div>
               <div>
-                <Label htmlFor="systemRole">System Role</Label>
+                <Label htmlFor="systemRole">{t('members:systemRole')}</Label>
                 {isAdmin ? (
                   <CustomSelect
                     id="systemRole"
                     value={watch('systemRole') ?? 'member'}
                     onValueChange={(v) => setValue('systemRole', v as 'member' | 'admin')}
-                    options={[{ value: 'member', label: 'Member' }, { value: 'admin', label: 'Admin' }]}
+                    options={[{ value: 'member', label: t('members:member') }, { value: 'admin', label: t('members:admin') }]}
                   />
                 ) : (
                   <Input id="systemRole" value="Member" disabled className="mt-1 cursor-not-allowed" />
@@ -289,20 +281,19 @@ export default function AddMemberPage() {
             </div>
             {/* Secondary branch */}
             <div>
-              <Label htmlFor="secondaryBranchId">Secondary Branch</Label>
-              <p className="mb-1 text-xs text-muted-foreground">Optional. For example, a branch near their university or workplace</p>
+              <Label htmlFor="secondaryBranchId">{t('members:secondaryBranch')}</Label>
+              <p className="mb-1 text-xs text-muted-foreground">{t('members:optionalForExampleABranchNear')}</p>
               <CustomSelect
                 id="secondaryBranchId"
                 value={watch('secondaryBranchId') ?? ''}
                 onValueChange={(v) => setValue('secondaryBranchId', v)}
-                placeholder="None"
+                placeholder={t('members:none')}
                 options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
               />
             </div>
             {secondaryBranchId && (
               <div className="rounded-lg border border-dashed border-input/15 bg-muted/30 p-4">
-                <p className="mb-3 text-xs font-medium text-muted-foreground">
-                  Secondary Branch Address <span className="font-normal">(optional)</span>
+                <p className="mb-3 text-xs font-medium text-muted-foreground">{t('members:secondaryBranchAddress')}<span className="font-normal">(optional)</span>
                 </p>
                 <AddressAutofillGroup
                   accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
@@ -334,16 +325,12 @@ export default function AddMemberPage() {
                 <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Creating...
-              </span>
+                </svg>{t('members:creating')}</span>
             ) : (
               'Create Member'
             )}
           </Button>
-          <Button type="button" variant="outline" className="rounded-lg" onClick={() => router.push('/members')}>
-            Cancel
-          </Button>
+          <Button type="button" variant="outline" className="rounded-lg" onClick={() => router.push('/members')}>{t('members:cancel')}</Button>
         </div>
       </form>
     </div>

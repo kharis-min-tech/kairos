@@ -9,6 +9,7 @@ import {
   ConsentType,
 } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
+import { useTranslation } from 'react-i18next';
 
 function docHrefFor(consentType: ConsentType): string | null {
   if (consentType === ConsentType.Terms) return '/legal/terms';
@@ -18,7 +19,8 @@ function docHrefFor(consentType: ConsentType): string | null {
   return null;
 }
 
-export default function LegalSettingsPage() {
+export default function LegalSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+
   const { data, isLoading, isError, error } = useMyConsentStatuses();
   const record = useRecordConsent();
 
@@ -27,8 +29,7 @@ export default function LegalSettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
@@ -42,14 +43,11 @@ export default function LegalSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Consent records
-          </CardTitle>
+            <FileText className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:consentRecords')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           {isLoading && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Loading…
-            </div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('settings:loading')}</div>
           )}
           {isError && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -81,9 +79,7 @@ export default function LegalSettingsPage() {
                       {CONSENT_TYPE_LABEL[status.consentType]}
                     </p>
                     {status.required && (
-                      <span className="rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-                        Required
-                      </span>
+                      <span className="rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('settings:required')}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
@@ -95,8 +91,7 @@ export default function LegalSettingsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#5D3FD3] hover:underline"
-                    >
-                      Read the current version <ExternalLink className="h-3 w-3" aria-hidden />
+                    >{t('settings:readTheCurrentVersion')}<ExternalLink className="h-3 w-3" aria-hidden />
                     </Link>
                   )}
                   <p className={`mt-1 inline-flex items-center gap-1 text-xs ${tone}`}>

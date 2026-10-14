@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { Button, Input } from '@kairos/ui';
 import { STAGES } from './stage-config';
 import type { NewBelieverStageValue } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 export type EnrollmentSortOption = 'date-added' | 'name' | 'last-activity';
 
@@ -43,31 +44,28 @@ export function PipelineToolbar({
   hasSelection = false,
   onSelectAllVisible,
   onDeselectAll,
-}: PipelineToolbarProps) {
+}: PipelineToolbarProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex gap-4 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by member or teacher name..."
+            placeholder={t('newBelievers:searchByMemberOrTeacherName')}
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
-            aria-label="Search enrollments"
+            aria-label={t('newBelievers:searchEnrollments')}
           />
         </div>
         {canBulkSelect && totalCount > 0 && (
           <div className="flex gap-2">
             {onSelectAllVisible && (
-              <Button variant="outline" size="sm" onClick={onSelectAllVisible}>
-                Select All
-              </Button>
+              <Button variant="outline" size="sm" onClick={onSelectAllVisible}>{t('newBelievers:selectAll')}</Button>
             )}
             {hasSelection && onDeselectAll && (
-              <Button variant="outline" size="sm" onClick={onDeselectAll}>
-                Deselect All
-              </Button>
+              <Button variant="outline" size="sm" onClick={onDeselectAll}>{t('newBelievers:deselectAll')}</Button>
             )}
           </div>
         )}
@@ -84,9 +82,7 @@ export function PipelineToolbar({
                 ? 'bg-white text-foreground shadow-sm dark:bg-[#5D3FD3] dark:text-white'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
-          >
-            All
-            <span className={`${filterStage === '' ? 'opacity-60' : 'opacity-50'}`}>
+          >{t('newBelievers:all')}<span className={`${filterStage === '' ? 'opacity-60' : 'opacity-50'}`}>
               ({totalCount})
             </span>
           </button>
@@ -113,8 +109,8 @@ export function PipelineToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sort</span>
-          <div role="tablist" aria-label="Sort enrollments by" className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('newBelievers:sort')}</span>
+          <div role="tablist" aria-label={t('newBelievers:sortEnrollmentsBy')} className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
             {SORT_OPTIONS.map(({ value, label }) => {
               const isActive = sortBy === value;
               return (

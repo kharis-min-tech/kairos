@@ -36,6 +36,7 @@ import { MyRotaTab } from './_components/my-rota-tab';
 import { DepartmentAttendanceTab } from './_components/attendance-tab';
 import { useConfirm } from '@/components/confirm-dialog';
 import { NbStageChip } from '@/components/nb-stage-chip';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'overview' | 'my-rota' | 'members' | 'attendance' | 'followups' | 'uniform' | 'rota' | 'recruitment';
 
@@ -80,7 +81,8 @@ function DepartmentDetailSkeleton() {
   );
 }
 
-function RestrictedNotice({ message }: { message: string }) {
+function RestrictedNotice({ message }: { message: string }) {  const { t } = useTranslation(['departments', 'common']);
+
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -98,15 +100,14 @@ function RestrictedNotice({ message }: { message: string }) {
           />
         </svg>
         <p className="font-medium">{message}</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Join this department to view this information.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('departments:joinThisDepartmentToViewThis')}</p>
       </CardContent>
     </Card>
   );
 }
 
-export default function DepartmentDetailPage() {
+export default function DepartmentDetailPage() {  const { t } = useTranslation(['departments', 'common']);
+
   const caps = useCapabilities();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
@@ -160,9 +161,7 @@ export default function DepartmentDetailPage() {
               strokeLinejoin="round"
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
-          </svg>
-          Back to Departments
-        </Link>
+          </svg>{t('departments:backToDepartments')}</Link>
         <div role="alert" className="rounded-lg bg-destructive/10 p-4">
           <p className="text-sm text-destructive">
             {error instanceof Error ? error.message : 'Department not found.'}
@@ -176,17 +175,17 @@ export default function DepartmentDetailPage() {
     isAdminOrPastor || dept?.leadMemberId === user?.id || dept?.deputyMemberId === user?.id;
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'overview', label: 'Overview' },
-    ...(isMemberOfDept ? [{ key: 'my-rota' as const, label: 'My Rota' }] : []),
+    { key: 'overview', label: t('departments:overview') },
+    ...(isMemberOfDept ? [{ key: 'my-rota' as const, label: t('departments:myRota') }] : []),
     ...(!isRestrictedView
       ? ([
           { key: 'members' as const, label: `Members${members ? ` (${members.length})` : ''}` },
-          { key: 'followups' as const, label: 'Followups' },
-          { key: 'uniform' as const, label: 'Uniform' },
-          { key: 'rota' as const, label: 'Rota' },
+          { key: 'followups' as const, label: t('departments:followups') },
+          { key: 'uniform' as const, label: t('departments:uniform') },
+          { key: 'rota' as const, label: t('departments:rota') },
         ] as const)
       : []),
-    ...(canSeeAttendanceTab ? [{ key: 'attendance' as const, label: 'Attendance' }] : []),
+    ...(canSeeAttendanceTab ? [{ key: 'attendance' as const, label: t('departments:attendance') }] : []),
     ...(isAdminOrPastor
       ? [
           {
@@ -228,9 +227,7 @@ export default function DepartmentDetailPage() {
                 strokeLinejoin="round"
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
-            </svg>
-            Back to Departments
-          </Link>
+            </svg>{t('departments:backToDepartments')}</Link>
           <h1 className="text-2xl font-bold tracking-tight">{dept.departmentName}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {dept.branchName} &middot; Lead: {dept.leadFirstName} {dept.leadLastName}
@@ -280,9 +277,7 @@ export default function DepartmentDetailPage() {
                   )
                 }
                 disabled={respondOffer.isPending}
-              >
-                Accept Offer
-              </Button>
+              >{t('departments:acceptOffer')}</Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -300,9 +295,7 @@ export default function DepartmentDetailPage() {
                   )
                 }
                 disabled={respondOffer.isPending}
-              >
-                Decline
-              </Button>
+              >{t('departments:decline')}</Button>
             </>
           )}
           {myOpenRequest &&
@@ -320,15 +313,13 @@ export default function DepartmentDetailPage() {
                   )
                 }
                 disabled={withdrawRequest.isPending}
-              >
-                Withdraw
-              </Button>
+              >{t('departments:withdraw')}</Button>
             )}
         </div>
       </div>
 
       {/* Tabs */}
-      <div role="tablist" aria-label="Department sections" className="flex flex-wrap gap-1 border-b border-border/40">
+      <div role="tablist" aria-label={t('departments:departmentSections')} className="flex flex-wrap gap-1 border-b border-border/40">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -354,7 +345,7 @@ export default function DepartmentDetailPage() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Leadership</CardTitle>
+              <CardTitle className="text-base">{t('departments:leadership')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
@@ -368,7 +359,7 @@ export default function DepartmentDetailPage() {
                   <p className="text-sm font-medium">
                     {dept.leadFirstName} {dept.leadLastName}
                   </p>
-                  <p className="text-xs text-muted-foreground">Lead</p>
+                  <p className="text-xs text-muted-foreground">{t('departments:lead')}</p>
                 </div>
               </div>
               {dept.deputyMemberId && dept.deputyFirstName && (
@@ -383,7 +374,7 @@ export default function DepartmentDetailPage() {
                     <p className="text-sm font-medium">
                       {dept.deputyFirstName} {dept.deputyLastName}
                     </p>
-                    <p className="text-xs text-muted-foreground">Deputy</p>
+                    <p className="text-xs text-muted-foreground">{t('departments:deputy')}</p>
                   </div>
                 </div>
               )}
@@ -392,7 +383,7 @@ export default function DepartmentDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">About</CardTitle>
+              <CardTitle className="text-base">{t('departments:about')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p className="text-muted-foreground">
@@ -400,11 +391,11 @@ export default function DepartmentDetailPage() {
               </p>
               <div className="grid grid-cols-2 gap-2 pt-2 text-xs text-muted-foreground">
                 <div>
-                  <p className="font-medium text-foreground">Members</p>
+                  <p className="font-medium text-foreground">{t('departments:members')}</p>
                   <p>{dept.memberCount ?? 0}</p>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Started</p>
+                  <p className="font-medium text-foreground">{t('departments:started')}</p>
                   <p>{dept.startDate}</p>
                 </div>
               </div>
@@ -429,7 +420,7 @@ export default function DepartmentDetailPage() {
                     size="sm"
                     value={memberToAdd}
                     onValueChange={(v) => setMemberToAdd(v)}
-                    placeholder="Pick a member..."
+                    placeholder={t('departments:pickAMember')}
                     options={branchMembers
                       .filter((bm) => !members?.some((m) => m.memberId === bm.id))
                       .map((m) => ({
@@ -453,9 +444,7 @@ export default function DepartmentDetailPage() {
                         },
                       )
                     }
-                  >
-                    Add
-                  </Button>
+                  >{t('departments:add')}</Button>
                 </div>
               )}
             </div>
@@ -463,7 +452,7 @@ export default function DepartmentDetailPage() {
           {!members || members.length === 0 ? (
             <Card>
               <CardContent className="flex items-center justify-center py-12">
-                <p className="text-muted-foreground">No members yet.</p>
+                <p className="text-muted-foreground">{t('departments:noMembersYet')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -502,7 +491,7 @@ export default function DepartmentDetailPage() {
                             const ok = await confirm({
                               title: `Remove ${m.memberFirstName} ${m.memberLastName}?`,
                               description: `They will no longer appear in ${dept.departmentName}. You can re-add them later.`,
-                              confirmLabel: 'Remove',
+                              confirmLabel: t('departments:remove'),
                               variant: 'destructive',
                             });
                             if (!ok) return;
@@ -514,9 +503,7 @@ export default function DepartmentDetailPage() {
                               },
                             );
                           }}
-                        >
-                          Remove
-                        </Button>
+                        >{t('departments:remove')}</Button>
                       )}
                     </li>
                   ))}

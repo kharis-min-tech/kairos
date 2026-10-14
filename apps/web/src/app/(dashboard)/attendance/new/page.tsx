@@ -8,8 +8,10 @@ import { useCreateService, useCanRecordAttendance } from '@/hooks/use-attendance
 import { useAuthStore } from '@/lib/auth-store';
 import { CreateServiceForm } from '../_components/create-service-form';
 import type { CreateServiceRequest } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
-export default function NewServicePage() {
+export default function NewServicePage() {  const { t } = useTranslation(['attendance', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const createService = useCreateService();
@@ -50,12 +52,9 @@ export default function NewServicePage() {
           href="/attendance"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ChevronLeft className="h-4 w-4" /> Back to services
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">Record a service</h1>
-        <p className="text-sm text-muted-foreground">
-          Set up the service details, then check in attendees.
-        </p>
+          <ChevronLeft className="h-4 w-4" />{t('attendance:backToServices')}</Link>
+        <h1 className="mt-2 text-2xl font-bold text-foreground">{t('attendance:recordAService')}</h1>
+        <p className="text-sm text-muted-foreground">{t('attendance:setUpTheServiceDetailsThen')}</p>
       </div>
 
       <CreateServiceForm onSubmit={handleSubmit} submitError={error} canPickBranch={canPickBranch} />

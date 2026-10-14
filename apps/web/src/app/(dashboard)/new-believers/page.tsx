@@ -46,6 +46,7 @@ import { EnrollmentDetailDrawer } from './_components/enrollment-detail-drawer';
 import { MemberJourneyView } from './_components/member-journey-view';
 import { MyTeachingTab } from './_components/my-teaching-tab';
 import { MyMenteesTab } from './_components/my-mentees-tab';
+import { useTranslation } from 'react-i18next';
 
 type PendingStageMove = {
   enrollmentId: string;
@@ -56,7 +57,8 @@ type PendingStageMove = {
 
 type PersonalTab = 'enrollment' | 'teaching' | 'mentees';
 
-function NewBelieversContent() {
+function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const { activeRole, user } = useAuthStore();
   const caps = useCapabilities();
   const isAdminOrPastor = caps.has('branch:write');
@@ -298,7 +300,7 @@ function NewBelieversContent() {
     const toastId = toast(`${move.memberName} → ${nextStage.label}`, {
       duration: 5000,
       action: {
-        label: 'Undo',
+        label: t('newBelievers:undo'),
         onClick: async () => {
           undone = true;
           toast.dismiss(toastId);
@@ -407,33 +409,27 @@ function NewBelieversContent() {
     return (
       <div className="container mx-auto py-6 space-y-6">
         <header>
-          <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers</h1>
-          <p className="text-muted-foreground">
-            Your personal view of the New Believers programme
-          </p>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">{t('newBelievers:newBelievers')}</h1>
+          <p className="text-muted-foreground">{t('newBelievers:yourPersonalViewOfTheNew')}</p>
         </header>
 
         {isLoading ? (
           <div aria-busy="true" aria-live="polite" className="space-y-3">
             <div className="h-24 animate-pulse rounded-lg bg-muted/60" />
             <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
-            <span className="sr-only">Loading your progress</span>
+            <span className="sr-only">{t('newBelievers:loadingYourProgress')}</span>
           </div>
         ) : personalTabs.length === 0 ? (
           <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="text-sm font-medium text-muted-foreground">
-              You are not currently enrolled in the New Believers programme.
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Speak to your pastor or branch leader to get started.
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">{t('newBelievers:youAreNotCurrentlyEnrolledIn')}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('newBelievers:speakToYourPastorOrBranch')}</p>
           </div>
         ) : (
           <div className="space-y-4">
             {personalTabs.length > 1 && (
               <div
                 role="tablist"
-                aria-label="My New Believers view"
+                aria-label={t('newBelievers:myNewBelieversView')}
                 className="inline-flex rounded-lg border bg-muted/40 p-1"
               >
                 {personalTabs.map((t) => (
@@ -480,26 +476,20 @@ function NewBelieversContent() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-[-0.02em]">New Believers</h1>
-          <p className="text-muted-foreground">
-            Journey tracking from enrolment to joining a department
-          </p>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">{t('newBelievers:newBelievers')}</h1>
+          <p className="text-muted-foreground">{t('newBelievers:journeyTrackingFromEnrolmentToJoining')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/new-believers/sessions"
             className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-foreground/5 transition-colors"
-          >
-            Sessions
-          </Link>
+          >{t('newBelievers:sessions')}</Link>
           {isAdminOrPastor && (
             <Button
               onClick={() => setShowEnrollDialog(true)}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Enrol Member
-            </Button>
+              <Plus className="mr-2 h-4 w-4" />{t('newBelievers:enrolMember')}</Button>
           )}
         </div>
       </div>
@@ -508,15 +498,15 @@ function NewBelieversContent() {
       <div className="flex flex-wrap gap-3">
         <div className="rounded-lg border bg-card px-4 py-2.5">
           <p className="text-2xl font-bold">{result?.total ?? 0}</p>
-          <p className="text-xs text-muted-foreground">Active</p>
+          <p className="text-xs text-muted-foreground">{t('newBelievers:active')}</p>
         </div>
         <div className="rounded-lg border bg-card px-4 py-2.5">
           <p className="text-2xl font-bold text-[#f8b537]">{alerts.length}</p>
-          <p className="text-xs text-muted-foreground">No progress in 7+ days</p>
+          <p className="text-xs text-muted-foreground">{t('newBelievers:noProgressInDays')}</p>
         </div>
         <div className="rounded-lg border bg-card px-4 py-2.5">
           <p className="text-2xl font-bold text-[#f8b537]">{byStage['integrated']?.length ?? 0}</p>
-          <p className="text-xs text-muted-foreground">Joined a Department</p>
+          <p className="text-xs text-muted-foreground">{t('newBelievers:joinedADepartment')}</p>
         </div>
       </div>
 
@@ -580,7 +570,7 @@ function NewBelieversContent() {
               <div className="h-20 animate-pulse rounded bg-muted/60" />
             </div>
           ))}
-          <span className="sr-only">Loading pipeline</span>
+          <span className="sr-only">{t('newBelievers:loadingPipeline')}</span>
         </div>
       ) : (
         <DndContext
@@ -620,7 +610,7 @@ function NewBelieversContent() {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Session Feedback Required</DialogTitle>
+            <DialogTitle>{t('newBelievers:sessionFeedbackRequired')}</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               Record feedback for {pendingStageMove?.memberName ?? 'this member'} before moving
               from {pendingMoveFromStage?.label ?? 'this session'} to{' '}
@@ -628,20 +618,17 @@ function NewBelieversContent() {
             </DialogDescription>
           </DialogHeader>
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              Session Feedback <span className="text-destructive">*</span>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:sessionFeedback')}<span className="text-destructive">*</span>
             </label>
             <Textarea
               rows={4}
-              placeholder="How did the session go? Any observations about the student's progress?"
+              placeholder={t('newBelievers:howDidTheSessionGoAny')}
               value={stageMoveFeedback}
               onChange={(e) => setStageMoveFeedback(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={resetPendingStageMove}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={resetPendingStageMove}>{t('newBelievers:cancel')}</Button>
             <Button
               disabled={!stageMoveFeedback.trim() || updateEnrollment.isPending}
               onClick={handleConfirmStageMove}
@@ -674,12 +661,13 @@ function NewBelieversContent() {
   );
 }
 
-export default function NewBelieversPage() {
+export default function NewBelieversPage() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   return (
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-12">
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('newBelievers:loading')}</p>
         </div>
       }
     >

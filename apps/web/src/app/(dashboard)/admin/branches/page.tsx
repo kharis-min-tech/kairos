@@ -9,8 +9,10 @@ import { Button, CustomSelect } from '@kairos/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
-export default function BranchesPage() {
+export default function BranchesPage() {  const { t } = useTranslation(['branches', 'common']);
+
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
   const { data: branches, isLoading, error } = useBranches();
@@ -35,7 +37,7 @@ export default function BranchesPage() {
             <div key={i} className="h-44 animate-pulse rounded-lg bg-muted/60" />
           ))}
         </div>
-        <span className="sr-only">Loading branches</span>
+        <span className="sr-only">{t('branches:loadingBranches')}</span>
       </div>
     );
   }
@@ -43,7 +45,7 @@ export default function BranchesPage() {
   if (error) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm font-medium text-destructive">Failed to load branches. Please try again.</p>
+        <p className="text-sm font-medium text-destructive">{t('branches:failedToLoadBranchesPleaseTry')}</p>
       </div>
     );
   }
@@ -53,8 +55,8 @@ export default function BranchesPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Branches</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Manage church branches and locations</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('branches:branches')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('branches:manageChurchBranchesAndLocations')}</p>
         </div>
         {isAdmin && (
           <Link href="/admin/branches/new">
@@ -69,9 +71,9 @@ export default function BranchesPage() {
           size="sm"
           value={regionFilter}
           onValueChange={setRegionFilter}
-          placeholder="All Regions"
+          placeholder={t('branches:allRegions')}
           options={[
-            { value: '', label: 'All Regions' },
+            { value: '', label: t('branches:allRegions') },
             ...(regions ?? []).map((r) => ({ value: r.id, label: r.regionName })),
           ]}
         />
@@ -80,10 +82,10 @@ export default function BranchesPage() {
       {!branches || branches.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No branches found.</p>
+            <p className="text-muted-foreground">{t('branches:noBranchesFound')}</p>
             {isAdmin && (
               <Link href="/admin/branches/new" className="mt-4">
-                <Button variant="outline">Create your first branch</Button>
+                <Button variant="outline">{t('branches:createYourFirstBranch')}</Button>
               </Link>
             )}
           </CardContent>
@@ -120,7 +122,7 @@ export default function BranchesPage() {
                           const ok = await confirm({
                             title: `Deactivate ${branch.branchName}?`,
                             description: 'The branch will be hidden from active lists. You can reactivate it later.',
-                            confirmLabel: 'Deactivate',
+                            confirmLabel: t('branches:deactivate'),
                             variant: 'destructive',
                           });
                           if (!ok) return;
@@ -129,9 +131,7 @@ export default function BranchesPage() {
                             onError: () => toast.error('Failed to deactivate branch. Please try again.'),
                           });
                         }}
-                      >
-                        Deactivate
-                      </Button>
+                      >{t('branches:deactivate')}</Button>
                     </div>
                   )}
                 </CardContent>

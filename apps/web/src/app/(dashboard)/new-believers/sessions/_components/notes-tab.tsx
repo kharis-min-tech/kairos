@@ -5,13 +5,15 @@ import { toast } from 'sonner';
 import { Button, Textarea } from '@kairos/ui';
 import { useUpdateSession } from '@/hooks/use-new-believers';
 import type { NewBelieverSession } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   session: NewBelieverSession;
   canEdit: boolean;
 }
 
-export function NotesTab({ session, canEdit }: Props) {
+export function NotesTab({ session, canEdit }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const [value, setValue] = useState(session.feedback ?? '');
   const [saved, setSaved] = useState(false);
   const updateSession = useUpdateSession();
@@ -45,12 +47,10 @@ export function NotesTab({ session, canEdit }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Class-level notes for this session, visible to other leaders.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('newBelievers:classLevelNotesForThisSession')}</p>
       <Textarea
         rows={5}
-        placeholder="Capture class-wide observations, questions raised, or follow-up themes."
+        placeholder={t('newBelievers:captureClassWideObservationsQuestionsRaised')}
         value={value}
         onChange={(event) => {
           setValue(event.target.value);
@@ -67,7 +67,7 @@ export function NotesTab({ session, canEdit }: Props) {
           {updateSession.isPending ? 'Saving...' : 'Save Notes'}
         </Button>
         {saved && (
-          <span className="text-xs font-medium text-emerald-600">Notes saved.</span>
+          <span className="text-xs font-medium text-emerald-600">{t('newBelievers:notesSaved')}</span>
         )}
       </div>
     </div>

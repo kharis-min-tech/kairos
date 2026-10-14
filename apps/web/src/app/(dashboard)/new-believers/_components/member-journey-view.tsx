@@ -5,12 +5,14 @@ import { Check, Award } from 'lucide-react';
 import { formatShortDate } from '@kairos/core';
 import { STAGES } from './stage-config';
 import type { EnrollmentCardData } from './types';
+import { useTranslation } from 'react-i18next';
 
 interface MemberJourneyViewProps {
   enrollment: EnrollmentCardData;
 }
 
-export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {
+export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {  const { t } = useTranslation(['members', 'common']);
+
   const currentIdx = STAGES.findIndex((s) => s.value === enrollment.stage);
   const stage = STAGES[currentIdx];
 
@@ -42,15 +44,15 @@ export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {
           ))}
         </div>
         <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-          <span>Session 1</span>
-          <span>Joined a Department</span>
+          <span>{t('members:session')}</span>
+          <span>{t('members:joinedADepartment')}</span>
         </div>
       </div>
 
       {/* Journey checklist */}
       <Card>
         <CardContent className="p-4">
-          <h3 className="mb-3 text-sm font-semibold">Your Journey</h3>
+          <h3 className="mb-3 text-sm font-semibold">{t('members:yourJourney')}</h3>
           <ol className="space-y-2">
             {STAGES.map((s, idx) => {
               const isDone = idx < currentIdx;
@@ -104,11 +106,11 @@ export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {
       {(enrollment.teacherFirstName || enrollment.mentorFirstName) && (
         <Card>
           <CardContent className="p-4">
-            <h3 className="mb-3 text-sm font-semibold">Your Support Team</h3>
+            <h3 className="mb-3 text-sm font-semibold">{t('members:yourSupportTeam')}</h3>
             <dl className="space-y-2 text-sm">
               {enrollment.teacherFirstName && (
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Teacher</dt>
+                  <dt className="text-muted-foreground">{t('members:teacher')}</dt>
                   <dd className="font-medium">
                     {enrollment.teacherFirstName} {enrollment.teacherLastName}
                   </dd>
@@ -116,7 +118,7 @@ export function MemberJourneyView({ enrollment }: MemberJourneyViewProps) {
               )}
               {enrollment.mentorFirstName && (
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Mentor</dt>
+                  <dt className="text-muted-foreground">{t('members:mentor')}</dt>
                   <dd className="font-medium">
                     {enrollment.mentorFirstName} {enrollment.mentorLastName}
                   </dd>

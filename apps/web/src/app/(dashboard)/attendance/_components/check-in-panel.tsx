@@ -11,6 +11,7 @@ import type {
 } from '@kairos/types';
 import { useDebounced } from '@/hooks/use-debounced';
 import { RosterRow, type MarkState } from './roster-row';
+import { useTranslation } from 'react-i18next';
 
 interface VisitorMark {
   key: string;
@@ -27,7 +28,8 @@ const STATUS_OPTIONS = [
   { value: ServiceAttendanceStatus.Virtual, label: 'Virtual' },
 ];
 
-export function CheckInPanel({ serviceId }: { serviceId: string }) {
+export function CheckInPanel({ serviceId }: { serviceId: string }) {  const { t } = useTranslation(['attendance', 'common']);
+
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounced(search, 300);
 
@@ -110,10 +112,10 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Search the roster by name…"
+          placeholder={t('attendance:searchTheRosterByName')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search roster"
+          aria-label={t('attendance:searchRoster')}
         />
       </div>
 
@@ -186,7 +188,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {
       <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/90 px-4 py-3 shadow-ambient backdrop-blur dark:bg-[#0f0f12]/90">
         <div className="text-sm">
           <span className="font-semibold text-foreground">{markedCount}</span>{' '}
-          <span className="text-muted-foreground">marked attending</span>
+          <span className="text-muted-foreground">{t('attendance:markedAttending')}</span>
           {saved !== null && (
             <span className="ml-3 font-medium text-[#16A34A]">Saved {saved} record{saved === 1 ? '' : 's'}.</span>
           )}
@@ -200,7 +202,8 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {
   );
 }
 
-function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {
+function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {  const { t } = useTranslation(['attendance', 'common']);
+
   const [open, setOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -238,8 +241,7 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {
   if (!open) {
     return (
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <UserPlus className="mr-1.5 h-4 w-4" /> Add first-time visitor
-      </Button>
+        <UserPlus className="mr-1.5 h-4 w-4" />{t('attendance:addFirstTimeVisitor')}</Button>
     );
   }
 
@@ -247,18 +249,18 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {
     <Card>
       <CardContent className="space-y-3 py-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-foreground">Add first-time visitor</p>
-          <button type="button" aria-label="Cancel" onClick={() => { reset(); setOpen(false); }} className="text-muted-foreground hover:text-foreground">
+          <p className="text-sm font-semibold text-foreground">{t('attendance:addFirstTimeVisitor')}</p>
+          <button type="button" aria-label={t('attendance:cancel')} onClick={() => { reset(); setOpen(false); }} className="text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="visitor-first">First name</Label>
+            <Label htmlFor="visitor-first">{t('attendance:firstName')}</Label>
             <Input id="visitor-first" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="visitor-last">Last name</Label>
+            <Label htmlFor="visitor-last">{t('attendance:lastName')}</Label>
             <Input id="visitor-last" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
@@ -266,7 +268,7 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {
             <Input id="visitor-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="visitor-status">Status</Label>
+            <Label htmlFor="visitor-status">{t('attendance:status')}</Label>
             <CustomSelect
               id="visitor-status"
               value={status}
@@ -277,15 +279,14 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {
         </div>
         {status === ServiceAttendanceStatus.Late && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Arrived</span>
+            <span className="text-xs text-muted-foreground">{t('attendance:arrived')}</span>
             <TimeSelect value={arrivalTime} onValueChange={setArrivalTime} allowEmpty />
           </div>
         )}
         {err && <p className="text-xs font-medium text-destructive">{err}</p>}
         <div className="flex justify-end">
           <Button onClick={add}>
-            <Plus className="mr-1.5 h-4 w-4" /> Add visitor
-          </Button>
+            <Plus className="mr-1.5 h-4 w-4" />{t('attendance:addVisitor')}</Button>
         </div>
       </CardContent>
     </Card>

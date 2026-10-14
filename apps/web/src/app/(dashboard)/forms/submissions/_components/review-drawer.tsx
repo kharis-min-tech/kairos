@@ -19,6 +19,7 @@ import { useUpdateFormSubmission } from '@/hooks/use-forms';
 import { STATUS_META, STATUS_OPTIONS } from '../../_lib/form-meta';
 import { FORM_DEFINITIONS } from '@kairos/types';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 interface ReviewDrawerProps {
   submission: FormSubmission | null;
@@ -98,26 +99,24 @@ function renderValue(value: unknown): string {
  * now reads as an openable record and a typed name is marked as name-only —
  * the distinction the two keys exist to carry, visible at a glance.
  */
-function MemberRefValue({ id }: { id: string }) {
+function MemberRefValue({ id }: { id: string }) {  const { t } = useTranslation(['forms', 'common']);
+
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <Link
         href={`/members/${id}`}
         className="font-medium text-[#5D3FD3] hover:underline"
-      >
-        Open member record
-      </Link>
+      >{t('forms:openMemberRecord')}</Link>
       <Badge
         variant="outline"
         className="border-[#5D3FD3]/25 bg-[#5D3FD3]/10 text-[#5D3FD3]"
-      >
-        Directory member
-      </Badge>
+      >{t('forms:directoryMember')}</Badge>
     </span>
   );
 }
 
-export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerProps) {
+export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerProps) {  const { t } = useTranslation(['forms', 'common']);
+
   const update = useUpdateFormSubmission();
   const [status, setStatus] = useState<FormSubmissionStatus>('new');
   const [notes, setNotes] = useState('');
@@ -205,15 +204,13 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
           {/* Linked entity */}
           {submission.linkedEntityId ? (
             <div className="rounded-lg bg-[#5D3FD3]/5 p-3 text-sm">
-              <span className="text-muted-foreground">Linked record: </span>
+              <span className="text-muted-foreground">{t('forms:linkedRecord')}</span>
               {submission.linkedEntityType === 'new_believer_enrollment' ||
               submission.formType === 'altar_call' ? (
                 <Link
                   href={`/new-believers?enrollment=${submission.linkedEntityId}`}
                   className="font-medium text-[#5D3FD3] hover:underline"
-                >
-                  View New Believers enrollment
-                </Link>
+                >{t('forms:viewNewBelieversEnrollment')}</Link>
               ) : (
                 <span className="font-medium text-foreground">
                   {submission.linkedEntityType} · {submission.linkedEntityId}
@@ -224,9 +221,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
 
           {/* Status + notes */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Status
-            </label>
+            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('forms:status')}</label>
             <CustomSelect
               value={status}
               onValueChange={(v) => setStatus(v as FormSubmissionStatus)}
@@ -238,15 +233,13 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
             <label
               htmlFor="review-notes"
               className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-            >
-              Notes
-            </label>
+            >{t('forms:notes')}</label>
             <Textarea
               id="review-notes"
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add internal notes…"
+              placeholder={t('forms:addInternalNotes')}
             />
           </div>
 
@@ -258,9 +251,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('forms:cancel')}</Button>
           <Button
             onClick={handleSave}
             disabled={update.isPending}

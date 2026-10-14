@@ -15,6 +15,7 @@ import {
   isUpcomingSession,
   teacherName,
 } from './session-helpers';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'attendance' | 'notes' | 'roster';
 
@@ -24,7 +25,8 @@ interface Props {
   userMemberId: string;
 }
 
-export function SessionDetailPane({ session, branchId, userMemberId }: Props) {
+export function SessionDetailPane({ session, branchId, userMemberId }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const caps = useCapabilities();
   const [tab, setTab] = useState<Tab>('attendance');
   const stageDef = getSessionStageDef(session.sessionStage);
@@ -88,11 +90,11 @@ export function SessionDetailPane({ session, branchId, userMemberId }: Props) {
       </div>
 
       <div className="border-b border-foreground/10 px-5">
-        <nav className="-mb-px flex gap-4" aria-label="Session detail tabs">
+        <nav className="-mb-px flex gap-4" aria-label={t('newBelievers:sessionDetailTabs')}>
           {[
-            { value: 'attendance', label: 'Attendance' },
-            { value: 'notes', label: 'Notes' },
-            { value: 'roster', label: 'Roster' },
+            { value: 'attendance', label: t('newBelievers:attendance') },
+            { value: 'notes', label: t('newBelievers:notes') },
+            { value: 'roster', label: t('newBelievers:roster') },
           ].map((option) => {
             const isActive = tab === option.value;
             return (

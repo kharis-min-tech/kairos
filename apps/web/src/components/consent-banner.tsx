@@ -7,6 +7,7 @@ import { Button } from '@kairos/ui';
 import { CONSENT_TYPE_LABEL, ConsentType } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 import { useAuthStore } from '@/lib/auth-store';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Dashboard-level banner. Renders when any REQUIRED consent needs accepting —
@@ -27,7 +28,8 @@ const LEGAL_DOC_HREF: Record<ConsentType, string> = {
   [ConsentType.AcceptableUse]: '/legal/acceptable-use',
   [ConsentType.AdminConfidentiality]: '/legal/confidentiality',
 };
-export function ConsentBanner() {
+export function ConsentBanner() {  const { t } = useTranslation(['security', 'common']);
+
   const { user } = useAuthStore();
   const { data, isLoading } = useMyConsentStatuses();
   const record = useRecordConsent();
@@ -54,7 +56,7 @@ export function ConsentBanner() {
         <div className="flex items-start gap-3">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-[#5D3FD3]" aria-hidden />
           <div>
-            <p className="text-sm font-semibold">Please review our policies</p>
+            <p className="text-sm font-semibold">{t('security:pleaseReviewOurPolicies')}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {pending
                 .map((s) => `${CONSENT_TYPE_LABEL[s.consentType]} (v${s.currentVersion})`)

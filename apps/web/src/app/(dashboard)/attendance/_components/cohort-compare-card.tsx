@@ -13,6 +13,7 @@ import {
 } from '@kairos/ui';
 import { useServices, useCohortDiff } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 type Mode = 'any' | 'all';
 type PresetKey = 'missed-last-4' | 'first-timers-this-week' | 'regulars-slipped';
@@ -35,7 +36,8 @@ interface CohortCompareCardProps {
  * clear selections whenever the branch changes so stale UUIDs from a
  * different branch can't leak into the next submission.
  */
-export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
+export function CohortCompareCard({ branchId }: CohortCompareCardProps) {  const { t } = useTranslation(['attendance', 'common']);
+
   const { data: servicesPage } = useServices(branchId ? { branchId, limit: 100 } : undefined);
   const serviceOptions = useMemo(
     () => (branchId ? servicesPage?.data ?? [] : []),
@@ -144,8 +146,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <GitCompare className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Compare cohorts
-        </CardTitle>
+          <GitCompare className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:compareCohorts')}</CardTitle>
         <CardDescription>
           Who came to one selection of services but is missing from another?
           Pick services in each column, then Run comparison. Use ANY/ALL to
@@ -158,20 +159,19 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         {branchId && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-              <Zap className="h-3.5 w-3.5" aria-hidden /> Presets:
-            </span>
+              <Zap className="h-3.5 w-3.5" aria-hidden />{t('attendance:presets')}</span>
             <PresetButton
-              label="Missed last 4"
+              label={t('attendance:missedLast')}
               disabled={!presetsEnabled}
               onClick={() => runPreset('missed-last-4')}
             />
             <PresetButton
-              label="First-timers this week"
+              label={t('attendance:firstTimersThisWeek')}
               disabled={!presetsEnabled || serviceOptions.length < 5}
               onClick={() => runPreset('first-timers-this-week')}
             />
             <PresetButton
-              label="Regulars who slipped"
+              label={t('attendance:regularsWhoSlipped')}
               disabled={!presetsEnabled || serviceOptions.length < 8}
               onClick={() => runPreset('regulars-slipped')}
             />
@@ -186,7 +186,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             <ServiceColumn
-              title="Present in"
+              title={t('attendance:presentIn')}
               services={serviceOptions}
               selected={presentIds}
               mode={presentMode}
@@ -194,7 +194,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
               onModeChange={setPresentMode}
             />
             <ServiceColumn
-              title="Absent from"
+              title={t('attendance:absentFrom')}
               services={serviceOptions}
               selected={absentIds}
               mode={absentMode}
@@ -225,7 +225,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
         </div>
 
         {cohort.isSuccess && result.length > 0 && (
-          <ul className="divide-y rounded-lg border bg-card" aria-label="Cohort comparison result">
+          <ul className="divide-y rounded-lg border bg-card" aria-label={t('attendance:cohortComparisonResult')}>
             {result.map((m) => (
               <li key={m.memberId} className="px-3 py-2 text-sm">
                 {m.firstName} {m.lastName}
@@ -234,9 +234,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {
           </ul>
         )}
         {cohort.isSuccess && result.length === 0 && (
-          <p className="rounded-lg border border-dashed bg-card px-3 py-6 text-center text-sm text-muted-foreground">
-            No members match this comparison.
-          </p>
+          <p className="rounded-lg border border-dashed bg-card px-3 py-6 text-center text-sm text-muted-foreground">{t('attendance:noMembersMatchThisComparison')}</p>
         )}
       </CardContent>
     </Card>
@@ -278,7 +276,8 @@ function ServiceColumn({
   mode: Mode;
   onToggleService: (id: string) => void;
   onModeChange: (mode: Mode) => void;
-}) {
+}) {  const { t } = useTranslation(['attendance', 'common']);
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -302,7 +301,7 @@ function ServiceColumn({
       </div>
       <ul className="max-h-60 space-y-1 overflow-y-auto rounded-lg border bg-card p-2">
         {services.length === 0 && (
-          <li className="px-2 py-1 text-xs text-muted-foreground">No services in scope.</li>
+          <li className="px-2 py-1 text-xs text-muted-foreground">{t('attendance:noServicesInScope')}</li>
         )}
         {services.map((s) => {
           const checked = selected.has(s.id);

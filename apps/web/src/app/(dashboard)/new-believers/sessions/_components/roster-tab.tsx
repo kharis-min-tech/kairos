@@ -5,13 +5,15 @@ import { Users } from 'lucide-react';
 import { useEnrollments } from '@/hooks/use-new-believers';
 import type { NewBelieverEnrollmentWithMember, NewBelieverStageValue } from '@kairos/types';
 import { getSessionStageDef } from './session-helpers';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   branchId: string;
   sessionStage: NewBelieverStageValue;
 }
 
-export function RosterTab({ branchId, sessionStage }: Props) {
+export function RosterTab({ branchId, sessionStage }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const stageDef = getSessionStageDef(sessionStage);
   const { data, isLoading } = useEnrollments(
     { branchId, stage: sessionStage, limit: 500 },
@@ -31,9 +33,7 @@ export function RosterTab({ branchId, sessionStage }: Props) {
 
   if (isLoading) {
     return (
-      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Loading roster...
-      </p>
+      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('newBelievers:loadingRoster')}</p>
     );
   }
 

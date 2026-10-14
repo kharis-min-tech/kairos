@@ -31,6 +31,7 @@ import type {
 } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function todayIso(): string {
   const today = new Date();
@@ -54,7 +55,8 @@ interface FollowupsTabProps {
   canManage: boolean;
 }
 
-export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabProps) {
+export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const [overdueBucket, setOverdueBucket] = useState<'never' | '7' | '14' | null>(null);
   const [memberFilter, setMemberFilter] = useState<string>('');
   const [showForm, setShowForm] = useState(false);
@@ -108,14 +110,12 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
         <Card className="border-[#f8b537]/40 bg-[#f8b537]/5">
           <CardHeader className="space-y-3 pb-3">
             <div>
-              <CardTitle className="text-base">Overdue Followups</CardTitle>
-              <CardDescription>
-                Filter members by how long since their last contact.
-              </CardDescription>
+              <CardTitle className="text-base">{t('departments:overdueFollowups')}</CardTitle>
+              <CardDescription>{t('departments:filterMembersByHowLongSince')}</CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
               <BucketFilter
-                label="Never contacted"
+                label={t('departments:neverContacted')}
                 count={buckets.never.length}
                 active={overdueBucket === 'never'}
                 onClick={() =>
@@ -123,13 +123,13 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
                 }
               />
               <BucketFilter
-                label="7+ days"
+                label={t('departments:days')}
                 count={buckets.d7.length}
                 active={overdueBucket === '7'}
                 onClick={() => setOverdueBucket((b) => (b === '7' ? null : '7'))}
               />
               <BucketFilter
-                label="14+ days"
+                label={t('departments:days2')}
                 count={buckets.d14.length}
                 active={overdueBucket === '14'}
                 onClick={() => setOverdueBucket((b) => (b === '14' ? null : '14'))}
@@ -139,9 +139,7 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
           {overdueBucket && (
             <CardContent className="pt-0">
               {visibleOverdue.length === 0 ? (
-                <p className="py-3 text-center text-sm text-muted-foreground">
-                  No members in this bucket.
-                </p>
+                <p className="py-3 text-center text-sm text-muted-foreground">{t('departments:noMembersInThisBucket')}</p>
               ) : (
                 <div className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-white/10 bg-white/5 p-1.5 backdrop-blur-md">
                   {visibleOverdue.map((row) => (
@@ -179,22 +177,18 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-2">
           <div className="space-y-1">
-            <Label htmlFor="memberFilter" className="text-xs text-muted-foreground">
-              Filter by member
-            </Label>
+            <Label htmlFor="memberFilter" className="text-xs text-muted-foreground">{t('departments:filterByMember')}</Label>
             <CustomSelect
               id="memberFilter"
               size="sm"
               value={memberFilter}
               onValueChange={(v) => setMemberFilter(v)}
-              placeholder="All members"
+              placeholder={t('departments:allMembers')}
               options={memberOptions}
             />
           </div>
           {memberFilter && (
-            <Button variant="outline" size="sm" onClick={() => setMemberFilter('')}>
-              Clear
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => setMemberFilter('')}>{t('departments:clear')}</Button>
           )}
         </div>
         {canManage && (
@@ -235,17 +229,15 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
       {isLoading ? (
         <Card>
           <CardContent className="flex items-center justify-center py-10">
-            <p className="text-sm text-muted-foreground">Loading followups...</p>
+            <p className="text-sm text-muted-foreground">{t('departments:loadingFollowups')}</p>
           </CardContent>
         </Card>
       ) : !followups || followups.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-10">
-            <p className="text-sm text-muted-foreground">No followups logged yet.</p>
+            <p className="text-sm text-muted-foreground">{t('departments:noFollowupsLoggedYet')}</p>
             {canManage && (
-              <p className="text-xs text-muted-foreground">
-                Click <span className="font-medium">Log Followup</span> to record one.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('departments:click')}<span className="font-medium">{t('departments:logFollowup')}</span>{t('departments:toRecordOne')}</p>
             )}
           </CardContent>
         </Card>
@@ -315,9 +307,9 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
                       type="button"
                       onClick={async () => {
                         const ok = await confirm({
-                          title: 'Delete this followup?',
+                          title: t('departments:deleteThisFollowup'),
                           description: 'The contact record will be permanently removed.',
-                          confirmLabel: 'Delete',
+                          confirmLabel: t('departments:delete'),
                           variant: 'destructive',
                         });
                         if (!ok) return;
@@ -330,9 +322,7 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
                         );
                       }}
                       className="text-xs text-destructive hover:underline"
-                    >
-                      Delete
-                    </button>
+                    >{t('departments:delete')}</button>
                   )}
                 </div>
               </CardContent>
@@ -430,7 +420,8 @@ function FollowupForm({
   defaultMemberId,
   isPending,
   onSubmit,
-}: FollowupFormProps) {
+}: FollowupFormProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const [memberId, setMemberId] = useState(defaultMemberId ?? '');
   const [contactedAt, setContactedAt] = useState(todayIso());
   const [type, setType] = useState<FollowupTypeChoice>('contact');
@@ -564,18 +555,18 @@ function FollowupForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Log Followup</CardTitle>
+        <CardTitle className="text-base">{t('departments:logFollowup')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="dept-fu-member">Member *</Label>
+              <Label htmlFor="dept-fu-member">{t('departments:member')}</Label>
               <CustomSelect
                 id="dept-fu-member"
                 value={memberId}
                 onValueChange={setMemberId}
-                placeholder="Pick a member"
+                placeholder={t('departments:pickAMember')}
                 options={memberOptions}
               />
               {errors['member'] && (
@@ -583,7 +574,7 @@ function FollowupForm({
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="dept-fu-contacted">Contacted on *</Label>
+              <Label htmlFor="dept-fu-contacted">{t('departments:contactedOn')}</Label>
               <DateSelect
                 id="dept-fu-contacted"
                 value={contactedAt}
@@ -592,12 +583,12 @@ function FollowupForm({
             </div>
           </div>
 
-          <FieldGroup label="Type">
+          <FieldGroup label={t('departments:type')}>
             <PillRow>
               {(
                 [
-                  { value: 'contact', label: 'Contact' },
-                  { value: 'visit', label: 'Visit' },
+                  { value: 'contact', label: t('departments:contact') },
+                  { value: 'visit', label: t('departments:visit') },
                 ] as { value: FollowupTypeChoice; label: string }[]
               ).map((opt) => (
                 <Pill
@@ -617,7 +608,7 @@ function FollowupForm({
           {type === 'contact' ? (
             <>
               <FieldGroup
-                label="Methods (pick one or more) *"
+                label={t('departments:methodsPickOneOrMore')}
                 error={errors['methods']}
               >
                 <PillRow>
@@ -633,12 +624,12 @@ function FollowupForm({
                 </PillRow>
               </FieldGroup>
 
-              <FieldGroup label="Reached them? *" error={errors['reached']}>
+              <FieldGroup label={t('departments:reachedThem')} error={errors['reached']}>
                 <PillRow>
                   {(
                     [
-                      { value: true, label: 'Yes' },
-                      { value: false, label: 'No' },
+                      { value: true, label: t('departments:yes') },
+                      { value: false, label: t('departments:no') },
                     ] as { value: boolean; label: string }[]
                   ).map((opt) => (
                     <Pill
@@ -656,13 +647,13 @@ function FollowupForm({
               </FieldGroup>
 
               {contactReached === true && (
-                <FieldGroup label="Interest">
+                <FieldGroup label={t('departments:interest')}>
                   <PillRow>
                     {(
                       [
-                        { value: 'interested', label: 'Interested' },
-                        { value: 'not_interested', label: 'Not interested' },
-                        { value: 'undecided', label: 'Undecided' },
+                        { value: 'interested', label: t('departments:interested') },
+                        { value: 'not_interested', label: t('departments:notInterested') },
+                        { value: 'undecided', label: t('departments:undecided') },
                       ] as { value: InterestChoice; label: string }[]
                     ).map((opt) => (
                       <Pill
@@ -679,12 +670,12 @@ function FollowupForm({
             </>
           ) : (
             <>
-              <FieldGroup label="Kind *" error={errors['visitKind']}>
+              <FieldGroup label={t('departments:kind')} error={errors['visitKind']}>
                 <PillRow>
                   {(
                     [
-                      { value: 'in_person', label: 'In-person' },
-                      { value: 'virtual', label: 'Virtual' },
+                      { value: 'in_person', label: t('departments:inPerson') },
+                      { value: 'virtual', label: t('departments:virtual') },
                     ] as { value: VisitKindChoice; label: string }[]
                   ).map((opt) => (
                     <Pill
@@ -698,12 +689,12 @@ function FollowupForm({
                 </PillRow>
               </FieldGroup>
 
-              <FieldGroup label="Announced? *" error={errors['announced']}>
+              <FieldGroup label={t('departments:announced')} error={errors['announced']}>
                 <PillRow>
                   {(
                     [
-                      { value: true, label: 'Announced' },
-                      { value: false, label: 'Unannounced' },
+                      { value: true, label: t('departments:announced2') },
+                      { value: false, label: t('departments:unannounced') },
                     ] as { value: boolean; label: string }[]
                   ).map((opt) => (
                     <Pill
@@ -719,7 +710,7 @@ function FollowupForm({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1">
-                  <Label htmlFor="dept-fu-arrival">Arrival time *</Label>
+                  <Label htmlFor="dept-fu-arrival">{t('departments:arrivalTime')}</Label>
                   <TimeSelect
                     value={arrivalTime}
                     onValueChange={setArrivalTime}
@@ -739,7 +730,7 @@ function FollowupForm({
                 </div>
               </div>
 
-              <FieldGroup label="Went with (optional)">
+              <FieldGroup label={t('departments:wentWithOptional')}>
                 <div className="flex flex-wrap items-center gap-2">
                   {companions.map((cid) => (
                     <CompanionChip
@@ -755,7 +746,7 @@ function FollowupForm({
                       size="sm"
                       value={companionDraft}
                       onValueChange={(v) => setCompanionDraft(v)}
-                      placeholder="Pick a member"
+                      placeholder={t('departments:pickAMember')}
                       options={companionOptions}
                     />
                     <Button
@@ -777,13 +768,13 @@ function FollowupForm({
                 </div>
               </FieldGroup>
 
-              <FieldGroup label="Outcome *" error={errors['outcome']}>
+              <FieldGroup label={t('departments:outcome')} error={errors['outcome']}>
                 <PillRow>
                   {(
                     [
-                      { value: 'present', label: 'Present' },
-                      { value: 'not_present', label: 'Not present' },
-                      { value: 'rescheduled', label: 'Rescheduled' },
+                      { value: 'present', label: t('departments:present') },
+                      { value: 'not_present', label: t('departments:notPresent') },
+                      { value: 'rescheduled', label: t('departments:rescheduled') },
                     ] as { value: VisitOutcomeChoice; label: string }[]
                   ).map((opt) => (
                     <Pill
@@ -800,12 +791,12 @@ function FollowupForm({
           )}
 
           <div className="space-y-1">
-            <Label htmlFor="dept-fu-notes">Notes</Label>
+            <Label htmlFor="dept-fu-notes">{t('departments:notes')}</Label>
             <AutoGrowTextarea
               id="dept-fu-notes"
               value={notes}
               onChange={setNotes}
-              placeholder="What was discussed?"
+              placeholder={t('departments:whatWasDiscussed')}
             />
           </div>
 
@@ -813,13 +804,13 @@ function FollowupForm({
             <div className="space-y-2">
               <CheckboxRow
                 id="dept-fu-welfare"
-                label="Welfare concern noted"
+                label={t('departments:welfareConcernNoted')}
                 checked={welfareConcern}
                 onToggle={() => setWelfareConcern((v) => !v)}
               />
               <CheckboxRow
                 id="dept-fu-safeguarding"
-                label="Safeguarding matter"
+                label={t('departments:safeguardingMatter')}
                 checked={safeguardingConcern}
                 onToggle={() => setSafeguardingConcern((v) => !v)}
               />

@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { KharisCardHeader } from '../kharis-logo';
 import { useAuthStore } from '@/lib/auth-store';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
-export default function PendingApprovalPage() {
+export default function PendingApprovalPage() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const { logout, accessToken } = useAuthStore();
@@ -20,8 +22,8 @@ export default function PendingApprovalPage() {
   return (
     <>
       <KharisCardHeader
-        heading="Account pending approval"
-        subtitle="Your email has been verified. A church administrator will review and approve your account shortly."
+        heading={t('auth:accountPendingApproval')}
+        subtitle={t('auth:yourEmailHasBeenVerifiedA')}
       />
 
       <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
@@ -53,9 +55,7 @@ export default function PendingApprovalPage() {
               type="button"
               onClick={handleSignOut}
               className="h-11 w-full rounded-lg border border-[#5D3FD3]/30 bg-transparent text-sm font-semibold text-[#5D3FD3] transition-colors hover:bg-[#5D3FD3]/5"
-            >
-              Sign out
-            </button>
+            >{t('auth:signOut')}</button>
           ) : (
             <>
               <div className="relative py-1">
@@ -63,17 +63,13 @@ export default function PendingApprovalPage() {
                   <span className="w-full border-t border-muted-foreground/10" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">
-                    or
-                  </span>
+                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">{t('auth:or')}</span>
                 </div>
               </div>
 
               <p className="text-center text-sm text-muted-foreground/70">
                 Already approved?{' '}
-                <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">
-                  Sign in
-                </Link>
+                <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:signIn')}</Link>
               </p>
             </>
           )}

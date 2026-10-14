@@ -5,8 +5,10 @@ import { useApi } from '@/lib/api-client';
 import { UnifiedDashboard } from '@/components/dashboard/unified-dashboard';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from '@/components/dashboard/types';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-export default function SoulsDashboardPage() {
+export default function SoulsDashboardPage() {  const { t } = useTranslation(['souls', 'common']);
+
   const api = useApi();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
@@ -100,7 +102,7 @@ export default function SoulsDashboardPage() {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <p className="text-muted-foreground">{t('souls:loadingDashboard')}</p>
         </div>
       </div>
     );

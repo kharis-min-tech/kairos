@@ -30,6 +30,7 @@ import type {
   MembershipCohortSummary,
   MembershipBranchViewResponse,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Membership classes.
@@ -44,7 +45,8 @@ import type {
  *     on `membership:admin` at church scope, NOT on `systemRole === 'admin'`:
  *     the church has people who run this class and hold no platform authority.
  */
-export default function MembershipPage() {
+export default function MembershipPage() {  const { t } = useTranslation(['membership', 'common']);
+
   const caps = useCapabilities();
   const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
   // A Champion holds `membership:branch:read` on at least one branch. We
@@ -72,13 +74,8 @@ export default function MembershipPage() {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-semibold text-foreground">
-            <GraduationCap className="size-5 text-[#5D3FD3]" />
-            Membership classes
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Four sessions, coursework, a final test and the induction ceremony. Completing
-            all of it is what makes someone a confirmed Member.
-          </p>
+            <GraduationCap className="size-5 text-[#5D3FD3]" />{t('membership:membershipClasses')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('membership:fourSessionsCourseworkAFinalTest')}</p>
         </div>
         {isAdmin ? (
           <div className="flex flex-wrap gap-2">
@@ -86,16 +83,12 @@ export default function MembershipPage() {
               href="/membership/interest"
               className="inline-flex h-9 items-center rounded-md border border-border px-4 text-sm font-medium text-foreground transition hover:bg-muted/60"
             >
-              <ListChecks className="mr-1 size-4" />
-              Interest pool
-            </Link>
+              <ListChecks className="mr-1 size-4" />{t('membership:interestPool')}</Link>
             <Link
               href="/membership/new"
               className="inline-flex h-9 items-center rounded-md bg-[#5D3FD3] px-4 text-sm font-medium text-white transition hover:bg-[#451ebb]"
             >
-              <Plus className="mr-1 size-4" />
-              New cohort
-            </Link>
+              <Plus className="mr-1 size-4" />{t('membership:newCohort')}</Link>
           </div>
         ) : null}
       </header>
@@ -135,12 +128,10 @@ export default function MembershipPage() {
           </div>
 
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading cohorts…</p>
+            <p className="text-sm text-muted-foreground">{t('membership:loadingCohorts')}</p>
           ) : cohorts.length === 0 ? (
             <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                No cohorts yet. Create one to start admitting people.
-              </CardContent>
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">{t('membership:noCohortsYetCreateOneTo')}</CardContent>
             </Card>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -165,7 +156,8 @@ export default function MembershipPage() {
  * nothing had happened is exactly the silent-drop the two-stage model exists
  * to avoid.
  */
-function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['data'] }) {
+function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['data'] }) {  const { t } = useTranslation(['membership', 'common']);
+
   const express = useExpressInterest();
   const withdraw = useWithdrawInterest();
 
@@ -177,7 +169,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
         <CardContent className="flex items-center gap-3 py-4">
           <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
           <div>
-            <p className="text-sm font-medium text-foreground">You are a confirmed Member</p>
+            <p className="text-sm font-medium text-foreground">{t('membership:youAreAConfirmedMember')}</p>
             <p className="text-xs text-muted-foreground">
               Membership class completed on {formatShortDate(mine.confirmedAt)}.
             </p>
@@ -221,9 +213,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
           <div className="flex items-center gap-3">
             <Clock className="size-5 shrink-0 text-[#5D3FD3]" />
             <div>
-              <p className="text-sm font-medium text-foreground">
-                You are on the list for the next class
-              </p>
+              <p className="text-sm font-medium text-foreground">{t('membership:youAreOnTheListFor')}</p>
               <p className="text-xs text-muted-foreground">
                 Added {formatShortDate(interest.expressedAt)}. A membership admin will place
                 you in a cohort. Your place holds until{' '}
@@ -303,7 +293,8 @@ function ChampionBranchView({
 }: {
   view: MembershipBranchViewResponse;
   scope: 'branch' | 'group';
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const { waitlist, enrolled } = view;
   const isGroup = scope === 'group';
   return (
@@ -347,9 +338,7 @@ function ChampionBranchView({
             </h2>
           </div>
           {enrolled.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground/70">
-              No one from your branch is currently enrolled in a cohort.
-            </p>
+            <p className="mt-3 text-sm text-muted-foreground/70">{t('membership:noOneFromYourBranchIs')}</p>
           ) : (
             <ul className="mt-3 divide-y divide-border">
               {enrolled.map((row) => (

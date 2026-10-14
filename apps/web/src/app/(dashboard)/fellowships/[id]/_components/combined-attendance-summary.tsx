@@ -10,6 +10,7 @@ import {
 import { useFellowshipAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
 import type { FellowshipAttendanceReport } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 interface CombinedAttendanceSummaryProps {
   fellowshipId: string;
@@ -19,7 +20,8 @@ interface CombinedAttendanceSummaryProps {
  * Phase 4b — fellowship-leader view that combines church-service attendance
  * AND fellowship-meeting attendance for the fellowship's members in one panel.
  */
-export function CombinedAttendanceSummary({ fellowshipId }: CombinedAttendanceSummaryProps) {
+export function CombinedAttendanceSummary({ fellowshipId }: CombinedAttendanceSummaryProps) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const { data, isLoading, isError, error } = useFellowshipAttendance(fellowshipId, { weeks: 12 });
 
   if (isLoading) {
@@ -30,7 +32,7 @@ export function CombinedAttendanceSummary({ fellowshipId }: CombinedAttendanceSu
           <div className="h-32 animate-pulse rounded-xl bg-muted/60" />
         </div>
         <div className="h-64 animate-pulse rounded-xl bg-muted/60" />
-        <span className="sr-only">Loading combined attendance</span>
+        <span className="sr-only">{t('fellowships:loadingCombinedAttendance')}</span>
       </div>
     );
   }
@@ -61,7 +63,8 @@ function RateCard({
   total: number;
   activeMembers: number;
   totalLabel: string;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const pct = Math.round(rate * 100);
   const tone =
     activeMembers === 0 || total === 0
@@ -84,8 +87,7 @@ function RateCard({
         <div className="text-right text-xs text-muted-foreground">
           <p>
             <span className="font-semibold text-foreground">{distinctAttendees}</span> of{' '}
-            <span className="font-semibold text-foreground">{activeMembers}</span> members
-          </p>
+            <span className="font-semibold text-foreground">{activeMembers}</span>{t('fellowships:members')}</p>
           <p className="mt-0.5">{totalLabel}</p>
         </div>
       </CardContent>
@@ -93,12 +95,13 @@ function RateCard({
   );
 }
 
-function Body({ report }: { report: FellowshipAttendanceReport }) {
+function Body({ report }: { report: FellowshipAttendanceReport }) {  const { t } = useTranslation(['fellowships', 'common']);
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 md:grid-cols-2">
         <RateCard
-          title="Service attendance"
+          title={t('fellowships:serviceAttendance')}
           description="Sunday / midweek / special church services attended by anyone in this fellowship."
           rate={report.services.rate}
           distinctAttendees={report.services.distinctAttendees}
@@ -107,7 +110,7 @@ function Body({ report }: { report: FellowshipAttendanceReport }) {
           totalLabel={`${report.services.totalServices} services in window`}
         />
         <RateCard
-          title="Meeting attendance"
+          title={t('fellowships:meetingAttendance')}
           description="Attendance at this fellowship’s own meetings."
           rate={report.meetings.rate}
           distinctAttendees={report.meetings.distinctAttendees}
@@ -123,23 +126,21 @@ function Body({ report }: { report: FellowshipAttendanceReport }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Per-member combined breakdown</CardTitle>
-          <CardDescription>Lowest service-rate first.</CardDescription>
+          <CardTitle className="text-base">{t('fellowships:perMemberCombinedBreakdown')}</CardTitle>
+          <CardDescription>{t('fellowships:lowestServiceRateFirst')}</CardDescription>
         </CardHeader>
         <CardContent>
           {report.members.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No active members in this fellowship.
-            </p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('fellowships:noActiveMembersInThisFellowship')}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="pb-2 font-medium">Member</th>
-                  <th className="pb-2 text-right font-medium">Services</th>
-                  <th className="pb-2 text-right font-medium">Service rate</th>
-                  <th className="pb-2 text-right font-medium">Meetings</th>
-                  <th className="pb-2 text-right font-medium">Meeting rate</th>
+                  <th className="pb-2 font-medium">{t('fellowships:member')}</th>
+                  <th className="pb-2 text-right font-medium">{t('fellowships:services')}</th>
+                  <th className="pb-2 text-right font-medium">{t('fellowships:serviceRate')}</th>
+                  <th className="pb-2 text-right font-medium">{t('fellowships:meetings')}</th>
+                  <th className="pb-2 text-right font-medium">{t('fellowships:meetingRate')}</th>
                 </tr>
               </thead>
               <tbody>

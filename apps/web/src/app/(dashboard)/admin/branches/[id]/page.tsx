@@ -19,6 +19,7 @@ import { formatShortDate } from '@kairos/core';
 import { AddressAutofillGroup, Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   branchName: z.string().min(1, 'Branch name is required'),
@@ -36,7 +37,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export default function BranchDetailPage() {
+export default function BranchDetailPage() {  const { t } = useTranslation(['branches', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { activeRole } = useAuthStore();
@@ -130,7 +132,7 @@ export default function BranchDetailPage() {
         <div className="h-9 w-64 animate-pulse rounded bg-muted/60" />
         <div className="h-72 animate-pulse rounded-lg bg-muted/60" />
         <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
-        <span className="sr-only">Loading branch</span>
+        <span className="sr-only">{t('branches:loadingBranch')}</span>
       </div>
     );
   }
@@ -138,7 +140,7 @@ export default function BranchDetailPage() {
   if (error || !branch) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm font-medium text-destructive">Branch not found or access denied.</p>
+        <p className="text-sm font-medium text-destructive">{t('branches:branchNotFoundOrAccessDenied')}</p>
       </div>
     );
   }
@@ -153,7 +155,7 @@ export default function BranchDetailPage() {
         </div>
         {canSeeRolesLink && (
           <Link href={`/admin/branches/${id}/roles`}>
-            <Button variant="outline" size="sm">Manage Admins</Button>
+            <Button variant="outline" size="sm">{t('branches:manageAdmins')}</Button>
           </Link>
         )}
       </div>
@@ -161,36 +163,36 @@ export default function BranchDetailPage() {
       {/* Edit Form */}
       <Card>
         <CardHeader>
-          <CardTitle>Branch Details</CardTitle>
-          <CardDescription>Update branch information</CardDescription>
+          <CardTitle>{t('branches:branchDetails')}</CardTitle>
+          <CardDescription>{t('branches:updateBranchInformation')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="branchName">Branch Name *</Label>
+              <Label htmlFor="branchName">{t('branches:branchName')}</Label>
               <Input id="branchName" {...register('branchName')} />
               {errors.branchName && <p className="text-sm text-destructive">{errors.branchName.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="regionId">Region *</Label>
+              <Label htmlFor="regionId">{t('branches:region')}</Label>
               <CustomSelect
                 id="regionId"
                 value={watch('regionId') ?? ''}
                 onValueChange={(v) => setValue('regionId', v, { shouldDirty: true })}
-                placeholder="Select a region"
+                placeholder={t('branches:selectARegion')}
                 options={(regions ?? []).map((r) => ({ value: r.id, label: r.regionName }))}
               />
               {errors.regionId && <p className="text-sm text-destructive">{errors.regionId.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="branchType">Branch Type</Label>
+              <Label htmlFor="branchType">{t('branches:branchType')}</Label>
               <CustomSelect
                 id="branchType"
                 value={watch('branchType') ?? ''}
                 onValueChange={(v) => setValue('branchType', v as FormValues['branchType'], { shouldDirty: true })}
-                placeholder="Select type"
+                placeholder={t('branches:selectType')}
                 options={Object.values(BranchType).map((t) => ({ value: t, label: t }))}
               />
             </div>
@@ -214,17 +216,17 @@ export default function BranchDetailPage() {
             />
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{t('branches:phone')}</Label>
               <Input id="phone" type="tel" {...register('phone')} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('branches:email')}</Label>
                 <Input id="email" type="email" {...register('email')} />
               </div>
               <div className="space-y-2">
-                <Label>Established Date</Label>
+                <Label>{t('branches:establishedDate')}</Label>
                 <Controller
                   name="establishedDate"
                   control={control}
@@ -243,9 +245,7 @@ export default function BranchDetailPage() {
               <Button type="submit" variant="success" disabled={!isDirty || isSubmitting || updateBranch.isPending}>
                 {updateBranch.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>
-                Back
-              </Button>
+              <Button type="button" variant="outline" onClick={() => router.push('/admin/branches')}>{t('branches:back')}</Button>
               {isAdmin && (
                 <Button
                   type="button"
@@ -255,7 +255,7 @@ export default function BranchDetailPage() {
                     const ok = await confirm({
                       title: `Deactivate ${branch?.branchName ?? 'this branch'}?`,
                       description: 'The branch will be hidden from active lists. All associated members and data stay in place but are tagged inactive.',
-                      confirmLabel: 'Deactivate',
+                      confirmLabel: t('branches:deactivate'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
@@ -263,9 +263,7 @@ export default function BranchDetailPage() {
                       onSuccess: () => router.push('/admin/branches'),
                     });
                   }}
-                >
-                  Deactivate Branch
-                </Button>
+                >{t('branches:deactivateBranch')}</Button>
               )}
             </div>
           </form>
@@ -277,14 +275,14 @@ export default function BranchDetailPage() {
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <CardTitle>Leadership</CardTitle>
+              <CardTitle>{t('branches:leadership')}</CardTitle>
               <CardDescription className="mt-0.5">
                 {showHistory ? 'All leadership assignments (including past)' : 'Current branch leadership assignments'}
               </CardDescription>
             </div>
             <div className="flex shrink-0 items-center gap-3">
               <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                <span>History</span>
+                <span>{t('branches:history')}</span>
                 <button
                   type="button"
                   role="switch"
@@ -302,9 +300,7 @@ export default function BranchDetailPage() {
                 </button>
               </label>
               {isAdmin && (
-                <Button size="sm" variant="success" onClick={() => setShowAssignDialog(true)}>
-                  Assign Leader
-                </Button>
+                <Button size="sm" variant="success" onClick={() => setShowAssignDialog(true)}>{t('branches:assignLeader')}</Button>
               )}
             </div>
           </div>
@@ -313,27 +309,27 @@ export default function BranchDetailPage() {
           {/* Assign Leadership Dialog */}
           {showAssignDialog && (
             <div className="rounded-lg bg-muted p-4 space-y-3">
-              <p className="text-sm font-medium text-foreground">Assign New Leader</p>
+              <p className="text-sm font-medium text-foreground">{t('branches:assignNewLeader')}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Role</label>
+                  <label className="text-sm font-medium">{t('branches:role')}</label>
                   <CustomSelect
                     value={assignRole}
                     onValueChange={(v) => setAssignRole(v as 'Main Pastor' | 'Minister')}
-                    options={[{ value: 'Minister', label: 'Minister' }, { value: 'Main Pastor', label: 'Main Pastor' }]}
+                    options={[{ value: 'Minister', label: t('branches:minister') }, { value: 'Main Pastor', label: t('branches:mainPastor') }]}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Member</label>
+                  <label className="text-sm font-medium">{t('branches:member')}</label>
                   <CustomSelect
                     value={assignMemberId}
                     onValueChange={setAssignMemberId}
-                    placeholder="Select a member..."
+                    placeholder={t('branches:selectAMember')}
                     options={(membersData?.data ?? []).map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Start Date</label>
+                  <label className="text-sm font-medium">{t('branches:startDate')}</label>
                   <DateSelect
                     value={assignStartDate}
                     onChange={setAssignStartDate}
@@ -366,7 +362,7 @@ export default function BranchDetailPage() {
                 >
                   {assignLeadership.isPending ? 'Assigning...' : 'Confirm'}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowAssignDialog(false)}>Cancel</Button>
+                <Button size="sm" variant="outline" onClick={() => setShowAssignDialog(false)}>{t('branches:cancel')}</Button>
               </div>
             </div>
           )}
@@ -378,11 +374,11 @@ export default function BranchDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-2 pr-4 font-medium">Name</th>
-                    <th className="pb-2 pr-4 font-medium">Role</th>
-                    <th className="pb-2 pr-4 font-medium">Start Date</th>
-                    <th className="pb-2 pr-4 font-medium">End Date</th>
-                    <th className="pb-2 font-medium">Status</th>
+                    <th className="pb-2 pr-4 font-medium">{t('branches:name')}</th>
+                    <th className="pb-2 pr-4 font-medium">{t('branches:role')}</th>
+                    <th className="pb-2 pr-4 font-medium">{t('branches:startDate')}</th>
+                    <th className="pb-2 pr-4 font-medium">{t('branches:endDate')}</th>
+                    <th className="pb-2 font-medium">{t('branches:status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -432,7 +428,7 @@ export default function BranchDetailPage() {
                         const ok = await confirm({
                           title: `Remove ${leader.memberFirstName} ${leader.memberLastName} as ${leader.role}?`,
                           description: 'You can reassign them later if needed.',
-                          confirmLabel: 'Remove',
+                          confirmLabel: t('branches:remove'),
                           variant: 'destructive',
                         });
                         if (!ok) return;
@@ -444,9 +440,7 @@ export default function BranchDetailPage() {
                           },
                         );
                       }}
-                    >
-                      Remove
-                    </Button>
+                    >{t('branches:remove')}</Button>
                   </div>
                 );
               })}
@@ -459,25 +453,25 @@ export default function BranchDetailPage() {
       {canSeeMembers && (
         <Card>
           <CardHeader>
-            <CardTitle>Members</CardTitle>
+            <CardTitle>{t('branches:members')}</CardTitle>
             <CardDescription>
               {membersData?.meta?.total ?? 0} member{(membersData?.meta?.total ?? 0) !== 1 ? 's' : ''} in this branch
             </CardDescription>
           </CardHeader>
           <CardContent>
             {membersLoading ? (
-              <p className="text-sm text-muted-foreground">Loading members...</p>
+              <p className="text-sm text-muted-foreground">{t('branches:loadingMembers')}</p>
             ) : !membersData?.data?.length ? (
-              <p className="text-sm text-muted-foreground">No members found for this branch.</p>
+              <p className="text-sm text-muted-foreground">{t('branches:noMembersFoundForThisBranch')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
-                      <th className="pb-2 pr-4 font-medium">Name</th>
-                      <th className="pb-2 pr-4 font-medium">Email</th>
-                      <th className="pb-2 pr-4 font-medium">Phone</th>
-                      <th className="pb-2 font-medium">Status</th>
+                      <th className="pb-2 pr-4 font-medium">{t('branches:name')}</th>
+                      <th className="pb-2 pr-4 font-medium">{t('branches:email')}</th>
+                      <th className="pb-2 pr-4 font-medium">{t('branches:phone')}</th>
+                      <th className="pb-2 font-medium">{t('branches:status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

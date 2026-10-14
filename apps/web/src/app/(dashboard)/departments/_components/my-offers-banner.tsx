@@ -12,6 +12,7 @@ import {
 import { useRespondToDepartmentOffer } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   offers: MyDepartmentJoinRequest[];
@@ -30,7 +31,8 @@ function formatDateTime(value: string | Date | null) {
   });
 }
 
-export function MyOffersBanner({ offers }: Props) {
+export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslation(['departments', 'common']);
+
   const respond = useRespondToDepartmentOffer();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
@@ -51,7 +53,7 @@ export function MyOffersBanner({ offers }: Props) {
     const ok = await confirm({
       title: `Decline the offer from ${departmentName}?`,
       description: 'You won’t be added to this department. You can apply again later if you change your mind.',
-      confirmLabel: 'Decline',
+      confirmLabel: t('departments:decline'),
       variant: 'destructive',
     });
     if (!ok) return;
@@ -98,17 +100,13 @@ export function MyOffersBanner({ offers }: Props) {
                   size="sm"
                   onClick={() => handleAccept(req.branchDepartmentId, req.id)}
                   disabled={respond.isPending}
-                >
-                  Accept offer
-                </Button>
+                >{t('departments:acceptOffer')}</Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleDecline(req.branchDepartmentId, req.id, req.departmentName)}
                   disabled={respond.isPending}
-                >
-                  Decline
-                </Button>
+                >{t('departments:decline')}</Button>
               </div>
             </CardContent>
           </Card>

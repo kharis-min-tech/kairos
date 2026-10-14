@@ -1,6 +1,7 @@
 'use client';
 
 import { Checkbox } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
 /**
  * GDPR / safeguarding disclaimer rendered above every form's submit. The submit
@@ -18,10 +19,11 @@ interface DisclaimerConsentProps {
   onChange: (checked: boolean) => void;
 }
 
-export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps) {
+export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps) {  const { t } = useTranslation(['forms', 'common']);
+
   return (
     <div className="rounded-lg border bg-card p-4 text-sm">
-      <h3 className="font-semibold text-foreground">Privacy notice</h3>
+      <h3 className="font-semibold text-foreground">{t('forms:privacyNotice')}</h3>
       <div className="mt-2 space-y-3 text-muted-foreground">
         <p>
           Kharis Church is committed to respecting the privacy and security of your
@@ -32,22 +34,17 @@ export function DisclaimerConsent({ checked, onChange }: DisclaimerConsentProps)
           purposes. We securely store this information until it is no longer
           required.
         </p>
-        <p>
-          Please tick the box below to provide your consent for us using your
-          information in this way.
-        </p>
+        <p>{t('forms:pleaseTickTheBoxBelowTo')}</p>
         <p>
           To find out more about how we handle your personal data or to{' '}
-          <span className="italic">opt out</span> of us using it, please read our
+          <span className="italic">{t('forms:optOut')}</span> of us using it, please read our
           Privacy Policy at{' '}
           <a
             href="https://kharis.org"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-[#5D3FD3] hover:underline"
-          >
-            kharis.org
-          </a>
+          >{t('forms:kharisOrg')}</a>
           .
         </p>
       </div>

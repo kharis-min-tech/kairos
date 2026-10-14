@@ -35,6 +35,7 @@ import {
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
+import { useTranslation } from 'react-i18next';
 
 // ── Value model ─────────────────────────────────────────────
 //
@@ -68,7 +69,8 @@ export function DeclarativeForm({
   definition,
   successTitle,
   successMessage,
-}: DeclarativeFormProps) {
+}: DeclarativeFormProps) {  const { t } = useTranslation(['forms', 'common']);
+
   const user = useAuthStore((s) => s.user);
   const submitForm = useSubmitForm();
 
@@ -416,8 +418,7 @@ export function DeclarativeForm({
                       onClick={() => removeRow(block, index)}
                       className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4" /> Remove
-                    </button>
+                      <Trash2 className="h-4 w-4" />{t('forms:remove')}</button>
                   ) : null}
                 </div>
                 {block.fields

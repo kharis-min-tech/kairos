@@ -31,6 +31,7 @@ import {
   type UpdateEnrollmentRequest,
   type NBRemovalReason,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 interface EnrollmentDetailDrawerProps {
   enrollmentId: string | null;
@@ -43,7 +44,8 @@ export function EnrollmentDetailDrawer({
   enrollmentId,
   onClose,
   branchMembers,
-}: EnrollmentDetailDrawerProps) {
+}: EnrollmentDetailDrawerProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const open = !!enrollmentId;
   const caps = useCapabilities();
   const canEdit = (caps.has('branch:write') || caps.has('fellowship:write') || caps.has('department:write'));
@@ -175,7 +177,7 @@ export function EnrollmentDetailDrawer({
       >
       <DialogContent
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
-        aria-label="Enrollment details"
+        aria-label={t('newBelievers:enrollmentDetails')}
       >
         <DialogHeader>
           <DialogTitle>
@@ -183,15 +185,11 @@ export function EnrollmentDetailDrawer({
               ? `${enrollment.memberFirstName} ${enrollment.memberLastName}`
               : 'Loading...'}
           </DialogTitle>
-          <DialogDescription className="sr-only">
-            View and update this new believer enrollment.
-          </DialogDescription>
+          <DialogDescription className="sr-only">{t('newBelievers:viewAndUpdateThisNewBeliever')}</DialogDescription>
         </DialogHeader>
 
         {isLoading || !enrollment ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Loading enrollment...
-          </div>
+          <div className="py-10 text-center text-sm text-muted-foreground">{t('newBelievers:loadingEnrollment')}</div>
         ) : (
           <div className="space-y-5">
             {/* Stage indicator */}
@@ -211,15 +209,13 @@ export function EnrollmentDetailDrawer({
             {/* Teacher + Mentor reassignment */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                  Teacher
-                </label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">{t('newBelievers:teacher')}</label>
                 {canEdit ? (
                   <CustomSelect
                     value={enrollment.teacherId ?? ''}
                     onValueChange={(v) => handleReassign('teacherId', v)}
                     options={memberOptions}
-                    placeholder="Assign teacher..."
+                    placeholder={t('newBelievers:assignTeacher')}
                   />
                 ) : (
                   <p className="text-sm">
@@ -230,15 +226,13 @@ export function EnrollmentDetailDrawer({
                 )}
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                  Mentor
-                </label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">{t('newBelievers:mentor')}</label>
                 {canEdit ? (
                   <CustomSelect
                     value={enrollment.mentorId ?? ''}
                     onValueChange={(v) => handleReassign('mentorId', v)}
                     options={memberOptions}
-                    placeholder="Assign mentor..."
+                    placeholder={t('newBelievers:assignMentor')}
                   />
                 ) : (
                   <p className="text-sm">
@@ -252,13 +246,9 @@ export function EnrollmentDetailDrawer({
 
             {/* Session attendance log */}
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                Session attendance
-              </h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('newBelievers:sessionAttendance')}</h3>
               {attendanceHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">
-                  No sessions logged yet.
-                </p>
+                <p className="text-sm text-muted-foreground italic">{t('newBelievers:noSessionsLoggedYet')}</p>
               ) : (
                 <ul className="space-y-1.5">
                   {attendanceHistory.map((a) => (
@@ -293,8 +283,7 @@ export function EnrollmentDetailDrawer({
                 href={`/new-believers/${enrollment.id}`}
                 className="inline-flex items-center gap-1.5 rounded text-sm font-semibold text-[#5D3FD3] hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5D3FD3]/40"
                 onClick={onClose}
-              >
-                Open full page <ExternalLink className="h-3.5 w-3.5" />
+              >{t('newBelievers:openFullPage')}<ExternalLink className="h-3.5 w-3.5" />
               </Link>
               <div className="flex items-center gap-2">
                 {canEdit && enrollment.isActive && enrollment.stage !== 'integrated' && (
@@ -303,9 +292,7 @@ export function EnrollmentDetailDrawer({
                     onClick={() => setShowRemoveModal(true)}
                     disabled={removeEnrollment.isPending}
                     className="border-rose-600/40 text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
-                  >
-                    Remove from pipeline
-                  </Button>
+                  >{t('newBelievers:removeFromPipeline')}</Button>
                 )}
                 {canEdit && nextStage && enrollment.stage !== 'integrated' && (
                   <Button
@@ -335,26 +322,23 @@ export function EnrollmentDetailDrawer({
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Session Feedback Required</DialogTitle>
+            <DialogTitle>{t('newBelievers:sessionFeedbackRequired')}</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               Record feedback before moving to {nextStage?.label ?? 'the next stage'}.
             </DialogDescription>
           </DialogHeader>
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              Session Feedback <span className="text-destructive">*</span>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:sessionFeedback')}<span className="text-destructive">*</span>
             </label>
             <Textarea
               rows={4}
-              placeholder="How did the session go? Any observations about the student's progress?"
+              placeholder={t('newBelievers:howDidTheSessionGoAny')}
               value={advanceFeedback}
               onChange={(e) => setAdvanceFeedback(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={resetFeedbackModal}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={resetFeedbackModal}>{t('newBelievers:cancel')}</Button>
             <Button
               disabled={!advanceFeedback.trim() || updateEnrollment.isPending}
               onClick={handleConfirmAdvanceWithFeedback}
@@ -375,16 +359,12 @@ export function EnrollmentDetailDrawer({
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Remove from pipeline</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Capture why this new believer is leaving the pipeline. Their mentor
-              and branch leadership will be notified.
-            </DialogDescription>
+            <DialogTitle>{t('newBelievers:removeFromPipeline')}</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">{t('newBelievers:captureWhyThisNewBelieverIs')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                Reason <span className="text-destructive">*</span>
+              <label className="mb-1 block text-sm font-medium">{t('newBelievers:reason')}<span className="text-destructive">*</span>
               </label>
               <CustomSelect
                 value={removeReason}
@@ -393,16 +373,15 @@ export function EnrollmentDetailDrawer({
                   value: r,
                   label: NB_REMOVAL_REASON_LABEL[r],
                 }))}
-                placeholder="Select a reason..."
+                placeholder={t('newBelievers:selectAReason')}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                Notes <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+              <label className="mb-1 block text-sm font-medium">{t('newBelievers:notes')}<span className="text-xs font-normal text-muted-foreground">(optional)</span>
               </label>
               <Textarea
                 rows={3}
-                placeholder="Anything the mentor should know..."
+                placeholder={t('newBelievers:anythingTheMentorShouldKnow')}
                 value={removeNotes}
                 onChange={(e) => setRemoveNotes(e.target.value)}
                 maxLength={500}
@@ -410,9 +389,7 @@ export function EnrollmentDetailDrawer({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={resetRemoveModal}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={resetRemoveModal}>{t('newBelievers:cancel')}</Button>
             <Button
               disabled={!removeReason || removeEnrollment.isPending}
               onClick={handleConfirmRemove}

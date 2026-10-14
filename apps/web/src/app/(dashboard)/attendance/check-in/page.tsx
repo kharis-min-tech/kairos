@@ -14,6 +14,7 @@ import {
   useSelfCheckInQr,
 } from '@/hooks/use-attendance';
 import { QrScannerModal } from '@/components/qr-scanner-modal';
+import { useTranslation } from 'react-i18next';
 
 function formatServiceTime(iso: string): string {
   const d = new Date(iso);
@@ -44,7 +45,8 @@ function parseCheckInQr(payload: string): { serviceId: string; token: string } |
  * page never looks empty when there's a service today. See docs/self-check-in.md
  * for the full lifecycle.
  */
-export default function SelfCheckInPage() {
+export default function SelfCheckInPage() {  const { t } = useTranslation(['attendance', 'common']);
+
   const candidates = useSelfCheckInCandidates();
   const checkIn = useSelfCheckIn();
   const checkInQr = useSelfCheckInQr();
@@ -94,14 +96,11 @@ export default function SelfCheckInPage() {
         href="/attendance"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ChevronLeft className="h-4 w-4" /> Back to attendance
-      </Link>
+        <ChevronLeft className="h-4 w-4" />{t('attendance:backToAttendance')}</Link>
 
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Check in</h1>
-        <p className="text-sm text-muted-foreground">
-          Tap once to record yourself at a service, or scan the QR displayed at the admin desk.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t('attendance:checkIn')}</h1>
+        <p className="text-sm text-muted-foreground">{t('attendance:tapOnceToRecordYourselfAt')}</p>
       </div>
 
       {/* Success + error banners */}
@@ -139,12 +138,9 @@ export default function SelfCheckInPage() {
           onClick={() => setScannerOpen(true)}
           disabled={!canCheckIn || pending}
         >
-          <ScanLine className="mr-1.5 h-4 w-4" /> Scan QR at the desk
-        </Button>
+          <ScanLine className="mr-1.5 h-4 w-4" />{t('attendance:scanQrAtTheDesk')}</Button>
         {!canCheckIn && rows.length > 0 ? (
-          <span className="text-xs text-muted-foreground">
-            The scanner unlocks the moment a service's window opens.
-          </span>
+          <span className="text-xs text-muted-foreground">{t('attendance:theScannerUnlocksTheMomentA')}</span>
         ) : null}
       </div>
 
@@ -159,10 +155,8 @@ export default function SelfCheckInPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
             <Clock className="h-10 w-10 text-muted-foreground" />
-            <p className="font-medium text-foreground">Nothing scheduled today</p>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Come back closer to your next service.
-            </p>
+            <p className="font-medium text-foreground">{t('attendance:nothingScheduledToday')}</p>
+            <p className="max-w-sm text-sm text-muted-foreground">{t('attendance:comeBackCloserToYourNext')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -200,9 +194,7 @@ export default function SelfCheckInPage() {
               key={s.serviceId}
               candidate={s}
               action={
-                <span className="text-sm text-muted-foreground">
-                  Ask a leader to record you.
-                </span>
+                <span className="text-sm text-muted-foreground">{t('attendance:askALeaderToRecordYou')}</span>
               }
               badge={<StateBadge kind="closed" />}
             />
@@ -214,7 +206,7 @@ export default function SelfCheckInPage() {
         open={scannerOpen}
         onOpenChange={setScannerOpen}
         onScan={handleScannedQr}
-        title="Scan check-in QR"
+        title={t('attendance:scanCheckInQr')}
         description="Point your camera at the code on the admin desk screen."
       />
     </div>

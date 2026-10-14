@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import type { FellowshipWithBranch } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
 import mapboxgl from 'mapbox-gl';
+import { useTranslation } from 'react-i18next';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -163,7 +164,8 @@ function getNextMeetingDate(schedule: string): string | null {
 
 // ── Country Search Component ─────────────────────────────
 
-function CountrySearch({ countries, onSelect }: { countries: CountryData[]; onSelect: (c: CountryData) => void }) {
+function CountrySearch({ countries, onSelect }: { countries: CountryData[]; onSelect: (c: CountryData) => void }) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -180,7 +182,7 @@ function CountrySearch({ countries, onSelect }: { countries: CountryData[]; onSe
           </svg>
           <input
             type="text"
-            placeholder="Search country..."
+            placeholder={t('fellowships:searchCountry')}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
             onFocus={() => setOpen(true)}
@@ -200,7 +202,7 @@ function CountrySearch({ countries, onSelect }: { countries: CountryData[]; onSe
         {open && (
           <div className="max-h-40 overflow-y-auto border-t border-border">
             {filtered.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-muted-foreground">No countries found</div>
+              <div className="px-3 py-2 text-xs text-muted-foreground">{t('fellowships:noCountriesFound')}</div>
             ) : (
               filtered.map((country) => (
                 <button
@@ -225,7 +227,8 @@ function CountrySearch({ countries, onSelect }: { countries: CountryData[]; onSe
 
 // ── Postcode Search Component ────────────────────────────
 
-function PostcodeSearch({ onLocate }: { onLocate: (lat: number, lng: number, label: string) => void }) {
+function PostcodeSearch({ onLocate }: { onLocate: (lat: number, lng: number, label: string) => void }) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const [postcode, setPostcode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -266,7 +269,7 @@ function PostcodeSearch({ onLocate }: { onLocate: (lat: number, lng: number, lab
           </svg>
           <input
             type="text"
-            placeholder="SEARCH POSTCODE..."
+            placeholder={t('fellowships:searchPostcode')}
             value={postcode}
             onChange={(e) => { setPostcode(e.target.value.toUpperCase()); setError(''); }}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
@@ -333,7 +336,8 @@ function smallBranchMarkerElement(): HTMLDivElement {
   return el;
 }
 
-export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps) {
+export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const { theme } = useTheme();
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -489,7 +493,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       const color = TYPE_COLORS[fellowshipType] || '#6366f1';
       const nextMeeting = meetingSchedule ? getNextMeetingDate(meetingSchedule) : null;
       const scheduleInfo = nextMeeting
-        ? `<div style="margin-top:6px;font-size:12px;color:#374151;">Next meeting: <strong style="color:#111827;">${nextMeeting}</strong></div>`
+        ? `<div style="margin-top:6px;font-size:12px;color:#374151;">{t('fellowships:nextMeeting')}<strong style="color:#111827;">${nextMeeting}</strong></div>`
         : meetingSchedule
           ? `<div style="margin-top:6px;font-size:12px;color:#374151;">${meetingSchedule}</div>`
           : '';
@@ -581,9 +585,9 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                     <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
                     <strong style="font-size:12px;color:#111827;">${f.fellowshipName}</strong>
                   </div>
-                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
+                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">{t('fellowships:nextMeeting')}<strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
                   ${f.description ? `<div style="margin-top:3px;font-size:11px;color:#6b7280;">${f.description}</div>` : ''}
-                  <button onclick="window.dispatchEvent(new CustomEvent('fellowship-join', {detail:{id:'${f.id}',name:'${f.fellowshipName.replace(/'/g, "\\'")}',type:'${f.fellowshipType}',schedule:'${(f.meetingSchedule || '').replace(/'/g, "\\'")}'} }))" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Request to Join</button>
+                  <button onclick="window.dispatchEvent(new CustomEvent('fellowship-join', {detail:{id:'${f.id}',name:'${f.fellowshipName.replace(/'/g, "\\'")}',type:'${f.fellowshipType}',schedule:'${(f.meetingSchedule || '').replace(/'/g, "\\'")}'} }))" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">{t('fellowships:requestToJoin')}</button>
                 </div>
               `;
             }).join('');
@@ -596,9 +600,9 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                     <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
                     <strong style="font-size:12px;color:#111827;">${f.name}</strong>
                   </div>
-                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
+                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">{t('fellowships:nextMeeting')}<strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
                   <div style="margin-top:3px;font-size:11px;color:#6b7280;">${f.description}</div>
-                  <button onclick="window.dispatchEvent(new CustomEvent('fellowship-join-static', {detail:{name:'${f.name.replace(/'/g, "\\'")}',type:'${f.type}',schedule:'${f.schedule.replace(/'/g, "\\'")}'} }))" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Request to Join</button>
+                  <button onclick="window.dispatchEvent(new CustomEvent('fellowship-join-static', {detail:{name:'${f.name.replace(/'/g, "\\'")}',type:'${f.type}',schedule:'${f.schedule.replace(/'/g, "\\'")}'} }))" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">{t('fellowships:requestToJoin')}</button>
                 </div>
               `;
             }).join('');
@@ -619,7 +623,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         const popupContent = `
           <div style="min-width:240px;max-width:300px;padding:6px 0;">
             <strong style="font-size:14px;display:block;margin-bottom:8px;">${branch.name}</strong>
-            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Tap a fellowship type to see details:</div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;">{t('fellowships:tapAFellowshipTypeToSee')}</div>
             ${fellowshipSections}
           </div>
         `;
@@ -706,8 +710,8 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         )}
         {stage === 'globe' && (
           <div className="rounded-lg bg-background/80 px-4 py-2 backdrop-blur-sm">
-            <h2 className="text-sm font-semibold">Find a Fellowship Near You</h2>
-            <p className="text-xs text-muted-foreground">Search for your country</p>
+            <h2 className="text-sm font-semibold">{t('fellowships:findAFellowshipNearYou')}</h2>
+            <p className="text-xs text-muted-foreground">{t('fellowships:searchForYourCountry')}</p>
           </div>
         )}
       </div>
@@ -839,25 +843,17 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                 <Button
                   className="w-full"
                   onClick={() => setShowConfirmation(true)}
-                >
-                  This is near me, I want to join
-                </Button>
+                >{t('fellowships:thisIsNearMeIWant')}</Button>
               )}
 
               {showConfirmation && !joinSubmitted && (
                 <div className="space-y-3 rounded-lg border border-border bg-muted/50 p-3">
-                  <p className="text-sm font-medium">Confirm your interest</p>
-                  <p className="text-xs text-muted-foreground">
-                    The fellowship leader will be notified of your request.
-                    Estimated response time: <span className="font-semibold text-foreground">{getWaitTime()}</span>
+                  <p className="text-sm font-medium">{t('fellowships:confirmYourInterest')}</p>
+                  <p className="text-xs text-muted-foreground">{t('fellowships:theFellowshipLeaderWillBeNotified')}<span className="font-semibold text-foreground">{getWaitTime()}</span>
                   </p>
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1" onClick={handleConfirmJoin}>
-                      Confirm
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowConfirmation(false)}>
-                      Cancel
-                    </Button>
+                    <Button size="sm" className="flex-1" onClick={handleConfirmJoin}>{t('fellowships:confirm')}</Button>
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => setShowConfirmation(false)}>{t('fellowships:cancel')}</Button>
                   </div>
                 </div>
               )}
@@ -868,7 +864,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                     <svg className="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Request sent!</p>
+                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t('fellowships:requestSent')}</p>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     The leader will review your request. You&apos;ll be notified once approved.
@@ -920,11 +916,9 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                     <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Request sent!</p>
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('fellowships:requestSent')}</p>
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    The fellowship leader and admin have been notified.
-                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{t('fellowships:theFellowshipLeaderAndAdminHave')}</p>
                 </div>
               )}
             </CardContent>
@@ -939,7 +933,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
             <CardContent className="p-6 max-h-[460px] overflow-y-auto">
               <div className="flex items-start justify-between mb-5">
                 <div>
-                  <p className="text-sm text-muted-foreground">Nearest fellowship</p>
+                  <p className="text-sm text-muted-foreground">{t('fellowships:nearestFellowship')}</p>
                   <p className="font-bold text-xl mt-1">{nearestBranch.branch.name}</p>
                   <p className="text-sm text-muted-foreground mt-1">{nearestBranch.distanceKm.toFixed(1)} km away</p>
                 </div>
@@ -960,10 +954,10 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
               </div>
               <div className="grid grid-cols-4 gap-4 mt-4">
                 {[
-                  { label: 'Walk', mins: Math.round(nearestBranch.distanceKm / 5 * 60), mode: 'walking', icon: '<path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/>' },
-                  { label: 'Bus', mins: Math.round(nearestBranch.distanceKm / 20 * 60), mode: 'transit', icon: '<path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>' },
-                  { label: 'Car', mins: Math.round(nearestBranch.distanceKm / 40 * 60), mode: 'driving', icon: '<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>' },
-                  { label: 'Train', mins: Math.round(nearestBranch.distanceKm / 60 * 60), mode: 'transit', icon: '<path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm2 0V6h5v5h-5zm3.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>' },
+                  { label: t('fellowships:walk'), mins: Math.round(nearestBranch.distanceKm / 5 * 60), mode: 'walking', icon: '<path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/>' },
+                  { label: t('fellowships:bus'), mins: Math.round(nearestBranch.distanceKm / 20 * 60), mode: 'transit', icon: '<path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/>' },
+                  { label: t('fellowships:car'), mins: Math.round(nearestBranch.distanceKm / 40 * 60), mode: 'driving', icon: '<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>' },
+                  { label: t('fellowships:train'), mins: Math.round(nearestBranch.distanceKm / 60 * 60), mode: 'transit', icon: '<path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-4-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-6H6V6h5v5zm2 0V6h5v5h-5zm3.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>' },
                 ].map(({ label, mins, mode, icon }) => {
                   const hours = Math.floor(mins / 60);
                   const remainMins = mins % 60;
@@ -978,9 +972,9 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                         <p className="text-xs text-muted-foreground">{label}</p>
                         <p className="text-lg font-bold mt-1 whitespace-nowrap">{display}</p>
                         <div className="flex gap-3 mt-3 justify-center items-center">
-                          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary font-bold hover:underline">Maps</a>
+                          <a href={googleUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary font-bold hover:underline">{t('fellowships:maps')}</a>
                           <span className="text-sm text-muted-foreground">|</span>
-                          <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary font-bold hover:underline">Waze</a>
+                          <a href={wazeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary font-bold hover:underline">{t('fellowships:waze')}</a>
                         </div>
                       </div>
                     );
@@ -991,13 +985,13 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                       <svg className="mx-auto h-8 w-8 text-primary mb-2" viewBox="0 0 24 24" fill="currentColor" dangerouslySetInnerHTML={{ __html: icon }} />
                       <p className="text-xs text-muted-foreground">{label}</p>
                       <p className="text-lg font-bold mt-1 whitespace-nowrap">{display}</p>
-                      <p className="text-xs text-primary font-semibold mt-3">View route →</p>
+                      <p className="text-xs text-primary font-semibold mt-3">{t('fellowships:viewRoute')}</p>
                     </a>
                   );
                 })}
               </div>
               <div className="mt-4 border-t border-border pt-4 space-y-2">
-                <p className="text-xs text-muted-foreground">Available fellowships:</p>
+                <p className="text-xs text-muted-foreground">{t('fellowships:availableFellowships')}</p>
                 <div className="space-y-2">
                   {nearestBranch.branch.fellowshipDetails.map((f) => {
                     const color = TYPE_COLORS[f.type] || '#6366f1';
@@ -1015,7 +1009,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                         </summary>
                         <div className="mt-2 ml-2 rounded-lg border border-border bg-muted/30 p-3">
                           <p className="text-sm font-medium">{f.name}</p>
-                          {nextMeeting && <p className="text-xs text-muted-foreground mt-1">Next meeting: <span className="font-medium text-foreground">{nextMeeting}</span></p>}
+                          {nextMeeting && <p className="text-xs text-muted-foreground mt-1">{t('fellowships:nextMeeting')}<span className="font-medium text-foreground">{nextMeeting}</span></p>}
                           <p className="text-xs text-muted-foreground mt-0.5">{f.description}</p>
                         </div>
                       </details>
@@ -1032,7 +1026,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
       {!nearestBranch && (
       <div className="absolute bottom-6 left-4 z-[1000]">
         <div className="rounded-lg bg-background/90 p-3 shadow-md backdrop-blur-sm">
-          <p className="mb-2 text-xs font-semibold text-muted-foreground">Fellowship Types</p>
+          <p className="mb-2 text-xs font-semibold text-muted-foreground">{t('fellowships:fellowshipTypes')}</p>
           <div className="space-y-1">
             {Object.entries(TYPE_COLORS).map(([type, color]) => (
               <div key={type} className="flex items-center gap-2">

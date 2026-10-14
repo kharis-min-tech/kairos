@@ -13,6 +13,7 @@ import {
 import { DateSelect } from '@/components/date-select';
 import { formatShortDate } from '@kairos/core';
 import type { DashboardOverview, DashboardAnalytics, FollowUpOverviewData, PaginatedDashboardData, DashboardSoul, DashboardFollowUp } from './types';
+import { useTranslation } from 'react-i18next';
 
 type DatePreset = 'week' | '1M' | '3M' | '6M' | 'custom';
 
@@ -112,7 +113,8 @@ export function UnifiedDashboard({
   onProgramChange,
   programs = [],
   isRefreshing,
-}: UnifiedDashboardProps) {
+}: UnifiedDashboardProps) {  const { t } = useTranslation(['common', 'common']);
+
   const router = useRouter();
   const [selectedSouls, setSelectedSouls] = useState<DashboardSoul[]>([]);
   const [selectedFollowUps, setSelectedFollowUps] = useState<DashboardFollowUp[]>([]);
@@ -230,30 +232,26 @@ export function UnifiedDashboard({
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-semibold text-primary tracking-tight">
-              Souls Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-2">Soul management and assimilation insights</p>
+            <h1 className="text-4xl font-semibold text-primary tracking-tight">{t('common:soulsDashboard')}</h1>
+            <p className="text-muted-foreground mt-2">{t('common:soulManagementAndAssimilationInsights')}</p>
           </div>
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] hover:from-[#3a17a0] hover:to-[#4f35b8] text-white rounded transition-colors shadow-md disabled:opacity-60"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />{t('common:refresh')}</button>
         </div>
 
         {/* Date Filter Bar */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex items-center gap-1 rounded bg-[#f0f0f3] p-1.5 dark:bg-white/[0.06]">
             {([
-              { key: 'week', label: 'Week' },
+              { key: 'week', label: t('common:week') },
               { key: '1M', label: '1M' },
               { key: '3M', label: '3M' },
               { key: '6M', label: '6M' },
-              { key: 'custom', label: 'Custom' },
+              { key: 'custom', label: t('common:custom') },
             ] as Array<{ key: DatePreset; label: string }>).map((opt) => {
               const active = datePreset === opt.key;
               return (
@@ -277,15 +275,15 @@ export function UnifiedDashboard({
               <DateSelect
                 variant="pill"
                 value={customFrom}
-                placeholder="Start date"
+                placeholder={t('common:startDate')}
                 maxDate={customTo || formatDateInput(new Date())}
                 onChange={(v) => applyCustomRange(v, customTo)}
               />
-              <span className="text-sm font-medium text-muted-foreground">to</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('common:to')}</span>
               <DateSelect
                 variant="pill"
                 value={customTo}
-                placeholder="End date"
+                placeholder={t('common:endDate')}
                 minDate={customFrom}
                 maxDate={formatDateInput(new Date())}
                 onChange={(v) => applyCustomRange(customFrom, v)}
@@ -299,18 +297,16 @@ export function UnifiedDashboard({
           )}
           {onProgramChange && (
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Program
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('common:program')}</span>
               <div className="min-w-[220px]">
                 <CustomSelect
                   value={programId ?? ''}
                   onValueChange={(value) => onProgramChange(value === '' ? null : value)}
                   options={[
-                    { value: '', label: 'All programs' },
+                    { value: '', label: t('common:allPrograms') },
                     ...programs.map((p) => ({ value: p.id, label: p.programName })),
                   ]}
-                  placeholder="All programs"
+                  placeholder={t('common:allPrograms')}
                   size="sm"
                 />
               </div>
@@ -326,9 +322,9 @@ export function UnifiedDashboard({
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Total Souls</p>
+                <p className="text-muted-foreground text-sm">{t('common:totalSouls')}</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.totalSouls || 0}</p>
-                <p className="text-muted-foreground text-xs mt-1">Click to view all</p>
+                <p className="text-muted-foreground text-xs mt-1">{t('common:clickToViewAll')}</p>
               </div>
               <Users className="h-12 w-12 text-primary/60" />
             </div>
@@ -340,9 +336,9 @@ export function UnifiedDashboard({
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Critical</p>
+                <p className="text-muted-foreground text-sm">{t('common:critical')}</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.ragCounts?.RED || 0}</p>
-                <p className="text-muted-foreground text-xs mt-1">Click to view</p>
+                <p className="text-muted-foreground text-xs mt-1">{t('common:clickToView')}</p>
               </div>
               <AlertCircle className="h-12 w-12 text-destructive/70" />
             </div>
@@ -354,9 +350,9 @@ export function UnifiedDashboard({
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">Monitor</p>
+                <p className="text-muted-foreground text-sm">{t('common:monitor')}</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.ragCounts?.AMBER || 0}</p>
-                <p className="text-muted-foreground text-xs mt-1">Click to view</p>
+                <p className="text-muted-foreground text-xs mt-1">{t('common:clickToView')}</p>
               </div>
               <Clock className="h-12 w-12 text-accent/70" />
             </div>
@@ -368,9 +364,9 @@ export function UnifiedDashboard({
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-sm">On Track</p>
+                <p className="text-muted-foreground text-sm">{t('common:onTrack')}</p>
                 <p className="text-4xl font-semibold text-foreground mt-2 tracking-tight">{overview?.ragCounts?.GREEN || 0}</p>
-                <p className="text-muted-foreground text-xs mt-1">Click to view</p>
+                <p className="text-muted-foreground text-xs mt-1">{t('common:clickToView')}</p>
               </div>
               <CheckCircle className="h-12 w-12 text-success/70" />
             </div>
@@ -381,13 +377,11 @@ export function UnifiedDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Souls RAG Status Pie Chart */}
           <div className="bg-card rounded p-6 shadow-ambient">
-            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              Souls Pipeline Status
-              <InfoTooltip title="Souls Pipeline RAG">
-                <p className="font-semibold text-foreground mb-2">Souls Pipeline RAG Criteria:</p>
+            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">{t('common:soulsPipelineStatus')}<InfoTooltip title={t('common:soulsPipelineRag')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:soulsPipelineRagCriteria')}</p>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-destructive font-semibold">RED RED - Critical:</p>
+                    <p className="text-destructive font-semibold">{t('common:redRedCritical')}</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• No follow-up logged yet</li>
                       <li>• New/Following Up: 3+ days since last contact</li>
@@ -395,14 +389,14 @@ export function UnifiedDashboard({
                     </ul>
                   </div>
                   <div>
-                    <p className="text-accent font-semibold">AMBER AMBER - Monitor:</p>
+                    <p className="text-accent font-semibold">{t('common:amberAmberMonitor')}</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• New/Following Up: 2 days since last contact</li>
                       <li>• Interested: 3-4 days since last contact</li>
                     </ul>
                   </div>
                   <div>
-                    <p className="text-success font-semibold">GREEN GREEN - On Track:</p>
+                    <p className="text-success font-semibold">{t('common:greenGreenOnTrack')}</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• New/Following Up: &lt; 2 days since last contact</li>
                       <li>• Interested: &lt; 3 days since last contact</li>
@@ -445,17 +439,15 @@ export function UnifiedDashboard({
 
           {/* Status Breakdown Bar Chart */}
           <div className="bg-card rounded p-6 shadow-ambient">
-            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              Souls by Status
-              <InfoTooltip title="Soul Status">
-                <p className="font-semibold text-foreground mb-2">Soul Status Definitions:</p>
+            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">{t('common:soulsByStatus')}<InfoTooltip title={t('common:soulStatus')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:soulStatusDefinitions')}</p>
                 <ul className="ml-4 text-xs space-y-1">
-                  <li>• <span className="font-semibold">New:</span> Recently contacted, initial stage</li>
-                  <li>• <span className="font-semibold">Following Up:</span> Active engagement in progress</li>
-                  <li>• <span className="font-semibold">Interested:</span> Showing interest in joining</li>
-                  <li>• <span className="font-semibold">Converted:</span> Successfully joined the church</li>
-                  <li>• <span className="font-semibold">Not Interested:</span> Declined to join</li>
-                  <li>• <span className="font-semibold">Lost Contact:</span> Unable to reach</li>
+                  <li>• <span className="font-semibold">{t('common:new')}</span>{t('common:recentlyContactedInitialStage')}</li>
+                  <li>• <span className="font-semibold">{t('common:followingUp')}</span>{t('common:activeEngagementInProgress')}</li>
+                  <li>• <span className="font-semibold">{t('common:interested')}</span>{t('common:showingInterestInJoining')}</li>
+                  <li>• <span className="font-semibold">{t('common:converted')}</span>{t('common:successfullyJoinedTheChurch')}</li>
+                  <li>• <span className="font-semibold">{t('common:notInterested')}</span>{t('common:declinedToJoin')}</li>
+                  <li>• <span className="font-semibold">{t('common:lostContact')}</span>{t('common:unableToReach')}</li>
                 </ul>
               </InfoTooltip>
             </h3>
@@ -480,9 +472,7 @@ export function UnifiedDashboard({
                 />
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-4 text-center text-muted-foreground text-sm">
-              Click any bar to view souls in that status
-            </div>
+            <div className="mt-4 text-center text-muted-foreground text-sm">{t('common:clickAnyBarToViewSouls')}</div>
           </div>
         </div>
 
@@ -490,13 +480,11 @@ export function UnifiedDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Follow-up RAG Status */}
           <div className="bg-card rounded p-6 shadow-ambient">
-            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              Follow-up Status
-              <InfoTooltip title="Follow-up RAG">
-                <p className="font-semibold text-foreground mb-2">Follow-up RAG Criteria:</p>
+            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">{t('common:followUpStatus')}<InfoTooltip title={t('common:followUpRag')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:followUpRagCriteria')}</p>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-destructive font-semibold">RED RED - Critical:</p>
+                    <p className="text-destructive font-semibold">{t('common:redRedCritical')}</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• No follow-up logged</li>
                       <li>• Overdue: 3+ days (New/Following Up)</li>
@@ -505,7 +493,7 @@ export function UnifiedDashboard({
                     </ul>
                   </div>
                   <div>
-                    <p className="text-accent font-semibold">AMBER AMBER - Monitor:</p>
+                    <p className="text-accent font-semibold">{t('common:amberAmberMonitor')}</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• Due soon: 2 days (New/Following Up)</li>
                       <li>• Due soon: 3-4 days (Interested)</li>
@@ -513,7 +501,7 @@ export function UnifiedDashboard({
                     </ul>
                   </div>
                   <div>
-                    <p className="text-success font-semibold">GREEN GREEN - On Track:</p>
+                    <p className="text-success font-semibold">{t('common:greenGreenOnTrack')}</p>
                     <ul className="ml-4 text-xs space-y-1">
                       <li>• On track or no follow-up needed</li>
                       <li>• Contact Status: Successful</li>
@@ -565,18 +553,16 @@ export function UnifiedDashboard({
 
           {/* Conversion Funnel */}
           <div className="bg-card rounded p-6 shadow-ambient">
-            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              Conversion Funnel
-              <InfoTooltip title="Conversion Funnel">
-                <p className="font-semibold text-foreground mb-2">Conversion Funnel:</p>
-                <p className="text-xs mb-2">Shows the progression of souls through the pipeline stages.</p>
+            <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">{t('common:conversionFunnel')}<InfoTooltip title={t('common:conversionFunnel')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:conversionFunnel2')}</p>
+                <p className="text-xs mb-2">{t('common:showsTheProgressionOfSoulsThrough')}</p>
                 <ul className="ml-4 text-xs space-y-1">
-                  <li>• <span className="font-semibold">New:</span> Initial contacts</li>
-                  <li>• <span className="font-semibold">Following Up:</span> Active engagement</li>
-                  <li>• <span className="font-semibold">Interested:</span> Showing commitment</li>
-                  <li>• <span className="font-semibold">Converted:</span> Successfully joined</li>
+                  <li>• <span className="font-semibold">{t('common:new')}</span>{t('common:initialContacts')}</li>
+                  <li>• <span className="font-semibold">{t('common:followingUp')}</span>{t('common:activeEngagement')}</li>
+                  <li>• <span className="font-semibold">{t('common:interested')}</span>{t('common:showingCommitment')}</li>
+                  <li>• <span className="font-semibold">{t('common:converted')}</span>{t('common:successfullyJoined')}</li>
                 </ul>
-                <p className="text-xs mt-2 text-muted-foreground">Higher numbers at each stage indicate better retention.</p>
+                <p className="text-xs mt-2 text-muted-foreground">{t('common:higherNumbersAtEachStageIndicate')}</p>
               </InfoTooltip>
             </h3>
             <ResponsiveContainer width="100%" height={260}>
@@ -601,38 +587,27 @@ export function UnifiedDashboard({
                 />
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-4 text-center text-muted-foreground text-sm">
-              Click any bar to view souls in that stage
-            </div>
+            <div className="mt-4 text-center text-muted-foreground text-sm">{t('common:clickAnyBarToViewSouls2')}</div>
           </div>
         </div>
 
         {/* Stage Assimilation Rates */}
         {analytics?.assimilationRates && Object.keys(analytics.assimilationRates).length > 0 && (
           <div className="bg-card rounded p-6 shadow-ambient">
-            <h3 className="text-xl font-semibold text-foreground mb-1 flex items-center gap-2">
-              Stage Assimilation Rates
-              <InfoTooltip title="Stage Assimilation Rates">
-                <p className="font-semibold text-foreground mb-2">Stage Assimilation:</p>
-                <p className="text-xs mb-2">
-                  Percentage of souls who advanced from one funnel stage to the next.
-                  Tells the optimistic story of how people are progressing through our
-                  assimilation pipeline from <em>New</em> to <em>Converted</em>.
+            <h3 className="text-xl font-semibold text-foreground mb-1 flex items-center gap-2">{t('common:stageAssimilationRates')}<InfoTooltip title={t('common:stageAssimilationRates')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:stageAssimilation')}</p>
+                <p className="text-xs mb-2">{t('common:percentageOfSoulsWhoAdvancedFrom')}<em>{t('common:new2')}</em>{t('common:to')}<em>{t('common:converted2')}</em>.
                 </p>
                 <p className="text-xs text-muted-foreground mb-2">
                   Formula: souls reaching stage B / souls reaching stage A &times; 100
                 </p>
-                <p className="text-xs mt-2 text-success">
-                  Higher is better: more souls moving forward.
-                </p>
+                <p className="text-xs mt-2 text-success">{t('common:higherIsBetterMoreSoulsMoving')}</p>
                 <p className="text-xs mt-2 text-muted-foreground">
                   Thresholds: &ge;{ASSIMILATION_THRESHOLDS.green}% green &middot; &ge;{ASSIMILATION_THRESHOLDS.amber}% amber &middot; below = red.
                 </p>
               </InfoTooltip>
             </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              How well souls are progressing through each stage of the pipeline.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">{t('common:howWellSoulsAreProgressingThrough')}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {Object.entries(analytics.assimilationRates).map(([stage, rate]) => {
                 const tone =
@@ -661,7 +636,7 @@ export function UnifiedDashboard({
                     <p className={`mt-2 text-3xl font-semibold tracking-tight ${toneClasses}`}>
                       {rate.toFixed(1)}%
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">advanced to next stage</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{t('common:advancedToNextStage')}</p>
                     <div className="mt-3 h-1.5 w-full overflow-hidden rounded bg-muted">
                       <div
                         className={`h-full ${barClasses}`}
@@ -679,69 +654,67 @@ export function UnifiedDashboard({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card rounded p-6 shadow-ambient">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-muted-foreground text-sm">Response Rate</h4>
-              <InfoTooltip title="Response Rate">
-                <p className="font-semibold text-foreground mb-2">Response Rate:</p>
-                <p className="text-xs mb-2">Percentage of souls that have been successfully converted out of the total souls in the pipeline.</p>
+              <h4 className="text-muted-foreground text-sm">{t('common:responseRate')}</h4>
+              <InfoTooltip title={t('common:responseRate')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:responseRate2')}</p>
+                <p className="text-xs mb-2">{t('common:percentageOfSoulsThatHaveBeen')}</p>
                 <p className="text-xs text-muted-foreground">Formula: (Converted Souls / Total Souls) × 100</p>
-                <p className="text-xs mt-2 text-success">Higher is better - indicates effective outreach and follow-up.</p>
+                <p className="text-xs mt-2 text-success">{t('common:higherIsBetterIndicatesEffectiveOutreach')}</p>
               </InfoTooltip>
             </div>
             <p className="text-3xl font-semibold text-foreground tracking-tight">{analytics?.overview?.conversionRate?.toFixed(1) || 0}%</p>
-            <p className="text-muted-foreground text-xs mt-1">Conversion rate</p>
+            <p className="text-muted-foreground text-xs mt-1">{t('common:conversionRate')}</p>
           </div>
 
           <div className="bg-card rounded p-6 shadow-ambient">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-muted-foreground text-sm">Active Follow-ups</h4>
-              <InfoTooltip title="Active Follow-ups">
-                <p className="font-semibold text-foreground mb-2">Active Follow-ups:</p>
+              <h4 className="text-muted-foreground text-sm">{t('common:activeFollowUps')}</h4>
+              <InfoTooltip title={t('common:activeFollowUps')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:activeFollowUps2')}</p>
                 <p className="text-xs mb-2">Number of souls currently in active follow-up stages (New, Following Up, or Interested).</p>
-                <p className="text-xs text-muted-foreground">These souls require ongoing engagement and attention.</p>
-                <p className="text-xs mt-2 text-accent">Monitor regularly to ensure timely follow-ups.</p>
+                <p className="text-xs text-muted-foreground">{t('common:theseSoulsRequireOngoingEngagementAnd')}</p>
+                <p className="text-xs mt-2 text-accent">{t('common:monitorRegularlyToEnsureTimelyFollow')}</p>
               </InfoTooltip>
             </div>
             <p className="text-3xl font-semibold text-foreground tracking-tight">{analytics?.overview?.activeFollowUps || 0}</p>
-            <p className="text-muted-foreground text-xs mt-1">In progress</p>
+            <p className="text-muted-foreground text-xs mt-1">{t('common:inProgress')}</p>
           </div>
 
           <div className="bg-card rounded p-6 shadow-ambient">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-muted-foreground text-sm">Avg Days to Convert</h4>
-              <InfoTooltip title="Avg Days to Convert">
-                <p className="font-semibold text-foreground mb-2">Average Days to Convert:</p>
-                <p className="text-xs mb-2">Average number of days from first contact to successful conversion.</p>
-                <p className="text-xs text-muted-foreground">Calculated from souls who have been converted.</p>
-                <p className="text-xs mt-2 text-primary">Lower is better - indicates efficient conversion process.</p>
+              <h4 className="text-muted-foreground text-sm">{t('common:avgDaysToConvert')}</h4>
+              <InfoTooltip title={t('common:avgDaysToConvert')}>
+                <p className="font-semibold text-foreground mb-2">{t('common:averageDaysToConvert')}</p>
+                <p className="text-xs mb-2">{t('common:averageNumberOfDaysFromFirst')}</p>
+                <p className="text-xs text-muted-foreground">{t('common:calculatedFromSoulsWhoHaveBeen')}</p>
+                <p className="text-xs mt-2 text-primary">{t('common:lowerIsBetterIndicatesEfficientConversion')}</p>
               </InfoTooltip>
             </div>
             <p className="text-3xl font-semibold text-foreground tracking-tight">{analytics?.overview?.avgDaysToConversion || 0}</p>
-            <p className="text-muted-foreground text-xs mt-1">Days average</p>
+            <p className="text-muted-foreground text-xs mt-1">{t('common:daysAverage')}</p>
           </div>
         </div>
         {/* Recent Follow-up Activity */}
         <div className="bg-card rounded shadow-ambient overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-border/15">
-            <h3 className="text-base font-semibold text-foreground tracking-wide">Recent Follow-up Activity</h3>
+            <h3 className="text-base font-semibold text-foreground tracking-wide">{t('common:recentFollowUpActivity')}</h3>
             <button
               type="button"
               onClick={() => router.push('/souls')}
               className="text-xs font-semibold text-primary tracking-wider uppercase hover:text-primary/80 transition-colors"
-            >
-              View All
-            </button>
+            >{t('common:viewAll')}</button>
           </div>
           {recentFollowUps.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-12 text-center">No follow-up activity in this date range.</p>
+            <p className="text-sm text-muted-foreground py-12 text-center">{t('common:noFollowUpActivityInThis')}</p>
           ) : (
             <div>
               {/* Column Headers */}
               <div className="grid grid-cols-[2fr_1fr_1.25fr_1fr_1fr] items-center gap-4 px-6 py-3 bg-muted/30 border-b border-border/10">
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Soul Name</span>
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Status</span>
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Assignee</span>
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">Method</span>
-                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase text-right">Last Action</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">{t('common:soulName')}</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">{t('common:status')}</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">{t('common:assignee')}</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase">{t('common:method')}</span>
+                <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em] uppercase text-right">{t('common:lastAction')}</span>
               </div>
               {/* Rows */}
               <div className="divide-y divide-border/10">
@@ -789,7 +762,7 @@ export function UnifiedDashboard({
                             <span className="text-sm text-foreground truncate">{followUp.memberName}</span>
                           </>
                         ) : (
-                          <span className="text-sm text-muted-foreground italic">Unassigned</span>
+                          <span className="text-sm text-muted-foreground italic">{t('common:unassigned')}</span>
                         )}
                       </div>
                       {/* Method */}
@@ -812,21 +785,19 @@ export function UnifiedDashboard({
         {/* Instructions Panel */}
         <div className="bg-muted rounded p-6">
           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-            <ClipboardList className="h-5 w-5" />
-            Quick Guide
-          </h3>
+            <ClipboardList className="h-5 w-5" />{t('common:quickGuide')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-destructive font-semibold mb-2">Critical (Red)</p>
-              <p className="text-muted-foreground">These souls need immediate attention! No follow-up logged or overdue contacts. Click the red card above to see the list.</p>
+              <p className="text-muted-foreground">{t('common:theseSoulsNeedImmediateAttentionNo')}</p>
             </div>
             <div>
               <p className="text-accent font-semibold mb-2">Monitor (Amber)</p>
-              <p className="text-muted-foreground">Follow-up due soon. Keep an eye on these souls and schedule contact within 1-2 days.</p>
+              <p className="text-muted-foreground">{t('common:followUpDueSoonKeepAn')}</p>
             </div>
             <div>
               <p className="text-success font-semibold mb-2">On Track (Green)</p>
-              <p className="text-muted-foreground">Recent contact made or no follow-up needed. These souls are on track!</p>
+              <p className="text-muted-foreground">{t('common:recentContactMadeOrNoFollow')}</p>
             </div>
           </div>
         </div>
@@ -841,7 +812,7 @@ export function UnifiedDashboard({
           </DialogHeader>
           <div className="space-y-3 mt-4">
             {selectedSouls.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No souls in this category</p>
+              <p className="text-muted-foreground text-center py-8">{t('common:noSoulsInThisCategory')}</p>
             ) : (
               selectedSouls.map((soul) => (
                 <div
@@ -879,15 +850,12 @@ export function UnifiedDashboard({
                         <p className="text-muted-foreground">
                           <span className="text-foreground">{soul.email || 'No email'}</span>
                         </p>
-                        <p className="text-muted-foreground">
-                          Status: <span className="text-foreground font-medium">{soul.status}</span>
+                        <p className="text-muted-foreground">{t('common:status2')}<span className="text-foreground font-medium">{soul.status}</span>
                         </p>
-                        <p className="text-muted-foreground">
-                          Assigned: <span className="text-foreground">{soul.assignedMemberName || 'Unassigned'}</span>
+                        <p className="text-muted-foreground">{t('common:assigned')}<span className="text-foreground">{soul.assignedMemberName || 'Unassigned'}</span>
                         </p>
                         {soul.assignedMemberBranchName && (
-                          <p className="text-muted-foreground col-span-2">
-                            Branch: <span className="text-primary font-medium">{soul.assignedMemberBranchName}</span>
+                          <p className="text-muted-foreground col-span-2">{t('common:branch')}<span className="text-primary font-medium">{soul.assignedMemberBranchName}</span>
                           </p>
                         )}
                       </div>
@@ -923,7 +891,7 @@ export function UnifiedDashboard({
           </DialogHeader>
           <div className="space-y-3 mt-4">
             {selectedFollowUps.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No follow-ups in this category</p>
+              <p className="text-muted-foreground text-center py-8">{t('common:noFollowUpsInThisCategory')}</p>
             ) : (
               selectedFollowUps.map((followUp) => (
                 <div
@@ -946,15 +914,12 @@ export function UnifiedDashboard({
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                        <p className="text-muted-foreground">
-                          Contact Status: <span className="text-foreground font-medium">{followUp.contactStatus}</span>
+                        <p className="text-muted-foreground">{t('common:contactStatus')}<span className="text-foreground font-medium">{followUp.contactStatus}</span>
                         </p>
-                        <p className="text-muted-foreground">
-                          Follow-up by: <span className="text-foreground">{followUp.memberName || 'Unknown'}</span>
+                        <p className="text-muted-foreground">{t('common:followUpBy')}<span className="text-foreground">{followUp.memberName || 'Unknown'}</span>
                         </p>
                         <p className="text-muted-foreground col-span-2 flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Follow-up Date: <span className="text-foreground">{formatDistanceToNow(new Date(followUp.followUpDate), { addSuffix: true })}</span>
+                          <Calendar className="h-3 w-3" />{t('common:followUpDate')}<span className="text-foreground">{formatDistanceToNow(new Date(followUp.followUpDate), { addSuffix: true })}</span>
                         </p>
                       </div>
                       

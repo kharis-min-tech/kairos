@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 const FORM_ICONS: Record<FormType, React.ReactNode> = {
   first_time_visitor: <UserPlus className="h-6 w-6" />,
@@ -25,7 +26,8 @@ const FORM_ICONS: Record<FormType, React.ReactNode> = {
   baby_dedication: <HandHeart className="h-6 w-6" />,
 };
 
-export default function FormsLandingPage() {
+export default function FormsLandingPage() {  const { t } = useTranslation(['forms', 'common']);
+
   const { data: capabilities } = useMyFormCapabilities();
   const canSeeSubmissions = (capabilities?.visibleFormTypes.length ?? 0) > 0;
   const canSeeAttendees = !!capabilities?.canSeeAttendees;
@@ -35,9 +37,7 @@ export default function FormsLandingPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Forms &amp; Data Capture</h1>
-        <p className="mt-1 text-muted-foreground">
-          Capture altar-call responses, baptism and dedication requests, and testimonies.
-        </p>
+        <p className="mt-1 text-muted-foreground">{t('forms:captureAltarCallResponsesBaptismAnd')}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -54,8 +54,7 @@ export default function FormsLandingPage() {
                     <h2 className="font-semibold text-foreground">{definition.title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{definition.description}</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-[#5D3FD3] group-hover:gap-2 transition-all">
-                    Open form <ChevronRight className="h-4 w-4" />
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-[#5D3FD3] group-hover:gap-2 transition-all">{t('forms:openForm')}<ChevronRight className="h-4 w-4" />
                   </span>
                 </CardContent>
               </Card>
@@ -66,7 +65,7 @@ export default function FormsLandingPage() {
 
       {showAdminSection ? (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Administration</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('forms:administration')}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {canSeeSubmissions && (
               <Link href="/forms/submissions" className="group">
@@ -76,8 +75,8 @@ export default function FormsLandingPage() {
                       <ClipboardList className="h-5 w-5" />
                     </span>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">Submissions</h3>
-                      <p className="text-sm text-muted-foreground">Review, triage and export form submissions.</p>
+                      <h3 className="font-semibold text-foreground">{t('forms:submissions')}</h3>
+                      <p className="text-sm text-muted-foreground">{t('forms:reviewTriageAndExportFormSubmissions')}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </CardContent>
@@ -93,8 +92,8 @@ export default function FormsLandingPage() {
                       <Archive className="h-5 w-5" />
                     </span>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">Dormant attendees</h3>
-                      <p className="text-sm text-muted-foreground">Bulk-archive stale form-created contact shells.</p>
+                      <h3 className="font-semibold text-foreground">{t('forms:dormantAttendees')}</h3>
+                      <p className="text-sm text-muted-foreground">{t('forms:bulkArchiveStaleFormCreatedContact')}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </CardContent>

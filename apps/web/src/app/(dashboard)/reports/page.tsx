@@ -28,6 +28,7 @@ import {
   LineChart,
   Line,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
   New: '#5D3FD3',
@@ -83,7 +84,8 @@ function ReportStatCard({ title, value, sub, icon, trend, onClick }: {
 
 type Tab = 'attendance' | 'outreach' | 'growth';
 
-function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats | undefined }) {
+function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats | undefined }) {  const { t } = useTranslation(['reports', 'common']);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data: meetingsData } = useQuery({
     queryKey: ['fellowship-meetings', expandedId],
@@ -102,12 +104,12 @@ function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Top Fellowships Attended</CardTitle>
-        <p className="text-xs text-muted-foreground">Click to see meeting history</p>
+        <CardTitle className="text-sm font-semibold">{t('reports:topFellowshipsAttended')}</CardTitle>
+        <p className="text-xs text-muted-foreground">{t('reports:clickToSeeMeetingHistory')}</p>
       </CardHeader>
       <CardContent>
         {myFellowships.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No fellowships joined yet.</p>
+          <p className="text-sm text-muted-foreground">{t('reports:noFellowshipsJoinedYet')}</p>
         ) : (
           <div className="space-y-3">
             {myFellowships.map((f) => {
@@ -135,9 +137,9 @@ function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats
                   {/* Expanded meeting history */}
                   {isExpanded && (
                     <div className="mt-2 rounded-md border border-border bg-muted/30 p-3 space-y-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2">Meeting History</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-2">{t('reports:meetingHistory')}</p>
                       {meetings.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No meetings recorded yet.</p>
+                        <p className="text-xs text-muted-foreground">{t('reports:noMeetingsRecordedYet')}</p>
                       ) : (
                         meetings.slice(0, 8).map((m) => (
                           <div key={m.id} className="flex items-center justify-between text-xs">
@@ -162,7 +164,8 @@ function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats
   );
 }
 
-function MemberSoulsTab() {
+function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common']);
+
   const user = useAuthStore((s) => s.user);
   const memberId = user?.id;
   const [statusColors, setStatusColorsRaw] = useState<Record<string, string>>(() => {
@@ -219,15 +222,13 @@ function MemberSoulsTab() {
           </button>
         )}
         {showColorPicker && (
-          <button onClick={() => setStatusColors(PRESET_PURPLE_SHADES)} className="rounded-md border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">
-            Purple shades
-          </button>
+          <button onClick={() => setStatusColors(PRESET_PURPLE_SHADES)} className="rounded-md border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors">{t('reports:purpleShades')}</button>
         )}
       </div>
       {showColorPicker && (
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Pick a colour for each status</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">{t('reports:pickAColourForEachStatus')}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {Object.keys(statusColors).map((status) => (
                 <div key={status} className="flex items-center gap-2">
@@ -245,11 +246,11 @@ function MemberSoulsTab() {
         <Card className="cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setEvidenceFilter(evidenceFilter === 'converted' ? null : 'converted')}>
           <CardContent className="pt-5 pb-5">
             <div className="flex items-start justify-between">
-              <p className="text-xs font-medium text-muted-foreground">My Souls Won</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('reports:mySoulsWon')}</p>
               <div className="flex items-center gap-1">
                 <span className="group relative">
                   <svg className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                  <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-44 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Souls you personally led to Christ</span>
+                  <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-44 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:soulsYouPersonallyLedToChrist')}</span>
                 </span>
                 <svg className="h-3 w-3 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
               </div>
@@ -261,10 +262,10 @@ function MemberSoulsTab() {
         <Card className="cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setEvidenceFilter(evidenceFilter === 'active' ? null : 'active')}>
           <CardContent className="pt-5 pb-5">
             <div className="flex items-start justify-between">
-              <p className="text-xs font-medium text-muted-foreground">Active Follow-ups</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('reports:activeFollowUps')}</p>
               <span className="group relative">
                 <svg className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-44 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Souls you are currently following up</span>
+                <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-44 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:soulsYouAreCurrentlyFollowingUp')}</span>
               </span>
             </div>
             <p className="mt-1 text-3xl font-bold tracking-tight text-emerald-600">{active.length}</p>
@@ -273,11 +274,11 @@ function MemberSoulsTab() {
         <Card className="cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setEvidenceFilter(evidenceFilter === 'all' ? null : 'all')}>
           <CardContent className="pt-5 pb-5">
             <div className="flex items-start justify-between">
-              <p className="text-xs font-medium text-muted-foreground">Total Assigned</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('reports:totalAssigned')}</p>
               <div className="flex items-center gap-1">
               <span className="group relative">
                 <svg className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-44 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">All souls assigned to you from outreach</span>
+                <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-44 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:allSoulsAssignedToYouFrom')}</span>
               </span>
               <svg className="h-3 w-3 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
               </div>
@@ -302,16 +303,16 @@ function MemberSoulsTab() {
             {(() => {
               const list = evidenceFilter === 'converted' ? converted : evidenceFilter === 'active' ? active : evidenceFilter === 'all' ? souls : souls.filter((s) => s.status === evidenceFilter);
               return list.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">No souls in this category yet.</p>
+                <p className="py-4 text-center text-sm text-muted-foreground">{t('reports:noSoulsInThisCategoryYet')}</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left">
                       <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">#</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Name</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Contact</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Status</th>
-                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Added</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{t('reports:name')}</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{t('reports:contact')}</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{t('reports:status')}</th>
+                      <th className="pb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{t('reports:added')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -345,8 +346,8 @@ function MemberSoulsTab() {
           {/* Souls by Status bar chart */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">My Souls by Status</CardTitle>
-              <p className="text-xs text-muted-foreground">Breakdown of your assigned souls</p>
+              <CardTitle className="text-base font-semibold">{t('reports:mySoulsByStatus')}</CardTitle>
+              <p className="text-xs text-muted-foreground">{t('reports:breakdownOfYourAssignedSouls')}</p>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
@@ -368,8 +369,8 @@ function MemberSoulsTab() {
           {/* Status Breakdown progress bars */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Status Breakdown</CardTitle>
-              <p className="text-xs text-muted-foreground">Your pipeline progress</p>
+              <CardTitle className="text-base font-semibold">{t('reports:statusBreakdown')}</CardTitle>
+              <p className="text-xs text-muted-foreground">{t('reports:yourPipelineProgress')}</p>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -400,12 +401,12 @@ function MemberSoulsTab() {
       {/* Souls list */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">My Souls</CardTitle>
-          <p className="text-xs text-muted-foreground">People assigned to you from outreach</p>
+          <CardTitle className="text-base font-semibold">{t('reports:mySouls')}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t('reports:peopleAssignedToYouFromOutreach')}</p>
         </CardHeader>
         <CardContent>
           {souls.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No souls assigned to you yet. Participate in outreach programs to get souls assigned.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{t('reports:noSoulsAssignedToYouYet')}</p>
           ) : (
             <div className="space-y-2">
               {souls.map((soul) => (
@@ -438,7 +439,8 @@ function MemberSoulsTab() {
 // `<BranchReportsPanel isLeadership={false}/>`), which preserves the original
 // behaviour of /reports prior to Phase 6.
 
-function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
+function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  const { t } = useTranslation(['reports', 'common']);
+
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [statusColors, setStatusColorsRaw] = useState<Record<string, string>>(() => {
     if (typeof window !== 'undefined') {
@@ -517,13 +519,13 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
   // data. Attendance + Outreach are both scoped personal below.
   const tabs: { key: Tab; label: string }[] = isLeadership
     ? [
-        { key: 'attendance', label: 'Attendance' },
-        { key: 'growth', label: 'Growth' },
-        { key: 'outreach', label: 'Outreach' },
+        { key: 'attendance', label: t('reports:attendance') },
+        { key: 'growth', label: t('reports:growth') },
+        { key: 'outreach', label: t('reports:outreach') },
       ]
     : [
-        { key: 'attendance', label: 'Attendance' },
-        { key: 'outreach', label: 'Outreach' },
+        { key: 'attendance', label: t('reports:attendance') },
+        { key: 'outreach', label: t('reports:outreach') },
       ];
 
   // Safety net — if a plain member somehow lands on the growth tab (bookmarked
@@ -567,7 +569,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           activeTab branches below stay unchanged. */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Tab)}>
         <div className="flex justify-end">
-          <TabsList aria-label="Report category">
+          <TabsList aria-label={t('reports:reportCategory')}>
             {tabs.map((tab) => (
               <TabsTrigger key={tab.key} value={tab.key}>
                 {tab.label}
@@ -581,25 +583,25 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
       {isLeadership ? (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ReportStatCard
-          title="New Members"
+          title={t('reports:newMembers')}
           value={totalNewMembers}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>}
-          trend={totalNewMembers > 0 ? { direction: 'up', label: `+${totalNewMembers} last ${growthMonths}mo` } : { direction: 'flat', label: 'vs last period' }}
+          trend={totalNewMembers > 0 ? { direction: 'up', label: `+${totalNewMembers} last ${growthMonths}mo` } : { direction: 'flat', label: t('reports:vsLastPeriod') }}
         />
         <ReportStatCard
-          title="Avg Attendance"
+          title={t('reports:avgAttendance')}
           value={`${avgAttendance}%`}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-          trend={attendanceTrending === true ? { direction: 'up', label: 'Trending up' } : attendanceTrending === false ? { direction: 'down', label: 'Trending down' } : { direction: 'flat', label: 'vs last period' }}
+          trend={attendanceTrending === true ? { direction: 'up', label: t('reports:trendingUp') } : attendanceTrending === false ? { direction: 'down', label: t('reports:trendingDown') } : { direction: 'flat', label: t('reports:vsLastPeriod') }}
         />
         <ReportStatCard
-          title="Souls Reached"
+          title={t('reports:soulsReached')}
           value={totalSouls}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>}
           trend={effectiveOutreachAnalytics ? { direction: effectiveOutreachAnalytics.overview.conversionRate > 0 ? 'up' : 'flat', label: `${effectiveOutreachAnalytics.overview.conversionRate}% conversion` } : undefined}
         />
         <ReportStatCard
-          title="Growth Months"
+          title={t('reports:growthMonths')}
           value={growthMonths}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>}
           trend={growthTrending !== null ? { direction: growthTrending ? 'up' : 'down', label: growthTrending ? '+1' : 'Slowing' } : undefined}
@@ -608,28 +610,28 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
       ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ReportStatCard
-          title="My Fellowships"
+          title={t('reports:myFellowships')}
           value={memberData?.fellowshipsJoined ?? 0}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>}
           trend={{ direction: (memberData?.fellowshipsJoined ?? 0) > 0 ? 'up' : 'flat', label: `${memberData?.fellowshipsJoined ?? 0} joined` }}
         />
         <ReportStatCard
-          title="My Attendance"
+          title={t('reports:myAttendance')}
           value={`${memberData?.recentAttendance.rate ?? 0}%`}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-          trend={(memberData?.recentAttendance.rate ?? 0) >= 70 ? { direction: 'up', label: 'Great attendance' } : (memberData?.recentAttendance.rate ?? 0) > 0 ? { direction: 'down', label: 'Needs improvement' } : { direction: 'flat', label: 'No data yet' }}
+          trend={(memberData?.recentAttendance.rate ?? 0) >= 70 ? { direction: 'up', label: t('reports:greatAttendance') } : (memberData?.recentAttendance.rate ?? 0) > 0 ? { direction: 'down', label: t('reports:needsImprovement') } : { direction: 'flat', label: t('reports:noDataYet') }}
         />
         <ReportStatCard
-          title="My Souls"
+          title={t('reports:mySouls')}
           value={totalSouls}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>}
           trend={{ direction: totalSouls > 0 ? 'up' : 'flat', label: totalSouls > 0 ? 'Souls won' : 'No souls yet' }}
         />
         <ReportStatCard
-          title="Meetings Attended"
+          title={t('reports:meetingsAttended')}
           value={`${memberData?.recentAttendance.present ?? 0}/${memberData?.recentAttendance.total ?? 0}`}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>}
-          trend={{ direction: (memberData?.recentAttendance.present ?? 0) > 0 ? 'up' : 'flat', label: 'Last 30 days' }}
+          trend={{ direction: (memberData?.recentAttendance.present ?? 0) > 0 ? 'up' : 'flat', label: t('reports:lastDays') }}
         />
       </div>
       )}
@@ -641,8 +643,8 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Weekly Attendance Rate</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Average over the last 8 weeks</p>
+                  <CardTitle className="text-base font-semibold">{t('reports:weeklyAttendanceRate')}</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('reports:averageOverTheLastWeeks')}</p>
                 </div>
                 {attendanceTrending !== null && (
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${attendanceTrending ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400'}`}>
@@ -654,10 +656,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <CardContent>
               {isLoading ? (
                 <div className="flex h-[280px] items-center justify-center">
-                  <p className="text-sm text-muted-foreground">Loading...</p>
+                  <p className="text-sm text-muted-foreground">{t('reports:loading')}</p>
                 </div>
               ) : effectiveAttendance.length === 0 ? (
-                <p className="py-12 text-center text-sm text-muted-foreground">No attendance data yet.</p>
+                <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noAttendanceDataYet')}</p>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <AreaChart data={effectiveAttendance}>
@@ -682,7 +684,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-5 pb-5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9a6b04] dark:text-[#f8b537]">Monthly Highlight</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9a6b04] dark:text-[#f8b537]">{t('reports:monthlyHighlight')}</p>
                 <p className="mt-2 text-lg font-bold text-foreground">
                   {attendanceTrending === true ? 'Attendance trending up' : attendanceTrending === false ? 'Attendance needs attention' : 'Attendance overview'}
                 </p>
@@ -694,9 +696,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                 <Link
                   href="/attendance/reports"
                   className="mt-4 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(93,63,211,0.2)] hover:opacity-90 transition-opacity"
-                >
-                  View breakdown
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+                >{t('reports:viewBreakdown')}<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
                 </Link>
               </CardContent>
             </Card>
@@ -713,16 +713,14 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           <Card>
             <CardHeader className="pb-2">
               <div>
-                <CardTitle className="text-base font-semibold">My Weekly Attendance</CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Your service attendance rate over the last 8 weeks
-                </p>
+                <CardTitle className="text-base font-semibold">{t('reports:myWeeklyAttendance')}</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('reports:yourServiceAttendanceRateOverThe')}</p>
               </div>
             </CardHeader>
             <CardContent>
               {myWeeklyAttendance.length === 0 ? (
                 <div className="flex h-[280px] flex-col items-center justify-center gap-2 text-center">
-                  <p className="text-sm font-medium text-foreground">No attendance recorded yet</p>
+                  <p className="text-sm font-medium text-foreground">{t('reports:noAttendanceRecordedYet')}</p>
                   <p className="max-w-xs text-xs text-muted-foreground">
                     Once you attend a service and get marked present (or check in
                     yourself), your weekly rate will show up here.
@@ -751,9 +749,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-5 pb-5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Attendance Summary
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t('reports:attendanceSummary')}</p>
                 <p className="mt-2 text-2xl font-bold text-foreground">
                   {myAttendance?.attendedCount ?? 0} of{' '}
                   {myAttendance?.servicesInWindow ?? 0}
@@ -776,9 +772,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
                 <Link
                   href="/me/attendance"
                   className="mt-4 flex items-center justify-between rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(93,63,211,0.2)] hover:opacity-90 transition-opacity"
-                >
-                  Full history
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
+                >{t('reports:fullHistory')}<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" /></svg>
                 </Link>
               </CardContent>
             </Card>
@@ -796,8 +790,8 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Member Growth</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Active members over time</p>
+                  <CardTitle className="text-base font-semibold">{t('reports:memberGrowth')}</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('reports:activeMembersOverTime')}</p>
                 </div>
                 {growthTrending !== null && (
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${growthTrending ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400'}`}>
@@ -809,10 +803,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <CardContent>
               {isLoading ? (
                 <div className="flex h-[300px] items-center justify-center">
-                  <p className="text-sm text-muted-foreground">Loading...</p>
+                  <p className="text-sm text-muted-foreground">{t('reports:loading')}</p>
                 </div>
               ) : cumulativeGrowth.length === 0 ? (
-                <p className="py-12 text-center text-sm text-muted-foreground">No growth data yet.</p>
+                <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noGrowthDataYet')}</p>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={cumulativeGrowth}>
@@ -831,11 +825,11 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           <div className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold">Monthly Signups</CardTitle>
+                <CardTitle className="text-sm font-semibold">{t('reports:monthlySignups')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {effectiveGrowth.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">No data yet.</p>
+                  <p className="py-8 text-center text-sm text-muted-foreground">{t('reports:noDataYet2')}</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={effectiveGrowth} barSize={20}>
@@ -852,7 +846,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             {/* Trend alert */}
             <Card>
               <CardContent className="pt-4 pb-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Trend Alert</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('reports:trendAlert')}</p>
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                   <p className="text-sm">
@@ -893,15 +887,13 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
               <button
                 onClick={() => setStatusColors(PRESET_PURPLE_SHADES)}
                 className="rounded-md border border-primary/40 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
-              >
-                Purple shades
-              </button>
+              >{t('reports:purpleShades')}</button>
             )}
           </div>
           {showColorPicker && (
             <Card>
               <CardContent className="pt-4 pb-4">
-                <p className="text-xs font-medium text-muted-foreground mb-3">Pick a colour for each status</p>
+                <p className="text-xs font-medium text-muted-foreground mb-3">{t('reports:pickAColourForEachStatus')}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.keys(statusColors).map((status) => (
                     <div key={status} className="flex items-center gap-2">
@@ -923,10 +915,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <Card>
               <CardContent className="pt-5 pb-5">
                 <div className="flex items-start justify-between">
-                  <p className="text-xs font-medium text-muted-foreground">Active Follow-ups</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('reports:activeFollowUps')}</p>
                   <span className="group relative">
                     <svg className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                    <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Souls currently being followed up by your team</span>
+                    <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:soulsCurrentlyBeingFollowedUpBy')}</span>
                   </span>
                 </div>
                 <p className="mt-1 text-3xl font-bold tracking-tight text-primary">{effectiveOutreachAnalytics.overview.activeFollowUps ?? '—'}</p>
@@ -935,10 +927,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <Card>
               <CardContent className="pt-5 pb-5">
                 <div className="flex items-start justify-between">
-                  <p className="text-xs font-medium text-muted-foreground">Conversion Rate</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('reports:conversionRate')}</p>
                   <span className="group relative">
                     <svg className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                    <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Percentage of souls that moved from New to Converted</span>
+                    <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:percentageOfSoulsThatMovedFrom')}</span>
                   </span>
                 </div>
                 <p className="mt-1 text-3xl font-bold tracking-tight text-emerald-600">{`${effectiveOutreachAnalytics.overview.conversionRate}%`}</p>
@@ -947,10 +939,10 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             <Card>
               <CardContent className="pt-5 pb-5">
                 <div className="flex items-start justify-between">
-                  <p className="text-xs font-medium text-muted-foreground">Avg Time to Conversion</p>
+                  <p className="text-xs font-medium text-muted-foreground">{t('reports:avgTimeToConversion')}</p>
                   <span className="group relative">
                     <svg className="h-3.5 w-3.5 text-muted-foreground/50 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                    <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">Average number of days from first contact to conversion</span>
+                    <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:averageNumberOfDaysFromFirst')}</span>
                   </span>
                 </div>
                 <p className="mt-1 text-3xl font-bold tracking-tight text-[#9a6b04] dark:text-[#f8b537]">{effectiveOutreachAnalytics.overview.avgDaysToConversion > 0 ? `${effectiveOutreachAnalytics.overview.avgDaysToConversion} days` : 'No data'}</p>
@@ -962,12 +954,12 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             {/* Conversion funnel */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Souls by Status</CardTitle>
-                <p className="text-xs text-muted-foreground">Breakdown across the pipeline</p>
+                <CardTitle className="text-base font-semibold">{t('reports:soulsByStatus')}</CardTitle>
+                <p className="text-xs text-muted-foreground">{t('reports:breakdownAcrossThePipeline')}</p>
               </CardHeader>
               <CardContent>
                 {funnelData.length === 0 ? (
-                  <p className="py-12 text-center text-sm text-muted-foreground">No outreach data yet.</p>
+                  <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noOutreachDataYet')}</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={funnelData} barSize={32} layout="vertical">
@@ -989,12 +981,12 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
             {/* Status breakdown with progress bars */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Status Breakdown</CardTitle>
-                <p className="text-xs text-muted-foreground">Count per pipeline stage</p>
+                <CardTitle className="text-base font-semibold">{t('reports:statusBreakdown')}</CardTitle>
+                <p className="text-xs text-muted-foreground">{t('reports:countPerPipelineStage')}</p>
               </CardHeader>
               <CardContent>
                 {statusData.length === 0 ? (
-                  <p className="py-12 text-center text-sm text-muted-foreground">No data yet.</p>
+                  <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noDataYet2')}</p>
                 ) : (
                   <div className="space-y-3">
                     {statusData.map((item) => {
@@ -1024,7 +1016,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
           { effectiveOutreachAnalytics.overview.conversionRate > 0 && (
             <Card>
               <CardContent className="pt-4 pb-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Trend Alert</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('reports:trendAlert')}</p>
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                   <p className="text-sm">
@@ -1050,7 +1042,8 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {
 // the lone fellowship is selected automatically. Backed by a single
 // aggregate endpoint (/api/fellowships/:id/stats).
 
-function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellowship[] }) {
+function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellowship[] }) {  const { t } = useTranslation(['reports', 'common']);
+
   const [selectedId, setSelectedId] = useState<string>(fellowships[0]?.id ?? '');
   const selected = fellowships.find((f) => f.id === selectedId) ?? fellowships[0];
 
@@ -1068,9 +1061,7 @@ function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellows
     <div className="space-y-6">
       {fellowships.length > 1 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="fellowship-picker" className="text-xs font-medium text-muted-foreground">
-            Fellowship
-          </label>
+          <label htmlFor="fellowship-picker" className="text-xs font-medium text-muted-foreground">{t('reports:fellowship')}</label>
           <select
             id="fellowship-picker"
             value={selected.id}
@@ -1088,7 +1079,8 @@ function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellows
   );
 }
 
-function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId: string; fellowshipName: string }) {
+function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId: string; fellowshipName: string }) {  const { t } = useTranslation(['reports', 'common']);
+
   const statsQ = useFellowshipStats(fellowshipId);
 
   if (statsQ.isLoading) {
@@ -1118,9 +1110,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
             type="button"
             onClick={() => statsQ.refetch()}
             className="rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] px-3 py-1.5 text-sm font-medium text-white"
-          >
-            Retry
-          </button>
+          >{t('reports:retry')}</button>
         </CardContent>
       </Card>
     );
@@ -1134,25 +1124,25 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <ReportStatCard
-          title="Members"
+          title={t('reports:members')}
           value={members.total}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
           sub={`${members.active} active${members.inactive ? ` · ${members.inactive} inactive` : ''}`}
         />
         <ReportStatCard
-          title="Meetings (90d)"
+          title={t('reports:meetingsD')}
           value={meetings.last90d}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
           sub={meetings.last90d === 0 ? 'None recorded' : 'Recorded meetings'}
         />
         <ReportStatCard
-          title="Follow-ups"
+          title={t('reports:followUps')}
           value={followups.total}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           sub={`${followups.open} open · ${followups.closed} closed`}
         />
         <ReportStatCard
-          title="New joins (30d)"
+          title={t('reports:newJoinsD')}
           value={joinRequests.recent30d}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3" /></svg>}
           sub={joinRequests.recent30d === 0 ? 'No new requests' : `${joinRequests.pending} pending review`}
@@ -1164,19 +1154,15 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-semibold">Meetings per week</CardTitle>
+              <CardTitle className="text-base font-semibold">{t('reports:meetingsPerWeek')}</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">Last 90 days, {fellowshipName}</p>
             </div>
-            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-              Scoped: fellowship
-            </span>
+            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('reports:scopedFellowship')}</span>
           </div>
         </CardHeader>
         <CardContent>
           {meetingsTrend.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
-              No meetings in the last 90 days. Record meetings to see trends here.
-            </p>
+            <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noMeetingsInTheLastDays')}</p>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={meetingsTrend} barSize={24}>
@@ -1194,7 +1180,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
       {/* Open followups breakdown */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">Recent activity</CardTitle>
+          <CardTitle className="text-base font-semibold">{t('reports:recentActivity')}</CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
             {fellowshipName} · last 90 days
           </p>
@@ -1202,15 +1188,15 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-md border border-border bg-card p-3">
-              <p className="text-xs text-muted-foreground">Open follow-ups</p>
+              <p className="text-xs text-muted-foreground">{t('reports:openFollowUps')}</p>
               <p className="mt-1 text-2xl font-bold text-[#5D3FD3]">{followups.open}</p>
             </div>
             <div className="rounded-md border border-border bg-card p-3">
-              <p className="text-xs text-muted-foreground">Closed follow-ups</p>
+              <p className="text-xs text-muted-foreground">{t('reports:closedFollowUps')}</p>
               <p className="mt-1 text-2xl font-bold text-emerald-600">{followups.closed}</p>
             </div>
             <div className="rounded-md border border-border bg-card p-3">
-              <p className="text-xs text-muted-foreground">Pending join requests</p>
+              <p className="text-xs text-muted-foreground">{t('reports:pendingJoinRequests')}</p>
               <p className="mt-1 text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">{joinRequests.pending}</p>
             </div>
           </div>
@@ -1228,7 +1214,8 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
 // Service-attendance rate + weekly trend come from the existing department
 // attendance endpoint. Rota-instance counts still pending (separate endpoint).
 
-function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartment[] }) {
+function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartment[] }) {  const { t } = useTranslation(['reports', 'common']);
+
   const [selectedId, setSelectedId] = useState<string>(departments[0]?.id ?? '');
   const selected = departments.find((d) => d.id === selectedId) ?? departments[0];
 
@@ -1246,9 +1233,7 @@ function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartm
     <div className="space-y-6">
       {departments.length > 1 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="department-picker" className="text-xs font-medium text-muted-foreground">
-            Department
-          </label>
+          <label htmlFor="department-picker" className="text-xs font-medium text-muted-foreground">{t('reports:department')}</label>
           <select
             id="department-picker"
             value={selected.id}
@@ -1266,7 +1251,8 @@ function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartm
   );
 }
 
-function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId: string; departmentName: string }) {
+function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId: string; departmentName: string }) {  const { t } = useTranslation(['reports', 'common']);
+
   const membersQ = useDepartmentMembers(branchDeptId);
   const joinRequestsQ = useDepartmentJoinRequests(branchDeptId);
   const followupsQ = useDepartmentFollowups(branchDeptId);
@@ -1320,25 +1306,25 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <ReportStatCard
-          title="Members"
+          title={t('reports:members')}
           value={members.length}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197" /></svg>}
           sub={probationMembers > 0 ? `${activeMembers} active · ${probationMembers} probation` : `${activeMembers} active`}
         />
         <ReportStatCard
-          title="Pending join requests"
+          title={t('reports:pendingJoinRequests')}
           value={pendingJoinRequests}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3" /></svg>}
           sub={pendingJoinRequests === 0 ? 'All caught up' : 'Awaiting review'}
         />
         <ReportStatCard
-          title="Open follow-ups"
+          title={t('reports:openFollowUps')}
           value={openFollowups}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           sub={`${closedFollowups} closed`}
         />
         <ReportStatCard
-          title="Service attendance"
+          title={t('reports:serviceAttendance')}
           value={attendance ? `${attendanceRatePct}%` : '—'}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
           sub={
@@ -1350,7 +1336,7 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
           }
         />
         <ReportStatCard
-          title="Upcoming rota"
+          title={t('reports:upcomingRota')}
           value={rotaStats ? rotaStats.upcomingCount : '—'}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" /></svg>}
           sub={
@@ -1367,31 +1353,27 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-semibold">Department snapshot</CardTitle>
+              <CardTitle className="text-base font-semibold">{t('reports:departmentSnapshot')}</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">{departmentName}</p>
             </div>
-            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-              Scoped: department
-            </span>
+            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('reports:scopedDepartment')}</span>
           </div>
         </CardHeader>
         <CardContent>
           {members.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No members in this department yet. Approve a join request to get started.
-            </p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{t('reports:noMembersInThisDepartmentYet')}</p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-md border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Active members</p>
+                <p className="text-xs text-muted-foreground">{t('reports:activeMembers')}</p>
                 <p className="mt-1 text-2xl font-bold text-emerald-600">{activeMembers}</p>
               </div>
               <div className="rounded-md border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">On probation</p>
+                <p className="text-xs text-muted-foreground">{t('reports:onProbation')}</p>
                 <p className="mt-1 text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">{probationMembers}</p>
               </div>
               <div className="rounded-md border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Open follow-ups</p>
+                <p className="text-xs text-muted-foreground">{t('reports:openFollowUps')}</p>
                 <p className="mt-1 text-2xl font-bold text-[#5D3FD3]">{openFollowups}</p>
               </div>
             </div>
@@ -1405,21 +1387,17 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-semibold">Service attendance per week</CardTitle>
+              <CardTitle className="text-base font-semibold">{t('reports:serviceAttendancePerWeek')}</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {attendance ? `Last ${attendance.windowWeeks} weeks · ${departmentName}` : departmentName}
               </p>
             </div>
-            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-              Scoped: department
-            </span>
+            <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('reports:scopedDepartment')}</span>
           </div>
         </CardHeader>
         <CardContent>
           {attendanceTrend.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
-              No service attendance recorded in this window yet.
-            </p>
+            <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noServiceAttendanceRecordedInThis')}</p>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={attendanceTrend} barSize={24}>
@@ -1452,7 +1430,8 @@ const PERSONA_LABELS: Record<PersonaKey, string> = {
 
 // ── Page orchestrator ─────────────────────────────────────
 
-export default function ReportsPage() {
+export default function ReportsPage() {  const { t } = useTranslation(['reports', 'common']);
+
   const activeRole = useAuthStore((s) => s.activeRole);
   const bsaIds = useAuthStore((s) => s.branchSystemAdminBranchIds);
   const bdaIds = useAuthStore((s) => s.branchDataAdminBranchIds);
@@ -1523,9 +1502,7 @@ export default function ReportsPage() {
     <div>
       <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
       <h1 className="mt-1 text-2xl font-bold tracking-tight">Reports &amp; Analytics</h1>
-      <p className="mt-0.5 text-sm text-muted-foreground">
-        Track church growth, attendance trends, and outreach, all in one calm view.
-      </p>
+      <p className="mt-0.5 text-sm text-muted-foreground">{t('reports:trackChurchGrowthAttendanceTrendsAnd')}</p>
     </div>
   );
 
@@ -1552,7 +1529,7 @@ export default function ReportsPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           {header}
           {availableTabs.length > 1 && (
-            <TabsList aria-label="Reports persona">
+            <TabsList aria-label={t('reports:reportsPersona')}>
               {availableTabs.map((key) => (
                 <TabsTrigger key={key} value={key}>{PERSONA_LABELS[key]}</TabsTrigger>
               ))}

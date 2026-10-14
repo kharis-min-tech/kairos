@@ -16,6 +16,7 @@ import type { FellowshipListParams } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
 import type { FellowshipWithBranch } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
   ssr: false,
@@ -69,7 +70,8 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
   [FellowshipType.KharisOnCampusColleges]: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
 };
 
-function FellowshipsContent() {
+function FellowshipsContent() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -120,7 +122,7 @@ function FellowshipsContent() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Fellowships</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('fellowships:fellowships')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Fellowship groups{pagination ? `, ${pagination.total} total` : ''}
           </p>
@@ -203,9 +205,9 @@ function FellowshipsContent() {
             size="sm"
             value={params.branchId ?? ''}
             onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
-            placeholder="All Branches"
+            placeholder={t('fellowships:allBranches')}
             options={[
-              { value: '', label: 'All Branches' },
+              { value: '', label: t('fellowships:allBranches') },
               ...(branchesResult ?? []).map((b) => ({ value: b.id, label: b.branchName })),
             ]}
           />
@@ -217,13 +219,11 @@ function FellowshipsContent() {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             {(caps.has('fellowship:write') || caps.has('department:write')) ? (
               <>
-                <p className="font-medium">You don’t lead a fellowship</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  The leader view shows fellowships you lead or co-lead. Switch to your member view to browse and request to join one.
-                </p>
+                <p className="font-medium">{t('fellowships:youDonTLeadAFellowship')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('fellowships:theLeaderViewShowsFellowshipsYou')}</p>
               </>
             ) : (
-              <p className="text-muted-foreground">No fellowships found.</p>
+              <p className="text-muted-foreground">{t('fellowships:noFellowshipsFound')}</p>
             )}
           </CardContent>
         </Card>
@@ -280,7 +280,7 @@ function FellowshipsContent() {
                             const ok = await confirm({
                               title: `Deactivate ${fellowship.fellowshipName}?`,
                               description: 'It will be hidden from the directory. You can restore it from the API if needed.',
-                              confirmLabel: 'Deactivate',
+                              confirmLabel: t('fellowships:deactivate'),
                               variant: 'destructive',
                             });
                             if (!ok) return;
@@ -289,9 +289,7 @@ function FellowshipsContent() {
                               onError: () => toast.error('Failed to deactivate fellowship. Please try again.'),
                             });
                           }}
-                        >
-                          Deactivate
-                        </Button>
+                        >{t('fellowships:deactivate')}</Button>
                       </div>
                     )}
                   </CardContent>
@@ -310,9 +308,7 @@ function FellowshipsContent() {
                 size="sm"
                 disabled={pagination.page <= 1}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) - 1 }))}
-              >
-                Previous
-              </Button>
+              >{t('fellowships:previous')}</Button>
               <span className="text-sm text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
@@ -321,9 +317,7 @@ function FellowshipsContent() {
                 size="sm"
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) + 1 }))}
-              >
-                Next
-              </Button>
+              >{t('fellowships:next')}</Button>
             </div>
           )}
         </>

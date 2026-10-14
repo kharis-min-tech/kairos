@@ -16,6 +16,7 @@ import type {
   CreateMembershipCohortRequest,
   MembershipCohortStatus,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Create / edit form for a membership cohort. Shared by `/membership/new` and
@@ -70,7 +71,8 @@ export function CohortForm({
   onCancel,
   onSubmit,
   footer,
-}: CohortFormProps) {
+}: CohortFormProps) {  const { t } = useTranslation(['membership', 'common']);
+
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [startDate, setStartDate] = useState(initial?.startDate ?? '');
@@ -143,11 +145,9 @@ export function CohortForm({
     <Card>
       <CardContent className="space-y-5 py-5">
         <section className="space-y-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Details
-          </h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{t('membership:details')}</h2>
           <div className="grid gap-1.5">
-            <Label htmlFor="cohort-name">Cohort name</Label>
+            <Label htmlFor="cohort-name">{t('membership:cohortName')}</Label>
             <Input
               id="cohort-name"
               value={name}
@@ -155,7 +155,7 @@ export function CohortForm({
                 setName(e.target.value);
                 clearError('name');
               }}
-              placeholder="Autumn 2026"
+              placeholder={t('membership:autumn')}
             />
             {errors['name'] ? <p className="text-xs text-destructive">{errors['name']}</p> : null}
           </div>
@@ -172,7 +172,7 @@ export function CohortForm({
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="grid gap-1.5">
-              <Label>Start date</Label>
+              <Label>{t('membership:startDate')}</Label>
               <DateSelect
                 value={startDate}
                 onChange={(v) => {
@@ -185,7 +185,7 @@ export function CohortForm({
               ) : null}
             </div>
             <div className="grid gap-1.5">
-              <Label>Induction ceremony</Label>
+              <Label>{t('membership:inductionCeremony')}</Label>
               <DateSelect
                 value={graduationDate}
                 onChange={(v) => {
@@ -198,23 +198,18 @@ export function CohortForm({
               ) : null}
             </div>
             <div className="grid gap-1.5">
-              <Label>Final test deadline</Label>
+              <Label>{t('membership:finalTestDeadline')}</Label>
               <DateSelect value={finalTestDeadline} onChange={setFinalTestDeadline} />
             </div>
           </div>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Pass marks
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Whole number 0-100. Defaults are 50 for each. Applied per-member when the admin saves a
-            session register or records the final test.
-          </p>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{t('membership:passMarks')}</h2>
+          <p className="text-xs text-muted-foreground">{t('membership:wholeNumberDefaultsAreForEach')}</p>
           <div className="grid gap-4 sm:grid-cols-3">
             <PassMarkField
-              label="Homework"
+              label={t('membership:homework')}
               value={homeworkPassMark}
               onChange={(v) => {
                 setHomeworkPassMark(v);
@@ -223,7 +218,7 @@ export function CohortForm({
               error={errors['homeworkPassMark']}
             />
             <PassMarkField
-              label="Quiz"
+              label={t('membership:quiz')}
               value={quizPassMark}
               onChange={(v) => {
                 setQuizPassMark(v);
@@ -232,7 +227,7 @@ export function CohortForm({
               error={errors['quizPassMark']}
             />
             <PassMarkField
-              label="Final test"
+              label={t('membership:finalTest')}
               value={finalTestPassMark}
               onChange={(v) => {
                 setFinalTestPassMark(v);
@@ -244,9 +239,7 @@ export function CohortForm({
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Admission
-          </h2>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{t('membership:admission')}</h2>
           <label className="flex items-start gap-3 rounded-md border border-border bg-muted/30 px-4 py-3 cursor-pointer">
             <Checkbox
               id="cohort-enrolment-open"
@@ -254,16 +247,14 @@ export function CohortForm({
               onChange={(e) => setEnrolmentOpen(e.target.checked)}
             />
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Enrolment open</p>
-              <p className="text-xs text-muted-foreground">
-                When off, admin cannot admit members from the pool into this cohort.
-              </p>
+              <p className="text-sm font-medium text-foreground">{t('membership:enrolmentOpen')}</p>
+              <p className="text-xs text-muted-foreground">{t('membership:whenOffAdminCannotAdmitMembers')}</p>
             </div>
           </label>
 
           {showStatus ? (
             <div className="grid gap-1.5">
-              <Label>Cohort status</Label>
+              <Label>{t('membership:cohortStatus')}</Label>
               <CustomSelect
                 value={status}
                 onValueChange={(v) => setStatus(v as MembershipCohortStatus)}
@@ -290,9 +281,7 @@ export function CohortForm({
         ) : null}
 
         <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={onCancel} disabled={submitting}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={onCancel} disabled={submitting}>{t('membership:cancel')}</Button>
           <Button
             className="bg-[#5D3FD3] hover:bg-[#451ebb]"
             disabled={submitting}

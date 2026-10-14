@@ -5,6 +5,7 @@ import { Lock, ShieldCheck, Pencil } from 'lucide-react';
 import { Button, CustomSelect, Textarea, Label, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import type { MemberHealthRecord, UpsertHealthRecordRequest } from '@kairos/types';
 import { useMemberHealthRecord, useUpsertMemberHealthRecord } from '@/hooks/use-members';
+import { useTranslation } from 'react-i18next';
 
 interface SafeguardingSectionProps {
   memberId: string;
@@ -47,7 +48,8 @@ function consentCls(v: boolean | null | undefined): string {
   return 'bg-[#c9c4d7]/20 text-muted-foreground';
 }
 
-export function SafeguardingSection({ memberId, redacted, canEdit }: SafeguardingSectionProps) {
+export function SafeguardingSection({ memberId, redacted, canEdit }: SafeguardingSectionProps) {  const { t } = useTranslation(['members', 'common']);
+
   // Only fetch when the viewer has access (not redacted).
   const { data: record, isLoading, error } = useMemberHealthRecord(memberId, !redacted);
   const [editing, setEditing] = useState(false);
@@ -60,13 +62,13 @@ export function SafeguardingSection({ memberId, redacted, canEdit }: Safeguardin
             <Lock className="h-5 w-5 text-[#5D3FD3]" strokeWidth={1.5} />
             Safeguarding &amp; Health
           </CardTitle>
-          <CardDescription>Sensitive minor data</CardDescription>
+          <CardDescription>{t('members:sensitiveMinorData')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-start gap-3 rounded bg-[#f3f3f3] p-4">
             <Lock className="mt-0.5 h-5 w-5 shrink-0 text-[#5D3FD3]" strokeWidth={1.5} />
             <div className="text-sm">
-              <p className="font-medium text-foreground">Hidden, safeguarding protected</p>
+              <p className="font-medium text-foreground">{t('members:hiddenSafeguardingProtected')}</p>
               <p className="mt-1 text-muted-foreground">
                 This member is under 16. You need safeguarding access (admin, pastor, the
                 member&apos;s guardian, or a Safeguarding Lead) to view their health record.
@@ -86,7 +88,7 @@ export function SafeguardingSection({ memberId, redacted, canEdit }: Safeguardin
             <ShieldCheck className="h-5 w-5 text-[#5D3FD3]" strokeWidth={1.5} />
             Safeguarding &amp; Health
           </CardTitle>
-          <CardDescription>Medical, dietary and consent details for this minor</CardDescription>
+          <CardDescription>{t('members:medicalDietaryAndConsentDetailsFor')}</CardDescription>
         </div>
         {canEdit && !editing && (
           <Button
@@ -96,9 +98,7 @@ export function SafeguardingSection({ memberId, redacted, canEdit }: Safeguardin
             disabled={isLoading}
             onClick={() => setEditing(true)}
           >
-            <Pencil className="h-4 w-4" strokeWidth={1.5} />
-            Edit
-          </Button>
+            <Pencil className="h-4 w-4" strokeWidth={1.5} />{t('members:edit')}</Button>
         )}
       </CardHeader>
       <CardContent>
@@ -107,7 +107,7 @@ export function SafeguardingSection({ memberId, redacted, canEdit }: Safeguardin
             <div className="h-4 w-1/3 animate-pulse rounded bg-[#f3f3f3]" />
             <div className="h-4 w-2/3 animate-pulse rounded bg-[#f3f3f3]" />
             <div className="h-4 w-1/2 animate-pulse rounded bg-[#f3f3f3]" />
-            <span className="sr-only">Loading health record…</span>
+            <span className="sr-only">{t('members:loadingHealthRecord')}</span>
           </div>
         ) : error ? (
           <div className="rounded border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
@@ -129,30 +129,29 @@ export function SafeguardingSection({ memberId, redacted, canEdit }: Safeguardin
 
 // ── Read-only view ─────────────────────────────────────────
 
-function HealthRecordView({ record }: { record: MemberHealthRecord | null }) {
+function HealthRecordView({ record }: { record: MemberHealthRecord | null }) {  const { t } = useTranslation(['members', 'common']);
+
   if (!record) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No health record recorded yet.
-      </p>
+      <p className="text-sm text-muted-foreground">{t('members:noHealthRecordRecordedYet')}</p>
     );
   }
 
   return (
     <div className="space-y-5 text-sm">
       <div className="space-y-3">
-        <TextField label="Medical Conditions" value={record.medicalConditions} />
-        <TextField label="Allergies" value={record.allergies} />
-        <TextField label="Medications" value={record.medications} />
-        <TextField label="Dietary Needs" value={record.dietaryNeeds} />
-        <TextField label="Additional Notes" value={record.additionalNotes} />
+        <TextField label={t('members:medicalConditions')} value={record.medicalConditions} />
+        <TextField label={t('members:allergies')} value={record.allergies} />
+        <TextField label={t('members:medications')} value={record.medications} />
+        <TextField label={t('members:dietaryNeeds')} value={record.dietaryNeeds} />
+        <TextField label={t('members:additionalNotes')} value={record.additionalNotes} />
       </div>
 
       <div className="space-y-2 border-t border-[#c9c4d7]/30 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Consent</p>
-        <ConsentRow label="Photo & Media Consent" value={record.photoMediaConsent} />
-        <ConsentRow label="Medical Treatment Consent" value={record.medicalTreatmentConsent} />
-        <ConsentRow label="Data Processing Consent" value={record.dataProcessingConsent} />
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('members:consent')}</p>
+        <ConsentRow label={t('members:photoMediaConsent')} value={record.photoMediaConsent} />
+        <ConsentRow label={t('members:medicalTreatmentConsent')} value={record.medicalTreatmentConsent} />
+        <ConsentRow label={t('members:dataProcessingConsent')} value={record.dataProcessingConsent} />
         {record.consentDate && (
           <p className="pt-1 text-xs text-muted-foreground">
             Consent last recorded {record.consentDate}.
@@ -193,7 +192,8 @@ function HealthRecordForm({
   memberId: string;
   record: MemberHealthRecord | null;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['members', 'common']);
+
   const upsert = useUpsertMemberHealthRecord(memberId);
 
   const [medicalConditions, setMedicalConditions] = useState(record?.medicalConditions ?? '');
@@ -234,37 +234,35 @@ function HealthRecordForm({
       )}
 
       <div className="space-y-1.5">
-        <Label htmlFor="medicalConditions">Medical Conditions</Label>
+        <Label htmlFor="medicalConditions">{t('members:medicalConditions')}</Label>
         <Textarea id="medicalConditions" value={medicalConditions} onChange={(e) => setMedicalConditions(e.target.value)} rows={2} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="allergies">Allergies</Label>
+        <Label htmlFor="allergies">{t('members:allergies')}</Label>
         <Textarea id="allergies" value={allergies} onChange={(e) => setAllergies(e.target.value)} rows={2} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="medications">Medications</Label>
+        <Label htmlFor="medications">{t('members:medications')}</Label>
         <Textarea id="medications" value={medications} onChange={(e) => setMedications(e.target.value)} rows={2} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="dietaryNeeds">Dietary Needs</Label>
+        <Label htmlFor="dietaryNeeds">{t('members:dietaryNeeds')}</Label>
         <Textarea id="dietaryNeeds" value={dietaryNeeds} onChange={(e) => setDietaryNeeds(e.target.value)} rows={2} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="additionalNotes">Additional Notes</Label>
+        <Label htmlFor="additionalNotes">{t('members:additionalNotes')}</Label>
         <Textarea id="additionalNotes" value={additionalNotes} onChange={(e) => setAdditionalNotes(e.target.value)} rows={2} />
       </div>
 
       <div className="space-y-3 border-t border-[#c9c4d7]/30 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Consent</p>
-        <ConsentSelect label="Photo & Media Consent" value={photoMediaConsent} onChange={setPhotoMediaConsent} />
-        <ConsentSelect label="Medical Treatment Consent" value={medicalTreatmentConsent} onChange={setMedicalTreatmentConsent} />
-        <ConsentSelect label="Data Processing Consent" value={dataProcessingConsent} onChange={setDataProcessingConsent} />
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('members:consent')}</p>
+        <ConsentSelect label={t('members:photoMediaConsent')} value={photoMediaConsent} onChange={setPhotoMediaConsent} />
+        <ConsentSelect label={t('members:medicalTreatmentConsent')} value={medicalTreatmentConsent} onChange={setMedicalTreatmentConsent} />
+        <ConsentSelect label={t('members:dataProcessingConsent')} value={dataProcessingConsent} onChange={setDataProcessingConsent} />
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" size="sm" onClick={onDone} disabled={upsert.isPending}>
-          Cancel
-        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onDone} disabled={upsert.isPending}>{t('members:cancel')}</Button>
         <Button
           type="submit"
           size="sm"

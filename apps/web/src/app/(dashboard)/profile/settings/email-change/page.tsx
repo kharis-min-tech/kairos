@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
 import { useRequestEmailChange } from '@/hooks/use-email-change';
+import { useTranslation } from 'react-i18next';
 
 const schema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -16,7 +17,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export default function EmailChangePage() {
+export default function EmailChangePage() {  const { t } = useTranslation(['settings', 'common']);
+
   const [success, setSuccess] = useState(false);
   const mutation = useRequestEmailChange();
 
@@ -41,13 +43,12 @@ export default function EmailChangePage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Change email</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings:changeEmail')}</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
           Confirm your password, then we&apos;ll send a verification link to the
           new address.
@@ -57,25 +58,21 @@ export default function EmailChangePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Mail className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> New email
-          </CardTitle>
+            <Mail className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:newEmail')}</CardTitle>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-4 text-sm">
-              <p className="font-semibold text-emerald-700 dark:text-emerald-400">
-                Confirmation sent
-              </p>
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400">{t('settings:confirmationSent')}</p>
               <p className="text-muted-foreground">
                 Check the new email for a verification link. Your current email is
                 still active until you click it. We&apos;ve also notified your old
-                email. If you didn&apos;t request this, click <strong>This wasn&apos;t me</strong> in that message.
-              </p>
+                email. If you didn&apos;t request this, click <strong>This wasn&apos;t me</strong>{t('settings:inThatMessage')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <Label htmlFor="currentPassword">Current password</Label>
+                <Label htmlFor="currentPassword">{t('settings:currentPassword')}</Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -89,7 +86,7 @@ export default function EmailChangePage() {
                 )}
               </div>
               <div>
-                <Label htmlFor="newEmail">New email address</Label>
+                <Label htmlFor="newEmail">{t('settings:newEmailAddress')}</Label>
                 <Input
                   id="newEmail"
                   type="email"

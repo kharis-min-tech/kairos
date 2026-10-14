@@ -18,12 +18,14 @@ import { formatShortDate } from '@kairos/core';
 import { useCreateMentorFollowup, useMentorFollowups } from '@/hooks/use-new-believers';
 import { getStageByValue } from './stage-config';
 import type { EnrollmentCardData } from './types';
+import { useTranslation } from 'react-i18next';
 
 interface MyMenteesTabProps {
   enrollments: EnrollmentCardData[];
 }
 
-export function MyMenteesTab({ enrollments }: MyMenteesTabProps) {
+export function MyMenteesTab({ enrollments }: MyMenteesTabProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const [activeMenteeId, setActiveMenteeId] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const createFollowup = useCreateMentorFollowup();
@@ -59,19 +61,15 @@ export function MyMenteesTab({ enrollments }: MyMenteesTabProps) {
         role="status"
       >
         <HeartHandshake className="mx-auto mb-2 h-6 w-6 text-muted-foreground" aria-hidden />
-        <p className="text-sm font-medium text-muted-foreground">
-          You are not currently mentoring anyone.
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Mentees will appear here once they are assigned to you.
-        </p>
+        <p className="text-sm font-medium text-muted-foreground">{t('newBelievers:youAreNotCurrentlyMentoringAnyone')}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t('newBelievers:menteesWillAppearHereOnceThey')}</p>
       </div>
     );
   }
 
   return (
     <>
-      <ul className="space-y-2" aria-label="Enrollments I mentor">
+      <ul className="space-y-2" aria-label={t('newBelievers:enrollmentsIMentor')}>
         {enrollments.map((e) => (
           <MenteeRow
             key={e.id}
@@ -84,23 +82,18 @@ export function MyMenteesTab({ enrollments }: MyMenteesTabProps) {
       <Dialog open={!!activeMenteeId} onOpenChange={(open) => !open && closeFollowupDialog()}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Log a follow-up</DialogTitle>
-            <DialogDescription>
-              Record a quick note about your most recent check-in. Only NB-leaders, pastors,
-              and admins can see your follow-ups.
-            </DialogDescription>
+            <DialogTitle>{t('newBelievers:logAFollowUp')}</DialogTitle>
+            <DialogDescription>{t('newBelievers:recordAQuickNoteAboutYour')}</DialogDescription>
           </DialogHeader>
           <Textarea
             value={note}
             onChange={(ev) => setNote(ev.target.value)}
-            placeholder="How was the conversation? Any concerns or wins to flag?"
+            placeholder={t('newBelievers:howWasTheConversationAnyConcerns')}
             rows={5}
             maxLength={2000}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={closeFollowupDialog}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={closeFollowupDialog}>{t('newBelievers:cancel')}</Button>
             <Button
               onClick={handleSubmitFollowup}
               disabled={!note.trim() || createFollowup.isPending}
@@ -121,7 +114,8 @@ function MenteeRow({
 }: {
   enrollment: EnrollmentCardData;
   onAddFollowup: () => void;
-}) {
+}) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const stage = getStageByValue(enrollment.stage);
   const { data: followups } = useMentorFollowups(enrollment.id);
   const lastFollowupAt = followups?.[0]?.contactedAt;
@@ -158,9 +152,7 @@ function MenteeRow({
           onClick={onAddFollowup}
           className="shrink-0"
         >
-          <MessageSquarePlus className="mr-1 h-3.5 w-3.5" aria-hidden />
-          Follow-up
-        </Button>
+          <MessageSquarePlus className="mr-1 h-3.5 w-3.5" aria-hidden />{t('newBelievers:followUp')}</Button>
       </div>
     </li>
   );

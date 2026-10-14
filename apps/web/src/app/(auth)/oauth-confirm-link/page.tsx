@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { persistAuthSuccess } from '@/hooks/use-auth';
 import { OAUTH_PROVIDER_LABEL, OAuthProviderIcon } from '@/components/oauth-provider-icon';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
 const confirmSchema = z.object({
   password: z.string().min(1, 'Password is required'),
@@ -25,7 +26,8 @@ function providerLabel(provider: string | null): string {
   return OAUTH_PROVIDER_LABEL[provider as OAuthProviderId] ?? 'your provider';
 }
 
-function ConfirmLinkContent() {
+function ConfirmLinkContent() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -79,17 +81,13 @@ function ConfirmLinkContent() {
     return (
       <>
         <KharisCardHeader
-          heading="Link expired"
-          subtitle="This confirmation link is missing information"
+          heading={t('auth:linkExpired')}
+          subtitle={t('auth:thisConfirmationLinkIsMissingInformation')}
         />
         <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
-          <p className="mb-5 text-sm text-muted-foreground">
-            Please try signing in again from the login page.
-          </p>
+          <p className="mb-5 text-sm text-muted-foreground">{t('auth:pleaseTrySigningInAgainFrom')}</p>
           <Link href="/login">
-            <button className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90">
-              Back to sign in
-            </button>
+            <button className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90">{t('auth:backToSignIn')}</button>
           </Link>
         </div>
       </>
@@ -99,7 +97,7 @@ function ConfirmLinkContent() {
   return (
     <>
       <KharisCardHeader
-        heading="Confirm to link account"
+        heading={t('auth:confirmToLinkAccount')}
         subtitle={`Enter your Kharis password to link ${providerName}`}
       />
 
@@ -108,8 +106,7 @@ function ConfirmLinkContent() {
           {provider && (
             <OAuthProviderIcon provider={provider as OAuthProviderId} className="mt-0.5 h-5 w-5 shrink-0" />
           )}
-          <p className="text-sm text-foreground">
-            We found a Kairos account for <span className="font-semibold">{email ?? 'your email'}</span>.
+          <p className="text-sm text-foreground">{t('auth:weFoundAKairosAccountFor')}<span className="font-semibold">{email ?? 'your email'}</span>.
             Enter your password to link it with your {providerName} account.
           </p>
         </div>
@@ -125,9 +122,7 @@ function ConfirmLinkContent() {
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:password')}</label>
             <div className="relative">
               <Input
                 id="password"
@@ -168,9 +163,7 @@ function ConfirmLinkContent() {
           </button>
 
           <p className="text-center text-sm text-muted-foreground/70">
-            <Link href="/login" className="font-medium text-[#5D3FD3] hover:opacity-80">
-              Sign in another way
-            </Link>
+            <Link href="/login" className="font-medium text-[#5D3FD3] hover:opacity-80">{t('auth:signInAnotherWay')}</Link>
           </p>
         </form>
       </div>
@@ -178,10 +171,11 @@ function ConfirmLinkContent() {
   );
 }
 
-function Skeleton() {
+function Skeleton() {  const { t } = useTranslation(['auth', 'common']);
+
   return (
     <>
-      <KharisCardHeader heading="Confirm to link account" subtitle="Loading…" />
+      <KharisCardHeader heading={t('auth:confirmToLinkAccount')} subtitle={t('auth:loading')} />
       <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-4" aria-busy="true" aria-live="polite">
           <div className="h-16 rounded-lg bg-muted/40" />

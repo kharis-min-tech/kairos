@@ -6,6 +6,7 @@ import { Badge, Card, CardContent, Label } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useMyRota } from '@/hooks/use-me';
 import { formatDate } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   branchDepartmentId: string;
@@ -61,7 +62,8 @@ function statusBadgeClass(status: string): string {
   }
 }
 
-export function MyRotaTab({ branchDepartmentId }: Props) {
+export function MyRotaTab({ branchDepartmentId }: Props) {  const { t } = useTranslation(['departments', 'common']);
+
   const [from, setFrom] = useState<string>('');
   const [to, setTo] = useState<string>('');
 
@@ -94,9 +96,7 @@ export function MyRotaTab({ branchDepartmentId }: Props) {
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1">
-              <Label htmlFor="rota-from" className="text-xs text-muted-foreground">
-                From
-              </Label>
+              <Label htmlFor="rota-from" className="text-xs text-muted-foreground">{t('departments:from')}</Label>
               <DateSelect
                 id="rota-from"
                 value={from}
@@ -105,9 +105,7 @@ export function MyRotaTab({ branchDepartmentId }: Props) {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="rota-to" className="text-xs text-muted-foreground">
-                To
-              </Label>
+              <Label htmlFor="rota-to" className="text-xs text-muted-foreground">{t('departments:to')}</Label>
               <DateSelect
                 id="rota-to"
                 value={to}
@@ -130,9 +128,7 @@ export function MyRotaTab({ branchDepartmentId }: Props) {
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-          No upcoming duties for you in this department.
-        </p>
+        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">{t('departments:noUpcomingDutiesForYouIn')}</p>
       ) : (
         <ol className="space-y-2">
           {rows.map((row) => {

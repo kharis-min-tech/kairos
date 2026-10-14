@@ -17,6 +17,7 @@ import {
 import { useConfirm } from '@/components/confirm-dialog';
 import { CHURCH_SCOPE } from '@kairos/types';
 import { CohortForm } from '../../_components/cohort-form';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Edit an existing cohort. Mirrors the mobile edit flow — same fields,
@@ -27,7 +28,8 @@ import { CohortForm } from '../../_components/cohort-form';
  * the explicit action on the detail page, because graduating per-enrolment
  * is where the real Member confirmation happens.
  */
-export default function EditCohortPage() {
+export default function EditCohortPage() {  const { t } = useTranslation(['membership', 'common']);
+
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const cohortId = params?.id ?? '';
@@ -49,9 +51,7 @@ export default function EditCohortPage() {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Loading cohort…
-          </CardContent>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">{t('membership:loadingCohort')}</CardContent>
         </Card>
       </div>
     );
@@ -61,9 +61,7 @@ export default function EditCohortPage() {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Cohort not found.
-          </CardContent>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">{t('membership:cohortNotFound')}</CardContent>
         </Card>
       </div>
     );
@@ -78,16 +76,12 @@ export default function EditCohortPage() {
           href={`/membership/${cohortId}`}
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="size-3.5" />
-          Back to cohort
-        </Link>
+          <ArrowLeft className="size-3.5" />{t('membership:backToCohort')}</Link>
         <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold text-foreground">
           <GraduationCap className="size-5 text-[#5D3FD3]" />
           Edit {cohort.data.name}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Changes save immediately. Pass marks apply on the next session register you record.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('membership:changesSaveImmediatelyPassMarksApply')}</p>
       </div>
 
       <CohortForm
@@ -105,7 +99,7 @@ export default function EditCohortPage() {
           notes: cohort.data.notes ?? '',
         }}
         showStatus
-        submitLabel="Save changes"
+        submitLabel={t('membership:saveChanges')}
         submitPendingLabel="Saving…"
         submitting={update.isPending}
         serverError={serverError}
@@ -126,15 +120,11 @@ export default function EditCohortPage() {
         }}
         footer={
           <div className="mt-6 border-t border-destructive/20 pt-5">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-destructive">
-              Danger zone
-            </h3>
+            <h3 className="text-[11px] font-bold uppercase tracking-widest text-destructive">{t('membership:dangerZone')}</h3>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/5 p-4">
               <div>
-                <p className="text-sm font-medium text-foreground">Archive this cohort</p>
-                <p className="text-xs text-muted-foreground">
-                  Hides it from the lists. Enrolments stay in the DB for audit. Not reversible from the UI.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('membership:archiveThisCohort')}</p>
+                <p className="text-xs text-muted-foreground">{t('membership:hidesItFromTheListsEnrolments')}</p>
               </div>
               <Button
                 variant="outline"
@@ -146,7 +136,7 @@ export default function EditCohortPage() {
                     description:
                       'This hides it from every active list. The row stays in the database.',
                     variant: 'destructive',
-                    confirmLabel: 'Archive',
+                    confirmLabel: t('membership:archive'),
                   });
                   if (!ok) return;
                   archive.mutate(cohortId, {

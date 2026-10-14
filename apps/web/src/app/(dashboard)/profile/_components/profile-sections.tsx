@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button } from '@kairos/ui';
 import { useBranches } from '@/hooks/use-branches';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useMyDepartments } from '@/hooks/use-departments';
+import { useTranslation } from 'react-i18next';
 
 // ── Derived "friendly role line" ───────────────────────────────────────────
 // Replaces the raw `systemRole: "member"` exposure on /profile with a sentence
@@ -79,7 +80,8 @@ export function WhereIBelongCard({
   onSwitchBranch?: () => void;
   switchPending?: boolean;
   switchError?: string | null;
-}) {
+}) {  const { t } = useTranslation(['settings', 'common']);
+
   const { data: branches } = useBranches();
   const home = branches?.find((b) => b.id === homeBranchId);
   const secondary = branches?.find((b) => b.id === secondaryBranchId);
@@ -87,23 +89,23 @@ export function WhereIBelongCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Where I belong</CardTitle>
+        <CardTitle className="text-base">{t('settings:whereIBelong')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-sm text-muted-foreground">Home branch</p>
+          <p className="text-sm text-muted-foreground">{t('settings:homeBranch')}</p>
           <p className="mt-0.5 font-medium">{home?.branchName ?? '—'}</p>
         </div>
 
         {secondary && (
           <>
             <div className="border-t pt-3">
-              <p className="text-sm text-muted-foreground">Secondary branch</p>
+              <p className="text-sm text-muted-foreground">{t('settings:secondaryBranch')}</p>
               <p className="mt-0.5 font-medium">{secondary.branchName}</p>
             </div>
             <div className="flex items-center justify-between border-t pt-3">
               <div>
-                <p className="text-sm font-medium">Active branch</p>
+                <p className="text-sm font-medium">{t('settings:activeBranch')}</p>
                 <p className="text-xs text-muted-foreground">
                   {isAtSecondaryBranch
                     ? `Currently at ${secondary.branchName} (secondary)`
@@ -134,7 +136,8 @@ export function WhereIBelongCard({
 }
 
 // ── "My community" — fellowships + departments ────────────────────────────
-export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
+export function MyCommunityCard({ memberId }: { memberId?: string | null }) {  const { t } = useTranslation(['settings', 'common']);
+
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
 
@@ -153,7 +156,7 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">My community</CardTitle>
+        <CardTitle className="text-base">{t('settings:myCommunity')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {fellowships.length > 0 && (
@@ -214,7 +217,8 @@ export function MyLeadershipCard({
 }: {
   memberId?: string | null;
   showAdminRole?: boolean;
-}) {
+}) {  const { t } = useTranslation(['settings', 'common']);
+
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
 
@@ -247,7 +251,7 @@ export function MyLeadershipCard({
   });
 
   const churchRoles: { key: string; label: string; href?: string }[] = [];
-  if (showAdminRole) churchRoles.push({ key: 'admin', label: 'Church administrator' });
+  if (showAdminRole) churchRoles.push({ key: 'admin', label: t('settings:churchAdministrator') });
   // A "Pastor, X branch" row used to sit here behind a systemRole === 'pastor'
   // test that has been unreachable since the RBAC rebuild. Pastor is an
   // identity on branch_leadership, not a system role — if this row comes back
@@ -259,7 +263,7 @@ export function MyLeadershipCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">My leadership</CardTitle>
+        <CardTitle className="text-base">{t('settings:myLeadership')}</CardTitle>
       </CardHeader>
       <CardContent>
         <ul className="space-y-2 text-sm">

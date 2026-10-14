@@ -44,6 +44,7 @@ import {
   OAUTH_PROVIDER_LABEL,
   OAuthProviderIcon,
 } from '@/components/oauth-provider-icon';
+import { useTranslation } from 'react-i18next';
 
 const ALL_PROVIDERS: OAuthProviderId[] = ['google', 'microsoft', 'apple'];
 
@@ -93,7 +94,8 @@ function formatRelative(iso: string | null): string {
 
 // ── Connected accounts ────────────────────────────────────────
 
-function ConnectedAccountsCard() {
+function ConnectedAccountsCard() {  const { t } = useTranslation(['security', 'common']);
+
   const { data: connections, isLoading, isError, error } = useMyOAuthConnections();
   const disconnect = useDisconnectOAuthProvider();
 
@@ -125,17 +127,12 @@ function ConnectedAccountsCard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldCheck className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Connected accounts
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Sign in faster by linking a Google, Microsoft, or Apple account.
-        </p>
+          <ShieldCheck className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('security:connectedAccounts')}</CardTitle>
+        <p className="text-xs text-muted-foreground">{t('security:signInFasterByLinkingA')}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading && (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            Loading connected accounts…
-          </div>
+          <div className="py-6 text-center text-sm text-muted-foreground">{t('security:loadingConnectedAccounts')}</div>
         )}
 
         {isError && (
@@ -146,9 +143,7 @@ function ConnectedAccountsCard() {
 
         {!isLoading && !isError && connections && connections.length === 0 && (
           <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/20 px-4 py-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              No connected accounts. Add Google, Microsoft, or Apple to sign in faster.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('security:noConnectedAccountsAddGoogleMicrosoft')}</p>
           </div>
         )}
 
@@ -178,8 +173,7 @@ function ConnectedAccountsCard() {
                     setConfirming(c.provider);
                   }}
                 >
-                  <Link2Off className="h-3.5 w-3.5" /> Disconnect
-                </Button>
+                  <Link2Off className="h-3.5 w-3.5" />{t('security:disconnect')}</Button>
               </li>
             ))}
           </ul>
@@ -187,9 +181,7 @@ function ConnectedAccountsCard() {
 
         {!isLoading && !isError && unconnected.length > 0 && (
           <div className="space-y-2 border-t border-muted-foreground/10 pt-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Add another
-            </p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t('security:addAnother')}</p>
             <div className="grid gap-2 sm:grid-cols-3">
               {unconnected.map((provider) => (
                 <button
@@ -230,9 +222,7 @@ function ConnectedAccountsCard() {
               variant="outline"
               onClick={() => setConfirming(null)}
               disabled={disconnect.isPending}
-            >
-              Cancel
-            </Button>
+            >{t('security:cancel')}</Button>
             <Button
               onClick={confirmDisconnect}
               disabled={disconnect.isPending}
@@ -247,7 +237,8 @@ function ConnectedAccountsCard() {
   );
 }
 
-export default function SecuritySettingsPage() {
+export default function SecuritySettingsPage() {  const { t } = useTranslation(['security', 'common']);
+
   const { data, isLoading, isError, error } = useMyAuditLog();
 
   return (
@@ -255,16 +246,13 @@ export default function SecuritySettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('security:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Security</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Manage the ways you sign in and review recent security activity.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('security:security')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('security:manageTheWaysYouSignIn')}</p>
       </div>
 
       <ConnectedAccountsCard />
@@ -272,17 +260,12 @@ export default function SecuritySettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ShieldCheck className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Recent security activity
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Your last 50 sign-ins, password changes, and role updates.
-          </p>
+            <ShieldCheck className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('security:recentSecurityActivity')}</CardTitle>
+          <p className="text-xs text-muted-foreground">{t('security:yourLastSignInsPasswordChanges')}</p>
         </CardHeader>
         <CardContent className="space-y-1">
           {isLoading && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Loading activity…
-            </div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('security:loadingActivity')}</div>
           )}
           {isError && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -290,9 +273,7 @@ export default function SecuritySettingsPage() {
             </div>
           )}
           {data && data.entries.length === 0 && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              No activity recorded yet.
-            </div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('security:noActivityRecordedYet')}</div>
           )}
           {data?.entries.map((entry, idx) => (
             <div
@@ -304,9 +285,7 @@ export default function SecuritySettingsPage() {
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium">{AUDIT_ACTION_LABEL[entry.action]}</p>
                   {entry.outcome === 'failure' && (
-                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive">
-                      Failed
-                    </span>
+                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-destructive">{t('security:failed')}</span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">{formatTime(entry.createdAt)}</p>

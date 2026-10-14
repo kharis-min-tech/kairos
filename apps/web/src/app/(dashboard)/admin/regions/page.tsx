@@ -14,13 +14,15 @@ import { CONTINENTS, COUNTRIES_BY_CONTINENT } from '@kairos/core';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
 import type { Region } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 type DialogMode =
   | { kind: 'closed' }
   | { kind: 'create' }
   | { kind: 'edit'; region: Region };
 
-export default function RegionsPage() {
+export default function RegionsPage() {  const { t } = useTranslation(['admin', 'common']);
+
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
   const { data: regions, isLoading } = useRegions();
@@ -86,7 +88,7 @@ export default function RegionsPage() {
     const ok = await confirm({
       title: `Delete "${region.regionName} / ${region.country}"?`,
       description: 'This region has no branches attached, so it can be safely removed. This cannot be undone.',
-      confirmLabel: 'Delete',
+      confirmLabel: t('admin:delete'),
       variant: 'destructive',
     });
     if (!ok) return;
@@ -105,7 +107,7 @@ export default function RegionsPage() {
       {/* Page header */}
       <div className="flex items-center justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Regions</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('admin:regions')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Manage geographic regions{regions ? `, ${regions.length} total` : ''}
           </p>
@@ -130,23 +132,23 @@ export default function RegionsPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="regionName">Continent *</Label>
+                <Label htmlFor="regionName">{t('admin:continent')}</Label>
                 <CustomSelect
                   id="regionName"
                   value={regionName}
                   onValueChange={(v) => { setRegionName(v); setCountry(''); }}
-                  placeholder="Select continent…"
+                  placeholder={t('admin:selectContinent')}
                   options={CONTINENTS.map((c) => ({ value: c, label: c }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="country">Country *</Label>
+                <Label htmlFor="country">{t('admin:country')}</Label>
                 <CustomSelect
                   id="country"
                   value={country}
                   onValueChange={setCountry}
                   disabled={!regionName}
-                  placeholder="Select country…"
+                  placeholder={t('admin:selectCountry')}
                   options={availableCountries.map((c) => ({ value: c, label: c }))}
                 />
               </div>
@@ -165,9 +167,7 @@ export default function RegionsPage() {
                   ? (dialog.kind === 'edit' ? 'Saving…' : 'Creating…')
                   : (dialog.kind === 'edit' ? 'Save changes' : 'Create Region')}
               </Button>
-              <Button variant="outline" onClick={closeDialog}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={closeDialog}>{t('admin:cancel')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -179,12 +179,12 @@ export default function RegionsPage() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-32 animate-pulse rounded-lg bg-muted/60" />
           ))}
-          <span className="sr-only">Loading regions</span>
+          <span className="sr-only">{t('admin:loadingRegions')}</span>
         </div>
       ) : !regions || regions.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No regions found. Create one above.</p>
+            <p className="text-muted-foreground">{t('admin:noRegionsFoundCreateOneAbove')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -213,18 +213,14 @@ export default function RegionsPage() {
                     disabled={locked}
                     title={lockedTitle}
                     onClick={() => openEdit(region)}
-                  >
-                    Edit
-                  </Button>
+                  >{t('admin:edit')}</Button>
                   <Button
                     size="sm"
                     variant="destructive"
                     disabled={locked || deleteRegion.isPending}
                     title={lockedTitle}
                     onClick={() => handleDelete(region)}
-                  >
-                    Delete
-                  </Button>
+                  >{t('admin:delete')}</Button>
                 </CardContent>
               </Card>
             );

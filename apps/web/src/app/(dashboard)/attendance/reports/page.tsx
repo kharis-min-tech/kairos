@@ -30,8 +30,10 @@ import { CohortCompareCard } from '../_components/cohort-compare-card';
 import { AttendanceHeatmapCard } from '../_components/attendance-heatmap-card';
 import { FrequencyBucketsCard } from '../_components/frequency-buckets-card';
 import { FirstTimeReturningCard } from '../_components/first-time-returning-card';
+import { useTranslation } from 'react-i18next';
 
-export default function AttendanceReportsPage() {
+export default function AttendanceReportsPage() {  const { t } = useTranslation(['reports', 'common']);
+
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
   const caps = useCapabilities();
@@ -77,20 +79,20 @@ export default function AttendanceReportsPage() {
   const byBranch = useAttendanceByBranch({ weeks: 4, engagedWindowMonths: engagedWindow });
 
   const branchOptions = [
-    { value: '', label: 'All branches' },
+    { value: '', label: t('reports:allBranches') },
     ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
   ];
 
   // Dept + fellowship dropdown options. Both lists are paginated payloads ({data: [...]}).
   const deptOptions = [
-    { value: '', label: 'All departments' },
+    { value: '', label: t('reports:allDepartments') },
     ...((deptList?.data ?? []).map((d) => ({
       value: d.id,
       label: d.departmentName,
     }))),
   ];
   const fellowshipOptions = [
-    { value: '', label: 'All fellowships' },
+    { value: '', label: t('reports:allFellowships') },
     ...((fellowList?.data ?? []).map((f) => ({
       value: f.id,
       label: f.fellowshipName,
@@ -104,9 +106,9 @@ export default function AttendanceReportsPage() {
   }));
 
   const engagedWindowOptions = [
-    { value: '3', label: 'Engaged: 3 mo' },
-    { value: '6', label: 'Engaged: 6 mo' },
-    { value: '12', label: 'Engaged: 12 mo' },
+    { value: '3', label: t('reports:engagedMo') },
+    { value: '6', label: t('reports:engagedMo2') },
+    { value: '12', label: t('reports:engagedMo3') },
   ];
 
   return (
@@ -116,10 +118,9 @@ export default function AttendanceReportsPage() {
           href="/attendance"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ChevronLeft className="h-4 w-4" /> Back to services
-        </Link>
+          <ChevronLeft className="h-4 w-4" />{t('reports:backToServices')}</Link>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-foreground">Attendance Reports</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t('reports:attendanceReports')}</h1>
           {isAdminOrPastor && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-56">
@@ -154,7 +155,7 @@ export default function AttendanceReportsPage() {
       {/* Trends — check-ins overlaid with distinct members */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Weekly attendance</CardTitle>
+          <CardTitle className="text-base">{t('reports:weeklyAttendance')}</CardTitle>
           <CardDescription>
             Total check-ins per week (attendees × services attended) with a
             distinct-members overlay showing how many unique humans that was.
@@ -170,7 +171,7 @@ export default function AttendanceReportsPage() {
               {trends.error instanceof Error ? trends.error.message : 'Could not load trends.'}
             </p>
           ) : chartData.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">No attendance recorded yet.</p>
+            <p className="py-12 text-center text-sm text-muted-foreground">{t('reports:noAttendanceRecordedYet')}</p>
           ) : (
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
@@ -223,12 +224,8 @@ export default function AttendanceReportsPage() {
         {/* Missing members */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Members not seen recently</CardTitle>
-            <CardDescription>
-              Active members who missed the most recent service. Sorted by
-              consecutive services missed. The top of the list are the
-              members most likely to need a check-in.
-            </CardDescription>
+            <CardTitle className="text-base">{t('reports:membersNotSeenRecently')}</CardTitle>
+            <CardDescription>{t('reports:activeMembersWhoMissedTheMost')}</CardDescription>
           </CardHeader>
           <CardContent>
             {missing.isLoading ? (
@@ -244,9 +241,7 @@ export default function AttendanceReportsPage() {
             ) : !missing.data || missing.data.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <UserX className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Everyone attended the most recent service.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('reports:everyoneAttendedTheMostRecentService')}</p>
               </div>
             ) : (
               <ul className="space-y-1.5">
@@ -273,11 +268,10 @@ export default function AttendanceReportsPage() {
         {/* By branch */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Attendance by branch</CardTitle>
+            <CardTitle className="text-base">{t('reports:attendanceByBranch')}</CardTitle>
             <CardDescription>
               Distinct members who attended at least one service in the last
-              4 weeks. Rate = distinct attendees ÷ <span className="font-medium">engaged
-              members</span> (attended in the last {engagedWindow} months) —
+              4 weeks. Rate = distinct attendees ÷ <span className="font-medium">{t('reports:engagedMembers')}</span> (attended in the last {engagedWindow} months) —
               the honest denominator; the roll count is shown alongside for
               context.
             </CardDescription>
@@ -294,15 +288,15 @@ export default function AttendanceReportsPage() {
                 {byBranch.error instanceof Error ? byBranch.error.message : 'Could not load this report.'}
               </p>
             ) : !byBranch.data || byBranch.data.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No branch data yet.</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">{t('reports:noBranchDataYet')}</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="pb-2 font-medium">Branch</th>
-                    <th className="pb-2 text-right font-medium">Attended / Engaged</th>
-                    <th className="pb-2 text-right font-medium">On roll</th>
-                    <th className="pb-2 text-right font-medium">Rate</th>
+                    <th className="pb-2 font-medium">{t('reports:branch')}</th>
+                    <th className="pb-2 text-right font-medium">{t('reports:attendedEngaged')}</th>
+                    <th className="pb-2 text-right font-medium">{t('reports:onRoll')}</th>
+                    <th className="pb-2 text-right font-medium">{t('reports:rate')}</th>
                   </tr>
                 </thead>
                 <tbody>

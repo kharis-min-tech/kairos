@@ -12,6 +12,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { Halo } from '@/components/motion/halo';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -27,7 +28,8 @@ const OAUTH_ERROR_COPY: Record<string, string> = {
   provider_error: 'Your provider returned an error. Please try again or use email + password.',
 };
 
-function LoginContent() {
+function LoginContent() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginMutation = useLogin();
@@ -82,7 +84,7 @@ function LoginContent() {
   return (
     <>
       {/* Heading — outside card */}
-      <KharisCardHeader heading="Welcome Back" subtitle="Sign in to continue to your dashboard" />
+      <KharisCardHeader heading={t('auth:welcomeBack')} subtitle={t('auth:signInToContinueToYour')} />
 
       {/* Card. The halo is the card's border: a purple-and-gold light circling a
           resting --border rim. The shadow sits on the halo (its own overflow
@@ -106,13 +108,11 @@ function LoginContent() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-1.5">
-              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Email Address
-              </label>
+              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:emailAddress')}</label>
               <Input
                 id="email"
                 type="email"
-                placeholder="your email"
+                placeholder={t('auth:yourEmail')}
                 className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:shadow-[0_0_0_3px_rgba(248,181,55,0.25)]"
                 {...register('email')}
               />
@@ -121,12 +121,8 @@ function LoginContent() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Password
-                </label>
-                <Link href="/forgot-password" className="text-xs font-medium text-[#5D3FD3] hover:opacity-80">
-                  Forgot password?
-                </Link>
+                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:password')}</label>
+                <Link href="/forgot-password" className="text-xs font-medium text-[#5D3FD3] hover:opacity-80">{t('auth:forgotPassword')}</Link>
               </div>
               <div className="relative">
                 <Input
@@ -167,9 +163,7 @@ function LoginContent() {
                   <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Signing in...
-                </>
+                  </svg>{t('auth:signingIn')}</>
               ) : (
                 <>
                   Sign in
@@ -192,7 +186,7 @@ function LoginContent() {
                 <span className="w-full border-t border-muted-foreground/10" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-muted-foreground/50">or continue with</span>
+                <span className="bg-card px-3 text-[11px] uppercase tracking-wider text-muted-foreground/50">{t('auth:orContinueWith')}</span>
               </div>
             </div>
 
@@ -200,9 +194,7 @@ function LoginContent() {
 
             <p className="text-center text-sm text-muted-foreground/70">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="font-semibold text-[#5D3FD3] hover:opacity-80">
-                Create account
-              </Link>
+              <Link href="/signup" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:createAccount')}</Link>
             </p>
           </form>
         </div>

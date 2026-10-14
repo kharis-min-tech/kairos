@@ -56,6 +56,7 @@ import { useMembers } from '@/hooks/use-members';
 // DateSelect is an app-level component, not a design-system primitive.
 // packages/ui does not export one — see apps/web/CLAUDE.md.
 import { DateSelect } from '@/components/date-select';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'roster' | 'sessions' | 'graduation';
 
@@ -75,7 +76,8 @@ type Tab = 'roster' | 'sessions' | 'graduation';
  * Teaching is per SESSION and confers nothing: different people teach
  * different sessions of one cohort, and admins do the marking.
  */
-export default function CohortDetailPage() {
+export default function CohortDetailPage() {  const { t } = useTranslation(['membership', 'common']);
+
   const params = useParams<{ id: string }>();
   const cohortId = params.id;
   const caps = useCapabilities();
@@ -87,7 +89,7 @@ export default function CohortDetailPage() {
   const { data: enrollments } = useMembershipEnrollments(cohortId);
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading cohort…</p>;
+    return <p className="text-sm text-muted-foreground">{t('membership:loadingCohort')}</p>;
   }
   if (error || !cohort) {
     return (
@@ -107,9 +109,7 @@ export default function CohortDetailPage() {
             href="/membership"
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="size-3.5" />
-            All cohorts
-          </Link>
+            <ArrowLeft className="size-3.5" />{t('membership:allCohorts')}</Link>
           <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold text-foreground">
             <GraduationCap className="size-5 text-[#5D3FD3]" />
             {cohort.name}
@@ -133,17 +133,15 @@ export default function CohortDetailPage() {
             href={`/membership/edit/${cohortId}`}
             className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted/60"
           >
-            <Pencil className="size-4" />
-            Edit cohort
-          </Link>
+            <Pencil className="size-4" />{t('membership:editCohort')}</Link>
         ) : null}
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList aria-label="Cohort view">
-          <TabsTrigger value="roster">Roster</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="graduation">Graduation</TabsTrigger>
+        <TabsList aria-label={t('membership:cohortView')}>
+          <TabsTrigger value="roster">{t('membership:roster')}</TabsTrigger>
+          <TabsTrigger value="sessions">{t('membership:sessions')}</TabsTrigger>
+          <TabsTrigger value="graduation">{t('membership:graduation')}</TabsTrigger>
         </TabsList>
         <TabsContent value="roster">
           <RosterTab roster={roster} />
@@ -161,7 +159,8 @@ export default function CohortDetailPage() {
 
 // ── Roster ────────────────────────────────────────────────────────────────
 
-function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
+function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  const { t } = useTranslation(['membership', 'common']);
+
   const recordFinalTest = useRecordFinalTest();
   const withdraw = useWithdrawEnrollment();
   const [scores, setScores] = useState<Record<string, string>>({});
@@ -169,9 +168,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
   if (roster.length === 0) {
     return (
       <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Nobody has enrolled yet.
-        </CardContent>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">{t('membership:nobodyHasEnrolledYet')}</CardContent>
       </Card>
     );
   }
@@ -182,12 +179,12 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 font-medium">Member</th>
-              <th className="px-4 py-2 font-medium">Branch</th>
-              <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Final test</th>
-              <th className="px-4 py-2 font-medium">Induction</th>
-              <th className="px-4 py-2 font-medium sr-only">Actions</th>
+              <th className="px-4 py-2 font-medium">{t('membership:member')}</th>
+              <th className="px-4 py-2 font-medium">{t('membership:branch')}</th>
+              <th className="px-4 py-2 font-medium">{t('membership:status')}</th>
+              <th className="px-4 py-2 font-medium">{t('membership:finalTest')}</th>
+              <th className="px-4 py-2 font-medium">{t('membership:induction')}</th>
+              <th className="px-4 py-2 font-medium sr-only">{t('membership:actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -203,7 +200,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
                   {/* Provenance: through the interest pool, or added directly by
                       an admin (the paper-signup case). */}
                   {e.fromPool ? null : (
-                    <span className="ml-2 text-[10px] text-muted-foreground">added directly</span>
+                    <span className="ml-2 text-[10px] text-muted-foreground">{t('membership:addedDirectly')}</span>
                   )}
                 </td>
                 <td className="px-4 py-2 text-muted-foreground">{e.branchName ?? '—'}</td>
@@ -238,13 +235,11 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
                           },
                         )
                       }
-                    >
-                      Save
-                    </Button>
+                    >{t('membership:save')}</Button>
                     {e.finalTestPassed === true ? (
-                      <Badge variant="default">Passed</Badge>
+                      <Badge variant="default">{t('membership:passed')}</Badge>
                     ) : e.finalTestPassed === false ? (
-                      <Badge variant="destructive">Failed</Badge>
+                      <Badge variant="destructive">{t('membership:failed')}</Badge>
                     ) : null}
                   </div>
                 </td>
@@ -252,7 +247,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {
                   {e.inductionAttended ? (
                     <CheckCircle2 className="size-4 text-emerald-600" />
                   ) : (
-                    <span className="text-xs text-muted-foreground">Not yet</span>
+                    <span className="text-xs text-muted-foreground">{t('membership:notYet')}</span>
                   )}
                 </td>
                 <td className="px-4 py-2 text-right">
@@ -310,7 +305,8 @@ function SessionsTab({
   cohortId: string;
   sessions: MembershipSession[];
   roster: MembershipEnrollmentWithMember[];
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const [openSessionId, setOpenSessionId] = useState<string | null>(null);
   const [editingNumber, setEditingNumber] = useState<MembershipSessionNumber | null>(null);
 
@@ -331,14 +327,10 @@ function SessionsTab({
             <CardContent className="flex flex-wrap items-center justify-between gap-2 py-4">
               <div>
                 <p className="text-sm font-semibold text-foreground">Session {number}</p>
-                <p className="text-xs text-muted-foreground">
-                  Not scheduled yet. All four are required before anyone can graduate.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('membership:notScheduledYetAllFourAre')}</p>
               </div>
               <Button size="sm" variant="outline" onClick={() => setEditingNumber(number)}>
-                <CalendarPlus className="mr-1 size-4" />
-                Schedule
-              </Button>
+                <CalendarPlus className="mr-1 size-4" />{t('membership:schedule')}</Button>
             </CardContent>
             {editingNumber === number ? (
               <CardContent className="pt-0">
@@ -427,7 +419,8 @@ function SessionEditor({
   sessionNumber: MembershipSessionNumber;
   existing: MembershipSession | null;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const save = useSaveSession(cohortId);
   const { data: memberPage } = useMembers({ page: 1, limit: 200 });
 
@@ -439,7 +432,7 @@ function SessionEditor({
   const [error, setError] = useState<string | null>(null);
 
   const teacherOptions = [
-    { value: '', label: 'No teacher assigned' },
+    { value: '', label: t('membership:noTeacherAssigned') },
     ...(memberPage?.data ?? []).map((m) => ({
       value: m.id,
       label: `${m.firstName} ${m.lastName}`,
@@ -477,7 +470,7 @@ function SessionEditor({
     <div className="space-y-3 rounded-lg border border-border p-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor={`title-${sessionNumber}`}>Title</Label>
+          <Label htmlFor={`title-${sessionNumber}`}>{t('membership:title')}</Label>
           <Input
             id={`title-${sessionNumber}`}
             value={title}
@@ -485,30 +478,30 @@ function SessionEditor({
               setTitle(e.target.value);
               setError(null);
             }}
-            placeholder="e.g. Who we are as a church"
+            placeholder={t('membership:eGWhoWeAreAs')}
           />
           {error ? <p className="text-xs text-destructive">{error}</p> : null}
         </div>
         <div className="space-y-1">
-          <Label>Date</Label>
+          <Label>{t('membership:date')}</Label>
           <DateSelect value={date} onChange={setDate} />
         </div>
         <div className="space-y-1">
-          <Label htmlFor={`location-${sessionNumber}`}>Location</Label>
+          <Label htmlFor={`location-${sessionNumber}`}>{t('membership:location')}</Label>
           <Input
             id={`location-${sessionNumber}`}
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Main hall"
+            placeholder={t('membership:eGMainHall')}
           />
         </div>
         <div className="space-y-1">
-          <Label>Teacher</Label>
+          <Label>{t('membership:teacher')}</Label>
           <CustomSelect
             value={teacherId}
             onValueChange={setTeacherId}
             options={teacherOptions}
-            placeholder="No teacher assigned"
+            placeholder={t('membership:noTeacherAssigned')}
           />
         </div>
       </div>
@@ -521,9 +514,7 @@ function SessionEditor({
         >
           {save.isPending ? 'Saving…' : 'Save session'}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>
-          Cancel
-        </Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('membership:cancel')}</Button>
       </div>
     </div>
   );
@@ -540,7 +531,8 @@ function SessionRegister({
 }: {
   sessionId: string;
   roster: MembershipEnrollmentWithMember[];
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const save = useSaveSessionRecords(sessionId);
   const [draft, setDraft] = useState<
     Record<string, { attended: boolean; homework: string; quiz: string }>
@@ -574,7 +566,7 @@ function SessionRegister({
   }
 
   if (active.length === 0) {
-    return <p className="text-xs text-muted-foreground">No active enrolments to mark.</p>;
+    return <p className="text-xs text-muted-foreground">{t('membership:noActiveEnrolmentsToMark')}</p>;
   }
 
   return (
@@ -582,10 +574,10 @@ function SessionRegister({
       <table className="w-full text-sm">
         <thead className="text-left text-xs text-muted-foreground">
           <tr>
-            <th className="py-1 font-medium">Member</th>
-            <th className="py-1 font-medium">Attended</th>
-            <th className="py-1 font-medium">Homework</th>
-            <th className="py-1 font-medium">Quiz</th>
+            <th className="py-1 font-medium">{t('membership:member')}</th>
+            <th className="py-1 font-medium">{t('membership:attended')}</th>
+            <th className="py-1 font-medium">{t('membership:homework')}</th>
+            <th className="py-1 font-medium">{t('membership:quiz')}</th>
           </tr>
         </thead>
         <tbody>
@@ -614,7 +606,7 @@ function SessionRegister({
                 <Input
                   className="h-8 w-20"
                   inputMode="numeric"
-                  placeholder="score"
+                  placeholder={t('membership:score')}
                   aria-label={`${r.memberFirstName} ${r.memberLastName} homework score`}
                   value={draft[r.id]?.homework ?? ''}
                   onChange={(e) =>
@@ -633,7 +625,7 @@ function SessionRegister({
                 <Input
                   className="h-8 w-20"
                   inputMode="numeric"
-                  placeholder="score"
+                  placeholder={t('membership:score')}
                   aria-label={`${r.memberFirstName} ${r.memberLastName} quiz score`}
                   value={draft[r.id]?.quiz ?? ''}
                   onChange={(e) =>
@@ -674,7 +666,8 @@ function GraduationTab({
   cohortId: string;
   roster: MembershipEnrollmentWithMember[];
   isAdmin: boolean;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const graduate = useGraduateMembers(cohortId);
   const induction = useRecordInduction(cohortId);
   const [selected, setSelected] = useState<string[]>([]);
@@ -701,18 +694,12 @@ function GraduationTab({
     <div className="space-y-4">
       <Card className="border-[#5D3FD3]/20 bg-[#5D3FD3]/5">
         <CardContent className="py-4 text-xs text-muted-foreground">
-          <p className="mb-1 font-medium text-foreground">What graduation requires</p>
-          All four sessions attended, homework passed for each, quizzes passed for each, the
-          final test passed on or before the deadline, and the induction ceremony attended.
-          Finishing session four is not completion on its own.
-        </CardContent>
+          <p className="mb-1 font-medium text-foreground">{t('membership:whatGraduationRequires')}</p>{t('membership:allFourSessionsAttendedHomeworkPassed')}</CardContent>
       </Card>
 
       {active.length === 0 ? (
         <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            Nobody is currently enrolled.
-          </CardContent>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">{t('membership:nobodyIsCurrentlyEnrolled')}</CardContent>
         </Card>
       ) : (
         <Card>
@@ -729,12 +716,10 @@ function GraduationTab({
                     {e.memberFirstName} {e.memberLastName}
                   </span>
                   {e.inductionAttended ? (
-                    <Badge variant="secondary">Induction done</Badge>
+                    <Badge variant="secondary">{t('membership:inductionDone')}</Badge>
                   ) : (
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <AlertCircle className="size-3.5" />
-                      Induction outstanding
-                    </span>
+                      <AlertCircle className="size-3.5" />{t('membership:inductionOutstanding')}</span>
                   )}
                 </li>
               ))}
@@ -757,9 +742,7 @@ function GraduationTab({
                   )
                 }
               >
-                <Users className="mr-1 size-4" />
-                Mark induction attended
-              </Button>
+                <Users className="mr-1 size-4" />{t('membership:markInductionAttended')}</Button>
 
               {isAdmin ? (
                 <Button
@@ -788,9 +771,7 @@ function GraduationTab({
                     )
                   }
                 >
-                  <GraduationCap className="mr-1 size-4" />
-                  Graduate selected
-                </Button>
+                  <GraduationCap className="mr-1 size-4" />{t('membership:graduateSelected')}</Button>
               ) : null}
             </div>
           </CardContent>
@@ -812,18 +793,15 @@ function GraduationTab({
 
             {overrideFor === b.enrollmentId ? (
               <div className="space-y-2 pt-1">
-                <Label htmlFor={`reason-${b.enrollmentId}`}>Why are you overriding?</Label>
+                <Label htmlFor={`reason-${b.enrollmentId}`}>{t('membership:whyAreYouOverriding')}</Label>
                 <Textarea
                   id={`reason-${b.enrollmentId}`}
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
                   rows={2}
-                  placeholder="e.g. Attended the induction at another branch"
+                  placeholder={t('membership:eGAttendedTheInductionAt')}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Appended to the enrolment notes and kept permanently. Be specific enough
-                  that someone reading it in a year understands the decision.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('membership:appendedToTheEnrolmentNotesAnd')}</p>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -854,9 +832,7 @@ function GraduationTab({
                         },
                       )
                     }
-                  >
-                    Graduate anyway
-                  </Button>
+                  >{t('membership:graduateAnyway')}</Button>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -864,9 +840,7 @@ function GraduationTab({
                       setOverrideFor(null);
                       setOverrideReason('');
                     }}
-                  >
-                    Cancel
-                  </Button>
+                  >{t('membership:cancel')}</Button>
                 </div>
               </div>
             ) : isAdmin ? (
@@ -877,9 +851,7 @@ function GraduationTab({
                   setOverrideFor(b.enrollmentId);
                   setOverrideReason('');
                 }}
-              >
-                Override and graduate
-              </Button>
+              >{t('membership:overrideAndGraduate')}</Button>
             ) : null}
           </CardContent>
         </Card>

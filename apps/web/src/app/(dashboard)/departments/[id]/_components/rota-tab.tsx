@@ -45,6 +45,7 @@ import type {
   RotaInstanceWithSummary,
   RotaTemplateWithSummary,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 const WEEKDAYS = [
   { value: '0', label: 'Sunday' },
@@ -144,7 +145,8 @@ interface RotaTabProps {
   currentUserId?: string;
 }
 
-export function RotaTab({ branchDeptId, members, canManage, currentUserId }: RotaTabProps) {
+export function RotaTab({ branchDeptId, members, canManage, currentUserId }: RotaTabProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const [subTab, setSubTab] = useState<'templates' | 'schedule' | 'swaps'>('schedule');
 
   return (
@@ -152,9 +154,9 @@ export function RotaTab({ branchDeptId, members, canManage, currentUserId }: Rot
       <div className="flex gap-2 border-b border-border/60">
         {(
           [
-            { key: 'schedule' as const, label: 'Schedule' },
-            { key: 'templates' as const, label: 'Templates' },
-            { key: 'swaps' as const, label: 'Swap Requests' },
+            { key: 'schedule' as const, label: t('departments:schedule') },
+            { key: 'templates' as const, label: t('departments:templates') },
+            { key: 'swaps' as const, label: t('departments:swapRequests') },
           ]
         ).map((t) => (
           <button
@@ -201,7 +203,8 @@ function ScheduleSection({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
   currentUserId?: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [showGenerate, setShowGenerate] = useState(false);
   const [expandedInstanceId, setExpandedInstanceId] = useState<string | null>(null);
   const [showCancelled, setShowCancelled] = useState(false);
@@ -239,7 +242,7 @@ function ScheduleSection({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold">Upcoming services</h3>
+          <h3 className="text-base font-semibold">{t('departments:upcomingServices')}</h3>
           <p className="text-xs text-muted-foreground">
             Next 90 days. Drafts can be edited or regenerated; publish to notify members. Click any service to manage assignments.
           </p>
@@ -260,7 +263,7 @@ function ScheduleSection({
       )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-muted-foreground">Status:</span>
+        <span className="text-muted-foreground">{t('departments:status')}</span>
         {(
           [
             { v: 'all' as const, l: 'All' },
@@ -292,7 +295,7 @@ function ScheduleSection({
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Loading schedule...</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{t('departments:loadingSchedule')}</p>
       ) : list.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
@@ -346,7 +349,8 @@ function ScheduleRow({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
   currentUserId?: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const isToday = instance.serviceDate === today && instance.status !== 'Cancelled';
   const time = formatTimeShort(instance.templateStartTime);
   const total = instance.totalSlots;
@@ -396,9 +400,7 @@ function ScheduleRow({
               </span>
             )}
             {isToday && (
-              <span className="rounded bg-[#f8b537] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                Today
-              </span>
+              <span className="rounded bg-[#f8b537] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">{t('departments:today')}</span>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -481,7 +483,8 @@ function GenerateForm({
   branchDeptId: string;
   templates: RotaTemplateWithSummary[];
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [templateId, setTemplateId] = useState<string>(templates[0]?.id ?? '');
   const [weeks, setWeeks] = useState(4);
   const selected = templates.find((t) => t.id === templateId);
@@ -514,16 +517,13 @@ function GenerateForm({
   return (
     <Card className="rounded">
       <CardHeader>
-        <CardTitle className="text-sm">Generate Schedule</CardTitle>
-        <CardDescription className="text-xs">
-          Generate a number of weeks of service rota from a template. Open slots will be filled by
-          rotation pool members.
-        </CardDescription>
+        <CardTitle className="text-sm">{t('departments:generateSchedule')}</CardTitle>
+        <CardDescription className="text-xs">{t('departments:generateANumberOfWeeksOf')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <Label className="text-xs">Template</Label>
+            <Label className="text-xs">{t('departments:template')}</Label>
             <CustomSelect
               value={templateId}
               onValueChange={(v) => {
@@ -532,11 +532,11 @@ function GenerateForm({
                 if (t) setStartDate(nextOccurrenceOfWeekday(t.weekday));
               }}
               options={templates.map((t) => ({ value: t.id, label: t.name }))}
-              placeholder="Select template"
+              placeholder={t('departments:selectTemplate')}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Weeks</Label>
+            <Label className="text-xs">{t('departments:weeks')}</Label>
             <NumberStepper
               value={weeks}
               onValueChange={setWeeks}
@@ -547,7 +547,7 @@ function GenerateForm({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Start date</Label>
+            <Label className="text-xs">{t('departments:startDate')}</Label>
             <DateSelect value={startDate} onChange={setStartDate} minDate={todayIso()} />
           </div>
           <div className="md:col-span-3">
@@ -573,7 +573,8 @@ function InstanceDetail({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
   currentUserId?: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data, isLoading } = useRotaInstance(branchDeptId, instanceId);
   const updateAssignment = useUpdateRotaAssignment();
   const updateStatus = useUpdateRotaInstanceStatus();
@@ -583,7 +584,7 @@ function InstanceDetail({
 
   const memberOptions = useMemo(
     () => [
-      { value: '', label: '— Open —' },
+      { value: '', label: t('departments:open') },
       ...members.map((m) => ({
         value: m.memberId,
         label: `${m.memberFirstName} ${m.memberLastName}`,
@@ -593,7 +594,7 @@ function InstanceDetail({
   );
 
   if (isLoading || !data) {
-    return <p className="text-sm text-muted-foreground">Loading assignments...</p>;
+    return <p className="text-sm text-muted-foreground">{t('departments:loadingAssignments')}</p>;
   }
 
   const sortedAssignments = [...data.assignments].sort((a, b) => {
@@ -608,7 +609,7 @@ function InstanceDetail({
       {confirmDialog}
       {canManage && (
         <div className="flex flex-wrap items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Status:</Label>
+          <Label className="text-xs text-muted-foreground">{t('departments:status')}</Label>
           <CustomSelect
             value={data.status}
             onValueChange={(v) =>
@@ -619,9 +620,9 @@ function InstanceDetail({
               })
             }
             options={[
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Published', label: 'Published' },
-              { value: 'Cancelled', label: 'Cancelled' },
+              { value: 'Draft', label: t('departments:draft') },
+              { value: 'Published', label: t('departments:published') },
+              { value: 'Cancelled', label: t('departments:cancelled') },
             ]}
           />
           {data.status === 'Draft' && (
@@ -630,9 +631,9 @@ function InstanceDetail({
               disabled={regenerate.isPending}
               onClick={async () => {
                 const ok = await confirm({
-                  title: 'Re-pick all assignments for this service?',
+                  title: t('departments:rePickAllAssignmentsForThis'),
                   description: 'Existing picks will be replaced with a fresh fair-rotation pass.',
-                  confirmLabel: 'Regenerate',
+                  confirmLabel: t('departments:regenerate'),
                   variant: 'destructive',
                 });
                 if (!ok) return;
@@ -648,14 +649,10 @@ function InstanceDetail({
                   },
                 );
               }}
-            >
-              Regenerate
-            </Button>
+            >{t('departments:regenerate')}</Button>
           )}
           {data.status !== 'Draft' && (
-            <span className="text-xs text-muted-foreground">
-              Set status back to Draft to regenerate this service.
-            </span>
+            <span className="text-xs text-muted-foreground">{t('departments:setStatusBackToDraftTo')}</span>
           )}
         </div>
       )}
@@ -725,9 +722,7 @@ function InstanceDetail({
                         },
                       );
                     }}
-                  >
-                    Request swap
-                  </Button>
+                  >{t('departments:requestSwap')}</Button>
                 )}
               </div>
             </div>
@@ -748,7 +743,8 @@ function TemplatesSection({
   branchDeptId: string;
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: allTemplates, isLoading } = useRotaTemplates(branchDeptId, {
     includeArchived: true,
   });
@@ -769,10 +765,8 @@ function TemplatesSection({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold">Service templates</h3>
-          <p className="text-xs text-muted-foreground">
-            Templates are the recurring blueprint of a service: the day, default time, and the roles you need filled.
-          </p>
+          <h3 className="text-base font-semibold">{t('departments:serviceTemplates')}</h3>
+          <p className="text-xs text-muted-foreground">{t('departments:templatesAreTheRecurringBlueprintOf')}</p>
         </div>
         {canManage && (
           <Button onClick={() => setShowCreate((v) => !v)}>
@@ -786,11 +780,11 @@ function TemplatesSection({
       )}
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">Loading templates...</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loadingTemplates')}</p>
       ) : active.length === 0 && archived.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">No templates yet.</p>
+            <p className="text-sm text-muted-foreground">{t('departments:noTemplatesYet')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -798,7 +792,7 @@ function TemplatesSection({
           {active.length === 0 ? (
             <Card className="rounded">
               <CardContent className="py-6 text-center">
-                <p className="text-sm text-muted-foreground">No active templates.</p>
+                <p className="text-sm text-muted-foreground">{t('departments:noActiveTemplates')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -856,7 +850,8 @@ function CreateTemplateForm({
 }: {
   branchDeptId: string;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [name, setName] = useState('');
   const [weekday, setWeekday] = useState('0');
   const [startTime, setStartTime] = useState('');
@@ -866,7 +861,7 @@ function CreateTemplateForm({
   return (
     <Card className="rounded">
       <CardHeader>
-        <CardTitle className="text-sm">New Template</CardTitle>
+        <CardTitle className="text-sm">{t('departments:newTemplate')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form
@@ -899,11 +894,11 @@ function CreateTemplateForm({
           className="grid grid-cols-1 gap-4 md:grid-cols-2"
         >
           <div className="space-y-1">
-            <Label className="text-xs">Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Sunday Service" />
+            <Label className="text-xs">{t('departments:name')}</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('departments:sundayService')} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Weekday</Label>
+            <Label className="text-xs">{t('departments:weekday')}</Label>
             <CustomSelect value={weekday} onValueChange={setWeekday} options={WEEKDAYS} />
           </div>
           <div className="space-y-1">
@@ -911,7 +906,7 @@ function CreateTemplateForm({
             <TimeSelect value={startTime} onValueChange={setStartTime} />
           </div>
           <div className="space-y-1 md:col-span-2">
-            <Label className="text-xs">Notes</Label>
+            <Label className="text-xs">{t('departments:notes')}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
           <div className="md:col-span-2">
@@ -939,7 +934,8 @@ function TemplateCard({
   canManage: boolean;
   expanded: boolean;
   onToggle: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const deactivate = useDeactivateRotaTemplate();
   const { confirm, dialog: confirmDialog } = useConfirm();
   const weekdayLabel = WEEKDAYS.find((w) => w.value === String(template.weekday))?.label ?? '';
@@ -963,18 +959,12 @@ function TemplateCard({
               <CardTitle className="text-sm font-semibold">{template.name}</CardTitle>
               {template.isActive ? (
                 isDraft ? (
-                  <span className="rounded-sm bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                    Draft
-                  </span>
+                  <span className="rounded-sm bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{t('departments:draft')}</span>
                 ) : (
-                  <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                    Active
-                  </span>
+                  <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">{t('departments:active')}</span>
                 )
               ) : (
-                <span className="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">
-                  Archived
-                </span>
+                <span className="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">{t('departments:archived')}</span>
               )}
             </div>
             <CardDescription className="mt-1 text-xs">
@@ -989,13 +979,13 @@ function TemplateCard({
             <Button
               variant="ghost"
               size="sm"
-              title="Archive template"
+              title={t('departments:archiveTemplate')}
               onClick={async (e) => {
                 e.stopPropagation();
                 const ok = await confirm({
                   title: `Archive template "${template.name}"?`,
                   description: 'No new services will be generated from this template. Existing rotas keep working.',
-                  confirmLabel: 'Archive',
+                  confirmLabel: t('departments:archive'),
                   variant: 'destructive',
                 });
                 if (!ok) return;
@@ -1008,9 +998,7 @@ function TemplateCard({
                   },
                 );
               }}
-            >
-              Archive
-            </Button>
+            >{t('departments:archive')}</Button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
@@ -1025,8 +1013,7 @@ function TemplateCard({
           </span>
           <span>•</span>
           <span>
-            <strong className="text-foreground">{template.poolCount}</strong> in pool
-          </span>
+            <strong className="text-foreground">{template.poolCount}</strong>{t('departments:inPool')}</span>
           <span className="ml-auto">
             {lastGen ? `Last generated ${lastGen}` : 'Never generated'}
           </span>
@@ -1055,7 +1042,8 @@ function SlotsManager({
   branchDeptId: string;
   templateId: string;
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: slots } = useRotaSlots(branchDeptId, templateId);
   const create = useCreateRotaSlot();
   const remove = useDeleteRotaSlot();
@@ -1077,14 +1065,12 @@ function SlotsManager({
   return (
     <div className="space-y-3">
       {confirmDialog}
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Slots
-      </h4>
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('departments:slots')}</h4>
       <p className="text-xs text-muted-foreground">
         Roles you need filled each service (e.g. Lead Vocal x1, Soprano x2). Positions = how many people for that role.
       </p>
       {sorted.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No slots defined.</p>
+        <p className="text-sm text-muted-foreground">{t('departments:noSlotsDefined')}</p>
       ) : (
         <div className="space-y-2">
           {sorted.map((s) => (
@@ -1105,15 +1091,13 @@ function SlotsManager({
                     const ok = await confirm({
                       title: `Delete slot "${s.roleName}"?`,
                       description: 'The role definition is removed. Existing assignments are not changed.',
-                      confirmLabel: 'Delete',
+                      confirmLabel: t('departments:delete'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
                     remove.mutate({ branchDeptId, templateId, slotId: s.id });
                   }}
-                >
-                  Delete
-                </Button>
+                >{t('departments:delete')}</Button>
               )}
             </div>
           ))}
@@ -1147,11 +1131,11 @@ function SlotsManager({
           className="flex flex-col gap-2 sm:flex-row sm:items-end"
         >
           <div className="flex-1 space-y-1">
-            <Label className="text-xs">Role name</Label>
-            <Input value={roleName} onChange={(e) => setRoleName(e.target.value)} placeholder="Lead Vocalist" />
+            <Label className="text-xs">{t('departments:roleName')}</Label>
+            <Input value={roleName} onChange={(e) => setRoleName(e.target.value)} placeholder={t('departments:leadVocalist')} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Positions</Label>
+            <Label className="text-xs">{t('departments:positions')}</Label>
             <NumberStepper
               value={positions}
               onValueChange={setPositions}
@@ -1160,9 +1144,7 @@ function SlotsManager({
               ariaLabel="Number of positions"
             />
           </div>
-          <Button type="submit" disabled={create.isPending}>
-            Add Slot
-          </Button>
+          <Button type="submit" disabled={create.isPending}>{t('departments:addSlot')}</Button>
         </form>
       )}
     </div>
@@ -1179,7 +1161,8 @@ function PoolManager({
   templateId: string;
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: pool } = useRotaPool(branchDeptId, templateId);
   const add = useAddRotaPoolMember();
   const remove = useRemoveRotaPoolMember();
@@ -1201,14 +1184,10 @@ function PoolManager({
   return (
     <div className="space-y-3">
       {confirmDialog}
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Rotation Pool
-      </h4>
-      <p className="text-xs text-muted-foreground">
-        Members eligible to be auto-scheduled. Assign a preferred role to give them priority for that slot. The algorithm picks least-recently-scheduled first, so frequency stays fair on its own.
-      </p>
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('departments:rotationPool')}</h4>
+      <p className="text-xs text-muted-foreground">{t('departments:membersEligibleToBeAutoScheduled')}</p>
       {!pool || pool.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No members in pool yet.</p>
+        <p className="text-sm text-muted-foreground">{t('departments:noMembersInPoolYet')}</p>
       ) : (
         <div className="space-y-2">
           {pool.map((p) => (
@@ -1240,15 +1219,13 @@ function PoolManager({
                     const ok = await confirm({
                       title: `Remove ${p.memberFirstName} from the pool?`,
                       description: 'They will no longer be auto-scheduled for this template.',
-                      confirmLabel: 'Remove',
+                      confirmLabel: t('departments:remove'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
                     remove.mutate({ branchDeptId, templateId, poolMemberId: p.id });
                   }}
-                >
-                  Remove
-                </Button>
+                >{t('departments:remove')}</Button>
               )}
             </div>
           ))}
@@ -1277,17 +1254,15 @@ function PoolManager({
           className="flex flex-col gap-2 sm:flex-row sm:items-end"
         >
           <div className="flex-1 space-y-1">
-            <Label className="text-xs">Member</Label>
+            <Label className="text-xs">{t('departments:member')}</Label>
             <CustomSelect
               value={memberId}
               onValueChange={setMemberId}
               options={availableOptions}
-              placeholder="Select member"
+              placeholder={t('departments:selectMember')}
             />
           </div>
-          <Button type="submit" disabled={add.isPending}>
-            Add
-          </Button>
+          <Button type="submit" disabled={add.isPending}>{t('departments:add')}</Button>
         </form>
       )}
     </div>
@@ -1302,7 +1277,8 @@ function SwapsSection({
 }: {
   branchDeptId: string;
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected' | 'cancelled'>(
     'pending',
   );
@@ -1326,7 +1302,7 @@ function SwapsSection({
     <div className="space-y-4">
       <div className="space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-base font-semibold">Swap requests</h3>
+          <h3 className="text-base font-semibold">{t('departments:swapRequests2')}</h3>
           {pendingCount > 0 && (
             <span className="rounded-full bg-[#f8b537]/20 px-2.5 py-0.5 text-xs font-semibold text-[#a06b00] dark:text-[#f8b537]">
               {pendingCount} awaiting review
@@ -1366,7 +1342,7 @@ function SwapsSection({
       </div>
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">Loading...</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loading')}</p>
       ) : !requests || requests.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
@@ -1409,7 +1385,7 @@ function SwapsSection({
                         </p>
                         {r.proposedFirstName && (
                           <p className="text-xs">
-                            <span className="text-muted-foreground">Proposed cover:</span>{' '}
+                            <span className="text-muted-foreground">{t('departments:proposedCover')}</span>{' '}
                             <span className="font-medium">
                               {r.proposedFirstName} {r.proposedLastName}
                             </span>
@@ -1454,9 +1430,7 @@ function SwapsSection({
                             },
                           )
                         }
-                      >
-                        Reject
-                      </Button>
+                      >{t('departments:reject')}</Button>
                       <Button
                         onClick={() =>
                           review.mutate(
@@ -1472,9 +1446,7 @@ function SwapsSection({
                             },
                           )
                         }
-                      >
-                        Approve
-                      </Button>
+                      >{t('departments:approve')}</Button>
                     </div>
                   )}
                 </CardContent>

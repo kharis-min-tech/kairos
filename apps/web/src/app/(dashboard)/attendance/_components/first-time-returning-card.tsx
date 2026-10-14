@@ -20,6 +20,7 @@ import {
 } from '@kairos/ui';
 import { useFirstTimeReturning } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   branchId?: string;
@@ -32,7 +33,8 @@ interface Props {
  * falls in the week) vs returning. Growth signal — distinguishes reaching
  * new people from regulars showing up.
  */
-export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }: Props) {
+export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }: Props) {  const { t } = useTranslation(['attendance', 'common']);
+
   const q = useFirstTimeReturning({ branchId, departmentId, fellowshipId, weeks: 12 });
 
   const chartData = (q.data ?? []).map((p) => ({
@@ -45,8 +47,7 @@ export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }:
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="h-4 w-4 text-[#f8b537]" aria-hidden /> First-time vs returning
-        </CardTitle>
+          <Sparkles className="h-4 w-4 text-[#f8b537]" aria-hidden />{t('attendance:firstTimeVsReturning')}</CardTitle>
         <CardDescription>
           Per week: how many attendees were first-time (their earliest-ever
           attendance on this branch fell in the week) vs returning. Rising
@@ -61,9 +62,7 @@ export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }:
             {q.error instanceof Error ? q.error.message : 'Could not load this report.'}
           </p>
         ) : chartData.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No attendance in the last 12 weeks.
-          </p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('attendance:noAttendanceInTheLastWeeks')}</p>
         ) : (
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">

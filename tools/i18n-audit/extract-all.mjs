@@ -34,7 +34,7 @@ if (!cfg) {
 function namespaceFor(file) {
   const p = relative(ROOT, file);
   const rules = [
-    [/\/(auth)\//, 'auth'],
+    [/\/\(auth\)\/|\/login\b|\/register\b|\/forgot-password\b|\/reset-password\b/, 'auth'],
     [/\/reports?\b/, 'reports'],
     [/\/members?\b/, 'members'],
     [/\/membership\b/, 'membership'],
@@ -77,7 +77,24 @@ let touched = 0;
 let added = 0;
 const perNs = {};
 
+/**
+ * useTranslation is a hook, so it only works in a client component. Rewriting
+ * a Next.js server component to call it would break the build, so for `web`
+ * we extract only from files carrying the 'use client' directive and report
+ * the rest. Mobile has no such split.
+ */
+function isTranslatable(file) {
+  if (app !== 'web') return true;
+  return /^\s*(['"])use client\1/.test(readFileSync(file, 'utf8'));
+}
+
+const skipped = [];
+
 for (const file of files) {
+  if (!isTranslatable(file)) {
+    skipped.push(relative(ROOT, file));
+    continue;
+  }
   const ns = namespaceFor(file);
   let result;
   try {
@@ -110,3 +127,7 @@ for (const file of files) {
 writeFileSync(basePath, `${JSON.stringify(base, null, 2)}\n`);
 console.log(`\n${touched} files rewritten, ${added} new keys in ${cfg.locales}/en.json`);
 console.log(Object.entries(perNs).map(([n, c]) => `  ${n}: ${c}`).join('\n'));
+if (skipped.length) {
+  console.log(`\n${skipped.length} server components skipped (no 'use client'):`);
+  for (const f of skipped) console.log(`  ${f}`);
+}

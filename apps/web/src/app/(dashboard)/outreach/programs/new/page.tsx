@@ -12,6 +12,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useMyDepartments } from '@/hooks/use-departments';
+import { useTranslation } from 'react-i18next';
 
 function todayIso(): string {
   const today = new Date();
@@ -20,7 +21,8 @@ function todayIso(): string {
   return `${today.getFullYear()}-${month}-${day}`;
 }
 
-export default function CreateProgramPage() {
+export default function CreateProgramPage() {  const { t } = useTranslation(['outreach', 'common']);
+
   const caps = useCapabilities();
   const router = useRouter();
   const api = useApi();
@@ -155,7 +157,7 @@ export default function CreateProgramPage() {
       const program = await createProgram(api, data);
 
       toast({
-        title: 'Program created successfully',
+        title: t('outreach:programCreatedSuccessfully'),
         description: `${program.programName} has been created.`,
       });
 
@@ -163,7 +165,7 @@ export default function CreateProgramPage() {
       router.push(`/outreach/programs/${program.id}`);
     } catch (error: unknown) {
       toast({
-        title: 'Failed to create program',
+        title: t('outreach:failedToCreateProgram'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -190,18 +192,14 @@ export default function CreateProgramPage() {
                 <span className="text-2xl font-bold text-[#9a6b04] dark:text-[#f8b537]">!</span>
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2">Branch-Specific Program</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  You have selected <span className="font-semibold text-foreground">{selectedCoordinator?.firstName} {selectedCoordinator?.lastName}</span> as the coordinator.
-                </p>
+                <h3 className="text-lg font-semibold mb-2">{t('outreach:branchSpecificProgram')}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t('outreach:youHaveSelected')}<span className="font-semibold text-foreground">{selectedCoordinator?.firstName} {selectedCoordinator?.lastName}</span>{t('outreach:asTheCoordinator')}</p>
                 <div className="bg-[#f8b537]/10 rounded-lg p-3 mb-4">
                   <p className="text-sm text-[#7a5a00] dark:text-[#f8b537]">
-                    <strong>Important:</strong> This program will ONLY be visible to members of <span className="font-semibold">{selectedCoordinator?.firstName}'s branch</span>. Pastors and leaders from other branches will NOT be able to see or register for this program.
+                    <strong>{t('outreach:important')}</strong>{t('outreach:thisProgramWillOnlyBeVisible')}<span className="font-semibold">{selectedCoordinator?.firstName}'s branch</span>. Pastors and leaders from other branches will NOT be able to see or register for this program.
                   </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  To make this program available to all branches, select <span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">Kharis</span> as the coordinator instead.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('outreach:toMakeThisProgramAvailableTo')}<span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">{t('outreach:kharis')}</span>{t('outreach:asTheCoordinatorInstead')}</p>
               </div>
             </div>
             <div className="flex gap-3 justify-end">
@@ -209,9 +207,7 @@ export default function CreateProgramPage() {
                 variant="outline"
                 onClick={() => setShowBranchWarning(false)}
                 disabled={loading}
-              >
-                Cancel
-              </Button>
+              >{t('outreach:cancel')}</Button>
               <Button
                 onClick={submitProgram}
                 disabled={loading}
@@ -233,21 +229,20 @@ export default function CreateProgramPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Create Outreach Program</h1>
-          <p className="text-muted-foreground">Plan a new evangelism activity</p>
+          <h1 className="text-3xl font-bold">{t('outreach:createOutreachProgram')}</h1>
+          <p className="text-muted-foreground">{t('outreach:planANewEvangelismActivity')}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="programName">
-            Program Name <span className="text-destructive">*</span>
+          <Label htmlFor="programName">{t('outreach:programName')}<span className="text-destructive">*</span>
           </Label>
           <Input
             id="programName"
             value={formData.programName}
             onChange={(e) => handleChange('programName', e.target.value)}
-            placeholder="Easter Outreach 2025"
+            placeholder={t('outreach:easterOutreach')}
           />
           {errors.programName && (
             <p className="text-sm text-destructive">{errors.programName}</p>
@@ -256,8 +251,7 @@ export default function CreateProgramPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="programDate">
-              Program Date <span className="text-destructive">*</span>
+            <Label htmlFor="programDate">{t('outreach:programDate')}<span className="text-destructive">*</span>
             </Label>
             <DateSelect
               id="programDate"
@@ -288,14 +282,13 @@ export default function CreateProgramPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">
-            Location <span className="text-destructive">*</span>
+          <Label htmlFor="location">{t('outreach:location')}<span className="text-destructive">*</span>
           </Label>
           <Input
             id="location"
             value={formData.location}
             onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="Victoria Park"
+            placeholder={t('outreach:victoriaPark')}
           />
           {errors.location && (
             <p className="text-sm text-destructive">{errors.location}</p>
@@ -308,7 +301,7 @@ export default function CreateProgramPage() {
             id="address"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="45 High Street"
+            placeholder={t('outreach:highStreet')}
           />
         </div>
 
@@ -318,7 +311,7 @@ export default function CreateProgramPage() {
             id="city"
             value={formData.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="London"
+            placeholder={t('outreach:london')}
           />
         </div>
 
@@ -328,16 +321,14 @@ export default function CreateProgramPage() {
             id="coordinatorId"
             value={formData.coordinatorId}
             onValueChange={(v) => handleChange('coordinatorId', v)}
-            placeholder="Select coordinator"
+            placeholder={t('outreach:selectCoordinator')}
             options={[
-              ...(isAdmin ? [{ value: 'KHARIS', label: 'Kharis (Allows all pastors/leaders to register)' }] : []),
+              ...(isAdmin ? [{ value: 'KHARIS', label: t('outreach:kharisAllowsAllPastorsLeadersTo') }] : []),
               ...members.map((member) => ({ value: member.id, label: `${member.firstName} ${member.lastName}` })),
             ]}
           />
           {isAdmin && (
-            <p className="text-sm text-muted-foreground">
-              Note: Select <span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">Kharis</span> as coordinator to allow pastors and leaders from all branches to register for this program
-            </p>
+            <p className="text-sm text-muted-foreground">{t('outreach:noteSelect')}<span className="font-semibold text-[#9a6b04] dark:text-[#f8b537]">{t('outreach:kharis')}</span>{t('outreach:asCoordinatorToAllowPastorsAnd')}</p>
           )}
         </div>
 
@@ -347,7 +338,7 @@ export default function CreateProgramPage() {
             id="description"
             value={formData.description}
             onChange={(e) => handleChange('description', e.target.value)}
-            placeholder="Describe the program goals and approach..."
+            placeholder={t('outreach:describeTheProgramGoalsAndApproach')}
             rows={4}
           />
         </div>
@@ -361,7 +352,7 @@ export default function CreateProgramPage() {
                 id="fellowshipId"
                 value={formData.fellowshipId}
                 onValueChange={(v) => handleChange('fellowshipId', v)}
-                placeholder="None"
+                placeholder={t('outreach:none')}
                 options={myFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
               />
             </div>
@@ -371,7 +362,7 @@ export default function CreateProgramPage() {
                 id="branchDepartmentId"
                 value={formData.branchDepartmentId}
                 onValueChange={(v) => handleChange('branchDepartmentId', v)}
-                placeholder="None"
+                placeholder={t('outreach:none')}
                 options={myDepartments.map((d) => ({ value: d.id, label: d.departmentName }))}
               />
             </div>
@@ -390,9 +381,7 @@ export default function CreateProgramPage() {
                 Open to All Branches (Allow pastors and leaders from all branches to register)
               </Label>
             </div>
-            <p className="text-sm text-muted-foreground ml-6">
-              When enabled, this program will be visible to all branches and their members can register
-            </p>
+            <p className="text-sm text-muted-foreground ml-6">{t('outreach:whenEnabledThisProgramWillBe')}</p>
           </div>
         )}
 
@@ -402,7 +391,7 @@ export default function CreateProgramPage() {
             id="notes"
             value={formData.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="Any additional notes or reminders..."
+            placeholder={t('outreach:anyAdditionalNotesOrReminders')}
             rows={3}
           />
         </div>
@@ -416,9 +405,7 @@ export default function CreateProgramPage() {
             variant="outline"
             onClick={() => router.back()}
             disabled={loading}
-          >
-            Cancel
-          </Button>
+          >{t('outreach:cancel')}</Button>
         </div>
       </form>
     </div>

@@ -6,8 +6,10 @@ import Link from 'next/link';
 
 import { useVerifyEmail } from '@/hooks/use-auth';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
-function VerifyEmailContent() {
+function VerifyEmailContent() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -39,19 +41,16 @@ function VerifyEmailContent() {
   if (verified) {
     return (
       <>
-        <KharisCardHeader heading="Email verified!" subtitle="Your email address has been confirmed" />
+        <KharisCardHeader heading={t('auth:emailVerified')} subtitle={t('auth:yourEmailAddressHasBeenConfirmed')} />
 
         <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
-            <p className="text-sm text-muted-foreground">
-              Your account is now <span className="font-medium text-[#9a6b04] dark:text-[#f8b537]">pending admin approval</span>. You&apos;ll receive a notification once your account is activated.
+            <p className="text-sm text-muted-foreground">{t('auth:yourAccountIsNow')}<span className="font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('auth:pendingAdminApproval')}</span>. You&apos;ll receive a notification once your account is activated.
             </p>
             <button
               className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90"
               onClick={() => router.push('/pending-approval')}
-            >
-              Continue
-            </button>
+            >{t('auth:continue')}</button>
           </div>
         </div>
       </>
@@ -62,7 +61,7 @@ function VerifyEmailContent() {
   if (!token) {
     return (
       <>
-        <KharisCardHeader heading="Check your email" subtitle="We sent you a verification link" />
+        <KharisCardHeader heading={t('auth:checkYourEmail')} subtitle={t('auth:weSentYouAVerificationLink')} />
 
         <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <div className="space-y-5">
@@ -78,9 +77,7 @@ function VerifyEmailContent() {
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Back to Sign In
-            </Link>
+              </svg>{t('auth:backToSignIn')}</Link>
           </div>
         </div>
       </>
@@ -90,7 +87,7 @@ function VerifyEmailContent() {
   // Token in URL: auto-verify. Show pending/error state.
   return (
     <>
-      <KharisCardHeader heading="Verifying your email" subtitle="This should only take a moment" />
+      <KharisCardHeader heading={t('auth:verifyingYourEmail')} subtitle={t('auth:thisShouldOnlyTakeAMoment')} />
 
       <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5">
@@ -111,35 +108,30 @@ function VerifyEmailContent() {
               <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Verifying…
-            </div>
+              </svg>{t('auth:verifying')}</div>
           )}
 
           <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back to Sign In
-          </Link>
+            </svg>{t('auth:backToSignIn')}</Link>
         </div>
       </div>
     </>
   );
 }
 
-function VerifyEmailSkeleton() {
+function VerifyEmailSkeleton() {  const { t } = useTranslation(['auth', 'common']);
+
   return (
     <>
-      <KharisCardHeader heading="Verifying your email" subtitle="Loading…" />
+      <KharisCardHeader heading={t('auth:verifyingYourEmail')} subtitle={t('auth:loading')} />
       <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" aria-busy="true" aria-live="polite">
           <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          Loading…
-        </div>
+          </svg>{t('auth:loading')}</div>
       </div>
     </>
   );

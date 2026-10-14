@@ -15,6 +15,7 @@ import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 import { useAuthStore } from '@/lib/auth-store';
 import { AcceptableUseBody } from '@/components/legal/acceptable-use-body';
 import { ConfidentialityBody } from '@/components/legal/confidentiality-body';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The hard consent gate. Reached via redirect from the dashboard layout when
@@ -39,7 +40,8 @@ const STANDALONE_HREF: Record<ConsentType, string> = {
   [ConsentType.AdminConfidentiality]: '/legal/confidentiality',
 };
 
-export default function AcceptPoliciesPage() {
+export default function AcceptPoliciesPage() {  const { t } = useTranslation(['common', 'common']);
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const logout = useAuthStore((s) => s.logout);
@@ -108,9 +110,7 @@ export default function AcceptPoliciesPage() {
   if (!accessToken) return null;
   if (isLoading || !data) {
     return (
-      <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground">
-        Loading policies…
-      </div>
+      <div className="rounded-2xl bg-card p-10 text-center text-sm text-muted-foreground">{t('common:loadingPolicies')}</div>
     );
   }
   if (isError) {
@@ -126,12 +126,8 @@ export default function AcceptPoliciesPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">
-          Action required
-        </p>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Please review and accept before continuing
-        </h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('common:actionRequired')}</p>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('common:pleaseReviewAndAcceptBeforeContinuing')}</h1>
         <p className="text-sm text-muted-foreground">
           You&apos;ll need to accept the policies below to keep using Kairos.
           Take a moment to read each one. You can also{' '}
@@ -180,9 +176,7 @@ export default function AcceptPoliciesPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-medium text-[#5D3FD3] hover:underline"
-                >
-                  Open in new tab ↗
-                </Link>
+                >{t('common:openInNewTab')}</Link>
               </header>
 
               {body ? (
@@ -231,9 +225,7 @@ export default function AcceptPoliciesPage() {
           className="rounded-lg"
           onClick={handleSignOut}
           disabled={submitting}
-        >
-          Sign out
-        </Button>
+        >{t('common:signOut')}</Button>
         <Button
           type="button"
           className="rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white"

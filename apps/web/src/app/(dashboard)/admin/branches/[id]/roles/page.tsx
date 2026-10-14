@@ -28,8 +28,10 @@ import {
   Input,
   Label,
 } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
-export default function BranchRolesPage() {
+export default function BranchRolesPage() {  const { t } = useTranslation(['branches', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
@@ -84,7 +86,7 @@ export default function BranchRolesPage() {
       <div aria-busy="true" aria-live="polite" className="mx-auto max-w-2xl space-y-6">
         <div className="h-9 w-72 animate-pulse rounded bg-muted/60" />
         <div className="h-56 animate-pulse rounded-lg bg-muted/60" />
-        <span className="sr-only">Loading branch roles</span>
+        <span className="sr-only">{t('branches:loadingBranchRoles')}</span>
       </div>
     );
   }
@@ -97,7 +99,7 @@ export default function BranchRolesPage() {
   if (!branch) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm font-medium text-destructive">Branch not found or access denied.</p>
+        <p className="text-sm font-medium text-destructive">{t('branches:branchNotFoundOrAccessDenied')}</p>
       </div>
     );
   }
@@ -109,28 +111,22 @@ export default function BranchRolesPage() {
         <div>
           <p className="text-xs font-medium text-muted-foreground">
             <Link href={`/admin/branches/${id}`} className="hover:underline">{branch.branchName}</Link>
-            <span className="mx-1.5 text-muted-foreground/60">/</span>
-            Roles
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">Branch System Admins</h1>
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-            Branch System Admins can assign and revoke roles, manage access, and configure branch settings.
-          </p>
+            <span className="mx-1.5 text-muted-foreground/60">/</span>{t('branches:roles')}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">{t('branches:branchSystemAdmins')}</h1>
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t('branches:branchSystemAdminsCanAssignAnd')}</p>
         </div>
         {canManage && (
           <Button
             variant="success"
             onClick={() => setShowAssign(true)}
-          >
-            Assign Admin
-          </Button>
+          >{t('branches:assignAdmin')}</Button>
         )}
       </div>
 
       {/* List */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Branch System Admins</CardTitle>
+          <CardTitle>{t('branches:currentBranchSystemAdmins')}</CardTitle>
           <CardDescription>
             {isBDA && !canManage
               ? 'You can view who holds this role, but assigning or revoking requires Branch System Admin authority.'
@@ -189,15 +185,13 @@ export default function BranchRolesPage() {
                             title: `Revoke Branch System Admin from ${fullName}?`,
                             description:
                               'They will lose access to admin-level branch tools. You can reassign them later.',
-                            confirmLabel: 'Revoke',
+                            confirmLabel: t('branches:revoke'),
                             variant: 'destructive',
                           });
                           if (!ok) return;
                           revokeBranchRole.mutate({ branchId: id, assignmentId: assignment.id });
                         }}
-                      >
-                        Revoke
-                      </Button>
+                      >{t('branches:revoke')}</Button>
                     )}
                   </li>
                 );
@@ -227,7 +221,7 @@ export default function BranchRolesPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign Branch System Admin</DialogTitle>
+            <DialogTitle>{t('branches:assignBranchSystemAdmin')}</DialogTitle>
             <DialogDescription>
               Select a member of {branch.branchName} to grant Branch System Admin authority.
             </DialogDescription>
@@ -235,16 +229,16 @@ export default function BranchRolesPage() {
 
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="member-search">Search members</Label>
+              <Label htmlFor="member-search">{t('branches:searchMembers')}</Label>
               <Input
                 id="member-search"
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
-                placeholder="Name or email"
+                placeholder={t('branches:nameOrEmail')}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="assign-member">Member</Label>
+              <Label htmlFor="assign-member">{t('branches:member')}</Label>
               <CustomSelect
                 id="assign-member"
                 value={assignMemberId}
@@ -262,9 +256,7 @@ export default function BranchRolesPage() {
                 }))}
               />
               {!membersLoading && assignableMembers.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Everyone in this branch is already an admin, or no members match.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('branches:everyoneInThisBranchIsAlready')}</p>
               )}
             </div>
             {assignBranchRole.error && (
@@ -280,9 +272,7 @@ export default function BranchRolesPage() {
               variant="outline"
               disabled={assignBranchRole.isPending}
               onClick={() => setShowAssign(false)}
-            >
-              Cancel
-            </Button>
+            >{t('branches:cancel')}</Button>
             <Button
               type="button"
               variant="success"

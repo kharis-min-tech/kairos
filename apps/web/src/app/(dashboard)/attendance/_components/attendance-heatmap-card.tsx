@@ -13,6 +13,7 @@ import {
 import { useAttendanceHeatmap } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
 import type { AttendanceHeatmapMember, AttendanceHeatmapCellStatus } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 type SortKey = 'streak' | 'attendance' | 'name';
 
@@ -34,7 +35,8 @@ export function AttendanceHeatmapCard({
   departmentId,
   fellowshipId,
   engagedWindowMonths,
-}: Props) {
+}: Props) {  const { t } = useTranslation(['attendance', 'common']);
+
   const [sortKey, setSortKey] = useState<SortKey>('streak');
 
   const query = useAttendanceHeatmap(
@@ -74,8 +76,7 @@ export function AttendanceHeatmapCard({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Grid3x3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Attendance heatmap
-            </CardTitle>
+              <Grid3x3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:attendanceHeatmap')}</CardTitle>
             <CardDescription>
               Row per engaged member × column per service (last 13 weeks, oldest
               on the left). Green / blue / amber cells = attended (in-person,
@@ -88,9 +89,9 @@ export function AttendanceHeatmapCard({
               value={sortKey}
               onValueChange={(v) => setSortKey(v as SortKey)}
               options={[
-                { value: 'streak', label: 'Sort: streak' },
-                { value: 'attendance', label: 'Sort: %' },
-                { value: 'name', label: 'Sort: name' },
+                { value: 'streak', label: t('attendance:sortStreak') },
+                { value: 'attendance', label: t('attendance:sort') },
+                { value: 'name', label: t('attendance:sortName') },
               ]}
             />
           </div>
@@ -98,10 +99,7 @@ export function AttendanceHeatmapCard({
       </CardHeader>
       <CardContent>
         {!branchId ? (
-          <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-            Pick a specific branch in the filter above to load the heatmap. The
-            timeline only reads coherently within one branch.
-          </div>
+          <div className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">{t('attendance:pickASpecificBranchInThe')}</div>
         ) : query.isLoading ? (
           <div className="h-72 animate-pulse rounded-lg bg-foreground/5" />
         ) : query.isError ? (
@@ -109,9 +107,7 @@ export function AttendanceHeatmapCard({
             {query.error instanceof Error ? query.error.message : 'Could not load the heatmap.'}
           </p>
         ) : (query.data?.members.length ?? 0) === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No engaged members in scope for this window.
-          </p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t('attendance:noEngagedMembersInScopeFor')}</p>
         ) : (
           <HeatmapTable services={query.data!.services} members={sorted} />
         )}
@@ -126,7 +122,8 @@ function HeatmapTable({
 }: {
   services: { id: string; serviceDate: string; serviceType: string; serviceTitle: string | null }[];
   members: AttendanceHeatmapMember[];
-}) {
+}) {  const { t } = useTranslation(['attendance', 'common']);
+
   // Layout strategy: table-fixed with equal-share service columns so the
   // heatmap always fills the card width. As weeks accumulate columns get
   // narrower; on mobile the whole grid horizontally scrolls with a minimum
@@ -153,9 +150,7 @@ function HeatmapTable({
             <th
               scope="col"
               className="sticky left-0 z-10 bg-card px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground"
-            >
-              Member
-            </th>
+            >{t('attendance:member')}</th>
             {services.map((s) => (
               <th
                 key={s.id}
@@ -175,10 +170,8 @@ function HeatmapTable({
             <th
               scope="col"
               className="px-2 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground"
-              title="Consecutive most-recent absences"
-            >
-              Streak
-            </th>
+              title={t('attendance:consecutiveMostRecentAbsences')}
+            >{t('attendance:streak')}</th>
           </tr>
         </thead>
         <tbody>
@@ -218,10 +211,10 @@ function HeatmapTable({
         </tbody>
       </table>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        <LegendSwatch status="present" label="Present" />
-        <LegendSwatch status="virtual" label="Virtual" />
-        <LegendSwatch status="late" label="Late" />
-        <LegendSwatch status="absent" label="Absent" />
+        <LegendSwatch status="present" label={t('attendance:present')} />
+        <LegendSwatch status="virtual" label={t('attendance:virtual')} />
+        <LegendSwatch status="late" label={t('attendance:late')} />
+        <LegendSwatch status="absent" label={t('attendance:absent')} />
       </div>
     </div>
   );

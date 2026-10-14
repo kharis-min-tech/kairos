@@ -26,8 +26,10 @@ import { STATUS_META, STATUS_OPTIONS, subjectName } from '../_lib/form-meta';
 import { ReviewDrawer } from './_components/review-drawer';
 import { FORM_DEFINITIONS, FORM_TYPES } from '@kairos/types';
 import type { FormSubmission, FormType, FormSubmissionStatus } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
-export default function SubmissionsPage() {
+export default function SubmissionsPage() {  const { t } = useTranslation(['forms', 'common']);
+
   const { data: capabilities, isLoading: capLoading } = useMyFormCapabilities();
   const visibleSet = capabilities?.visibleFormTypes ?? [];
   const canSeeAny = visibleSet.length > 0;
@@ -54,7 +56,7 @@ export default function SubmissionsPage() {
     return (
       <div aria-busy="true" aria-live="polite" className="space-y-3">
         <div className="h-32 animate-pulse rounded-xl bg-muted/60" />
-        <span className="sr-only">Loading submissions</span>
+        <span className="sr-only">{t('forms:loadingSubmissions')}</span>
       </div>
     );
   }
@@ -62,10 +64,8 @@ export default function SubmissionsPage() {
   if (!canSeeAny) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-2xl font-bold text-foreground">Not authorised</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Form review is restricted to the Admin-department members, NB-department leader, pastors, and admins.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t('forms:notAuthorised')}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t('forms:formReviewIsRestrictedToThe')}</p>
       </div>
     );
   }
@@ -95,8 +95,8 @@ export default function SubmissionsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Form Submissions</h1>
-          <p className="mt-1 text-muted-foreground">Review and triage captured forms.</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('forms:formSubmissions')}</h1>
+          <p className="mt-1 text-muted-foreground">{t('forms:reviewAndTriageCapturedForms')}</p>
         </div>
         <Button
           onClick={handleExport}
@@ -113,13 +113,13 @@ export default function SubmissionsPage() {
       <Card>
         <CardContent className="grid gap-4 py-5 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Form type</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('forms:formType')}</label>
             <CustomSelect
               value={formType}
               onValueChange={(v) => setFormType(v as FormType | '')}
-              placeholder="All forms"
+              placeholder={t('forms:allForms')}
               options={[
-                { value: '', label: 'All forms' },
+                { value: '', label: t('forms:allForms') },
                 ...FORM_TYPES
                   .filter((t) => visibleSet.includes(t))
                   .map((t) => ({ value: t, label: FORM_DEFINITIONS[t].title })),
@@ -127,20 +127,20 @@ export default function SubmissionsPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Status</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('forms:status')}</label>
             <CustomSelect
               value={status}
               onValueChange={(v) => setStatus(v as FormSubmissionStatus | '')}
-              placeholder="All statuses"
-              options={[{ value: '', label: 'All statuses' }, ...STATUS_OPTIONS]}
+              placeholder={t('forms:allStatuses')}
+              options={[{ value: '', label: t('forms:allStatuses') }, ...STATUS_OPTIONS]}
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">From</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('forms:from')}</label>
             <DateSelect value={from} onChange={setFrom} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">To</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('forms:to')}</label>
             <DateSelect value={to} onChange={setTo} />
           </div>
         </CardContent>
@@ -161,20 +161,18 @@ export default function SubmissionsPage() {
         </Card>
       ) : !data || data.length === 0 ? (
         <Card>
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No submissions match these filters.
-          </CardContent>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">{t('forms:noSubmissionsMatchTheseFilters')}</CardContent>
         </Card>
       ) : (
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Form</TableHead>
-                <TableHead>Branch</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
+                <TableHead>{t('forms:subject')}</TableHead>
+                <TableHead>{t('forms:form')}</TableHead>
+                <TableHead>{t('forms:branch')}</TableHead>
+                <TableHead>{t('forms:status')}</TableHead>
+                <TableHead>{t('forms:submitted')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

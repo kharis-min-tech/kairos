@@ -19,8 +19,10 @@ import { Lock, BadgeCheck, Phone, MessageCircle, Home, History } from 'lucide-re
 import { SafeguardingSection } from './_components/safeguarding-section';
 import { useConfirm } from '@/components/confirm-dialog';
 import type { MemberFollowupHistoryItem } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
-export default function MemberDetailPage() {
+export default function MemberDetailPage() {  const { t } = useTranslation(['members', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: member, isLoading, error } = useMember(id);
@@ -96,9 +98,7 @@ export default function MemberDetailPage() {
           <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Members
-          </Link>
+            </svg>{t('members:backToMembers')}</Link>
           <div className="mt-2 flex items-center gap-4">
             <MemberAvatar
               photoUrl={member.photoUrl}
@@ -116,9 +116,7 @@ export default function MemberDetailPage() {
                 </span>
                 {member.isMinor && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#f8b537]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3]">
-                    <Lock className="h-3 w-3" strokeWidth={2} />
-                    Minor, protected
-                  </span>
+                    <Lock className="h-3 w-3" strokeWidth={2} />{t('members:minorProtected')}</span>
                 )}
                 {/* systemRole is 'admin' or 'member' — the latter just means
                     "not a platform admin", not a membership signal. Rendering
@@ -126,9 +124,7 @@ export default function MemberDetailPage() {
                     surface the Admin case as a chip. The confirmed-Member
                     status has its own dedicated card below. */}
                 {member.systemRole === 'admin' && (
-                  <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">
-                    Admin
-                  </span>
+                  <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">{t('members:admin')}</span>
                 )}
               </div>
             </div>
@@ -137,7 +133,7 @@ export default function MemberDetailPage() {
         <div className="flex gap-2">
           {isSelf && (
             <Link href="/profile">
-              <Button size="sm" variant="outline">Edit my profile</Button>
+              <Button size="sm" variant="outline">{t('members:editMyProfile')}</Button>
             </Link>
           )}
           {canManage && (
@@ -150,7 +146,7 @@ export default function MemberDetailPage() {
                     const ok = await confirm({
                       title: `Approve ${member.firstName} ${member.lastName}?`,
                       description: 'They will be able to sign in once approved.',
-                      confirmLabel: 'Approve',
+                      confirmLabel: t('members:approve'),
                     });
                     if (!ok) return;
                     approve.mutate(
@@ -161,9 +157,7 @@ export default function MemberDetailPage() {
                       },
                     );
                   }}
-                >
-                  Approve
-                </Button>
+                >{t('members:approve')}</Button>
               )}
               {member.isActive !== false && (
                 <Button
@@ -173,7 +167,7 @@ export default function MemberDetailPage() {
                     const ok = await confirm({
                       title: `Deactivate ${member.firstName} ${member.lastName}?`,
                       description: 'They will be removed from the active directory. You can reactivate them later.',
-                      confirmLabel: 'Deactivate',
+                      confirmLabel: t('members:deactivate'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
@@ -182,9 +176,7 @@ export default function MemberDetailPage() {
                       onError: () => toast.error('Failed to deactivate member. Please try again.'),
                     });
                   }}
-                >
-                  Deactivate
-                </Button>
+                >{t('members:deactivate')}</Button>
               )}
               {member.isActive === false && (
                 <Button
@@ -194,7 +186,7 @@ export default function MemberDetailPage() {
                     const ok = await confirm({
                       title: `Reactivate ${member.firstName} ${member.lastName}?`,
                       description: 'They will appear back in the active directory.',
-                      confirmLabel: 'Reactivate',
+                      confirmLabel: t('members:reactivate'),
                     });
                     if (!ok) return;
                     reactivate.mutate(member.id, {
@@ -202,9 +194,7 @@ export default function MemberDetailPage() {
                       onError: () => toast.error('Failed to reactivate. Please try again.'),
                     });
                   }}
-                >
-                  Reactivate
-                </Button>
+                >{t('members:reactivate')}</Button>
               )}
             </>
           )}
@@ -215,28 +205,28 @@ export default function MemberDetailPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>{t('members:personalInformation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <InfoRow label="Email" value={member.email} redacted={hidden} />
-            <InfoRow label="Phone" value={member.phone} redacted={hidden} />
-            <InfoRow label="Gender" value={member.gender} />
-            <InfoRow label="Date of Birth" value={member.dateOfBirth} redacted={hidden} />
-            <InfoRow label="Membership Date" value={member.membershipDate} />
+            <InfoRow label={t('members:email')} value={member.email} redacted={hidden} />
+            <InfoRow label={t('members:phone')} value={member.phone} redacted={hidden} />
+            <InfoRow label={t('members:gender')} value={member.gender} />
+            <InfoRow label={t('members:dateOfBirth')} value={member.dateOfBirth} redacted={hidden} />
+            <InfoRow label={t('members:membershipDate')} value={member.membershipDate} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Contact & Location</CardTitle>
+            <CardTitle>{t('members:contactLocation')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <InfoRow label="Address" value={member.address} redacted={hidden} />
-            <InfoRow label="City" value={member.city} redacted={hidden} />
-            <InfoRow label="Postal Code" value={member.postalCode} redacted={hidden} />
-            <InfoRow label="Emergency Contact" value={member.emergencyContactName} redacted={hidden} />
-            <InfoRow label="Relationship" value={member.emergencyContactRelationship} redacted={hidden} />
-            <InfoRow label="Emergency Phone" value={member.emergencyContactPhone} redacted={hidden} />
+            <InfoRow label={t('members:address')} value={member.address} redacted={hidden} />
+            <InfoRow label={t('members:city')} value={member.city} redacted={hidden} />
+            <InfoRow label={t('members:postalCode')} value={member.postalCode} redacted={hidden} />
+            <InfoRow label={t('members:emergencyContact')} value={member.emergencyContactName} redacted={hidden} />
+            <InfoRow label={t('members:relationship')} value={member.emergencyContactRelationship} redacted={hidden} />
+            <InfoRow label={t('members:emergencyPhone')} value={member.emergencyContactPhone} redacted={hidden} />
           </CardContent>
         </Card>
       </div>
@@ -248,21 +238,14 @@ export default function MemberDetailPage() {
             <BadgeCheck
               className={`h-5 w-5 ${member.membershipClassCompletedAt ? 'text-emerald-600' : 'text-muted-foreground'}`}
               strokeWidth={2}
-            />
-            Membership Class
-          </CardTitle>
-          <CardDescription>
-            Membership in this church is conferred by completing the 4-week class. This is the
-            formal status, separate from joining a fellowship or department.
-          </CardDescription>
+            />{t('members:membershipClass')}</CardTitle>
+          <CardDescription>{t('members:membershipInThisChurchIsConferred')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {member.membershipClassCompletedAt ? (
             <div className="flex items-start justify-between gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/30">
               <div>
-                <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">
-                  Confirmed Member
-                </p>
+                <p className="text-sm font-medium text-emerald-900 dark:text-emerald-100">{t('members:confirmedMember')}</p>
                 <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">
                   Completed the class on{' '}
                   {new Date(member.membershipClassCompletedAt).toLocaleDateString(undefined, {
@@ -279,9 +262,9 @@ export default function MemberDetailPage() {
                   disabled={setMembershipClass.isPending}
                   onClick={async () => {
                     const ok = await confirm({
-                      title: 'Clear membership certification?',
+                      title: t('members:clearMembershipCertification'),
                       description: `${member.firstName} ${member.lastName} will revert to "not yet a confirmed Member."`,
-                      confirmLabel: 'Clear',
+                      confirmLabel: t('members:clear'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
@@ -294,24 +277,17 @@ export default function MemberDetailPage() {
                       },
                     );
                   }}
-                >
-                  Clear
-                </Button>
+                >{t('members:clear')}</Button>
               )}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-              Not yet a confirmed Member. Once they complete the 4-week class, mark the completion
-              date here.
-            </div>
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">{t('members:notYetAConfirmedMemberOnce')}</div>
           )}
 
           {canManage && !member.membershipClassCompletedAt && (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <div className="flex-1">
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Date completed
-                </label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('members:dateCompleted')}</label>
                 <DateSelect value={classDateDraft} onChange={setClassDateDraft} />
               </div>
               <Button
@@ -319,9 +295,9 @@ export default function MemberDetailPage() {
                 onClick={async () => {
                   if (!classDateDraft) return;
                   const ok = await confirm({
-                    title: 'Mark membership class as completed?',
+                    title: t('members:markMembershipClassAsCompleted'),
                     description: `${member.firstName} ${member.lastName} will be recorded as a confirmed Member as of ${classDateDraft}.`,
-                    confirmLabel: 'Confirm',
+                    confirmLabel: t('members:confirm'),
                   });
                   if (!ok) return;
                   setMembershipClass.mutate(
@@ -356,12 +332,12 @@ export default function MemberDetailPage() {
       {/* Roles */}
       <Card>
         <CardHeader>
-          <CardTitle>Roles</CardTitle>
-          <CardDescription>Current role assignments for this member</CardDescription>
+          <CardTitle>{t('members:roles')}</CardTitle>
+          <CardDescription>{t('members:currentRoleAssignmentsForThisMember')}</CardDescription>
         </CardHeader>
         <CardContent>
           {!roles || roles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No roles assigned.</p>
+            <p className="text-sm text-muted-foreground">{t('members:noRolesAssigned')}</p>
           ) : (
             <div className="space-y-3">
               {roles.map((role) => (
@@ -381,7 +357,7 @@ export default function MemberDetailPage() {
                         const ok = await confirm({
                           title: `Remove "${role.roleName}"?`,
                           description: `This will revoke the ${role.roleName} role from ${member.firstName} ${member.lastName} at ${role.branchName}.`,
-                          confirmLabel: 'Remove role',
+                          confirmLabel: t('members:removeRole'),
                           variant: 'destructive',
                         });
                         if (!ok) return;
@@ -393,9 +369,7 @@ export default function MemberDetailPage() {
                           },
                         );
                       }}
-                    >
-                      Remove
-                    </Button>
+                    >{t('members:remove')}</Button>
                   )}
                 </div>
               ))}
@@ -403,7 +377,7 @@ export default function MemberDetailPage() {
           )}
           {isAdmin && (
             <div className="mt-4 border-t pt-4">
-              <p className="mb-2 text-sm font-medium">Assign Role</p>
+              <p className="mb-2 text-sm font-medium">{t('members:assignRole')}</p>
               {assignRole.error && (
                 <div className="mb-2 rounded-lg border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
                   {assignRole.error instanceof Error ? assignRole.error.message : 'Failed to assign role.'}
@@ -413,13 +387,13 @@ export default function MemberDetailPage() {
                 <CustomSelect
                   value={selectedRoleId}
                   onValueChange={setSelectedRoleId}
-                  placeholder="Select role…"
+                  placeholder={t('members:selectRole')}
                   options={(allRoles ?? []).map((r) => ({ value: r.id, label: r.roleName }))}
                 />
                 <CustomSelect
                   value={selectedBranchId}
                   onValueChange={setSelectedBranchId}
-                  placeholder="Select branch…"
+                  placeholder={t('members:selectBranch')}
                   options={(branchesData ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
                 />
                 <button
@@ -442,7 +416,7 @@ export default function MemberDetailPage() {
       {(canManage || isSelf) && (
         <Card>
           <CardHeader>
-            <CardTitle>Fellowships</CardTitle>
+            <CardTitle>{t('members:fellowships')}</CardTitle>
             <CardDescription>
               {alreadyInFellowship
                 ? (isSelf ? 'Your fellowship membership' : 'This member\'s fellowship membership')
@@ -453,7 +427,7 @@ export default function MemberDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {currentFellowshipsLoading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">{t('members:loading')}</p>
             ) : alreadyInFellowship ? (
               <div className="space-y-2">
                 {currentFellowships.map((f) => (
@@ -465,18 +439,14 @@ export default function MemberDetailPage() {
                     <a
                       href={`/fellowships/${f.id}`}
                       className="text-sm text-primary hover:underline font-medium"
-                    >
-                      View Fellowship →
-                    </a>
+                    >{t('members:viewFellowship')}</a>
                   </div>
                 ))}
               </div>
             ) : canManage ? (
               <>
                 {addToFellowship.isSuccess && (
-                  <div className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">
-                    Member added to fellowship successfully.
-                  </div>
+                  <div className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">{t('members:memberAddedToFellowshipSuccessfully')}</div>
                 )}
                 {addToFellowship.error && (
                   <div role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -489,7 +459,7 @@ export default function MemberDetailPage() {
                   <CustomSelect
                     value={selectedFellowshipId}
                     onValueChange={setSelectedFellowshipId}
-                    placeholder="Select a fellowship…"
+                    placeholder={t('members:selectAFellowship')}
                     options={(fellowshipsData?.data ?? []).filter((f) => f.isActive).map((f) => ({ value: f.id, label: f.fellowshipName }))}
                   />
                   <Button
@@ -512,11 +482,9 @@ export default function MemberDetailPage() {
               </>
             ) : (
               <div className="space-y-3 rounded-lg bg-[#5D3FD3]/5 p-4">
-                <p className="text-sm text-muted-foreground">
-                  Browse the fellowships at your branch and send a join request to one that fits your schedule.
-                </p>
+                <p className="text-sm text-muted-foreground">{t('members:browseTheFellowshipsAtYourBranch')}</p>
                 <Link href="/fellowships">
-                  <Button size="sm" variant="outline">Browse fellowships</Button>
+                  <Button size="sm" variant="outline">{t('members:browseFellowships')}</Button>
                 </Link>
               </div>
             )}
@@ -528,9 +496,7 @@ export default function MemberDetailPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5 text-[#5D3FD3]" strokeWidth={1.75} />
-              Follow-up history
-            </CardTitle>
+              <History className="h-5 w-5 text-[#5D3FD3]" strokeWidth={1.75} />{t('members:followUpHistory')}</CardTitle>
             <CardDescription>
               {isSelf
                 ? 'Every fellowship and department follow-up recorded on you.'
@@ -539,7 +505,7 @@ export default function MemberDetailPage() {
           </CardHeader>
           <CardContent>
             {followupHistoryLoading ? (
-              <p className="text-sm text-muted-foreground">Loading follow-ups…</p>
+              <p className="text-sm text-muted-foreground">{t('members:loadingFollowUps')}</p>
             ) : !followupHistory || followupHistory.length === 0 ? (
               <p className="rounded-md bg-muted/40 p-4 text-center text-sm text-muted-foreground">
                 {isSelf
@@ -563,7 +529,8 @@ export default function MemberDetailPage() {
 // Row in the unified follow-up timeline. Method icon + label, outcome badge,
 // scope/date/recorder line, notes preview (2-line clamp), and welfare/
 // safeguarding chips when flagged. Mirrors the mobile FollowupHistoryRow.
-function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {
+function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {  const { t } = useTranslation(['members', 'common']);
+
   const isVisit = row.type === 'visit';
   const Icon = isVisit
     ? Home
@@ -650,12 +617,10 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {
         {(row.welfareConcern || row.safeguardingConcern) && (
           <div className="flex flex-wrap gap-1.5 pt-0.5">
             {row.welfareConcern && (
-              <Badge variant="secondary" className="bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]">
-                Welfare
-              </Badge>
+              <Badge variant="secondary" className="bg-[#f8b537]/20 text-[#9a6b04] dark:text-[#f8b537]">{t('members:welfare')}</Badge>
             )}
             {row.safeguardingConcern && (
-              <Badge variant="destructive">Safeguarding</Badge>
+              <Badge variant="destructive">{t('members:safeguarding')}</Badge>
             )}
           </div>
         )}

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { CardField } from '@/components/motion/card-field';
 import { FloatCard } from '@/components/motion/float-card';
 import { Spotlight } from '@/components/motion/spotlight';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The auth shell's canvas, behind every auth and onboarding page: a quiet
@@ -11,7 +12,8 @@ import { Spotlight } from '@/components/motion/spotlight';
  * and a cursor glow. The three floating cards are login's alone — they need
  * room, so they appear from lg up.
  */
-export function AuthAmbient() {
+export function AuthAmbient() {  const { t } = useTranslation(['auth', 'common']);
+
   const login = usePathname() === '/login';
 
   return (
@@ -30,7 +32,7 @@ export function AuthAmbient() {
       <CardField className="hidden lg:block">
         <FloatCard position={{ left: '8%', bottom: '12%' }} depth={0.5} fx={-200} fy={200} fr={-14} tilt={-4} i={0}>
           <div className="w-[200px] rounded-[3px] bg-[#fdf3dc] px-4 py-3.5 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
-            <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">DAILY VERSE</div>
+            <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">{t('auth:dailyVerse')}</div>
             <div className="mt-1.5 text-[13px] italic leading-[1.45]">&ldquo;Love one another as I have loved you.&rdquo;</div>
             <div className="mt-1.5 text-[11px] text-[#8a6410]">— John 15:12</div>
           </div>
@@ -39,9 +41,8 @@ export function AuthAmbient() {
           <div className="flex items-center gap-2.5 rounded border border-border bg-card px-3 py-2.5 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-[#5d3fd3] text-[10px] font-bold text-white">GL</span>
             <div>
-              <div className="text-xs font-bold text-card-foreground">Grace L.</div>
-              <div className="text-[10px] text-muted-foreground">
-                Moved to <span className="text-[#8b74ec]">Foundation</span>
+              <div className="text-xs font-bold text-card-foreground">{t('auth:graceL')}</div>
+              <div className="text-[10px] text-muted-foreground">{t('auth:movedTo')}<span className="text-[#8b74ec]">{t('auth:foundation')}</span>
               </div>
             </div>
           </div>
@@ -52,7 +53,7 @@ export function AuthAmbient() {
               className="h-[90px] rounded-sm bg-cover bg-center"
               style={{ backgroundImage: "url('/landing/hero.jpg')" }}
             />
-            <div className="mt-1.5 px-0.5 text-[10px] font-semibold text-card-foreground">Sunday Service</div>
+            <div className="mt-1.5 px-0.5 text-[10px] font-semibold text-card-foreground">{t('auth:sundayService')}</div>
           </div>
         </FloatCard>
       </CardField>

@@ -11,6 +11,7 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useCreateCohort } from '@/hooks/use-membership';
 import { CHURCH_SCOPE } from '@kairos/types';
 import { CohortForm } from '../_components/cohort-form';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Create a membership cohort.
@@ -19,7 +20,8 @@ import { CohortForm } from '../_components/cohort-form';
  * a cohort is church-wide, so no branch-scoped grant can authorise creating
  * one, but the people who actually run the class hold no platform authority.
  */
-export default function NewCohortPage() {
+export default function NewCohortPage() {  const { t } = useTranslation(['membership', 'common']);
+
   const router = useRouter();
   const caps = useCapabilities();
   const isAdmin = caps.has('membership:admin', CHURCH_SCOPE);
@@ -39,21 +41,14 @@ export default function NewCohortPage() {
           href="/membership"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="size-3.5" />
-          All cohorts
-        </Link>
+          <ArrowLeft className="size-3.5" />{t('membership:allCohorts')}</Link>
         <h1 className="mt-2 flex items-center gap-2 text-xl font-semibold text-foreground">
-          <GraduationCap className="size-5 text-[#5D3FD3]" />
-          New membership cohort
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Cohorts run church-wide. People join the interest pool, and you admit them
-          into a cohort from there.
-        </p>
+          <GraduationCap className="size-5 text-[#5D3FD3]" />{t('membership:newMembershipCohort')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('membership:cohortsRunChurchWidePeopleJoin')}</p>
       </div>
 
       <CohortForm
-        submitLabel="Create cohort"
+        submitLabel={t('membership:createCohort')}
         submitPendingLabel="Creating…"
         submitting={createCohort.isPending}
         serverError={serverError}

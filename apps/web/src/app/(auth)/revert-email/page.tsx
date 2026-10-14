@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { KharisCardHeader } from '../kharis-logo';
 import { useUndoEmailChange } from '@/hooks/use-email-change';
 import { Button } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
-function RevertEmailContent() {
+function RevertEmailContent() {  const { t } = useTranslation(['auth', 'common']);
+
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get('token') ?? '';
@@ -37,34 +39,27 @@ function RevertEmailContent() {
   return (
     <div className="w-full">
       <KharisCardHeader
-        heading="Revert email change"
-        subtitle="Undo the pending change and lock your account."
+        heading={t('auth:revertEmailChange')}
+        subtitle={t('auth:undoThePendingChangeAndLock')}
       />
       <div className="auth-halo mt-6 space-y-4 rounded-2xl bg-card p-8 text-center text-sm shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         {!token && (
-          <p className="text-destructive">No undo token in the link.</p>
+          <p className="text-destructive">{t('auth:noUndoTokenInTheLink')}</p>
         )}
         {state === 'idle' && token && (
-          <p className="text-muted-foreground">Reverting…</p>
+          <p className="text-muted-foreground">{t('auth:reverting')}</p>
         )}
         {state === 'success' && (
           <>
-            <p className="text-emerald-700 dark:text-emerald-400">
-              Email reverted. Your account has been locked for safety. Set a new
-              password to continue.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Redirecting you to the password reset page…
-            </p>
+            <p className="text-emerald-700 dark:text-emerald-400">{t('auth:emailRevertedYourAccountHasBeen')}</p>
+            <p className="text-xs text-muted-foreground">{t('auth:redirectingYouToThePasswordReset')}</p>
           </>
         )}
         {state === 'error' && (
           <>
             <p className="text-destructive">{error}</p>
             <Link href="/login">
-              <Button variant="outline" className="rounded-lg">
-                Back to sign in
-              </Button>
+              <Button variant="outline" className="rounded-lg">{t('auth:backToSignIn')}</Button>
             </Link>
           </>
         )}

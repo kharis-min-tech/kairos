@@ -10,6 +10,7 @@ import { useCompleteOauthProfile } from '@/hooks/use-auth';
 import { AddressAutofillGroup, Button, CustomSelect, Input, Label } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
 const RELATIONSHIP_OPTIONS = [
   'Spouse',
@@ -34,7 +35,8 @@ const RELATIONSHIP_OPTIONS = [
  * at first sign-in than to come back later from the profile edit page, so
  * we take whatever they give us and save it.
  */
-export default function CompleteProfilePage() {
+export default function CompleteProfilePage() {  const { t } = useTranslation(['auth', 'common']);
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, logout } = useAuthStore();
@@ -184,7 +186,7 @@ export default function CompleteProfilePage() {
   return (
     <>
       <KharisCardHeader
-        heading="Finish setting up"
+        heading={t('auth:finishSettingUp')}
         subtitle={`Welcome${
           user?.firstName ? `, ${user.firstName}` : ''
         }! Please fill in the required fields. The rest are optional but useful for admins to know who you are.`}
@@ -230,8 +232,7 @@ export default function CompleteProfilePage() {
           {/* ── Required section ───────────────────────────── */}
           <section className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="homeBranchId">
-                Home branch <span className="text-destructive">*</span>
+              <Label htmlFor="homeBranchId">{t('auth:homeBranch')}<span className="text-destructive">*</span>
               </Label>
               <CustomSelect
                 id="homeBranchId"
@@ -261,8 +262,7 @@ export default function CompleteProfilePage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="phone">
-                Phone <span className="text-destructive">*</span>
+              <Label htmlFor="phone">{t('auth:phone')}<span className="text-destructive">*</span>
               </Label>
               <Input
                 id="phone"
@@ -285,17 +285,13 @@ export default function CompleteProfilePage() {
           {/* ── Personal (optional) ─────────────────────────── */}
           <section className="space-y-4 rounded-lg border border-border/60 p-4">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                About you
-              </h2>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                Optional
-              </span>
+              <h2 className="text-sm font-semibold text-foreground">{t('auth:aboutYou')}</h2>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('auth:optional')}</span>
             </div>
 
             <div className="grid gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="firstName">First name</Label>
+                <Label htmlFor="firstName">{t('auth:firstName')}</Label>
                 <Input
                   id="firstName"
                   value={firstName}
@@ -304,7 +300,7 @@ export default function CompleteProfilePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="lastName">Last name</Label>
+                <Label htmlFor="lastName">{t('auth:lastName')}</Label>
                 <Input
                   id="lastName"
                   value={lastName}
@@ -313,7 +309,7 @@ export default function CompleteProfilePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="middleName">Middle name</Label>
+                <Label htmlFor="middleName">{t('auth:middleName')}</Label>
                 <Input
                   id="middleName"
                   value={middleName}
@@ -322,21 +318,21 @@ export default function CompleteProfilePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Gender</Label>
+                <Label>{t('auth:gender')}</Label>
                 <CustomSelect
                   value={gender}
                   onValueChange={(v) =>
                     setGender((v || '') as '' | 'Male' | 'Female')
                   }
-                  placeholder="Select gender"
+                  placeholder={t('auth:selectGender')}
                   options={[
-                    { value: 'Male', label: 'Male' },
-                    { value: 'Female', label: 'Female' },
+                    { value: 'Male', label: t('auth:male') },
+                    { value: 'Female', label: t('auth:female') },
                   ]}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Date of birth</Label>
+                <Label>{t('auth:dateOfBirth')}</Label>
                 <DateSelect value={dateOfBirth} onChange={setDateOfBirth} />
               </div>
             </div>
@@ -345,10 +341,8 @@ export default function CompleteProfilePage() {
           {/* ── Address (optional) ──────────────────────────── */}
           <section className="space-y-4 rounded-lg border border-border/60 p-4">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-foreground">Address</h2>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                Optional
-              </span>
+              <h2 className="text-sm font-semibold text-foreground">{t('auth:address')}</h2>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('auth:optional')}</span>
             </div>
 
             <AddressAutofillGroup
@@ -365,17 +359,13 @@ export default function CompleteProfilePage() {
           {/* ── Emergency contact (optional) ────────────────── */}
           <section className="space-y-4 rounded-lg border border-border/60 p-4">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                Emergency contact
-              </h2>
-              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                Optional
-              </span>
+              <h2 className="text-sm font-semibold text-foreground">{t('auth:emergencyContact')}</h2>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('auth:optional')}</span>
             </div>
 
             <div className="grid gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="ecName">Name</Label>
+                <Label htmlFor="ecName">{t('auth:name')}</Label>
                 <Input
                   id="ecName"
                   value={ecName}
@@ -383,12 +373,12 @@ export default function CompleteProfilePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="ecRel">Relationship</Label>
+                <Label htmlFor="ecRel">{t('auth:relationship')}</Label>
                 <CustomSelect
                   id="ecRel"
                   value={ecRel}
                   onValueChange={setEcRel}
-                  placeholder="Select relationship…"
+                  placeholder={t('auth:selectRelationship')}
                   options={RELATIONSHIP_OPTIONS.map((r) => ({
                     value: r,
                     label: r,
@@ -396,7 +386,7 @@ export default function CompleteProfilePage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="ecPhone">Phone</Label>
+                <Label htmlFor="ecPhone">{t('auth:phone')}</Label>
                 <Input
                   id="ecPhone"
                   type="tel"
@@ -437,9 +427,7 @@ export default function CompleteProfilePage() {
                     target="_blank"
                     rel="noreferrer"
                     className="font-medium text-[#5D3FD3] hover:opacity-80"
-                  >
-                    Privacy Notice
-                  </a>
+                  >{t('auth:privacyNotice')}</a>
                   . <span className="text-destructive">*</span>
                 </span>
               </label>
@@ -458,9 +446,7 @@ export default function CompleteProfilePage() {
           type="button"
           onClick={handleSignOut}
           className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
-        >
-          Sign out
-        </button>
+        >{t('auth:signOut')}</button>
       </div>
     </>
   );

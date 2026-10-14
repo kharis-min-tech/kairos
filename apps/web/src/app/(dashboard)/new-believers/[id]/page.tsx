@@ -38,8 +38,10 @@ import {
   getNextStage,
 } from '../_components/stage-config';
 import type { EnrollmentDetail, AttendanceLogItem } from '../_components/types';
+import { useTranslation } from 'react-i18next';
 
-export default function EnrollmentDetailPage() {
+export default function EnrollmentDetailPage() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const caps = useCapabilities();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -188,9 +190,9 @@ export default function EnrollmentDetailPage() {
 
   async function handleDeactivate() {
     const ok = await confirm({
-      title: 'Deactivate enrollment?',
+      title: t('newBelievers:deactivateEnrollment'),
       description: 'This member will be removed from the active pipeline. You can re-enrol them later if needed.',
-      confirmLabel: 'Deactivate',
+      confirmLabel: t('newBelievers:deactivate'),
       variant: 'destructive',
     });
     if (!ok) return;
@@ -222,7 +224,7 @@ export default function EnrollmentDetailPage() {
             <div className="h-32 animate-pulse rounded-lg bg-muted/60" />
           </div>
         </div>
-        <span className="sr-only">Loading enrollment</span>
+        <span className="sr-only">{t('newBelievers:loadingEnrollment')}</span>
       </div>
     );
   }
@@ -230,10 +232,9 @@ export default function EnrollmentDetailPage() {
   if (error || !enrollment) {
     return (
       <div role="alert" className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-        <p className="text-sm font-medium text-destructive">Enrollment not found.</p>
+        <p className="text-sm font-medium text-destructive">{t('newBelievers:enrollmentNotFound')}</p>
         <Link href="/new-believers" className="mt-2 inline-flex items-center gap-1 text-sm text-[#5D3FD3] hover:underline">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to New Believers
-        </Link>
+          <ArrowLeft className="h-3.5 w-3.5" />{t('newBelievers:backToNewBelievers')}</Link>
       </div>
     );
   }
@@ -261,8 +262,7 @@ export default function EnrollmentDetailPage() {
         href="/new-believers"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> New Believers
-      </Link>
+        <ArrowLeft className="h-3.5 w-3.5" />{t('newBelievers:newBelievers')}</Link>
 
       <header>
         <h1 className="text-3xl font-semibold tracking-[-0.02em]">
@@ -317,8 +317,8 @@ export default function EnrollmentDetailPage() {
           ))}
         </div>
         <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-          <span>Session 1</span>
-          <span>Joined a Department</span>
+          <span>{t('newBelievers:session')}</span>
+          <span>{t('newBelievers:joinedADepartment')}</span>
         </div>
       </div>
 
@@ -327,9 +327,7 @@ export default function EnrollmentDetailPage() {
         <div className="flex items-start gap-3 rounded-lg border border-[#f8b537]/40 bg-[#f8b537]/10 px-4 py-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#f8b537]" />
           <div>
-            <p className="text-sm font-semibold text-[#f8b537]">
-              Member enrolled as their own teacher
-            </p>
+            <p className="text-sm font-semibold text-[#f8b537]">{t('newBelievers:memberEnrolledAsTheirOwnTeacher')}</p>
             <p className="mt-0.5 text-xs font-medium text-[#f8b537]">
               {enrollment.memberFirstName} {enrollment.memberLastName} is assigned as both the
               student and the teacher on this enrolment. Please reassign the teacher using Edit.
@@ -348,8 +346,7 @@ export default function EnrollmentDetailPage() {
               disabled={updateEnrollment.isPending}
               className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300"
             >
-              <Check className="mr-1.5 h-4 w-4" /> Mark Session Complete
-            </Button>
+              <Check className="mr-1.5 h-4 w-4" />{t('newBelievers:markSessionComplete')}</Button>
           )}
           {canAdvance && enrollment.stage !== 'integrated' && nextStage && (
             <Button
@@ -360,17 +357,13 @@ export default function EnrollmentDetailPage() {
               Advance to {nextStage.label}
             </Button>
           )}
-          <Button variant="outline" onClick={startEdit}>
-            Edit
-          </Button>
+          <Button variant="outline" onClick={startEdit}>{t('newBelievers:edit')}</Button>
           {isAdminOrPastor && (
             <Button
               variant="outline"
               onClick={handleDeactivate}
               className="border-destructive/50 text-destructive hover:bg-destructive/10"
-            >
-              Deactivate
-            </Button>
+            >{t('newBelievers:deactivate')}</Button>
           )}
         </div>
       )}
@@ -380,11 +373,11 @@ export default function EnrollmentDetailPage() {
           {isEditing ? (
             <Card>
               <CardHeader>
-                <CardTitle>Edit Enrollment</CardTitle>
+                <CardTitle>{t('newBelievers:editEnrollment')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Stage</label>
+                  <label className="mb-1 block text-sm font-medium">{t('newBelievers:stage')}</label>
                   <CustomSelect
                     value={(editForm.stage ?? enrollment.stage) as string}
                     onValueChange={(v) =>
@@ -392,37 +385,35 @@ export default function EnrollmentDetailPage() {
                     }
                     options={STAGES.map((s) => ({ value: s.value, label: s.label }))}
                   />
-                  <p className="mt-1 text-xs font-medium text-[#f8b537]">
-                    Moving forward from a session requires completed session feedback.
-                  </p>
+                  <p className="mt-1 text-xs font-medium text-[#f8b537]">{t('newBelievers:movingForwardFromASessionRequires')}</p>
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Assign Teacher</label>
+                  <label className="mb-1 block text-sm font-medium">{t('newBelievers:assignTeacher')}</label>
                   <CustomSelect
                     value={editForm.teacherId ?? ''}
                     onValueChange={(v) =>
                       setEditForm((f) => ({ ...f, teacherId: v || null }))
                     }
                     options={memberOptions}
-                    placeholder="Unassigned"
+                    placeholder={t('newBelievers:unassigned')}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Assign Mentor</label>
+                  <label className="mb-1 block text-sm font-medium">{t('newBelievers:assignMentor')}</label>
                   <CustomSelect
                     value={editForm.mentorId ?? ''}
                     onValueChange={(v) =>
                       setEditForm((f) => ({ ...f, mentorId: v || null }))
                     }
                     options={memberOptions}
-                    placeholder="Unassigned"
+                    placeholder={t('newBelievers:unassigned')}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Notes</label>
+                  <label className="mb-1 block text-sm font-medium">{t('newBelievers:notes')}</label>
                   <Textarea
                     rows={3}
                     value={editForm.notes ?? ''}
@@ -431,9 +422,7 @@ export default function EnrollmentDetailPage() {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>{t('newBelievers:cancel')}</Button>
                   <Button
                     onClick={handleSave}
                     disabled={updateEnrollment.isPending}
@@ -447,22 +436,22 @@ export default function EnrollmentDetailPage() {
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>Enrollment Details</CardTitle>
+                <CardTitle>{t('newBelievers:enrollmentDetails')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                   <div>
-                    <dt className="text-muted-foreground">Stage</dt>
+                    <dt className="text-muted-foreground">{t('newBelievers:stage')}</dt>
                     <dd className="font-medium">{stage?.label ?? enrollment.stage}</dd>
                   </div>
                   <div>
-                    <dt className="text-muted-foreground">Enrolled On</dt>
+                    <dt className="text-muted-foreground">{t('newBelievers:enrolledOn')}</dt>
                     <dd className="font-medium">
                       {formatShortDate(enrollment.enrolledAt)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-muted-foreground">Teacher</dt>
+                    <dt className="text-muted-foreground">{t('newBelievers:teacher')}</dt>
                     <dd className="font-medium">
                       {enrollment.teacherFirstName
                         ? `${enrollment.teacherFirstName} ${enrollment.teacherLastName}`
@@ -470,7 +459,7 @@ export default function EnrollmentDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-muted-foreground">Mentor</dt>
+                    <dt className="text-muted-foreground">{t('newBelievers:mentor')}</dt>
                     <dd className="font-medium">
                       {enrollment.mentorFirstName
                         ? `${enrollment.mentorFirstName} ${enrollment.mentorLastName}`
@@ -478,7 +467,7 @@ export default function EnrollmentDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-muted-foreground">Completed On</dt>
+                    <dt className="text-muted-foreground">{t('newBelievers:completedOn')}</dt>
                     <dd className="font-medium">
                       {enrollment.completedAt
                         ? formatShortDate(enrollment.completedAt)
@@ -486,25 +475,21 @@ export default function EnrollmentDetailPage() {
                     </dd>
                   </div>
                   <div className="col-span-2">
-                    <dt className="text-muted-foreground">Department</dt>
+                    <dt className="text-muted-foreground">{t('newBelievers:department')}</dt>
                     <dd className="font-medium">
                       {enrollment.stage !== 'integrated' ? (
-                        <span className="italic text-muted-foreground">
-                          Not yet integrated into a department
-                        </span>
+                        <span className="italic text-muted-foreground">{t('newBelievers:notYetIntegratedIntoADepartment')}</span>
                       ) : enrollment.joinedDepartmentId ? (
                         branchDepartments.find((d) => d.id === enrollment.joinedDepartmentId)
                           ?.departmentName ?? enrollment.joinedDepartmentId
                       ) : (
-                        <span className="italic text-muted-foreground">
-                          Integrated, department not recorded
-                        </span>
+                        <span className="italic text-muted-foreground">{t('newBelievers:integratedDepartmentNotRecorded')}</span>
                       )}
                     </dd>
                   </div>
                   {enrollment.notes && (
                     <div className="col-span-2">
-                      <dt className="text-muted-foreground">Notes</dt>
+                      <dt className="text-muted-foreground">{t('newBelievers:notes')}</dt>
                       <dd className="font-medium">{enrollment.notes}</dd>
                     </div>
                   )}
@@ -516,7 +501,7 @@ export default function EnrollmentDetailPage() {
           {attendanceHistory.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Session Attendance</CardTitle>
+                <CardTitle>{t('newBelievers:sessionAttendance')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -552,7 +537,7 @@ export default function EnrollmentDetailPage() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Journey</CardTitle>
+              <CardTitle>{t('newBelievers:journey')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ol className="space-y-3">
@@ -641,12 +626,11 @@ export default function EnrollmentDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              Session Feedback <span className="text-destructive">*</span>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:sessionFeedback')}<span className="text-destructive">*</span>
             </label>
             <Textarea
               rows={4}
-              placeholder="How did the session go? Any observations about the student's progress?"
+              placeholder={t('newBelievers:howDidTheSessionGoAny')}
               value={markCompleteFeedback}
               onChange={(e) => setMarkCompleteFeedback(e.target.value)}
             />
@@ -659,9 +643,7 @@ export default function EnrollmentDetailPage() {
                 setMarkCompleteFeedback('');
                 setMarkCompleteShouldAdvance(false);
               }}
-            >
-              Cancel
-            </Button>
+            >{t('newBelievers:cancel')}</Button>
             <Button
               disabled={!markCompleteFeedback.trim() || updateEnrollment.isPending}
               onClick={handleConfirmMarkComplete}
@@ -681,18 +663,13 @@ export default function EnrollmentDetailPage() {
       <Dialog open={showJoinDeptModal} onOpenChange={setShowJoinDeptModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Joined a Department</DialogTitle>
+            <DialogTitle>{t('newBelievers:joinedADepartment')}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Optionally link this member to a department. You can skip this step.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('newBelievers:optionallyLinkThisMemberToA')}</p>
           <div>
-            <label className="mb-1 block text-sm font-medium">Department</label>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:department')}</label>
             {branchDepartments.length === 0 ? (
-              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                No departments configured for this branch yet. Departments are set up in the
-                Recruitment workflow.
-              </p>
+              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">{t('newBelievers:noDepartmentsConfiguredForThisBranch')}</p>
             ) : (
               <CustomSelect
                 value={joinDeptId}
@@ -701,14 +678,12 @@ export default function EnrollmentDetailPage() {
                   value: d.id,
                   label: d.departmentName,
                 }))}
-                placeholder="Skip, not specified"
+                placeholder={t('newBelievers:skipNotSpecified')}
               />
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowJoinDeptModal(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setShowJoinDeptModal(false)}>{t('newBelievers:cancel')}</Button>
             <Button
               onClick={handleConfirmJoinDept}
               disabled={updateEnrollment.isPending}

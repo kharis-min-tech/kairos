@@ -15,6 +15,7 @@ import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { AddressAutofillGroup, Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { FellowshipType } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
   [FellowshipType.KGroups]: 'K-Groups',
@@ -72,7 +73,8 @@ function parseMeetingSchedule(schedule: string | null) {
   return { meetingFrequency, meetingDay, meetingTime };
 }
 
-export default function EditFellowshipPage() {
+export default function EditFellowshipPage() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -182,7 +184,7 @@ export default function EditFellowshipPage() {
   if (!fellowship) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Fellowship not found.</p>
+        <p className="text-sm text-destructive">{t('fellowships:fellowshipNotFound')}</p>
       </div>
     );
   }
@@ -195,18 +197,16 @@ export default function EditFellowshipPage() {
           <Link href={`/fellowships/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Fellowship
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Edit Fellowship</h1>
+            </svg>{t('fellowships:backToFellowship')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('fellowships:editFellowship')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{fellowship.fellowshipName}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Fellowship Details</CardTitle>
-          <CardDescription>Update the details for this fellowship group</CardDescription>
+          <CardTitle>{t('fellowships:fellowshipDetails')}</CardTitle>
+          <CardDescription>{t('fellowships:updateTheDetailsForThisFellowship')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -219,20 +219,20 @@ export default function EditFellowshipPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="fellowshipName">Fellowship Name *</Label>
-              <Input id="fellowshipName" {...register('fellowshipName')} placeholder="e.g. Brixton K-Group A" />
+              <Label htmlFor="fellowshipName">{t('fellowships:fellowshipName')}</Label>
+              <Input id="fellowshipName" {...register('fellowshipName')} placeholder={t('fellowships:eGBrixtonKGroupA')} />
               {errors.fellowshipName && (
                 <p className="text-sm text-destructive">{errors.fellowshipName.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fellowshipType">Fellowship Type *</Label>
+              <Label htmlFor="fellowshipType">{t('fellowships:fellowshipType')}</Label>
               <CustomSelect
                 id="fellowshipType"
                 value={watch('fellowshipType') ?? ''}
                 onValueChange={(v) => setValue('fellowshipType', v as FormValues['fellowshipType'])}
-                placeholder="Select a type..."
+                placeholder={t('fellowships:selectAType')}
                 options={Object.values(FellowshipType).map((t) => ({ value: t, label: FELLOWSHIP_TYPE_LABELS[t] ?? t }))}
               />
               {errors.fellowshipType && (
@@ -242,7 +242,7 @@ export default function EditFellowshipPage() {
 
             {isAdmin && (
               <div className="space-y-2">
-                <Label htmlFor="branchId">Branch *</Label>
+                <Label htmlFor="branchId">{t('fellowships:branch')}</Label>
                 <CustomSelect
                   id="branchId"
                   value={watch('branchId') ?? ''}
@@ -258,11 +258,7 @@ export default function EditFellowshipPage() {
 
             <div className="space-y-2">
               <Label>Meeting location (optional)</Label>
-              <p className="text-xs text-muted-foreground">
-                Leave blank if the fellowship meets at the parent branch. Set
-                it for K-Groups or off-site fellowships so they land on the
-                map.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('fellowships:leaveBlankIfTheFellowshipMeets')}</p>
               <AddressAutofillGroup
                 accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
                 value={{
@@ -283,11 +279,11 @@ export default function EditFellowshipPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('fellowships:description')}</Label>
               <textarea
                 id="description"
                 {...register('description')}
-                placeholder="Brief description of this fellowship..."
+                placeholder={t('fellowships:briefDescriptionOfThisFellowship')}
                 rows={3}
                 className="flex min-h-[80px] w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
               />
@@ -295,22 +291,22 @@ export default function EditFellowshipPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="leaderId">Leader</Label>
+                <Label htmlFor="leaderId">{t('fellowships:leader')}</Label>
                 <CustomSelect
                   id="leaderId"
                   value={watch('leaderId') ?? ''}
                   onValueChange={(v) => setValue('leaderId', v)}
-                  placeholder="Select leader..."
+                  placeholder={t('fellowships:selectLeader')}
                   options={branchMembers.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="coLeaderId">Co-Leader</Label>
+                <Label htmlFor="coLeaderId">{t('fellowships:coLeader')}</Label>
                 <CustomSelect
                   id="coLeaderId"
                   value={watch('coLeaderId') ?? ''}
                   onValueChange={(v) => setValue('coLeaderId', v)}
-                  placeholder="Select co-leader..."
+                  placeholder={t('fellowships:selectCoLeader')}
                   options={branchMembers.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
                 />
               </div>
@@ -320,7 +316,7 @@ export default function EditFellowshipPage() {
               <p className="text-sm font-medium">Meeting Schedule (optional)</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="meetingFrequency" className="text-xs text-muted-foreground">Frequency</Label>
+                  <Label htmlFor="meetingFrequency" className="text-xs text-muted-foreground">{t('fellowships:frequency')}</Label>
                   <CustomSelect
                     id="meetingFrequency"
                     value={watch('meetingFrequency') ?? ''}
@@ -330,7 +326,7 @@ export default function EditFellowshipPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="meetingDay" className="text-xs text-muted-foreground">Day</Label>
+                  <Label htmlFor="meetingDay" className="text-xs text-muted-foreground">{t('fellowships:day')}</Label>
                   <CustomSelect
                     id="meetingDay"
                     value={watch('meetingDay') ?? ''}
@@ -340,7 +336,7 @@ export default function EditFellowshipPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="meetingTime" className="text-xs text-muted-foreground">Time</Label>
+                  <Label htmlFor="meetingTime" className="text-xs text-muted-foreground">{t('fellowships:time')}</Label>
                   <CustomSelect
                     id="meetingTime"
                     value={watch('meetingTime') ?? ''}
@@ -357,9 +353,7 @@ export default function EditFellowshipPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.push(`/fellowships/${id}`)}
-              >
-                Cancel
-              </Button>
+              >{t('fellowships:cancel')}</Button>
               <Button
                 type="submit"
                 variant="success"

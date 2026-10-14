@@ -9,6 +9,7 @@ import type {
   HomePulse,
   HomeTaskItem,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The control-centre blocks, web edition. Same four blocks as the mobile home
@@ -204,13 +205,14 @@ export function AgendaBlock({
  * Things waiting on the caller. Web had no equivalent — approvals were a stat
  * card you had to notice and concerns lived on their own page.
  */
-export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {
+export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {  const { t } = useTranslation(['common', 'common']);
+
   if (items.length === 0) return null;
   const total = items.reduce((sum, i) => sum + i.count, 0);
 
   return (
     <section>
-      <SectionLabel count={total}>Needs you</SectionLabel>
+      <SectionLabel count={total}>{t('common:needsYou')}</SectionLabel>
       <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
         <div className="divide-y divide-border">
           {items.map((item) => (
@@ -294,12 +296,13 @@ export function GroupsBlock({
 }
 
 /** Replaces an empty agenda for a brand-new member. */
-export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[] }) {
+export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[] }) {  const { t } = useTranslation(['common', 'common']);
+
   if (items.length === 0) return null;
 
   return (
     <section>
-      <SectionLabel>Getting started</SectionLabel>
+      <SectionLabel>{t('common:gettingStarted')}</SectionLabel>
       <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
         <div className="divide-y divide-border">
           {items.map((item) => (
@@ -352,15 +355,14 @@ function whenLabel(iso: string): string {
 }
 
 /** What has already happened, newest first. Empty at personal altitude. */
-export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {
+export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {  const { t } = useTranslation(['common', 'common']);
+
   return (
     <section>
-      <SectionLabel>Recent activity</SectionLabel>
+      <SectionLabel>{t('common:recentActivity')}</SectionLabel>
       <div className="rounded-lg border border-primary/20 bg-card shadow-ambient">
         {items.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-muted-foreground/70">
-            Nothing in the last two weeks.
-          </p>
+          <p className="px-4 py-4 text-sm text-muted-foreground/70">{t('common:nothingInTheLastTwoWeeks')}</p>
         ) : (
           <div className="divide-y divide-border">
             {items.map((item) => (
@@ -391,10 +393,11 @@ export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {
 }
 
 /** The only number a plain member gets, and it's about them. */
-export function StreakBlock({ weeks }: { weeks: number }) {
+export function StreakBlock({ weeks }: { weeks: number }) {  const { t } = useTranslation(['common', 'common']);
+
   return (
     <section>
-      <SectionLabel>You</SectionLabel>
+      <SectionLabel>{t('common:you')}</SectionLabel>
       <Link
         href="/me/attendance"
         className="flex items-center justify-between gap-3 rounded-lg border border-primary/20 bg-card px-4 py-3 shadow-ambient transition-colors hover:bg-foreground/[0.04]"
@@ -403,7 +406,7 @@ export function StreakBlock({ weeks }: { weeks: number }) {
           <p className="text-sm font-semibold text-foreground">
             {weeks} week{weeks === 1 ? '' : 's'} running
           </p>
-          <p className="text-xs text-muted-foreground">My attendance</p>
+          <p className="text-xs text-muted-foreground">{t('common:myAttendance')}</p>
         </div>
         <span aria-hidden className="text-muted-foreground">
           &rarr;

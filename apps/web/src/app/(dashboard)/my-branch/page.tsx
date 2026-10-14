@@ -9,8 +9,10 @@ import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@kairos/ui';
 import { Button } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
-export default function MyBranchPage() {
+export default function MyBranchPage() {  const { t } = useTranslation(['branches', 'common']);
+
   const caps = useCapabilities();
   const router = useRouter();
   const { user, activeRole } = useAuthStore();
@@ -29,7 +31,7 @@ export default function MyBranchPage() {
   if (!branchId) {
     return (
       <div role="alert" className="rounded-lg bg-[#f8b537]/10 p-4">
-        <p className="text-sm font-medium text-[#9a6b04] dark:text-[#f8b537]">No home branch assigned to your account.</p>
+        <p className="text-sm font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('branches:noHomeBranchAssignedToYour')}</p>
       </div>
     );
   }
@@ -40,7 +42,7 @@ export default function MyBranchPage() {
         <div className="h-9 w-56 animate-pulse rounded bg-muted/60" />
         <div className="h-56 animate-pulse rounded-lg bg-muted/60" />
         <div className="h-40 animate-pulse rounded-lg bg-muted/60" />
-        <span className="sr-only">Loading branch</span>
+        <span className="sr-only">{t('branches:loadingBranch')}</span>
       </div>
     );
   }
@@ -48,7 +50,7 @@ export default function MyBranchPage() {
   if (!branch) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm font-medium text-destructive">Branch not found.</p>
+        <p className="text-sm font-medium text-destructive">{t('branches:branchNotFound')}</p>
       </div>
     );
   }
@@ -58,13 +60,13 @@ export default function MyBranchPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <p className="text-xs font-medium text-muted-foreground">My Branch</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('branches:myBranch')}</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">{branch.branchName}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground capitalize">{branch.branchType}</p>
         </div>
         {isAdminOrPastor && (
           <Link href={`/admin/branches/${branchId}`}>
-            <Button variant="outline" size="sm">Manage</Button>
+            <Button variant="outline" size="sm">{t('branches:manage')}</Button>
           </Link>
         )}
       </div>
@@ -72,39 +74,39 @@ export default function MyBranchPage() {
       {/* Branch Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Branch Details</CardTitle>
+          <CardTitle>{t('branches:branchDetails')}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
           {branch.city && (
             <div>
-              <p className="text-sm font-medium text-muted-foreground">City</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('branches:city')}</p>
               <p>{branch.city}</p>
             </div>
           )}
           {branch.address && (
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Address</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('branches:address')}</p>
               <p>{branch.address}</p>
             </div>
           )}
           {branch.phone && (
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Phone</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('branches:phone')}</p>
               <p>{branch.phone}</p>
             </div>
           )}
           {branch.email && (
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('branches:email')}</p>
               <p>{branch.email}</p>
             </div>
           )}
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Total Members</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('branches:totalMembers')}</p>
             <p>{membersData?.meta?.total ?? '—'}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Status</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('branches:status')}</p>
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
               branch.isActive ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
             }`}>
@@ -117,14 +119,14 @@ export default function MyBranchPage() {
       {/* Leadership */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Leadership</CardTitle>
-          <CardDescription>Branch leadership team</CardDescription>
+          <CardTitle>{t('branches:currentLeadership')}</CardTitle>
+          <CardDescription>{t('branches:branchLeadershipTeam')}</CardDescription>
         </CardHeader>
         <CardContent>
           {leadershipLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <p className="text-sm text-muted-foreground">{t('branches:loading')}</p>
           ) : !leadership || leadership.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No leadership assigned yet.</p>
+            <p className="text-sm text-muted-foreground">{t('branches:noLeadershipAssignedYet')}</p>
           ) : (
             <div className="space-y-3">
               {leadership.map((leader) => {
@@ -150,27 +152,21 @@ export default function MyBranchPage() {
       {isAdminOrPastor && (
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>{t('branches:quickActions')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
             <Link
               href="/members"
               className="inline-flex items-center gap-1.5 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              View Members
-            </Link>
+            >{t('branches:viewMembers')}</Link>
             <Link
               href="/fellowships"
               className="inline-flex items-center gap-1.5 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              View Fellowships
-            </Link>
+            >{t('branches:viewFellowships')}</Link>
             <Link
               href="/reports"
               className="inline-flex items-center gap-1.5 rounded-lg border border-input/15 bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              Reports
-            </Link>
+            >{t('branches:reports')}</Link>
           </CardContent>
         </Card>
       )}
