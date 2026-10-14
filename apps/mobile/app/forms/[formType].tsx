@@ -905,8 +905,8 @@ function MemberField({
         title={field.label}
         subtitle={
           onTypeName
-            ? 'Search by name or phone — or use the name you type, if they aren’t a member.'
-            : 'Search members in this branch by name or phone.'
+            ? t('forms:searchNamePhoneUseNameType')
+: t('forms:searchMembersBranchNamePhone')
         }
         initialQuery={onTypeName ? typedName : undefined}
         onUseTypedName={

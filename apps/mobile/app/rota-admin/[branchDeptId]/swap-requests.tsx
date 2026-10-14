@@ -150,8 +150,8 @@ export default function SwapRequestsAdmin() {  const { t } = useTranslation(['ro
           <Card padding="md">
             <Text style={styles.emptyLine}>
               {filter === 'pending'
-                ? 'No pending swaps right now.'
-                : 'Nothing here yet.'}
+                ? t('rota:noPendingSwaps')
+: t('rota:nothingHere')}
             </Text>
           </Card>
         ) : (

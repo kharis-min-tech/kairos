@@ -226,8 +226,8 @@ export default function OutreachProgramsPage() {  const { t } = useTranslation([
               <TableRow>
                 <TableCell colSpan={canRegister ? 8 : 7} className="text-center py-8">
                   {activeTab === 'active' 
-                    ? 'No active programs currently.' 
-                    : 'No past programs found.'}
+                    ? t('outreach:noActiveProgramsCurrently')
+: t('outreach:noPastProgramsFound')}
                 </TableCell>
               </TableRow>
             ) : (

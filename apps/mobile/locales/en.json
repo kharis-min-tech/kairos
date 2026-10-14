@@ -380,7 +380,9 @@
     "submitting": "Submitting…",
     "submit": "Submit",
     "searchDirectoryTypeName": "Search the directory, or type a name",
-    "searchPerson": "Search for a person"
+    "searchPerson": "Search for a person",
+    "searchNamePhoneUseNameType": "Search by name or phone — or use the name you type, if they aren’t a member.",
+    "searchMembersBranchNamePhone": "Search members in this branch by name or phone."
   },
   "myGroups": {},
   "rollcall": {},
@@ -510,7 +512,15 @@
     "reactivateMember": "Reactivate member",
     "inactiveGdn": "Inactive gdn.",
     "noGdn": "No gdn.",
-    "attendees": "Attendees"
+    "attendees": "Attendees",
+    "resultWord_one": "result",
+    "resultWord_other": "results",
+    "noFollowUpsRecorded": "No follow-ups recorded on you yet.",
+    "noFollowUpsRecordedMember": "No follow-ups recorded for this member yet.",
+    "notInterested": "Not interested",
+    "reached": "Reached",
+    "virtualVisit": "Virtual visit",
+    "homeVisit": "Home visit"
   },
   "fellowships": {
     "activeMembers": "Active members",
@@ -632,7 +642,9 @@
     "saving": "Saving…",
     "saveFollowUp": "Save follow-up",
     "logMeeting": "Log meeting",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "fellowshipWord_one": "fellowship",
+    "fellowshipWord_other": "fellowships"
   },
   "departments": {
     "newFollowUp": "New follow-up",
@@ -779,7 +791,13 @@
     "chooseLead": "Choose a lead",
     "chooseBranchFirst": "Choose a branch first",
     "chooseDeputyOptional": "Choose a deputy (optional)",
-    "deactivating": "Deactivating…"
+    "deactivating": "Deactivating…",
+    "departmentWord_one": "department",
+    "departmentWord_other": "departments",
+    "noClosedApplications": "No closed applications yet.",
+    "noApplications": "No applications yet.",
+    "grantCameraAccessSettingsTakePhoto": "Grant camera access in Settings to take a photo.",
+    "grantPhotoLibraryAccessSettingsPick": "Grant photo library access in Settings to pick a photo."
   },
   "branches": {
     "branchName": "Branch name",
@@ -1033,7 +1051,15 @@
     "noFellowshipsToLead": "No fellowships to lead",
     "checking": "Checking in…",
     "scanQrDesk": "Scan QR at the desk",
-    "creating": "Creating…"
+    "creating": "Creating…",
+    "openingSoon": "Opening soon",
+    "today": "Today",
+    "askLeaderRecordAttendance": "Ask a leader to record your attendance.",
+    "nothingScheduledCheckIntoToday": "Nothing scheduled to check into today.",
+    "presentRecentServices": "Present at recent services.",
+    "nothingRecorded": "Nothing recorded yet.",
+    "nothingNeedsApproval": "Nothing needs your approval right now.",
+    "nothingFilter": "Nothing in this filter."
   },
   "concerns": {
     "welfare": "Welfare",
@@ -1046,7 +1072,15 @@
     "mentee": "Mentee",
     "followUps": "Follow-ups",
     "allCaughtUp": "All caught up",
-    "nothingHereYet": "Nothing here yet"
+    "nothingHereYet": "Nothing here yet",
+    "followUpsFlaggedWelfareConcernsReach": "Follow-ups flagged as welfare concerns. Reach out to the pastoral team.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Follow-ups flagged as safeguarding matters. Escalate to the branch safeguarding lead.",
+    "noWelfareConcernsFlaggedAllQuiet": "No welfare concerns flagged. All quiet.",
+    "noSafeguardingMattersFlagged": "No safeguarding matters flagged.",
+    "noFirstTimersWaitingFirstVisit": "No first-timers waiting on a first visit.",
+    "everyoneHereBelongsFellowshipDepartment": "Everyone here belongs to a fellowship or department.",
+    "nothingPendingEnjoyQuiet": "Nothing pending right now. Enjoy the quiet.",
+    "nothingFilter": "Nothing in this filter."
   },
   "membership": {
     "eGWhoWeAreAs": "e.g. Who we are as a church",
@@ -1141,7 +1175,15 @@
     "yourPeopleAdmitted": "Your people admitted",
     "admittedBranch": "Admitted from your branch",
     "admitting": "Admitting…",
-    "admit": "Admit"
+    "admit": "Admit",
+    "dayWord_one": "day",
+    "dayWord_other": "days",
+    "youTookYourselfOffListJoin": "You took yourself off the list. Join again whenever you are ready.",
+    "joinListMembershipAdminPlaceUpcoming": "Join the list and a membership admin will place you in an upcoming cohort.",
+    "nobodyLeadCurrentlyWaiting": "Nobody you lead is currently waiting.",
+    "nobodyBranchCurrentlyWaiting": "Nobody from your branch is currently waiting.",
+    "noOneLeadCurrentlyEnrolled": "No one you lead is currently enrolled.",
+    "noOneBranchCurrentlyEnrolled": "No one from your branch is currently enrolled."
   },
   "newBelievers": {
     "markSessionComplete": "Mark session complete",
@@ -1208,7 +1250,9 @@
     "youReEnrolled": "You’re not enrolled",
     "noActiveEnrollments": "No active enrollments",
     "creating": "Creating…",
-    "createSession": "Create session"
+    "createSession": "Create session",
+    "enrolNewBelieversClassViaBranch": "Enrol in the New Believers class via your branch team to track your journey here.",
+    "newBelieversTeachMentorAppearHere": "New Believers you teach or mentor will appear here."
   },
   "outreach": {
     "registerWorker": "Register worker",
@@ -1241,7 +1285,9 @@
     "cancel": "Cancel",
     "adding": "Adding…",
     "creating": "Creating…",
-    "createProgram": "Create program"
+    "createProgram": "Create program",
+    "programWord_one": "program",
+    "programWord_other": "programs"
   },
   "rota": {
     "upcoming": "Upcoming",
@@ -1334,7 +1380,9 @@
     "confirm": "Confirm",
     "sending": "Sending…",
     "published": "Published",
-    "draft": "Draft"
+    "draft": "Draft",
+    "noPendingSwaps": "No pending swaps right now.",
+    "nothingHere": "Nothing here yet."
   },
   "souls": {
     "convertToMember": "Convert to member?",
@@ -1394,6 +1442,8 @@
     "jumpTo": "Jump to",
     "converting": "Converting…",
     "convertMember": "Convert to member",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "soulWord_one": "soul",
+    "soulWord_other": "souls"
   }
 }

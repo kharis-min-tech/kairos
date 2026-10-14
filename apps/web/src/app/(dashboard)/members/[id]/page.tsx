@@ -499,8 +499,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
               <History className="h-5 w-5 text-[#5D3FD3]" strokeWidth={1.75} />{t('members:followUpHistory')}</CardTitle>
             <CardDescription>
               {isSelf
-                ? 'Every fellowship and department follow-up recorded on you.'
-                : 'Combined fellowship and department follow-ups, most recent first.'}
+                ? t('members:everyFellowshipDepartmentFollowUpRecorded')
+: t('members:combinedFellowshipDepartmentFollowUpsMost')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -509,8 +509,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
             ) : !followupHistory || followupHistory.length === 0 ? (
               <p className="rounded-md bg-muted/40 p-4 text-center text-sm text-muted-foreground">
                 {isSelf
-                  ? 'No follow-ups recorded on you yet.'
-                  : 'No follow-ups recorded for this member yet.'}
+                  ? t('members:noFollowUpsRecorded')
+: t('members:noFollowUpsRecordedMember')}
               </p>
             ) : (
               <ul className="space-y-3">
@@ -556,8 +556,8 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {  cons
       ? row.interestLevel === 'interested'
         ? 'Interested'
         : row.interestLevel === 'not_interested'
-          ? 'Not interested'
-          : 'Reached'
+          ? t('members:notInterested')
+: t('members:reached')
       : row.contactReached === false
         ? 'No answer'
         : null;
@@ -573,8 +573,8 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {  cons
 
   const methodLabel = isVisit
     ? row.visitKind === 'virtual'
-      ? 'Virtual visit'
-      : 'Home visit'
+      ? t('members:virtualVisit')
+: t('members:homeVisit')
     : (row.methods ?? [row.contactMethod])
         .map((m) =>
           m === 'phone_call'

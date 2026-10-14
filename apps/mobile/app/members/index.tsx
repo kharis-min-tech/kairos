@@ -233,7 +233,7 @@ export default function MembersDirectory() {  const { t } = useTranslation(['mem
 
             {rows.length > 0 ? (
               <Text style={styles.countLabel}>
-                {total} {total === 1 ? 'result' : 'results'}
+                {total} {t('members:resultWord', { count: total })}
               </Text>
             ) : null}
           </View>

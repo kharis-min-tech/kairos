@@ -653,7 +653,11 @@
     "currentBranchLeadershipAssignments": "Di branch lidaship asaynmɛnt dɛn we de naw",
     "assigning": "I de gi am...",
     "current": "Di wan we de naw",
-    "loadingRegions": "Di rijɔn dɛn de lod..."
+    "loadingRegions": "Di rijɔn dɛn de lod...",
+    "selectMember": "Pik wan mɛmba",
+    "youViewWhoHoldsRoleBut": "Yu kin si udat gɛt dis rol, bɔt fɔ gi ɔ pul am, yu fɔ bi Branch Sistɛm Admin.",
+    "theseMembersFullAdministrativeControlOver": "Dɛn mɛmba ya gɛt ful administretiv kɔntrol pan dis branch.",
+    "noAssignableMembersFound": "Nɔ mɛmba we yu kin gi di rol nɔ de"
   },
   "admin": {
     "delete": "Dilit",
@@ -787,7 +791,13 @@
     "saveAttendance": "Sev di atɛndans",
     "comparing": "I de kɔmpia…",
     "runComparison": "Rɔn di kɔmparisɔn",
-    "creating": "I de mek am…"
+    "creating": "I de mek am…",
+    "membersMatch_one": "{{count}} mɛmba fit.",
+    "membersMatch_other": "{{count}} mɛmba dɛn fit.",
+    "recordFirstServiceStartCheckingAttendees": "Rɛkɔd yu fɔs sɛvis fɔ bigin chɛk pipul in.",
+    "thereServicesViewBranch": "Nɔ sɛvis nɔ de fɔ si na yu branch yet.",
+    "consecutiveServicesAttended": "Sɛvis dɛn we yu kam wan afta di ɔda.",
+    "consecutiveServicesMissed": "Sɛvis dɛn we yu mis wan afta di ɔda."
   },
   "reports": {
     "weeklyAttendance": "Wikli atɛndans",
@@ -952,7 +962,11 @@
     "noFirstTimersWaitingOnA": "Nɔbɔdi we kam fɔs tɛm nɔ de wet fɔ di fɔs vizit.",
     "everyoneInThisBranchBelongsTo": "Ɛvribɔdi na dis branch bilɔng to wan fɛloship ɔ dipatmɛnt.",
     "peopleWhoNeedContactAndBelong": "Pipul we wi fɔ tɔk to ɛn we nɔ bilɔng to ɛni fɛloship ɔ dipatmɛnt. Grup fɔlo ɔp de na ɛvri fɛloship ɛn dipatmɛnt pej.",
-    "nothingDue": "Natin nɔ de fɔ du."
+    "nothingDue": "Natin nɔ de fɔ du.",
+    "followUpsFlaggedWelfareConcernsReach": "Fɔlo ɔp dɛn we wi mak as wɛlfɛa kɔnsɔn. Tɔk to di pastɔral tim.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Fɔlo ɔp dɛn we wi mak as sefgadin mata. Tɛl di branch sefgadin lid.",
+    "noWelfareConcernsFlaggedAllQuiet": "Nɔ wɛlfɛa kɔnsɔn nɔ mak. Ɔltin kwayɛt.",
+    "noSafeguardingMattersFlagged": "Nɔ sefgadin mata nɔ mak."
   },
   "departments": {
     "member": "Mɛmba",
@@ -1261,7 +1275,19 @@
     "selectBranch": "Pik wan branch...",
     "createDepartment": "Mek Dipatmɛnt",
     "savingEllipsis": "I de sev...",
-    "create": "Mek am"
+    "create": "Mek am",
+    "outfitWord_one": "klɔt",
+    "outfitWord_other": "klɔt dɛn",
+    "roleWord_one": "rol",
+    "roleWord_other": "rol dɛn",
+    "positionWord_one": "pɔzishɔn",
+    "positionWord_other": "pɔzishɔn dɛn",
+    "dutyWord_one": "dyuti",
+    "dutyWord_other": "dyuti dɛn",
+    "memberWord_one": "mɛmba",
+    "memberWord_other": "mɛmba dɛn",
+    "noUpcomingRotaInstancesClickGenerate": "Nɔ rota nɔ de we de kam. Klik Mek di Skejul fɔ mek dɛn.",
+    "noServicesMatchCurrentFilter": "Nɔ sɛvis nɔ fit di filtɔ we de naw."
   },
   "fellowships": {
     "serviceAttendance": "Sɛvis atɛndans",
@@ -1759,7 +1785,15 @@
     "exportCsv": "Ɛkspɔt CSV",
     "thisMembersFellowshipMembership": "Dis mɛmba in fɛloship mɛmbaship",
     "assignMemberToFellowshipInBranch": "Put dis mɛmba na wan fɛloship na dɛn branch",
-    "youHaventJoinedAFellowshipYet": "Yu nɔ jɔyn ɛni fɛloship yet"
+    "youHaventJoinedAFellowshipYet": "Yu nɔ jɔyn ɛni fɛloship yet",
+    "notInterested": "I nɔ want",
+    "everyFellowshipDepartmentFollowUpRecorded": "Ɔl di fɛloship ɛn dipatmɛnt fɔlo ɔp dɛn we dɛn rɛkɔd bɔt yu.",
+    "combinedFellowshipDepartmentFollowUpsMost": "Fɛloship ɛn dipatmɛnt fɔlo ɔp dɛn put togɛda, di nyu wan dɛn fɔs.",
+    "noFollowUpsRecorded": "Nɔ fɔlo ɔp nɔ rɛkɔd bɔt yu yet.",
+    "noFollowUpsRecordedMember": "Nɔ fɔlo ɔp nɔ rɛkɔd fɔ dis mɛmba yet.",
+    "reached": "Wi rich am",
+    "virtualVisit": "Vizit pan fon ɔ layn",
+    "homeVisit": "Om vizit"
   },
   "membership": {
     "eGWhoWeAreAs": "lɛkɛ Udat wi bi as wan church",
@@ -1904,7 +1938,11 @@
     "yourPeopleWaiting": "Yu pipul we de wet",
     "branchWaitlist": "Di branch wet lis",
     "yourPeopleAdmitted": "Yu pipul we dɛn tek in",
-    "admittedBranch": "Dɛn tek dɛn in frɔm yu branch"
+    "admittedBranch": "Dɛn tek dɛn in frɔm yu branch",
+    "dayWord_one": "de",
+    "dayWord_other": "de",
+    "nobodyLeadCurrentlyWaiting": "Nɔbɔdi we yu de lid nɔ de wet naw.",
+    "nobodyBranchCurrentlyWaiting": "Nɔbɔdi frɔm yu branch nɔ de wet naw."
   },
   "newBelievers": {
     "unassigned": "Dɛn nɔ gi am to ɛnibɔdi",
@@ -2093,7 +2131,8 @@
     "saveAttendance": "Sev di Atɛndans",
     "saveNotes": "Sev di Not dɛn",
     "collapseProgrammeHealth": "Klos di program ɛlt",
-    "expandProgrammeHealth": "Opin di program ɛlt"
+    "expandProgrammeHealth": "Opin di program ɛlt",
+    "confirmComplete": "Kɔnfam ɛn Finish"
   },
   "outreach": {
     "completed": "I dɔn",
@@ -2193,7 +2232,9 @@
     "register": "Rejista",
     "continueAnyway": "Kɔntinyu ɛnibaw",
     "autoAssignedPastorLeader": "Wi gi am ɔtomatik to Pastɔ/Lida",
-    "registering": "I de rejista..."
+    "registering": "I de rejista...",
+    "noActiveProgramsCurrently": "Nɔ program nɔ de aktiv naw.",
+    "noPastProgramsFound": "Nɔ program we dɔn pas nɔ de."
   },
   "security": {
     "connectedAccounts": "Akawnt dɛn we jɔyn",

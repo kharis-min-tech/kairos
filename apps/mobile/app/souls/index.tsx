@@ -242,7 +242,7 @@ export default function SoulsDirectory() {  const { t } = useTranslation(['souls
               <Text style={styles.countLabel}>
                 {rows.length}
                 {rows.length < total ? ` of ${total}` : ''}{' '}
-                {rows.length === 1 ? 'soul' : 'souls'}
+                {t('souls:soulWord', { count: rows.length })}
               </Text>
             ) : null}
           </View>

@@ -653,7 +653,11 @@
     "currentBranchLeadershipAssignments": "Asɔre baa akannie nhyɛ a ɛwɔ hɔ seesei",
     "assigning": "Ɛrehyɛ...",
     "current": "Deɛ ɛwɔ hɔ seesei",
-    "loadingRegions": "Mantam ahorow reba..."
+    "loadingRegions": "Mantam ahorow reba...",
+    "selectMember": "Yi ɔmanfoɔ",
+    "youViewWhoHoldsRoleBut": "Wobɛtumi ahunu onii a ɔkura dwumadie yi, nanso sɛ wobɛhyɛ anaa woayi a, ɛhia Asɔre Baa Sistem Sohwɛfoɔ tumi.",
+    "theseMembersFullAdministrativeControlOver": "Amanfoɔ yi wɔ asɔre baa yi so nhwɛsoɔ tumi nyinaa.",
+    "noAssignableMembersFound": "Ɔmanfoɔ biara nni hɔ a wobɛtumi ahyɛ no"
   },
   "admin": {
     "delete": "Yi firi hɔ",
@@ -787,7 +791,13 @@
     "saveAttendance": "Sie mmaeɛ",
     "comparing": "Ɛretoto ho…",
     "runComparison": "Yɛ ntotoho",
-    "creating": "Ɛreyɛ…"
+    "creating": "Ɛreyɛ…",
+    "membersMatch_one": "Ɔmanfoɔ {{count}} na ɔhyia.",
+    "membersMatch_other": "Amanfoɔ {{count}} na wɔhyia.",
+    "recordFirstServiceStartCheckingAttendees": "Kyerɛw w'ɔsom a ɛdi kan na fi aseɛ kyerɛw wɔn a wɔbaeɛ din.",
+    "thereServicesViewBranch": "Ɔsom biara nni hɔ a wobɛhwɛ wɔ w'asɔre baa mu ɛnnɛ.",
+    "consecutiveServicesAttended": "Ɔsom a wokɔeɛ a ɛtoatoa so.",
+    "consecutiveServicesMissed": "Ɔsom a wamma a ɛtoatoa so."
   },
   "reports": {
     "weeklyAttendance": "Dapɛn biara mmaeɛ",
@@ -952,7 +962,11 @@
     "noFirstTimersWaitingOnA": "Obi a ɔbaa a ɛdi kan nni hɔ a ɔretwɛn nsrahwɛ a ɛdi kan.",
     "everyoneInThisBranchBelongsTo": "Obiara a ɔwɔ asɔre baa yi mu wɔ fekuo anaa adwumakuo bi mu.",
     "peopleWhoNeedContactAndBelong": "Nkurɔfoɔ a ɛsɛ sɛ yɛne wɔn kasa na wɔnni fekuo anaa adwumakuo biara mu. Kuo nkɔdi akyi wɔ fekuo ne adwumakuo biara kratafa so.",
-    "nothingDue": "Biribiara nni hɔ."
+    "nothingDue": "Biribiara nni hɔ.",
+    "followUpsFlaggedWelfareConcernsReach": "Nkɔdi akyi a wɔahyɛ nsow sɛ yiedie nsɛm. Kasa kyerɛ ɔsɔfoɔ kuo no.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Nkɔdi akyi a wɔahyɛ nsow sɛ ahobammɔ nsɛm. Fa kɔ asɔre baa ahobammɔ panin nkyɛn.",
+    "noWelfareConcernsFlaggedAllQuiet": "Yiedie asɛm biara nni hɔ. Biribiara yɛ dinn.",
+    "noSafeguardingMattersFlagged": "Ahobammɔ asɛm biara nni hɔ."
   },
   "departments": {
     "member": "Ɔmanfoɔ",
@@ -1261,7 +1275,19 @@
     "selectBranch": "Yi asɔre baa...",
     "createDepartment": "Yɛ Adwumakuo",
     "savingEllipsis": "Ɛresie...",
-    "create": "Yɛ"
+    "create": "Yɛ",
+    "outfitWord_one": "ntadeɛ",
+    "outfitWord_other": "ntadeɛ",
+    "roleWord_one": "dwumadie",
+    "roleWord_other": "dwumadie",
+    "positionWord_one": "gyinaberɛ",
+    "positionWord_other": "gyinaberɛ",
+    "dutyWord_one": "adwuma",
+    "dutyWord_other": "nnwuma",
+    "memberWord_one": "ɔmanfoɔ",
+    "memberWord_other": "amanfoɔ",
+    "noUpcomingRotaInstancesClickGenerate": "Adwuma nhyehyɛeɛ biara nni hɔ a ɛrebɛba. Klike Yɛ Nhyehyɛeɛ na yɛ bi.",
+    "noServicesMatchCurrentFilter": "Ɔsom biara nhyia nhwehwɛmu a ɛwɔ hɔ seesei."
   },
   "fellowships": {
     "serviceAttendance": "Ɔsom mmaeɛ",
@@ -1759,7 +1785,15 @@
     "exportCsv": "Yi CSV",
     "thisMembersFellowshipMembership": "Ɔmanfoɔ yi fekuo mu kɔ",
     "assignMemberToFellowshipInBranch": "Fa ɔmanfoɔ yi hyɛ fekuo bi mu wɔ n'asɔre baa mu",
-    "youHaventJoinedAFellowshipYet": "Wonkaa fekuo biara ho ɛnnɛ"
+    "youHaventJoinedAFellowshipYet": "Wonkaa fekuo biara ho ɛnnɛ",
+    "notInterested": "N'ani nnye ho",
+    "everyFellowshipDepartmentFollowUpRecorded": "Fekuo ne adwumakuo nkɔdi akyi nyinaa a wɔakyerɛw wɔ wo ho.",
+    "combinedFellowshipDepartmentFollowUpsMost": "Fekuo ne adwumakuo nkɔdi akyi a wɔaka abom, deɛ ɛbaa nnansa yi di kan.",
+    "noFollowUpsRecorded": "Wɔnkyerɛɛ nkɔdi akyi biara wɔ wo ho ɛnnɛ.",
+    "noFollowUpsRecordedMember": "Wɔnkyerɛɛ nkɔdi akyi biara ma ɔmanfoɔ yi ɛnnɛ.",
+    "reached": "Yɛduruu ne nkyɛn",
+    "virtualVisit": "Nsrahwɛ a ɛfa afidie so",
+    "homeVisit": "Fie nsrahwɛ"
   },
   "membership": {
     "eGWhoWeAreAs": "te sɛ Yɛne hwan sɛ asɔre",
@@ -1904,7 +1938,11 @@
     "yourPeopleWaiting": "Wo nkurɔfoɔ a wɔretwɛn",
     "branchWaitlist": "Asɔre baa twɛn nhwehwɛmu",
     "yourPeopleAdmitted": "Wo nkurɔfoɔ a wɔagye wɔn",
-    "admittedBranch": "Wɔgyee wɔn firii w'asɔre baa mu"
+    "admittedBranch": "Wɔgyee wɔn firii w'asɔre baa mu",
+    "dayWord_one": "da",
+    "dayWord_other": "nna",
+    "nobodyLeadCurrentlyWaiting": "Obiara a wodi n'anim nretwɛn seesei.",
+    "nobodyBranchCurrentlyWaiting": "Obiara mfiri w'asɔre baa mu nretwɛn seesei."
   },
   "newBelievers": {
     "unassigned": "Wɔmmfaa mmaa obiara",
@@ -2093,7 +2131,8 @@
     "saveAttendance": "Sie Mmaeɛ",
     "saveNotes": "Sie Nsɛm",
     "collapseProgrammeHealth": "Bobɔ nhyehyɛeɛ apɔmuden mu",
-    "expandProgrammeHealth": "Trɛw nhyehyɛeɛ apɔmuden mu"
+    "expandProgrammeHealth": "Trɛw nhyehyɛeɛ apɔmuden mu",
+    "confirmComplete": "Hyɛ mu den na Wie"
   },
   "outreach": {
     "completed": "Awie",
@@ -2193,7 +2232,9 @@
     "register": "Din nhoma",
     "continueAnyway": "Kɔ so nkaeɛ",
     "autoAssignedPastorLeader": "Wɔde ahyɛ Ɔsɔfoɔ/Ɔkannifoɔ nsa ankasa",
-    "registering": "Ɛrekyerɛw din..."
+    "registering": "Ɛrekyerɛw din...",
+    "noActiveProgramsCurrently": "Nhyehyɛeɛ biara nnkɔ so seesei.",
+    "noPastProgramsFound": "Nhyehyɛeɛ biara a atwam nni hɔ."
   },
   "security": {
     "connectedAccounts": "Akawnt a wɔaka abom",

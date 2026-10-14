@@ -311,8 +311,8 @@ function ChampionBranchView({
           {waitlist.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground/70">
               {isGroup
-                ? 'Nobody you lead is currently waiting.'
-                : 'Nobody from your branch is currently waiting.'}
+                ? t('membership:nobodyLeadCurrentlyWaiting')
+: t('membership:nobodyBranchCurrentlyWaiting')}
             </p>
           ) : (
             <ul className="mt-3 divide-y divide-border">

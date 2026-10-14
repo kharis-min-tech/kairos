@@ -653,8 +653,8 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
               {updateEnrollment.isPending
                 ? 'Saving...'
                 : markCompleteShouldAdvance
-                  ? 'Confirm & Advance'
-                  : 'Confirm & Complete'}
+                  ? t('newBelievers:confirmAdvance')
+: t('newBelievers:confirmComplete')}
             </Button>
           </DialogFooter>
         </DialogContent>

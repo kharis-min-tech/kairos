@@ -236,7 +236,7 @@ export default function FellowshipsDirectory() {  const { t } = useTranslation([
               <Text style={styles.countLabel}>
                 {filtered.length}
                 {filtered.length < total ? ` of ${total}` : ''}{' '}
-                {filtered.length === 1 ? 'fellowship' : 'fellowships'}
+                {t('fellowships:fellowshipWord', { count: filtered.length })}
               </Text>
             ) : null}
           </View>

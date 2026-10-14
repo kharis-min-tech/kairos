@@ -251,7 +251,7 @@ function InterestRow({
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1 text-muted-foreground">
             <Clock className="size-3.5" />
-            Waiting {row.waitingDays} {row.waitingDays === 1 ? 'day' : 'days'}
+            Waiting {row.waitingDays} {t('membership:dayWord', { count: row.waitingDays })}
           </span>
 
           {row.recentAttendanceCount === null ? null : (

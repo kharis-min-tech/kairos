@@ -653,7 +653,11 @@
     "currentBranchLeadershipAssignments": "Désignations actuelles des responsables de l'antenne",
     "assigning": "Attribution...",
     "current": "Actuel",
-    "loadingRegions": "Chargement des régions..."
+    "loadingRegions": "Chargement des régions...",
+    "selectMember": "Sélectionner un membre",
+    "youViewWhoHoldsRoleBut": "Vous pouvez voir qui occupe ce rôle, mais l'attribuer ou le retirer exige l'autorité d'administrateur système d'antenne.",
+    "theseMembersFullAdministrativeControlOver": "Ces membres disposent d'un contrôle administratif complet sur cette antenne.",
+    "noAssignableMembersFound": "Aucun membre attribuable trouvé"
   },
   "admin": {
     "delete": "Supprimer",
@@ -787,7 +791,13 @@
     "saveAttendance": "Enregistrer les présences",
     "comparing": "Comparaison…",
     "runComparison": "Lancer la comparaison",
-    "creating": "Création…"
+    "creating": "Création…",
+    "membersMatch_one": "{{count}} membre correspond.",
+    "membersMatch_other": "{{count}} membres correspondent.",
+    "recordFirstServiceStartCheckingAttendees": "Enregistrez votre premier culte pour commencer à enregistrer les participants.",
+    "thereServicesViewBranch": "Aucun culte à afficher dans votre antenne pour l'instant.",
+    "consecutiveServicesAttended": "Cultes suivis consécutivement.",
+    "consecutiveServicesMissed": "Cultes manqués consécutivement."
   },
   "reports": {
     "weeklyAttendance": "Présences hebdomadaires",
@@ -952,7 +962,11 @@
     "noFirstTimersWaitingOnA": "Aucun nouveau venu en attente d'une première visite.",
     "everyoneInThisBranchBelongsTo": "Chaque personne de cette antenne appartient à une cellule ou à un département.",
     "peopleWhoNeedContactAndBelong": "Personnes à contacter qui n'appartiennent à aucune cellule ni département. Les suivis de groupe se trouvent sur la page de chaque cellule et département.",
-    "nothingDue": "Rien à faire."
+    "nothingDue": "Rien à faire.",
+    "followUpsFlaggedWelfareConcernsReach": "Suivis signalés comme préoccupations de bien-être. Contactez l'équipe pastorale.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Suivis signalés comme questions de protection. Transmettez au référent protection de l'antenne.",
+    "noWelfareConcernsFlaggedAllQuiet": "Aucune préoccupation de bien-être signalée. Tout est calme.",
+    "noSafeguardingMattersFlagged": "Aucune question de protection signalée."
   },
   "departments": {
     "member": "Membre",
@@ -1261,7 +1275,19 @@
     "selectBranch": "Sélectionner une antenne...",
     "createDepartment": "Créer un département",
     "savingEllipsis": "Enregistrement...",
-    "create": "Créer"
+    "create": "Créer",
+    "outfitWord_one": "tenue",
+    "outfitWord_other": "tenues",
+    "roleWord_one": "poste",
+    "roleWord_other": "postes",
+    "positionWord_one": "place",
+    "positionWord_other": "places",
+    "dutyWord_one": "service",
+    "dutyWord_other": "services",
+    "memberWord_one": "membre",
+    "memberWord_other": "membres",
+    "noUpcomingRotaInstancesClickGenerate": "Aucun planning à venir. Cliquez sur Générer le planning pour en créer.",
+    "noServicesMatchCurrentFilter": "Aucun culte ne correspond au filtre actuel."
   },
   "fellowships": {
     "serviceAttendance": "Présence aux cultes",
@@ -1759,7 +1785,15 @@
     "exportCsv": "Exporter en CSV",
     "thisMembersFellowshipMembership": "L'appartenance de ce membre à une cellule",
     "assignMemberToFellowshipInBranch": "Attribuer ce membre à une cellule de son antenne",
-    "youHaventJoinedAFellowshipYet": "Vous n'avez pas encore rejoint de cellule"
+    "youHaventJoinedAFellowshipYet": "Vous n'avez pas encore rejoint de cellule",
+    "notInterested": "Pas intéressé",
+    "everyFellowshipDepartmentFollowUpRecorded": "Tous les suivis de cellule et de département enregistrés vous concernant.",
+    "combinedFellowshipDepartmentFollowUpsMost": "Suivis de cellule et de département combinés, les plus récents en premier.",
+    "noFollowUpsRecorded": "Aucun suivi enregistré vous concernant pour l'instant.",
+    "noFollowUpsRecordedMember": "Aucun suivi enregistré pour ce membre pour l'instant.",
+    "reached": "Joint",
+    "virtualVisit": "Visite à distance",
+    "homeVisit": "Visite à domicile"
   },
   "membership": {
     "eGWhoWeAreAs": "ex. Qui nous sommes en tant qu'église",
@@ -1904,7 +1938,11 @@
     "yourPeopleWaiting": "Vos personnes en attente",
     "branchWaitlist": "Liste d'attente de l'antenne",
     "yourPeopleAdmitted": "Vos personnes admises",
-    "admittedBranch": "Admis depuis votre antenne"
+    "admittedBranch": "Admis depuis votre antenne",
+    "dayWord_one": "jour",
+    "dayWord_other": "jours",
+    "nobodyLeadCurrentlyWaiting": "Personne dont vous êtes responsable n'est en attente.",
+    "nobodyBranchCurrentlyWaiting": "Personne de votre antenne n'est en attente."
   },
   "newBelievers": {
     "unassigned": "Non attribué",
@@ -2093,7 +2131,8 @@
     "saveAttendance": "Enregistrer les présences",
     "saveNotes": "Enregistrer les notes",
     "collapseProgrammeHealth": "Réduire la santé du programme",
-    "expandProgrammeHealth": "Développer la santé du programme"
+    "expandProgrammeHealth": "Développer la santé du programme",
+    "confirmComplete": "Confirmer et terminer"
   },
   "outreach": {
     "completed": "Terminé",
@@ -2193,7 +2232,9 @@
     "register": "Registre",
     "continueAnyway": "Continuer malgré tout",
     "autoAssignedPastorLeader": "Attribué automatiquement au pasteur / responsable",
-    "registering": "Inscription..."
+    "registering": "Inscription...",
+    "noActiveProgramsCurrently": "Aucun programme en cours actuellement.",
+    "noPastProgramsFound": "Aucun programme passé trouvé."
   },
   "security": {
     "connectedAccounts": "Comptes associés",

@@ -417,7 +417,9 @@
     "submitting": "I de sɛn…",
     "submit": "Sɛn am",
     "searchDirectoryTypeName": "Luk na di dayrɛktri, ɔ rayt wan nem",
-    "searchPerson": "Luk fɔ wan pɔsin"
+    "searchPerson": "Luk fɔ wan pɔsin",
+    "searchNamePhoneUseNameType": "Luk wit nem ɔ fon — ɔ yuz di nem we yu rayt, if i nɔto wan mɛmba.",
+    "searchMembersBranchNamePhone": "Luk fɔ mɛmba dɛn na dis branch wit nem ɔ fon."
   },
   "reports": {
     "reports": "Ripɔt",
@@ -545,7 +547,15 @@
     "reactivating": "I de opin am bak…",
     "reactivateMember": "Opin di mɛmba bak",
     "inactiveGdn": "Gadian we nɔ de aktiv",
-    "noGdn": "Nɔ gadian"
+    "noGdn": "Nɔ gadian",
+    "resultWord_one": "risɔlt",
+    "resultWord_other": "risɔlt dɛn",
+    "notInterested": "I nɔ want",
+    "noFollowUpsRecorded": "Nɔ fɔlo ɔp nɔ rɛkɔd bɔt yu yet.",
+    "noFollowUpsRecordedMember": "Nɔ fɔlo ɔp nɔ rɛkɔd fɔ dis mɛmba yet.",
+    "reached": "Wi rich am",
+    "virtualVisit": "Vizit pan fon ɔ layn",
+    "homeVisit": "Om vizit"
   },
   "fellowships": {
     "followUps": "Fɔlo ɔp",
@@ -667,7 +677,9 @@
     "deleting": "I de dilit…",
     "overdue": "Dɔn let",
     "allFollowUps": "Ol di fɔlo ɔp dɛn",
-    "logMeeting": "Rɛkɔd wan mitin"
+    "logMeeting": "Rɛkɔd wan mitin",
+    "fellowshipWord_one": "fɛloship",
+    "fellowshipWord_other": "fɛloship dɛn"
   },
   "departments": {
     "followUps": "Fɔlo ɔp",
@@ -814,7 +826,13 @@
     "chooseLibrary": "Pik frɔm di laybri",
     "chooseLead": "Pik wan lid",
     "chooseBranchFirst": "Pik wan branch fɔs",
-    "chooseDeputyOptional": "Pik wan dɛpyuti (yu nɔ fɔ)"
+    "chooseDeputyOptional": "Pik wan dɛpyuti (yu nɔ fɔ)",
+    "departmentWord_one": "dipatmɛnt",
+    "departmentWord_other": "dipatmɛnt dɛn",
+    "noClosedApplications": "Nɔ aplikeshɔn we dɔn klos nɔ de yet.",
+    "noApplications": "Nɔ aplikeshɔn nɔ de yet.",
+    "grantCameraAccessSettingsTakePhoto": "Gi kamra akses na Sɛtin dɛn fɔ tek wan pikchɔ.",
+    "grantPhotoLibraryAccessSettingsPick": "Gi foto laybri akses na Sɛtin dɛn fɔ pik wan pikchɔ."
   },
   "branches": {
     "phone": "Fon",
@@ -1030,7 +1048,15 @@
     "noFellowshipsToLead": "Nɔ fɛloship fɔ yu fɔ lid",
     "scanQrDesk": "Skan di QR na di dɛsk",
     "creating": "I de mek am…",
-    "checking": "I de chɛk yu in…"
+    "checking": "I de chɛk yu in…",
+    "today": "Tide",
+    "openingSoon": "I go opin sun",
+    "askLeaderRecordAttendance": "Aks wan lida fɔ rɛkɔd yu atɛndans.",
+    "nothingScheduledCheckIntoToday": "Natin nɔ sɛt fɔ yu chɛk in tide.",
+    "presentRecentServices": "Yu bin de na di sɛvis dɛn we jɔs apin.",
+    "nothingRecorded": "Natin nɔ rɛkɔd yet.",
+    "nothingNeedsApproval": "Natin nɔ nid yu apruval naw.",
+    "nothingFilter": "Natin nɔ de na dis filtɔ."
   },
   "concerns": {
     "concerns": "Kɔnsan",
@@ -1043,7 +1069,15 @@
     "department": "Dipatmɛnt",
     "mentee": "Pɔsin we dɛn de mentɔ",
     "allCaughtUp": "Ɔltin dɔn",
-    "nothingHereYet": "Natin de ya yet"
+    "nothingHereYet": "Natin de ya yet",
+    "noFirstTimersWaitingFirstVisit": "Nɔbɔdi we kam fɔs tɛm nɔ de wet fɔ di fɔs vizit.",
+    "followUpsFlaggedWelfareConcernsReach": "Fɔlo ɔp dɛn we wi mak as wɛlfɛa kɔnsɔn. Tɔk to di pastɔral tim.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Fɔlo ɔp dɛn we wi mak as sefgadin mata. Tɛl di branch sefgadin lid.",
+    "noWelfareConcernsFlaggedAllQuiet": "Nɔ wɛlfɛa kɔnsɔn nɔ mak. Ɔltin kwayɛt.",
+    "noSafeguardingMattersFlagged": "Nɔ sefgadin mata nɔ mak.",
+    "everyoneHereBelongsFellowshipDepartment": "Ɛvribɔdi ya bilɔng to wan fɛloship ɔ dipatmɛnt.",
+    "nothingPendingEnjoyQuiet": "Natin nɔ de wet naw. Injɔy di kwayɛt.",
+    "nothingFilter": "Natin nɔ de na dis filtɔ."
   },
   "membership": {
     "optional": "If yu want",
@@ -1138,7 +1172,15 @@
     "admitting": "I de put am insay…",
     "admit": "Put am insay",
     "graduating": "I de gradyuet am…",
-    "takeMeOffList": "Pul mi awt pan di lis"
+    "takeMeOffList": "Pul mi awt pan di lis",
+    "dayWord_one": "de",
+    "dayWord_other": "de",
+    "youTookYourselfOffListJoin": "Yu pul yusɛf frɔm di lis. Jɔyn igen ɛni tɛm yu rɛdi.",
+    "joinListMembershipAdminPlaceUpcoming": "Jɔyn di lis ɛn wan mɛmbaship admin go put yu na wan grup we de kam.",
+    "nobodyLeadCurrentlyWaiting": "Nɔbɔdi we yu de lid nɔ de wet naw.",
+    "nobodyBranchCurrentlyWaiting": "Nɔbɔdi frɔm yu branch nɔ de wet naw.",
+    "noOneLeadCurrentlyEnrolled": "Nɔbɔdi we yu de lid nɔ rejista naw.",
+    "noOneBranchCurrentlyEnrolled": "Nɔbɔdi frɔm yu branch nɔ rejista naw."
   },
   "newBelievers": {
     "cancel": "Kansul",
@@ -1205,7 +1247,9 @@
     "pickMentor": "Pik wan mɛntɔ",
     "youReEnrolled": "Yu nɔ rejista",
     "noActiveEnrollments": "Nɔ aktiv rejistreshɔn nɔ de",
-    "createSession": "Mek wan sɛshɔn"
+    "createSession": "Mek wan sɛshɔn",
+    "enrolNewBelieversClassViaBranch": "Rejista na di Nyu Biliva klas tru yu branch tim fɔ fɔlo yu jɔni ya.",
+    "newBelieversTeachMentorAppearHere": "Di Nyu Biliva dɛn we yu de tich ɔ mɛntɔ go sho ya."
   },
   "outreach": {
     "done": "I dɔn",
@@ -1238,7 +1282,9 @@
     "afterCreatingTheProgramYouCan": "Afta yu mek di program, yu go ebul fɔ rejista wɔka dɛn ɛn bigin fɔ kach di sol dɛn we una rich.",
     "adding": "I de ad am…",
     "creating": "I de mek am…",
-    "createProgram": "Mek wan program"
+    "createProgram": "Mek wan program",
+    "programWord_one": "program",
+    "programWord_other": "program dɛn"
   },
   "rota": {
     "cancel": "Kansul",
@@ -1331,7 +1377,9 @@
     "createTemplate": "Mek wan tɛmplet",
     "confirmed": "I dɔn kɔnfam",
     "published": "Dɔn pɔblish",
-    "draft": "Draft"
+    "draft": "Draft",
+    "noPendingSwaps": "Nɔ swap nɔ de wet naw.",
+    "nothingHere": "Natin nɔ de ya yet."
   },
   "souls": {
     "firstName": "Fɔs nem",
@@ -1391,6 +1439,8 @@
     "jumpTo": "Jɔmp to",
     "saving": "I de sev…",
     "converting": "I de kɔnvat…",
-    "convertMember": "Mek am bi mɛmba"
+    "convertMember": "Mek am bi mɛmba",
+    "soulWord_one": "sol",
+    "soulWord_other": "sol dɛn"
   }
 }

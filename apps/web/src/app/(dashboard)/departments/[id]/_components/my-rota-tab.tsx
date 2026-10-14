@@ -91,7 +91,7 @@ export function MyRotaTab({ branchDepartmentId }: Props) {  const { t } = useTra
             <span>
               {isLoading
                 ? 'Loading your duties…'
-                : `${rows.length} upcoming ${rows.length === 1 ? 'duty' : 'duties'} in this department`}
+                : `${rows.length} upcoming ${t('departments:dutyWord', { count: rows.length })} in this department`}
             </span>
           </div>
           <div className="flex flex-wrap items-end gap-3">

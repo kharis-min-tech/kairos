@@ -201,7 +201,7 @@ export default function MembershipInterestScreen() {  const { t } = useTranslati
                   <View style={styles.metaRow}>
                     <Clock color={c.inkFaded} size={14} strokeWidth={1.5} />
                     <Text style={styles.metaText}>
-                      Waiting {row.waitingDays} {row.waitingDays === 1 ? 'day' : 'days'}
+                      Waiting {row.waitingDays} {t('membership:dayWord', { count: row.waitingDays })}
                     </Text>
                   </View>
 

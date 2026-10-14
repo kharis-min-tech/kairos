@@ -337,8 +337,8 @@ function MyMembership({
         {interest?.status === 'lapsed'
           ? `Your place lapsed on ${formatShortDate(interest.expiresAt)}. Join again and you will be considered for the next intake.`
           : interest?.status === 'withdrawn'
-            ? 'You took yourself off the list. Join again whenever you are ready.'
-            : 'Join the list and a membership admin will place you in an upcoming cohort.'}
+            ? t('membership:youTookYourselfOffListJoin')
+: t('membership:joinListMembershipAdminPlaceUpcoming')}
       </Text>
       <Button
         label={joining ? 'Joining…' : ended ? t('membership:joinAgain') : t('membership:joinList')}
@@ -381,8 +381,8 @@ function ChampionBranchView({
       {waitlist.length === 0 ? (
         <Text style={styles.metaText}>
           {isGroup
-            ? 'Nobody you lead is currently waiting.'
-            : 'Nobody from your branch is currently waiting.'}
+            ? t('membership:nobodyLeadCurrentlyWaiting')
+: t('membership:nobodyBranchCurrentlyWaiting')}
         </Text>
       ) : (
         waitlist.map((row) => (
@@ -406,8 +406,8 @@ function ChampionBranchView({
       {enrolled.length === 0 ? (
         <Text style={styles.metaText}>
           {isGroup
-            ? 'No one you lead is currently enrolled.'
-            : 'No one from your branch is currently enrolled.'}
+            ? t('membership:noOneLeadCurrentlyEnrolled')
+: t('membership:noOneBranchCurrentlyEnrolled')}
         </Text>
       ) : (
         enrolled.map((row) => (

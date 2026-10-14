@@ -205,8 +205,8 @@ export default function DepartmentRecruitment() {  const { t } = useTranslation(
               {stage === 'open'
                 ? 'No active applications right now.'
                 : stage === 'terminal'
-                  ? 'No closed applications yet.'
-                  : 'No applications yet.'}
+                  ? t('departments:noClosedApplications')
+: t('departments:noApplications')}
             </Text>
           </Card>
         ) : null}

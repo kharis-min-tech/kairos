@@ -252,8 +252,8 @@ export default function FollowUps() {  const { t } = useTranslation(['concerns',
           showInviter={tab === 'first-timers'}
           emptyText={
             tab === 'first-timers'
-              ? 'No first-timers waiting on a first visit.'
-              : 'Everyone here belongs to a fellowship or department.'
+              ? t('concerns:noFirstTimersWaitingFirstVisit')
+: t('concerns:everyoneHereBelongsFellowshipDepartment')
           }
         />
       ) : tab === 'todo' ? (
@@ -297,8 +297,8 @@ export default function FollowUps() {  const { t } = useTranslation(['concerns',
                   <Text style={styles.emptyTitle}>{t('concerns:allCaughtUp')}</Text>
                   <Text style={styles.emptyMeta}>
                     {filter === 'all'
-                      ? 'Nothing pending right now. Enjoy the quiet.'
-                      : 'Nothing in this filter.'}
+                      ? t('concerns:nothingPendingEnjoyQuiet')
+: t('concerns:nothingFilter')}
                   </Text>
                 </View>
               )

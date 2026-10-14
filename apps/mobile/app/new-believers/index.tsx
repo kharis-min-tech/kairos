@@ -117,8 +117,8 @@ export default function NewBelievers() {  const { t } = useTranslation(['newBeli
             </Text>
             <Text style={styles.emptyMeta}>
               {personalScope
-                ? 'Enrol in the New Believers class via your branch team to track your journey here.'
-                : 'New Believers you teach or mentor will appear here.'}
+                ? t('newBelievers:enrolNewBelieversClassViaBranch')
+: t('newBelievers:newBelieversTeachMentorAppearHere')}
             </Text>
           </View>
         ) : (

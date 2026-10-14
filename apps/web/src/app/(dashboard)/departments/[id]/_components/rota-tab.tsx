@@ -301,8 +301,8 @@ function ScheduleSection({
               {activeTemplates.length === 0
                 ? 'No templates yet. Create a template first, then generate a schedule.'
                 : (instances ?? []).length === 0
-                  ? 'No upcoming rota instances. Click Generate Schedule to create them.'
-                  : 'No services match the current filter.'}
+                  ? t('departments:noUpcomingRotaInstancesClickGenerate')
+: t('departments:noServicesMatchCurrentFilter')}
             </p>
           </CardContent>
         </Card>
@@ -1002,12 +1002,12 @@ function TemplateCard({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
           <span>
             <strong className="text-foreground">{template.slotCount}</strong>{' '}
-            {template.slotCount === 1 ? 'role' : 'roles'}
+            {t('departments:roleWord', { count: template.slotCount })}
           </span>
           <span>•</span>
           <span>
             <strong className="text-foreground">{template.positionCount}</strong>{' '}
-            {template.positionCount === 1 ? 'position' : 'positions'}
+            {t('departments:positionWord', { count: template.positionCount })}
           </span>
           <span>•</span>
           <span>
@@ -1077,7 +1077,7 @@ function SlotsManager({
               <div>
                 <p className="text-sm font-medium">{s.roleName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {s.positionsRequired} {s.positionsRequired === 1 ? 'position' : 'positions'}
+                  {s.positionsRequired} {t('departments:positionWord', { count: s.positionsRequired })}
                 </p>
               </div>
               {canManage && (

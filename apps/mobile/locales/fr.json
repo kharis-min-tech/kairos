@@ -380,7 +380,9 @@
     "submitting": "Envoi…",
     "submit": "Envoyer",
     "searchDirectoryTypeName": "Rechercher dans le répertoire, ou saisir un nom",
-    "searchPerson": "Rechercher une personne"
+    "searchPerson": "Rechercher une personne",
+    "searchNamePhoneUseNameType": "Recherchez par nom ou téléphone — ou utilisez le nom que vous saisissez, s'il ne s'agit pas d'un membre.",
+    "searchMembersBranchNamePhone": "Rechercher des membres de cette antenne par nom ou téléphone."
   },
   "reports": {
     "reports": "Rapports",
@@ -508,7 +510,15 @@
     "reactivating": "Réactivation…",
     "reactivateMember": "Réactiver le membre",
     "inactiveGdn": "Tuteur inactif",
-    "noGdn": "Aucun tuteur"
+    "noGdn": "Aucun tuteur",
+    "resultWord_one": "résultat",
+    "resultWord_other": "résultats",
+    "notInterested": "Pas intéressé",
+    "noFollowUpsRecorded": "Aucun suivi enregistré vous concernant pour l'instant.",
+    "noFollowUpsRecordedMember": "Aucun suivi enregistré pour ce membre pour l'instant.",
+    "reached": "Joint",
+    "virtualVisit": "Visite à distance",
+    "homeVisit": "Visite à domicile"
   },
   "fellowships": {
     "followUps": "Suivis",
@@ -630,7 +640,9 @@
     "overdue": "En retard",
     "allFollowUps": "Tous les suivis",
     "contact": "Contact",
-    "logMeeting": "Enregistrer une réunion"
+    "logMeeting": "Enregistrer une réunion",
+    "fellowshipWord_one": "cellule",
+    "fellowshipWord_other": "cellules"
   },
   "departments": {
     "followUps": "Suivis",
@@ -777,7 +789,13 @@
     "chooseLibrary": "Choisir dans la galerie",
     "chooseLead": "Choisir un responsable",
     "chooseBranchFirst": "Choisissez d'abord une antenne",
-    "chooseDeputyOptional": "Choisir un adjoint (facultatif)"
+    "chooseDeputyOptional": "Choisir un adjoint (facultatif)",
+    "departmentWord_one": "département",
+    "departmentWord_other": "départements",
+    "noClosedApplications": "Aucune candidature clôturée pour l'instant.",
+    "noApplications": "Aucune candidature pour l'instant.",
+    "grantCameraAccessSettingsTakePhoto": "Autorisez l'accès à l'appareil photo dans les Réglages pour prendre une photo.",
+    "grantPhotoLibraryAccessSettingsPick": "Autorisez l'accès à la galerie dans les Réglages pour choisir une photo."
   },
   "branches": {
     "phone": "Téléphone",
@@ -1030,7 +1048,15 @@
     "noFellowshipsToLead": "Aucune cellule à diriger",
     "scanQrDesk": "Scanner le QR à l'accueil",
     "creating": "Création…",
-    "checking": "Enregistrement…"
+    "checking": "Enregistrement…",
+    "today": "Aujourd'hui",
+    "openingSoon": "Ouverture prochaine",
+    "askLeaderRecordAttendance": "Demandez à un responsable d'enregistrer votre présence.",
+    "nothingScheduledCheckIntoToday": "Rien de prévu pour vous enregistrer aujourd'hui.",
+    "presentRecentServices": "Présent aux cultes récents.",
+    "nothingRecorded": "Rien d'enregistré pour l'instant.",
+    "nothingNeedsApproval": "Rien ne requiert votre approbation pour le moment.",
+    "nothingFilter": "Rien dans ce filtre."
   },
   "concerns": {
     "concerns": "Préoccupations",
@@ -1043,7 +1069,15 @@
     "department": "Département",
     "mentee": "Personne accompagnée",
     "allCaughtUp": "Tout est à jour",
-    "nothingHereYet": "Rien ici pour le moment"
+    "nothingHereYet": "Rien ici pour le moment",
+    "noFirstTimersWaitingFirstVisit": "Aucun nouveau venu en attente d'une première visite.",
+    "followUpsFlaggedWelfareConcernsReach": "Suivis signalés comme préoccupations de bien-être. Contactez l'équipe pastorale.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Suivis signalés comme questions de protection. Transmettez au référent protection de l'antenne.",
+    "noWelfareConcernsFlaggedAllQuiet": "Aucune préoccupation de bien-être signalée. Tout est calme.",
+    "noSafeguardingMattersFlagged": "Aucune question de protection signalée.",
+    "everyoneHereBelongsFellowshipDepartment": "Chaque personne ici appartient à une cellule ou à un département.",
+    "nothingPendingEnjoyQuiet": "Rien en attente pour le moment. Profitez du calme.",
+    "nothingFilter": "Rien dans ce filtre."
   },
   "membership": {
     "optional": "Facultatif",
@@ -1138,7 +1172,15 @@
     "admitting": "Admission…",
     "admit": "Admettre",
     "graduating": "Remise du diplôme…",
-    "takeMeOffList": "Me retirer de la liste"
+    "takeMeOffList": "Me retirer de la liste",
+    "dayWord_one": "jour",
+    "dayWord_other": "jours",
+    "youTookYourselfOffListJoin": "Vous vous êtes retiré de la liste. Inscrivez-vous à nouveau quand vous le souhaitez.",
+    "joinListMembershipAdminPlaceUpcoming": "Inscrivez-vous et un administrateur d'adhésion vous placera dans une prochaine promotion.",
+    "nobodyLeadCurrentlyWaiting": "Personne dont vous êtes responsable n'est en attente.",
+    "nobodyBranchCurrentlyWaiting": "Personne de votre antenne n'est en attente.",
+    "noOneLeadCurrentlyEnrolled": "Personne dont vous êtes responsable n'est actuellement inscrit.",
+    "noOneBranchCurrentlyEnrolled": "Personne de votre antenne n'est actuellement inscrit."
   },
   "newBelievers": {
     "cancel": "Annuler",
@@ -1205,7 +1247,9 @@
     "pickMentor": "Choisir un mentor",
     "youReEnrolled": "Vous n'êtes pas inscrit",
     "noActiveEnrollments": "Aucune inscription active",
-    "createSession": "Créer une séance"
+    "createSession": "Créer une séance",
+    "enrolNewBelieversClassViaBranch": "Inscrivez-vous au cours des nouveaux croyants auprès de l'équipe de votre antenne pour suivre votre parcours ici.",
+    "newBelieversTeachMentorAppearHere": "Les nouveaux croyants que vous enseignez ou accompagnez apparaîtront ici."
   },
   "outreach": {
     "done": "Terminé",
@@ -1238,7 +1282,9 @@
     "afterCreatingTheProgramYouCan": "Après avoir créé le programme, vous pourrez inscrire des ouvriers et commencer à enregistrer les âmes touchées.",
     "adding": "Ajout…",
     "creating": "Création…",
-    "createProgram": "Créer un programme"
+    "createProgram": "Créer un programme",
+    "programWord_one": "programme",
+    "programWord_other": "programmes"
   },
   "rota": {
     "cancel": "Annuler",
@@ -1331,7 +1377,9 @@
     "createTemplate": "Créer un modèle",
     "confirmed": "Confirmé",
     "published": "Publié",
-    "draft": "Brouillon"
+    "draft": "Brouillon",
+    "noPendingSwaps": "Aucun échange en attente pour le moment.",
+    "nothingHere": "Rien ici pour l'instant."
   },
   "souls": {
     "firstName": "Prénom",
@@ -1391,6 +1439,8 @@
     "jumpTo": "Aller à",
     "saving": "Enregistrement…",
     "converting": "Conversion…",
-    "convertMember": "Convertir en membre"
+    "convertMember": "Convertir en membre",
+    "soulWord_one": "âme",
+    "soulWord_other": "âmes"
   }
 }

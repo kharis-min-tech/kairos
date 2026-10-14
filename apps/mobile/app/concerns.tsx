@@ -121,8 +121,8 @@ export default function ConcernsInbox() {  const { t } = useTranslation(['concer
       >
         <Text style={styles.subtitle}>
           {tab === 'welfare'
-            ? 'Follow-ups flagged as welfare concerns. Reach out to the pastoral team.'
-            : 'Follow-ups flagged as safeguarding matters. Escalate to the branch safeguarding lead.'}
+            ? t('concerns:followUpsFlaggedWelfareConcernsReach')
+: t('concerns:followUpsFlaggedSafeguardingMattersEscalate')}
         </Text>
 
         {active.isLoading ? (
@@ -131,8 +131,8 @@ export default function ConcernsInbox() {  const { t } = useTranslation(['concer
           <Card padding="md">
             <Text style={styles.emptyLine}>
               {tab === 'welfare'
-                ? 'No welfare concerns flagged. All quiet.'
-                : 'No safeguarding matters flagged.'}
+                ? t('concerns:noWelfareConcernsFlaggedAllQuiet')
+: t('concerns:noSafeguardingMattersFlagged')}
             </Text>
           </Card>
         ) : (

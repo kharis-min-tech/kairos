@@ -417,7 +417,9 @@
     "submitting": "Ɛrebrɛ…",
     "submit": "Fa brɛ",
     "searchDirectoryTypeName": "Hwehwɛ nhwehwɛmu no mu, anaa kyerɛw din",
-    "searchPerson": "Hwehwɛ obi"
+    "searchPerson": "Hwehwɛ obi",
+    "searchNamePhoneUseNameType": "Hwehwɛ fa din anaa telefon so — anaasɛ fa din a wokyerɛw no di dwuma, sɛ ɔnyɛ ɔmanfoɔ a.",
+    "searchMembersBranchNamePhone": "Hwehwɛ amanfoɔ wɔ asɔre baa yi mu fa din anaa telefon so."
   },
   "reports": {
     "reports": "Amanneɛbɔ nkrataa",
@@ -545,7 +547,15 @@
     "reactivating": "Ɛresan sɔ…",
     "reactivateMember": "San sɔ ɔmanfoɔ no",
     "inactiveGdn": "Ɔhwɛfoɔ a ɔnyɛ adwuma",
-    "noGdn": "Ɔhwɛfoɔ biara nni hɔ"
+    "noGdn": "Ɔhwɛfoɔ biara nni hɔ",
+    "resultWord_one": "nsiesieeɛ",
+    "resultWord_other": "nsiesieeɛ",
+    "notInterested": "N'ani nnye ho",
+    "noFollowUpsRecorded": "Wɔnkyerɛɛ nkɔdi akyi biara wɔ wo ho ɛnnɛ.",
+    "noFollowUpsRecordedMember": "Wɔnkyerɛɛ nkɔdi akyi biara ma ɔmanfoɔ yi ɛnnɛ.",
+    "reached": "Yɛduruu ne nkyɛn",
+    "virtualVisit": "Nsrahwɛ a ɛfa afidie so",
+    "homeVisit": "Fie nsrahwɛ"
   },
   "fellowships": {
     "followUps": "Nkɔdi akyi",
@@ -667,7 +677,9 @@
     "deleting": "Ɛreyi…",
     "overdue": "Aka akyi",
     "allFollowUps": "Nkɔdi akyi nyinaa",
-    "logMeeting": "Kyerɛw nhyiamu"
+    "logMeeting": "Kyerɛw nhyiamu",
+    "fellowshipWord_one": "fekuo",
+    "fellowshipWord_other": "nkabomfekuo"
   },
   "departments": {
     "followUps": "Nkɔdi akyi",
@@ -814,7 +826,13 @@
     "chooseLibrary": "Yi firi mfonini beaeɛ",
     "chooseLead": "Yi panin",
     "chooseBranchFirst": "Yi asɔre baa kane",
-    "chooseDeputyOptional": "Yi ɔboafoɔ (ɛho nhia)"
+    "chooseDeputyOptional": "Yi ɔboafoɔ (ɛho nhia)",
+    "departmentWord_one": "adwumakuo",
+    "departmentWord_other": "adwumakuo",
+    "noClosedApplications": "Adwuma abisadeɛ biara a wɔato mu nni hɔ ɛnnɛ.",
+    "noApplications": "Adwuma abisadeɛ biara nni hɔ ɛnnɛ.",
+    "grantCameraAccessSettingsTakePhoto": "Ma mfoninitwa afidie kwan wɔ Nhyehyɛeɛ mu na twa mfonini.",
+    "grantPhotoLibraryAccessSettingsPick": "Ma mfonini beaeɛ kwan wɔ Nhyehyɛeɛ mu na yi mfonini."
   },
   "branches": {
     "phone": "Telefon",
@@ -1030,7 +1048,15 @@
     "noFellowshipsToLead": "Fekuo biara nni hɔ a wobɛhwɛ so",
     "scanQrDesk": "Scan QR wɔ ɛpono no ho",
     "creating": "Ɛreyɛ…",
-    "checking": "Ɛrekyerɛw din…"
+    "checking": "Ɛrekyerɛw din…",
+    "today": "Ɛnnɛ",
+    "openingSoon": "Ɛrebue nnansa yi",
+    "askLeaderRecordAttendance": "Bisa ɔkannifoɔ bi na ɔnkyerɛw wo mmaeɛ.",
+    "nothingScheduledCheckIntoToday": "Biribiara nni hɔ a wobɛkyerɛw wo din mu ɛnnɛ.",
+    "presentRecentServices": "Wobaa ɔsom a ɛbaa nnansa yi ase.",
+    "nothingRecorded": "Wɔnkyerɛɛ hwee ɛnnɛ.",
+    "nothingNeedsApproval": "Biribiara nhia wo pene seesei.",
+    "nothingFilter": "Biribiara nni nhwehwɛmu yi mu."
   },
   "concerns": {
     "concerns": "Nsɛm a ɛhia",
@@ -1043,7 +1069,15 @@
     "department": "Adwumakuo",
     "mentee": "Deɛ wɔrekyerɛ no adeɛ",
     "allCaughtUp": "Biribiara awie",
-    "nothingHereYet": "Hwee nni ha ɛnnɛ"
+    "nothingHereYet": "Hwee nni ha ɛnnɛ",
+    "noFirstTimersWaitingFirstVisit": "Obi a ɔbaa a ɛdi kan nni hɔ a ɔretwɛn nsrahwɛ a ɛdi kan.",
+    "followUpsFlaggedWelfareConcernsReach": "Nkɔdi akyi a wɔahyɛ nsow sɛ yiedie nsɛm. Kasa kyerɛ ɔsɔfoɔ kuo no.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Nkɔdi akyi a wɔahyɛ nsow sɛ ahobammɔ nsɛm. Fa kɔ asɔre baa ahobammɔ panin nkyɛn.",
+    "noWelfareConcernsFlaggedAllQuiet": "Yiedie asɛm biara nni hɔ. Biribiara yɛ dinn.",
+    "noSafeguardingMattersFlagged": "Ahobammɔ asɛm biara nni hɔ.",
+    "everyoneHereBelongsFellowshipDepartment": "Obiara a ɔwɔ ha wɔ fekuo anaa adwumakuo bi mu.",
+    "nothingPendingEnjoyQuiet": "Biribiara nretwɛn seesei. Gye w'ani wɔ dinn no mu.",
+    "nothingFilter": "Biribiara nni nhwehwɛmu yi mu."
   },
   "membership": {
     "optional": "Sɛ wopɛ a",
@@ -1138,7 +1172,15 @@
     "admitting": "Ɛregye…",
     "admit": "Gye",
     "graduating": "Ɛrewie…",
-    "takeMeOffList": "Yi me firi nhwehwɛmu no mu"
+    "takeMeOffList": "Yi me firi nhwehwɛmu no mu",
+    "dayWord_one": "da",
+    "dayWord_other": "nna",
+    "youTookYourselfOffListJoin": "Woyii wo ho firii nhwehwɛmu no mu. San ka ho berɛ biara a woasiesie wo ho.",
+    "joinListMembershipAdminPlaceUpcoming": "Ka nhwehwɛmu no ho na ɔmanfoɔyɛ sohwɛfoɔ bɛde wo ahyɛ kuo a ɛrebɛba bi mu.",
+    "nobodyLeadCurrentlyWaiting": "Obiara a wodi n'anim nretwɛn seesei.",
+    "nobodyBranchCurrentlyWaiting": "Obiara mfiri w'asɔre baa mu nretwɛn seesei.",
+    "noOneLeadCurrentlyEnrolled": "Obiara a wodi n'anim nkyerɛw ne din seesei.",
+    "noOneBranchCurrentlyEnrolled": "Obiara mfiri w'asɔre baa mu nkyerɛw ne din seesei."
   },
   "newBelievers": {
     "cancel": "Gyae",
@@ -1205,7 +1247,9 @@
     "pickMentor": "Yi ɔkwankyerɛfoɔ",
     "youReEnrolled": "Wonkyerɛw wo din",
     "noActiveEnrollments": "Din kyerɛw biara nni hɔ a ɛrekɔ so",
-    "createSession": "Yɛ adesua"
+    "createSession": "Yɛ adesua",
+    "enrolNewBelieversClassViaBranch": "Fa w'asɔre baa kuo so kyerɛw wo din Gyidifoɔ Foforɔ adesuakuo mu na di wo kwan akyi wɔ ha.",
+    "newBelieversTeachMentorAppearHere": "Gyidifoɔ Foforɔ a wokyerɛkyerɛ wɔn anaa wokyerɛ wɔn kwan bɛda adi wɔ ha."
   },
   "outreach": {
     "done": "Ɛwie",
@@ -1238,7 +1282,9 @@
     "afterCreatingTheProgramYouCan": "Sɛ woyɛ nhyehyɛeɛ no wie a, wobɛtumi akyerɛw adwumayɛfoɔ din na woafi aseɛ akyerɛw akra a moduru wɔn nkyɛn.",
     "adding": "Ɛreka ho…",
     "creating": "Ɛreyɛ…",
-    "createProgram": "Yɛ nhyehyɛeɛ"
+    "createProgram": "Yɛ nhyehyɛeɛ",
+    "programWord_one": "nhyehyɛeɛ",
+    "programWord_other": "nhyehyɛeɛ"
   },
   "rota": {
     "cancel": "Gyae",
@@ -1331,7 +1377,9 @@
     "createTemplate": "Yɛ nhwɛsoɔ",
     "confirmed": "Wɔahyɛ mu den",
     "published": "Wɔde ato badwam",
-    "draft": "Nhwɛsoɔ"
+    "draft": "Nhwɛsoɔ",
+    "noPendingSwaps": "Nsesaeɛ biara nretwɛn seesei.",
+    "nothingHere": "Biribiara nni ha ɛnnɛ."
   },
   "souls": {
     "firstName": "Din a ɛdi kan",
@@ -1391,6 +1439,8 @@
     "jumpTo": "Kɔ",
     "saving": "Ɛresie…",
     "converting": "Ɛresakra…",
-    "convertMember": "Sakra kɔ ɔmanfoɔ"
+    "convertMember": "Sakra kɔ ɔmanfoɔ",
+    "soulWord_one": "ɔkra",
+    "soulWord_other": "akra"
   }
 }

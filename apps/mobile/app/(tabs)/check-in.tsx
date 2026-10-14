@@ -203,8 +203,8 @@ export default function CheckIn() {
                 {canCheckIn
                   ? 'Happening now'
                   : nextOpening
-                    ? 'Opening soon'
-                    : 'Today'}
+                    ? t('attendance:openingSoon')
+: t('attendance:today')}
               </Text>
             </View>
             {candidates.isLoading ? (
@@ -294,8 +294,8 @@ export default function CheckIn() {
             : nextOpening
               ? `Opens in ${nextOpening.minutesUntilOpen} minute${nextOpening.minutesUntilOpen === 1 ? '' : 's'}.`
               : closedRows.length > 0
-                ? 'Ask a leader to record your attendance.'
-                : 'Nothing scheduled to check into today.'}
+                ? t('attendance:askLeaderRecordAttendance')
+: t('attendance:nothingScheduledCheckIntoToday')}
         </Text>
 
         {/* Scan QR — secondary path, only when a window is open. Uses the
@@ -345,8 +345,8 @@ export default function CheckIn() {
           </Text>
           <Text style={styles.statMeta}>
             {attendanceTotal > 0
-              ? 'Present at recent services.'
-              : 'Nothing recorded yet.'}
+              ? t('attendance:presentRecentServices')
+: t('attendance:nothingRecorded')}
           </Text>
         </Card>
       </ScrollView>

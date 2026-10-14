@@ -208,7 +208,7 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {  cons
           <div>
             <CardTitle className="text-base">{t('departments:outfitGallery')}</CardTitle>
             <CardDescription>
-              {outfits.length} {outfits.length === 1 ? 'outfit' : 'outfits'} available
+              {outfits.length} {t('departments:outfitWord', { count: outfits.length })} available
             </CardDescription>
           </div>
           {canManage && (
@@ -409,7 +409,7 @@ function AssignmentCard({
           <GenderPill value={assignment.genderTarget} />
           <span className="text-[11px] text-muted-foreground">
             Affects {assignment.affectsCount}{' '}
-            {assignment.affectsCount === 1 ? 'member' : 'members'}
+            {t('departments:memberWord', { count: assignment.affectsCount })}
           </span>
         </div>
         {assignment.notes && (

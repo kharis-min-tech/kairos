@@ -351,8 +351,8 @@ function OutfitSheet({
       alert.info(
         'Permission needed',
         source === 'camera'
-          ? 'Grant camera access in Settings to take a photo.'
-          : 'Grant photo library access in Settings to pick a photo.',
+          ? t('departments:grantCameraAccessSettingsTakePhoto')
+: t('departments:grantPhotoLibraryAccessSettingsPick'),
       );
       return;
     }

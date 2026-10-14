@@ -230,7 +230,7 @@ export default function DepartmentsDirectory() {  const { t } = useTranslation([
               <Text style={styles.countLabel}>
                 {filtered.length}
                 {filtered.length < total ? ` of ${total}` : ''}{' '}
-                {filtered.length === 1 ? 'department' : 'departments'}
+                {t('departments:departmentWord', { count: filtered.length })}
               </Text>
             ) : null}
           </View>

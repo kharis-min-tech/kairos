@@ -108,8 +108,8 @@ export default function AttendanceServicesPage() {  const { t } = useTranslation
             <p className="font-medium text-foreground">{t('attendance:noServicesYet')}</p>
             <p className="max-w-sm text-sm text-muted-foreground">
               {canRecord
-                ? 'Record your first service to start checking in attendees.'
-                : 'There are no services to view in your branch yet.'}
+                ? t('attendance:recordFirstServiceStartCheckingAttendees')
+: t('attendance:thereServicesViewBranch')}
             </p>
             {canRecord && (
               <Link href="/attendance/new">

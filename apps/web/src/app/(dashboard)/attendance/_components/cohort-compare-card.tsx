@@ -214,7 +214,7 @@ export function CohortCompareCard({ branchId }: CohortCompareCardProps) {  const
           </Button>
           {cohort.isSuccess && (
             <span className="text-xs text-muted-foreground">
-              {result.length} {result.length === 1 ? 'member' : 'members'} match.
+              {t('attendance:membersMatch', { count: result.length })}
             </span>
           )}
           {cohort.isError && (

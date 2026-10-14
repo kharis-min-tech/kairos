@@ -515,8 +515,8 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
             {(followupHistory.data ?? []).length === 0 ? (
               <Text style={styles.emptyLine}>
                 {isSelf
-                  ? 'No follow-ups recorded on you yet.'
-                  : 'No follow-ups recorded for this member yet.'}
+                  ? t('members:noFollowUpsRecorded')
+: t('members:noFollowUpsRecordedMember')}
               </Text>
             ) : (
               (followupHistory.data ?? []).map((h) => (
@@ -973,8 +973,8 @@ function FollowupHistoryRow({
       ? row.interestLevel === 'interested'
         ? 'Interested'
         : row.interestLevel === 'not_interested'
-          ? 'Not interested'
-          : 'Reached'
+          ? t('members:notInterested')
+: t('members:reached')
       : row.contactReached === false
         ? 'No answer'
         : null;
@@ -987,8 +987,8 @@ function FollowupHistoryRow({
 
   const methodLabel = isVisit
     ? row.visitKind === 'virtual'
-      ? 'Virtual visit'
-      : 'Home visit'
+      ? t('members:virtualVisit')
+: t('members:homeVisit')
     : (row.methods ?? [row.contactMethod])
         .map((m) =>
           m === 'phone_call'

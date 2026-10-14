@@ -129,7 +129,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {  const { 
                     <span className="font-medium">
                       {upcoming.length === 0
                         ? 'No upcoming duties'
-                        : `${upcoming.length} upcoming ${upcoming.length === 1 ? 'duty' : 'duties'}`}
+                        : `${upcoming.length} upcoming ${t('departments:dutyWord', { count: upcoming.length })}`}
                       {rotaLoading && upcoming.length === 0 ? ' …' : ''}
                     </span>
                   </div>

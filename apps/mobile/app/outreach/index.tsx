@@ -204,7 +204,7 @@ export default function OutreachDirectory() {  const { t } = useTranslation(['ou
               <Text style={styles.countLabel}>
                 {rows.length}
                 {rows.length < total ? ` of ${total}` : ''}{' '}
-                {rows.length === 1 ? 'program' : 'programs'}
+                {t('outreach:programWord', { count: rows.length })}
               </Text>
             ) : null}
           </View>

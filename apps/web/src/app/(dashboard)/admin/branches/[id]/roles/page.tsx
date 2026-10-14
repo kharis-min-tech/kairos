@@ -129,8 +129,8 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
           <CardTitle>{t('branches:currentBranchSystemAdmins')}</CardTitle>
           <CardDescription>
             {isBDA && !canManage
-              ? 'You can view who holds this role, but assigning or revoking requires Branch System Admin authority.'
-              : 'These members have full administrative control over this branch.'}
+              ? t('branches:youViewWhoHoldsRoleBut')
+: t('branches:theseMembersFullAdministrativeControlOver')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -248,8 +248,8 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
                   membersLoading
                     ? 'Loading members...'
                     : assignableMembers.length === 0
-                      ? 'No assignable members found'
-                      : 'Select a member'
+                      ? t('branches:noAssignableMembersFound')
+: t('branches:selectMember')
                 }
                 options={assignableMembers.map((m) => ({
                   value: m.id,

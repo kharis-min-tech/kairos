@@ -653,7 +653,11 @@
     "assign": "Assign",
     "loadingRegions": "Loading regions...",
     "selectRegion": "Select a region",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "youViewWhoHoldsRoleBut": "You can view who holds this role, but assigning or revoking requires Branch System Admin authority.",
+    "theseMembersFullAdministrativeControlOver": "These members have full administrative control over this branch.",
+    "noAssignableMembersFound": "No assignable members found",
+    "selectMember": "Select a member"
   },
   "admin": {
     "selectContinent": "Select continent…",
@@ -787,7 +791,13 @@
     "comparing": "Comparing…",
     "runComparison": "Run comparison",
     "creating": "Creating…",
-    "createService": "Create service"
+    "createService": "Create service",
+    "membersMatch_one": "{{count}} member match.",
+    "membersMatch_other": "{{count}} members match.",
+    "recordFirstServiceStartCheckingAttendees": "Record your first service to start checking in attendees.",
+    "thereServicesViewBranch": "There are no services to view in your branch yet.",
+    "consecutiveServicesAttended": "Consecutive services attended.",
+    "consecutiveServicesMissed": "Consecutive services missed."
   },
   "reports": {
     "allBranches": "All branches",
@@ -952,7 +962,11 @@
     "everyoneInThisBranchBelongsTo": "Everyone in this branch belongs to a fellowship or department.",
     "followUps": "Follow-ups",
     "peopleWhoNeedContactAndBelong": "People who need contact and belong to no fellowship or department. Group follow-ups live on each fellowship and department page.",
-    "nothingDue": "Nothing due."
+    "nothingDue": "Nothing due.",
+    "followUpsFlaggedWelfareConcernsReach": "Follow-ups flagged as welfare concerns. Reach out to the pastoral team.",
+    "followUpsFlaggedSafeguardingMattersEscalate": "Follow-ups flagged as safeguarding matters. Escalate to the branch safeguarding lead.",
+    "noWelfareConcernsFlaggedAllQuiet": "No welfare concerns flagged. All quiet.",
+    "noSafeguardingMattersFlagged": "No safeguarding matters flagged."
   },
   "departments": {
     "weeklyAttendedCount": "Weekly attended count",
@@ -1261,7 +1275,19 @@
     "creating": "Creating...",
     "createDepartment": "Create Department",
     "savingEllipsis": "Saving...",
-    "create": "Create"
+    "create": "Create",
+    "outfitWord_one": "outfit",
+    "outfitWord_other": "outfits",
+    "roleWord_one": "role",
+    "roleWord_other": "roles",
+    "positionWord_one": "position",
+    "positionWord_other": "positions",
+    "dutyWord_one": "duty",
+    "dutyWord_other": "duties",
+    "memberWord_one": "member",
+    "memberWord_other": "members",
+    "noUpcomingRotaInstancesClickGenerate": "No upcoming rota instances. Click Generate Schedule to create them.",
+    "noServicesMatchCurrentFilter": "No services match the current filter."
   },
   "fellowships": {
     "serviceAttendance": "Service attendance",
@@ -1759,7 +1785,15 @@
     "exportCsv": "Export CSV",
     "thisMembersFellowshipMembership": "This member's fellowship membership",
     "assignMemberToFellowshipInBranch": "Assign this member to a fellowship in their branch",
-    "youHaventJoinedAFellowshipYet": "You haven't joined a fellowship yet"
+    "youHaventJoinedAFellowshipYet": "You haven't joined a fellowship yet",
+    "everyFellowshipDepartmentFollowUpRecorded": "Every fellowship and department follow-up recorded on you.",
+    "combinedFellowshipDepartmentFollowUpsMost": "Combined fellowship and department follow-ups, most recent first.",
+    "noFollowUpsRecorded": "No follow-ups recorded on you yet.",
+    "noFollowUpsRecordedMember": "No follow-ups recorded for this member yet.",
+    "notInterested": "Not interested",
+    "reached": "Reached",
+    "virtualVisit": "Virtual visit",
+    "homeVisit": "Home visit"
   },
   "membership": {
     "cohortView": "Cohort view",
@@ -1904,7 +1938,11 @@
     "yourPeopleWaiting": "Your people waiting",
     "branchWaitlist": "Branch waitlist",
     "yourPeopleAdmitted": "Your people admitted",
-    "admittedBranch": "Admitted from your branch"
+    "admittedBranch": "Admitted from your branch",
+    "dayWord_one": "day",
+    "dayWord_other": "days",
+    "nobodyLeadCurrentlyWaiting": "Nobody you lead is currently waiting.",
+    "nobodyBranchCurrentlyWaiting": "Nobody from your branch is currently waiting."
   },
   "newBelievers": {
     "unassigned": "Unassigned",
@@ -2093,7 +2131,8 @@
     "collapseProgrammeHealth": "Collapse programme health",
     "expandProgrammeHealth": "Expand programme health",
     "upcoming": "Upcoming",
-    "past": "Past"
+    "past": "Past",
+    "confirmComplete": "Confirm & Complete"
   },
   "outreach": {
     "failedToLoadProgram": "Failed to load program",
@@ -2193,7 +2232,9 @@
     "selectBranch": "Select a branch",
     "autoAssignedPastorLeader": "Auto-assigned for Pastor/Leader",
     "registering": "Registering...",
-    "register": "Register"
+    "register": "Register",
+    "noActiveProgramsCurrently": "No active programs currently.",
+    "noPastProgramsFound": "No past programs found."
   },
   "security": {
     "connectedAccounts": "Connected accounts",

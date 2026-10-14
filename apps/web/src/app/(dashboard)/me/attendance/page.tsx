@@ -133,8 +133,8 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {  const
             </CardTitle>
             <CardDescription>
               {snapshot.currentStreak.kind === 'attended'
-                ? 'Consecutive services attended.'
-                : 'Consecutive services missed.'}
+                ? t('attendance:consecutiveServicesAttended')
+: t('attendance:consecutiveServicesMissed')}
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -137,8 +137,8 @@ export default function Approvals() {  const { t } = useTranslation(['common', '
               <Text style={styles.emptyTitle}>{t('common:allCaughtUp')}</Text>
               <Text style={styles.emptyMeta}>
                 {filter === 'all'
-                  ? 'Nothing needs your approval right now.'
-                  : 'Nothing in this filter.'}
+                  ? t('attendance:nothingNeedsApproval')
+: t('attendance:nothingFilter')}
               </Text>
             </View>
           )
