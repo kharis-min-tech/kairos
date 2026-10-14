@@ -2,17 +2,18 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import { formatEffectiveDate } from '@/components/legal/effective-date';
 import { TranslationNotice } from '@/components/legal/translation-notice';
 
 export const CONFIDENTIALITY_VERSION = '2026-07-v1';
-export const CONFIDENTIALITY_EFFECTIVE_DATE = '28 July 2026';
+export const CONFIDENTIALITY_EFFECTIVE_DATE = '2026-07-28';
 
 /**
  * The Confidentiality & Data Handling Undertaking body, rendered as an
  * <article>. Consumed by both the standalone /legal/confidentiality page and
  * the /accept-policies gate.
  */
-export function ConfidentialityBody() {  const { t } = useTranslation(['legalConfidentiality', 'common']);
+export function ConfidentialityBody() {  const { t, i18n } = useTranslation(['legalConfidentiality', 'common']);
 
   return (
     <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
@@ -22,7 +23,7 @@ export function ConfidentialityBody() {  const { t } = useTranslation(['legalCon
         <h1 className="text-3xl font-bold tracking-tight">{t('legalConfidentiality:title')}</h1>
         <p className="text-sm text-muted-foreground">
           {t('legalConfidentiality:effectiveVersion', {
-            date: CONFIDENTIALITY_EFFECTIVE_DATE,
+            date: formatEffectiveDate(CONFIDENTIALITY_EFFECTIVE_DATE, i18n.language),
             version: CONFIDENTIALITY_VERSION,
           })}
         </p>

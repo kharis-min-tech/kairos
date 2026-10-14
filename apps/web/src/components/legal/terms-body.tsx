@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import { formatEffectiveDate } from '@/components/legal/effective-date';
 import { TranslationNotice } from '@/components/legal/translation-notice';
 
 
 const TERMS_VERSION = '2026-07-v1';
-const TERMS_EFFECTIVE_DATE = '23 July 2026';
+const TERMS_EFFECTIVE_DATE = '2026-07-23';
 
-export function TermsBody() {  const { t } = useTranslation(['legalTerms', 'common']);
+export function TermsBody() {  const { t, i18n } = useTranslation(['legalTerms', 'common']);
 
   return (
     <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
@@ -18,7 +19,7 @@ export function TermsBody() {  const { t } = useTranslation(['legalTerms', 'comm
         <h1 className="text-3xl font-bold tracking-tight">{t('legalTerms:title')}</h1>
         <p className="text-sm text-muted-foreground">
           {t('legalTerms:effectiveVersion', {
-            date: TERMS_EFFECTIVE_DATE,
+            date: formatEffectiveDate(TERMS_EFFECTIVE_DATE, i18n.language),
             version: TERMS_VERSION,
           })}
         </p>

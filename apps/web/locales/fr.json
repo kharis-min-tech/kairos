@@ -1780,7 +1780,9 @@
     "getStartedToday": "Commencer aujourd'hui",
     "onePlatformEveryBranchEveryMember": "Une seule plateforme. Toutes les antennes. Tous les membres.",
     "newMembersApproved_one": "{{count}} nouveau membre approuvé",
-    "newMembersApproved_other": "{{count}} nouveaux membres approuvés"
+    "newMembersApproved_other": "{{count}} nouveaux membres approuvés",
+    "kairosReplacesTheSpreadsheets": "Kairos remplace les tableurs, les groupes WhatsApp et les registres manuels qui ralentissent votre église.",
+    "whatsappYouthLeaders": "WhatsApp · Responsables jeunesse (214 non lus)"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Avis de confidentialité",
@@ -2041,7 +2043,12 @@
     "ifYouBelieveWeHandledDataUnlawfully": "Si vous estimez que nous avons traité vos données de manière illicite, vous pouvez porter plainte auprès du UK Information Commissioner's Office à",
     "weWouldEncourageYouToRaiseItFirst": ". Nous vous encourageons à nous en parler d'abord afin que nous puissions y remédier.",
     "churchTakesSafeguardingSeriously": "Kharis Church prend très au sérieux la protection des enfants. Si vous avez moins de 16 ans, veuillez demander à un parent ou tuteur de remplir les formulaires Kairos en votre nom. Les dossiers des enfants sont créés et gérés par un parent ou par un référent protection désigné, et leur visibilité dans Kairos est réservée aux responsables dont la fonction l'exige. Lorsqu'un enfant atteint un âge approprié, nous l'accompagnons pour qu'il reprenne la gestion de son propre dossier.",
-    "passwordsAreStoredAsHashes": "Les mots de passe sont stockés sous forme de hachages cryptographiques à sens unique et ne peuvent être lus par personne, y compris nous. Les données en transit sont protégées par TLS. L'accès à l'administration de Kairos est contrôlé par des autorisations liées aux fonctions et journalisé. Nous maintenons notre plateforme à jour et sous surveillance, et nous réexaminons régulièrement qui a accès à quoi."
+    "passwordsAreStoredAsHashes": "Les mots de passe sont stockés sous forme de hachages cryptographiques à sens unique et ne peuvent être lus par personne, y compris nous. Les données en transit sont protégées par TLS. L'accès à l'administration de Kairos est contrôlé par des autorisations liées aux fonctions et journalisé. Nous maintenons notre plateforme à jour et sous surveillance, et nous réexaminons régulièrement qui a accès à quoi.",
+    "sub21InformationYouGiveAtSignUp": "2.1 Informations que vous nous donnez à l'inscription",
+    "sub22InformationYouCanAddLater": "2.2 Informations que vous pouvez ajouter plus tard",
+    "sub23InformationGeneratedByActivity": "2.3 Informations générées par votre activité dans l'église",
+    "sub24TechnicalInformation": "2.4 Informations techniques",
+    "sub25SpecialCategoryData": "2.5 Données de catégorie particulière et de protection"
   },
   "legalTerms": {
     "privacyNotice": "Avis de confidentialité",

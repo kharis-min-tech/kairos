@@ -62,12 +62,20 @@ const valueAt = (o, dotted) => dotted.split('.').reduce((n, k) => (n == null ? n
  * entities are stripped out and whatever prose is left over is what counts.
  */
 const PROSE_TAGS = 'p|li|h1|h2|h3|h4|td|th|strong|em|figcaption|blockquote|label|option|summary';
+// Text handed to a component as children or as a title prop is just as visible
+// as text in a <p>, and the tag list alone never sees it. Five numbered
+// subheadings sat untranslated inside <SubHeading>…</SubHeading> on the privacy
+// notice while the file reported clean.
+const CUSTOM_CHILDREN = /<([A-Z]\w+)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
+const TITLE_PROP = /\btitle="([^"]{4,160})"/g;
 
 function hardcoded(file) {
   const src = readFileSync(file, 'utf8');
   let n = 0;
   // display props
-  n += (src.match(/\b(?:label|placeholder|title|accessibilityLabel|subtitle|heading|emptyText)="[A-Z][^"]{1,120}"/g) ?? []).length;
+  // `text` was missing from this list, which is how the homepage's hero
+  // strapline stayed English in every language without the audit noticing.
+  n += (src.match(/\b(?:label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle|heading|emptyText|text|alt|caption|description|tooltip|ariaLabel|confirmText|cancelText|submitText|helperText)="[A-Z][^"]{1,160}"/g) ?? []).length;
 
   const re = new RegExp(`<(${PROSE_TAGS})\\b[^>]*>([\\s\\S]*?)</\\1>`, 'g');
   for (const m of src.matchAll(re)) {
@@ -83,6 +91,24 @@ function hardcoded(file) {
     // Two or more real words left over means prose nobody has keyed yet.
     if (!/[A-Za-z]{3}\s+\S|^[A-Za-z]{4,}$/.test(text)) continue;
     n++;
+  }
+
+  for (const m of src.matchAll(CUSTOM_CHILDREN)) {
+    // Only when the children are bare text. A component wrapping further
+    // elements is a layout wrapper, and counting it double-counts whatever is
+    // nested inside -- which turned a useful signal into several hundred
+    // phantom hits across both apps.
+    if (/[<>]/.test(m[3])) continue;
+    const text = m[3]
+      .replace(/\{[^{}]*\}/g, ' ')
+      .replace(/&[a-z]+;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!/[A-Za-z]{3}\s+\S|^[A-Za-z]{4,}$/.test(text)) continue;
+    n++;
+  }
+  for (const m of src.matchAll(TITLE_PROP)) {
+    if (/^[A-Za-z]/.test(m[1])) n++;
   }
   return n;
 }

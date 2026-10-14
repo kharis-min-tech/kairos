@@ -13,7 +13,15 @@ import { setLanguagePreference } from '@/components/i18n-provider';
  * Mirrors the mobile picker: "Match my browser" plus each language under its
  * own name, with the unreviewed ones marked rather than presented as finished.
  */
-export function LanguageToggle({ className }: { className?: string }) {
+export function LanguageToggle({
+  className,
+  // The sidebar sits at the bottom of the screen, so the menu opens upward
+  // there. In a page header it has to open downward or it lands off-screen.
+  placement = 'up',
+}: {
+  className?: string;
+  placement?: 'up' | 'down';
+}) {
   const { t, i18n } = useTranslation(['common']);
   const [open, setOpen] = useState(false);
   const [pref, setPref] = useState<LanguagePreference>('system');
@@ -47,7 +55,10 @@ export function LanguageToggle({ className }: { className?: string }) {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
           <div
             role="menu"
-            className="absolute bottom-full z-50 mb-2 min-w-44 rounded-lg border border-border bg-popover p-1 shadow-lg"
+            className={cn(
+              'absolute z-50 min-w-44 rounded-lg border border-border bg-popover p-1 shadow-lg',
+              placement === 'up' ? 'bottom-full mb-2' : 'right-0 top-full mt-2',
+            )}
           >
             <button
               type="button"

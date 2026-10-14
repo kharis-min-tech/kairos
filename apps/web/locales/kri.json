@@ -1780,7 +1780,9 @@
     "onePlatformEveryBranchEveryMember": "Wan platfɔm. Ɛvri branch. Ɛvri mɛmba.",
     "branch": "Branch",
     "newMembersApproved_one": "{{count}} nyu mɛmba we wi apruv",
-    "newMembersApproved_other": "{{count}} nyu mɛmba dɛn we wi apruv"
+    "newMembersApproved_other": "{{count}} nyu mɛmba dɛn we wi apruv",
+    "kairosReplacesTheSpreadsheets": "Kairos de tek di ples fɔ di sprɛdshit dɛn, WhatsApp grup dɛn, ɛn an rɛjista dɛn we de slo yu chɔch dɔn.",
+    "whatsappYouthLeaders": "WhatsApp · Yut Lida dɛn (214 we nɔbɔdi nɔ rid)"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Praivasi Notis",
@@ -2041,7 +2043,12 @@
     "ifYouBelieveWeHandledDataUnlawfully": "If yu tink se wi yuz yu infɔmeshɔn di rɔng we, yu kin kɔmplen to di UK Information Commissioner's Office na",
     "weWouldEncourageYouToRaiseItFirst": ". Wi want yu fɔ tɔk to wi fɔs so dat wi kin fiks am.",
     "churchTakesSafeguardingSeriously": "Kharis Church tek di sefgadin fɔ pikin dɛn sirios bad wan. If yu anda 16, duya aks yu mama, papa ɔ gadian fɔ ful di Kairos fɔm dɛn fɔ yu. Na wan mama, papa ɔ wan sefgadin lid de mek ɛn manej pikin dɛn rɛkɔd, ɛn na lida dɛn we dɛn rol nid am nɔmɔ kin si am insay Kairos. We wan pikin rich di rayt ej, wi de ɛp am fɔ tek ova in yon rɛkɔd.",
-    "passwordsAreStoredAsHashes": "Wi de kip paswɔd dɛn as wan-we kriptografik ash ɛn nɔbɔdi kin rid dɛn, ivin wisɛf. TLS de protɛkt infɔmeshɔn we de muv. Rol-bes pamishɔn de kɔntrol udat kin go insay di Kairos administreshɔn, ɛn wi de log am. Wi de kip wi platfɔm apdet ɛn wi de wach am, ɛn wi de chɛk ɔltɛm udat gɛt akses to wetin."
+    "passwordsAreStoredAsHashes": "Wi de kip paswɔd dɛn as wan-we kriptografik ash ɛn nɔbɔdi kin rid dɛn, ivin wisɛf. TLS de protɛkt infɔmeshɔn we de muv. Rol-bes pamishɔn de kɔntrol udat kin go insay di Kairos administreshɔn, ɛn wi de log am. Wi de kip wi platfɔm apdet ɛn wi de wach am, ɛn wi de chɛk ɔltɛm udat gɛt akses to wetin.",
+    "sub21InformationYouGiveAtSignUp": "2.1 Infɔmeshɔn we yu gi wi we yu sayn ɔp",
+    "sub22InformationYouCanAddLater": "2.2 Infɔmeshɔn we yu kin ad lata",
+    "sub23InformationGeneratedByActivity": "2.3 Infɔmeshɔn we kɔmɔt frɔm wetin yu de du na di chɔch",
+    "sub24TechnicalInformation": "2.4 Tɛknikal infɔmeshɔn",
+    "sub25SpecialCategoryData": "2.5 Spɛshal katigɔri ɛn sefgadin infɔmeshɔn"
   },
   "legalTerms": {
     "privacyNotice": "Praivasi Notis",

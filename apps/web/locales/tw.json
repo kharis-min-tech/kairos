@@ -1780,7 +1780,9 @@
     "getStartedToday": "Fi Aseɛ Ɛnnɛ",
     "onePlatformEveryBranchEveryMember": "Platform baako. Asɔre baa biara. Ɔmanfoɔ biara.",
     "newMembersApproved_one": "Ɔmanfoɔ foforɔ {{count}} a wɔapene so",
-    "newMembersApproved_other": "Amanfoɔ foforɔ {{count}} a wɔapene so"
+    "newMembersApproved_other": "Amanfoɔ foforɔ {{count}} a wɔapene so",
+    "kairosReplacesTheSpreadsheets": "Kairos sii spreadsheet, WhatsApp akuo, ne nhwehwɛmu a wɔde nsa kyerɛw a ɛrema w'asɔre kɔ brɛoo no anan mu.",
+    "whatsappYouthLeaders": "WhatsApp · Mmabunu Akannifoɔ (214 a wɔnkenkaneeɛ)"
   },
   "legalAcceptableUse": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",
@@ -2041,7 +2043,12 @@
     "ifYouBelieveWeHandledDataUnlawfully": "Sɛ wosusu sɛ yɛdii wo nsɛm ho dwuma a ɛnni mmara mu a, wobɛtumi akɔ UK Information Commissioner's Office akɔka wɔ",
     "weWouldEncourageYouToRaiseItFirst": ". Yɛhyɛ wo nkuran sɛ ka kyerɛ yɛn kane na yɛatumi asiesie.",
     "churchTakesSafeguardingSeriously": "Kharis Church fa mmɔfra ahobammɔ sɛ asɛm kɛseɛ. Sɛ wonnii mfeɛ 16 a, yɛsrɛ wo bisa w'awofoɔ anaa ɔhwɛfoɔ sɛ ɔnhyɛ Kairos fɔm no ma wo. Ɔwofoɔ anaa ahobammɔ panin a wɔapaw no na ɔyɛ na ɔhwɛ mmɔfra nkrataa so, na akannifoɔ a wɔn dwumadie hia no nko ara na wɔtumi hunu wɔ Kairos mu. Sɛ abɔfra duru mfeɛ a ɛfata a, yɛboa no ma ɔfa ne krataa.",
-    "passwordsAreStoredAsHashes": "Yɛkora password so sɛ cryptographic hash a ɛnsan, na obiara ntumi nkenkan, yɛn ankasa mpo. TLS bɔ nsɛm a ɛrekɔ ho ban. Dwumadie so kwan na ɛdi Kairos nhwɛsoɔ mu kɔ so, na yɛkyerɛw no. Yɛma yɛn platform kɔ so na yɛhwɛ so, na yɛhwɛ daa hunu wɔn a wɔwɔ kwan kɔ deɛ ɛwɔ hɔ mu."
+    "passwordsAreStoredAsHashes": "Yɛkora password so sɛ cryptographic hash a ɛnsan, na obiara ntumi nkenkan, yɛn ankasa mpo. TLS bɔ nsɛm a ɛrekɔ ho ban. Dwumadie so kwan na ɛdi Kairos nhwɛsoɔ mu kɔ so, na yɛkyerɛw no. Yɛma yɛn platform kɔ so na yɛhwɛ so, na yɛhwɛ daa hunu wɔn a wɔwɔ kwan kɔ deɛ ɛwɔ hɔ mu.",
+    "sub21InformationYouGiveAtSignUp": "2.1 Nsɛm a wode ma yɛn berɛ a wokyerɛw wo din",
+    "sub22InformationYouCanAddLater": "2.2 Nsɛm a wobɛtumi de aka ho akyire yi",
+    "sub23InformationGeneratedByActivity": "2.3 Nsɛm a ɛfiri w'asɔre mu dwumadie mu ba",
+    "sub24TechnicalInformation": "2.4 Mfiridwuma ho nsɛm",
+    "sub25SpecialCategoryData": "2.5 Nsɛm su soronko ne ahobammɔ nsɛm"
   },
   "legalTerms": {
     "privacyNotice": "Kokoamsɛm Nkrasɛm",

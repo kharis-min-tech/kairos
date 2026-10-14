@@ -27,6 +27,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 import { Reveal } from "@/components/motion/reveal";
 import { HandDrawn } from "@/components/motion/hand-drawn";
 import { TypedText } from "@/components/motion/typed-text";
@@ -172,6 +173,7 @@ export default function KairosLanding() {
             </a>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageToggle placement="down" className="rounded-full border border-black/15 dark:border-white/15 hover:border-[#f8b537]/60 bg-black/[0.02] dark:bg-white/[0.04] hover:bg-black/[0.05] dark:hover:bg-white/[0.07] text-black/85 dark:text-white/90 hover:text-[#f8b537] dark:hover:text-[#f8b537] w-9 h-9 inline-flex items-center justify-center" />
             <ThemeToggle className="rounded-full border border-black/15 dark:border-white/15 hover:border-[#f8b537]/60 bg-black/[0.02] dark:bg-white/[0.04] hover:bg-black/[0.05] dark:hover:bg-white/[0.07] text-black/85 dark:text-white/90 hover:text-[#f8b537] dark:hover:text-[#f8b537] w-9 h-9 inline-flex items-center justify-center" />
             <Link
               href="/login"
@@ -235,7 +237,7 @@ export default function KairosLanding() {
           </FloatCard>
           <FloatCard position={{ right: "4%", top: "54%" }} depth={0.6} fx={300} fy={60} fr={-10} tilt={2} i={3}>
             <div className="relative rounded bg-muted px-3.5 py-2.5 text-xs text-muted-foreground">
-              WhatsApp · Youth Leaders (214 unread)
+              {t('marketing:whatsappYouthLeaders')}
               <HandDrawn
                 d="M2 9 C 90 14, 200 5, 298 11"
                 viewBox="0 0 300 20"
@@ -265,8 +267,11 @@ export default function KairosLanding() {
           <FloatCard position={{ right: "11%", bottom: "7%" }} depth={0.4} fx={160} fy={240} fr={12} tilt={4} i={5}>
             <div className="w-[220px] rounded-[3px] bg-[#fdf3dc] px-[18px] py-4 text-[#3b2a06] shadow-[0_20px_50px_-16px_rgba(0,0,0,0.35)]">
               <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">{t('marketing:dailyVerse')}</div>
-              <div className="mt-1.5 text-sm italic leading-[1.45]">&ldquo;Love one another as I have loved you.&rdquo;</div>
-              <div className="mt-1.5 text-[11px] text-[#8a6410]">— John 15:12</div>
+              <div className="mt-1.5 text-sm italic leading-[1.45]">&ldquo;{verse.text}&rdquo;</div>
+              <div className="mt-1.5 text-[11px] text-[#8a6410]">
+                — {verse.ref} ({verse.version})
+                {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
+              </div>
             </div>
           </FloatCard>
         </CardField>
@@ -301,7 +306,7 @@ export default function KairosLanding() {
           </h1>
           <TypedText
             className="mt-11 min-h-[52px] max-w-[500px] text-[17px] leading-[1.55] text-black/55 dark:text-white/55"
-            text="Kairos replaces the spreadsheets, WhatsApp groups, and manual registers that are slowing your church down."
+            text={t('marketing:kairosReplacesTheSpreadsheets')}
           />
           <div className="mo-load mt-7 flex gap-3" style={{ ["--i" as string]: 6 }}>
             <Halo radiusClass="rounded-full" className="mo-lift [--lift-rot:-1deg]">
@@ -803,6 +808,7 @@ export default function KairosLanding() {
                         </p>
                         <p className="text-[8px] text-[#f8b537] mt-1 font-bold">
                           — {verse.ref} ({verse.version})
+                          {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
                         </p>
                       </div>
                     </div>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
 import { KharisLogoIcon } from '@/app/(auth)/kharis-logo';
 import { useTranslation } from 'react-i18next';
 
@@ -15,7 +16,12 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
             <KharisLogoIcon size={28} />
             <span className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white">Kharis Church</span>
           </Link>
-          <ThemeToggle variant="icon" />
+          {/* These pages are public, so the picker has to live here: a reader
+              who is not signed in never sees the dashboard sidebar. */}
+          <div className="flex items-center gap-1">
+            <LanguageToggle placement="down" className="text-gray-900 hover:text-[#5D3FD3] dark:text-white" />
+            <ThemeToggle variant="icon" />
+          </div>
         </div>
       </header>
 

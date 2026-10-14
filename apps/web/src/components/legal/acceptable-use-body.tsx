@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import { formatEffectiveDate } from '@/components/legal/effective-date';
 import { TranslationNotice } from '@/components/legal/translation-notice';
 
 export const AUP_VERSION = '2026-07-v1';
-export const AUP_EFFECTIVE_DATE = '28 July 2026';
+export const AUP_EFFECTIVE_DATE = '2026-07-28';
 
 /**
  * The Acceptable Use Policy body, rendered as an <article>. Consumed by both
@@ -13,7 +14,7 @@ export const AUP_EFFECTIVE_DATE = '28 July 2026';
  * Kept as a body component (no page-level chrome) so it can be embedded in a
  * scrollable panel above an acceptance checkbox.
  */
-export function AcceptableUseBody() {  const { t } = useTranslation(['legalAcceptableUse', 'common']);
+export function AcceptableUseBody() {  const { t, i18n } = useTranslation(['legalAcceptableUse', 'common']);
 
   return (
     <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
@@ -22,7 +23,7 @@ export function AcceptableUseBody() {  const { t } = useTranslation(['legalAccep
         <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('legalAcceptableUse:legal')}</p>
         <h1 className="text-3xl font-bold tracking-tight">{t('legalAcceptableUse:acceptableUsePolicy')}</h1>
         <p className="text-sm text-muted-foreground">
-          {t('legalAcceptableUse:effectiveVersion', { date: AUP_EFFECTIVE_DATE, version: AUP_VERSION })}
+          {t('legalAcceptableUse:effectiveVersion', { date: formatEffectiveDate(AUP_EFFECTIVE_DATE, i18n.language), version: AUP_VERSION })}
         </p>
       </header>
 
