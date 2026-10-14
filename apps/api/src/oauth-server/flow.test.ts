@@ -36,15 +36,6 @@ vi.mock('../db', async () => {
       is_active boolean NOT NULL DEFAULT true,
       approval_status varchar(20) NOT NULL DEFAULT 'approved'
     );
-    CREATE TABLE audit_log (
-      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-      actor_member_id uuid REFERENCES members(id) ON DELETE SET NULL,
-      action varchar(50) NOT NULL, outcome varchar(20) NOT NULL,
-      target_type varchar(50), target_id uuid, ip varchar(45), user_agent varchar(500),
-      country varchar(2), attempted_email varchar(200), metadata jsonb,
-      is_active boolean NOT NULL DEFAULT true,
-      created_at timestamp NOT NULL DEFAULT NOW(), updated_at timestamp NOT NULL DEFAULT NOW()
-    );
     INSERT INTO members (id, email, email_verified, first_name, last_name, home_branch_id) VALUES
       ('11111111-1111-1111-1111-111111111111', 'admin@kharis.org', true, 'Ada', 'Admin', '33333333-3333-3333-3333-333333333333'),
       ('22222222-2222-2222-2222-222222222222', 'grace@kharis.org', true, 'Grace', 'Okafor', '33333333-3333-3333-3333-333333333333');
@@ -53,6 +44,12 @@ vi.mock('../db', async () => {
   `);
   const { readFileSync } = await import('node:fs');
   const { resolve } = await import('node:path');
+  const migrations = (f: string) => readFileSync(resolve(__dirname, '../../../../packages/database/drizzle', f), 'utf8');
+  // The REAL audit_log, CHECK constraint and all. A stub here once hid a
+  // constraint that rejected every oauth_* event.
+  await pg.exec(`CREATE FUNCTION update_updated_at_column() RETURNS trigger AS $$ BEGIN NEW.updated_at = NOW(); RETURN NEW; END; $$ LANGUAGE plpgsql;`);
+  await pg.exec(migrations('0035_audit_log.sql'));
+  await pg.exec(migrations('0058_audit_log_oauth_actions.sql'));
   await pg.exec(
     readFileSync(resolve(__dirname, '../../../../packages/database/drizzle/0057_oauth_authorization_server.sql'), 'utf8'),
   );

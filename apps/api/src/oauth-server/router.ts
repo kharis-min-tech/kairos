@@ -64,6 +64,8 @@ function param(c: Context, name: string): string {
   return c.req.param(name) ?? '';
 }
 
+// Audit writes are awaited, never fire-and-forget: a Worker cancels promises
+// still pending when the response is sent, which would drop the event silently.
 const NO_STORE = { 'Cache-Control': 'no-store', Pragma: 'no-cache' } as const;
 
 function oauthErrorResponse(c: Context, err: OAuthError) {
@@ -174,7 +176,7 @@ oauthServerRouter.post('/token', async (c) => {
       throw new OAuthError('unsupported_grant_type', 'Supported grant types: authorization_code, refresh_token.');
     }
 
-    void audit(AuditAction.OauthTokenIssued, AuditOutcome.Success, {
+    await audit(AuditAction.OauthTokenIssued, AuditOutcome.Success, {
       memberId: outcome.memberId,
       clientRowId: outcome.clientRowId,
       metadata: { grantType: outcome.grantType },
@@ -182,7 +184,7 @@ oauthServerRouter.post('/token', async (c) => {
     return c.json(outcome.response, 200, NO_STORE);
   } catch (err) {
     if (err instanceof TokenReuseError) {
-      void audit(AuditAction.OauthTokenReuse, AuditOutcome.Failure, {
+      await audit(AuditAction.OauthTokenReuse, AuditOutcome.Failure, {
         memberId: err.memberId,
         clientRowId: err.clientRowId,
         metadata: { note: 'A rotated refresh token was reused; the token family was revoked.' },
@@ -190,7 +192,7 @@ oauthServerRouter.post('/token', async (c) => {
     }
     if (err instanceof OAuthError) {
       if (err.error !== 'invalid_client' && clientRowId && !(err instanceof TokenReuseError)) {
-        void audit(AuditAction.OauthTokenFailure, AuditOutcome.Failure, {
+        await audit(AuditAction.OauthTokenFailure, AuditOutcome.Failure, {
           clientRowId,
           metadata: { error: err.error },
         });
@@ -225,7 +227,7 @@ oauthServerRouter.post('/revoke', async (c) => {
     if (token) {
       const revoked = await revokeToken(db, client, token);
       if (revoked) {
-        void recordAuditEvent(db, {
+        await recordAuditEvent(db, {
           actorMemberId: revoked.memberId,
           action: AuditAction.OauthGrantRevoked,
           outcome: AuditOutcome.Success,

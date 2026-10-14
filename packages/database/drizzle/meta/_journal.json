@@ -407,6 +407,13 @@
       "when": 1791450000000,
       "tag": "0057_oauth_authorization_server",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1791460000000,
+      "tag": "0058_audit_log_oauth_actions",
+      "breakpoints": true
     }
   ]
 }
