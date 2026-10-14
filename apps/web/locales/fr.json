@@ -1684,7 +1684,22 @@
     "confidentiality": "Confidentialité",
     "termsAndConditions": "Conditions générales",
     "translationNoticeTitle": "Ceci est une traduction",
-    "translationNoticeBody": "Cette traduction est fournie pour vous aider à comprendre le document. Elle n'a pas été réalisée par un traducteur juridique. La version anglaise est le texte qui fait foi, et c'est elle qui prévaut en cas de divergence entre les deux."
+    "translationNoticeBody": "Cette traduction est fournie pour vous aider à comprendre le document. Elle n'a pas été réalisée par un traducteur juridique. La version anglaise est le texte qui fait foi, et c'est elle qui prévaut en cas de divergence entre les deux.",
+    "acceptIntro": "Vous devez accepter les politiques ci-dessous pour continuer à utiliser Kairos. Prenez un moment pour lire chacune d'elles. Vous pouvez aussi",
+    "openInNewTabNamed": "ouvrir {{name}} dans un nouvel onglet",
+    "versionLabel": "Version {{version}}",
+    "pleaseReadThisPolicyAt": "Veuillez lire cette politique à l'adresse",
+    "iHaveReadAndAccept": "J'ai lu et j'accepte",
+    "versionParenthetical": "(v{{version}}).",
+    "consentType": {
+      "terms": "Conditions générales",
+      "privacy": "Avis de confidentialité",
+      "marketing": "Communications marketing",
+      "acceptable_use": "Politique d'utilisation acceptable",
+      "admin_confidentiality": "Engagement de confidentialité et de traitement des données"
+    },
+    "beforeAccepting": "avant d'accepter.",
+    "listOr": ", ou "
   },
   "marketing": {
     "helpGuides": "Aide et guides",

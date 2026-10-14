@@ -1684,7 +1684,22 @@
     "createAccount": "Create account",
     "termsAndConditions": "Terms & Conditions",
     "translationNoticeTitle": "This is a translation",
-    "translationNoticeBody": "This translation is provided to help you understand the document. It was not prepared by a legal translator. The English version is the authoritative text, and it is the English version that governs if the two ever disagree."
+    "translationNoticeBody": "This translation is provided to help you understand the document. It was not prepared by a legal translator. The English version is the authoritative text, and it is the English version that governs if the two ever disagree.",
+    "acceptIntro": "You'll need to accept the policies below to keep using Kairos. Take a moment to read each one. You can also",
+    "openInNewTabNamed": "open the {{name}} in a new tab",
+    "versionLabel": "Version {{version}}",
+    "pleaseReadThisPolicyAt": "Please read this policy at",
+    "iHaveReadAndAccept": "I have read and accept the",
+    "versionParenthetical": "(v{{version}}).",
+    "consentType": {
+      "terms": "Terms & Conditions",
+      "privacy": "Privacy Notice",
+      "marketing": "Marketing communications",
+      "acceptable_use": "Acceptable Use Policy",
+      "admin_confidentiality": "Confidentiality & Data Handling Undertaking"
+    },
+    "beforeAccepting": "before accepting.",
+    "listOr": ", or "
   },
   "marketing": {
     "kairosChurchAdministrationPlatform": "Kairos church administration platform",

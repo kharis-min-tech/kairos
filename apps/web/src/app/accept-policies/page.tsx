@@ -40,7 +40,13 @@ const STANDALONE_HREF: Record<ConsentType, string> = {
   [ConsentType.AdminConfidentiality]: '/legal/confidentiality',
 };
 
-export default function AcceptPoliciesPage() {  const { t } = useTranslation(['common']);
+export default function AcceptPoliciesPage() {
+  const { t } = useTranslation(['common', 'legal']);
+  // The shared CONSENT_TYPE_LABEL in @kairos/types is English. This screen is
+  // the consent gate for the very documents that were just translated, so the
+  // document names have to follow the reader's language too.
+  const consentLabel = (type: string) =>
+    t(`legal:consentType.${type}`, { defaultValue: CONSENT_TYPE_LABEL[type as keyof typeof CONSENT_TYPE_LABEL] });
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -129,8 +135,7 @@ export default function AcceptPoliciesPage() {  const { t } = useTranslation(['c
         <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('common:actionRequired')}</p>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('common:pleaseReviewAndAcceptBeforeContinuing')}</h1>
         <p className="text-sm text-muted-foreground">
-          You&apos;ll need to accept the policies below to keep using Kairos.
-          Take a moment to read each one. You can also{' '}
+          {t('legal:acceptIntro')}{' '}
           {pending.map((s, i) => (
             <span key={s.consentType}>
               <Link
@@ -139,9 +144,9 @@ export default function AcceptPoliciesPage() {  const { t } = useTranslation(['c
                 rel="noopener noreferrer"
                 className="font-medium text-[#5D3FD3] hover:underline"
               >
-                open the {CONSENT_TYPE_LABEL[s.consentType]} in a new tab
+                {t('legal:openInNewTabNamed', { name: consentLabel(s.consentType) })}
               </Link>
-              {i < pending.length - 2 ? ', ' : i === pending.length - 2 ? ', or ' : '.'}
+              {i < pending.length - 2 ? ', ' : i === pending.length - 2 ? t('legal:listOr') : '.'}
             </span>
           ))}
         </p>
@@ -165,10 +170,10 @@ export default function AcceptPoliciesPage() {  const { t } = useTranslation(['c
               <header className="flex items-center justify-between border-b border-black/5 bg-[#5D3FD3]/5 px-5 py-3 dark:border-white/5">
                 <div>
                   <p id={`policy-${status.consentType}-title`} className="text-sm font-semibold">
-                    {CONSENT_TYPE_LABEL[status.consentType]}
+                    {consentLabel(status.consentType)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Version {status.currentVersion}
+                    {t('legal:versionLabel', { version: status.currentVersion })}
                   </p>
                 </div>
                 <Link
@@ -185,7 +190,7 @@ export default function AcceptPoliciesPage() {  const { t } = useTranslation(['c
                 </div>
               ) : (
                 <div className="px-5 py-4 text-sm text-muted-foreground">
-                  Please read this policy at{' '}
+                  {t('legal:pleaseReadThisPolicyAt')}{' '}
                   <Link
                     href={STANDALONE_HREF[status.consentType]}
                     target="_blank"
@@ -194,7 +199,7 @@ export default function AcceptPoliciesPage() {  const { t } = useTranslation(['c
                   >
                     {STANDALONE_HREF[status.consentType]}
                   </Link>{' '}
-                  before accepting.
+                  {t('legal:beforeAccepting')}
                 </div>
               )}
 
@@ -206,11 +211,9 @@ export default function AcceptPoliciesPage() {  const { t } = useTranslation(['c
                   disabled={submitting}
                 />
                 <span className="text-sm">
-                  I have read and accept the{' '}
-                  <span className="font-medium">
-                    {CONSENT_TYPE_LABEL[status.consentType]}
-                  </span>{' '}
-                  (v{status.currentVersion}).
+                  {t('legal:iHaveReadAndAccept')}{' '}
+                  <span className="font-medium">{consentLabel(status.consentType)}</span>{' '}
+                  {t('legal:versionParenthetical', { version: status.currentVersion })}
                 </span>
               </label>
             </section>

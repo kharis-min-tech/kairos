@@ -1684,7 +1684,22 @@
     "confidentiality": "Kɔnfidɛnshaliti",
     "termsAndConditions": "Tam ɛn Kɔndishɔn dɛn",
     "translationNoticeTitle": "Dis na wan tranzleshɔn",
-    "translationNoticeBody": "Wi gi dis tranzleshɔn fɔ ɛp yu ɔndastand di pepa. Nɔto wan ligal tranzletɔ mek am. Di Inglish vɛshɔn na di wan we kawnt, ɛn na in go rul if di tu nɔ gri."
+    "translationNoticeBody": "Wi gi dis tranzleshɔn fɔ ɛp yu ɔndastand di pepa. Nɔto wan ligal tranzletɔ mek am. Di Inglish vɛshɔn na di wan we kawnt, ɛn na in go rul if di tu nɔ gri.",
+    "acceptIntro": "Yu fɔ gri to di pɔlisi dɛn dɔn bilo bifo yu kin kɔntinyu fɔ yuz Kairos. Tek smɔl tɛm fɔ rid ɛvriwan. Yu kin",
+    "openInNewTabNamed": "opin {{name}} na wan nyu tab",
+    "versionLabel": "Vɛshɔn {{version}}",
+    "pleaseReadThisPolicyAt": "Duya rid dis pɔlisi na",
+    "iHaveReadAndAccept": "A dɔn rid ɛn a gri to di",
+    "versionParenthetical": "(v{{version}}).",
+    "consentType": {
+      "terms": "Tam ɛn Kɔndishɔn dɛn",
+      "privacy": "Praivasi Notis",
+      "marketing": "Matikɛtin mɛsej dɛn",
+      "acceptable_use": "Pɔlisi fɔ aw fɔ yuz am",
+      "admin_confidentiality": "Kɔnfidɛnshaliti ɛn Data Andlin Prɔmis"
+    },
+    "beforeAccepting": "bifo yu gri.",
+    "listOr": ", ɔ "
   },
   "marketing": {
     "helpGuides": "Ɛp ɛn gayd",

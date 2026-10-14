@@ -1684,7 +1684,22 @@
     "confidentiality": "Kokoamsɛm",
     "termsAndConditions": "Nhyehyɛeɛ ne Mmara",
     "translationNoticeTitle": "Yei yɛ nkyerɛaseɛ",
-    "translationNoticeBody": "Yɛde nkyerɛaseɛ yi ma sɛ ɛbɛboa wo ma wote krataa no aseɛ. Ɛnyɛ mmara nkyerɛaseɛni na ɔyɛeɛ. Borɔfo deɛ no ne nsɛm a ɛwɔ tumi, na sɛ mmienu no bɔ abira a, Borɔfo deɛ no na ɛdi."
+    "translationNoticeBody": "Yɛde nkyerɛaseɛ yi ma sɛ ɛbɛboa wo ma wote krataa no aseɛ. Ɛnyɛ mmara nkyerɛaseɛni na ɔyɛeɛ. Borɔfo deɛ no ne nsɛm a ɛwɔ tumi, na sɛ mmienu no bɔ abira a, Borɔfo deɛ no na ɛdi.",
+    "acceptIntro": "Ɛsɛ sɛ wopene nhyehyɛeɛ a ɛwɔ ase hɔ so ansa na woakɔ so de Kairos adi dwuma. Gye berɛ kakra kenkan biara. Wobɛtumi nso",
+    "openInNewTabNamed": "bue {{name}} wɔ tab foforɔ mu",
+    "versionLabel": "Nhwɛsoɔ {{version}}",
+    "pleaseReadThisPolicyAt": "Yɛsrɛ wo kenkan nhyehyɛeɛ yi wɔ",
+    "iHaveReadAndAccept": "Makenkan na megye",
+    "versionParenthetical": "(v{{version}}).",
+    "consentType": {
+      "terms": "Nhyehyɛeɛ ne Mmara",
+      "privacy": "Kokoamsɛm Nkrasɛm",
+      "marketing": "Adetɔn Nkrasɛm",
+      "acceptable_use": "Dwumadie a Ɛfata Nhyehyɛeɛ",
+      "admin_confidentiality": "Kokoamsɛm ne Nsɛm Dwumadie Bɔhyɛ"
+    },
+    "beforeAccepting": "ansa na wagye atom.",
+    "listOr": ", anaa "
   },
   "marketing": {
     "helpGuides": "Mmoa ne akwankyerɛ",
