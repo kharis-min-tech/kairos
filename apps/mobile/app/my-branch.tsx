@@ -135,7 +135,7 @@ export default function MyBranch() {  const { t } = useTranslation(['branches', 
               <Text
                 style={[styles.chipEyebrow, scope === 'home' && styles.chipLabelActive]}
               >
-                HOME
+                {t('branches:home')}
               </Text>
               <Text
                 style={[styles.chipLabel, scope === 'home' && styles.chipLabelActive]}
@@ -357,10 +357,7 @@ function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {  c
         <View style={styles.settingRow}>
           <View style={{ flex: 1, paddingRight: spacing.sm }}>
             <Text style={styles.settingTitle}>{t('branches:enabledForThisBranch')}</Text>
-            <Text style={styles.settingMeta}>
-              When off, members won&apos;t see the &ldquo;I&apos;m here&rdquo; button.
-              Attendance is only recorded by a desk volunteer.
-            </Text>
+            <Text style={styles.settingMeta}>{t('branches:whenOffMembersWontSeeTheImHereButton')}</Text>
           </View>
           <Switch
             value={enabled}

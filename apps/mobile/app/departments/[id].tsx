@@ -184,7 +184,7 @@ export default function DepartmentDetail() {  const { t } = useTranslation(['dep
                     lastName={d.leadLastName}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.leadEyebrow}>LEAD</Text>
+                    <Text style={styles.leadEyebrow}>{t('departments:lead')}</Text>
                     <Text style={styles.leadName}>
                       {d.leadFirstName} {d.leadLastName}
                     </Text>

@@ -725,7 +725,7 @@
     "departmentType": "Adwumakuo su",
     "chooseADepartmentType": "Paw adwumakuo su bi",
     "shortDescriptionShownOnTheDepartment": "Nkyerɛkyerɛmu tiawa a ɛbɛda adi wɔ adwumakuo no kratafa so",
-    "lead": "Ɔpanyin",
+    "lead": "PANIN",
     "clearDeputy": "Yi ɔboafoɔ no",
     "pickALead": "Paw ɔpanyin",
     "searchMembersInThisBranch": "Hwehwɛ amanfoɔ wɔ asɔre baa yi mu.",
@@ -739,7 +739,9 @@
     "anyDept": "Adwumakuo biara",
     "noDepartmentsFound": "Yɛanhu adwumakuo biara",
     "createDepartment": "Yɛ adwumakuo no",
-    "requiresTheDepartmentleaderCapabilityOnThe": "Ɛhia DepartmentLeader tumi wɔ asɔre baa a wopaw no so, anaa admin/ɔsɔfoɔ kwan. Wobɛtumi de amanfoɔ aka ho bere a woayɛ adwumakuo no wie."
+    "requiresTheDepartmentleaderCapabilityOnThe": "Ɛhia DepartmentLeader tumi wɔ asɔre baa a wopaw no so, anaa admin/ɔsɔfoɔ kwan. Wobɛtumi de amanfoɔ aka ho bere a woayɛ adwumakuo no wie.",
+    "notInADepartmentYet": "Wonni adwumakuo biara mu ɛnnɛ",
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Fa w'asɔre baa sohwɛfoɔ so ka asomdwuma adwumakuo bi ho (Ayɛyi, Ahɔhoɔgye, Amanneɛbɔ, Mmɔfra, …). Wo kuo, wo panin, ne w'adwuma nhyehyɛeɛ bɛda adi wɔ ha."
   },
   "branches": {
     "phone": "Telefon",
@@ -799,7 +801,9 @@
     "enabledForThisBranch": "Ɛyɛ adwuma wɔ asɔre baa yi mu",
     "noHomeBranchSet": "Wɔnhyɛɛ asɔre baa biara",
     "setYourHomeBranchFromYour": "Hyɛ wo asɔre baa wɔ wo profayl mu, anaa bisa adwumayɛni sɛ ɔnhyɛ mma wo.",
-    "email": "Email"
+    "email": "Email",
+    "whenOffMembersWontSeeTheImHereButton": "Sɛ ɛdum a, amanfoɔ renhunu “Mewɔ ha” bɔtin no. Ɛpono so boafoɔ nko ara na ɔbɛkyerɛw mmaeɛ.",
+    "home": "FIE"
   },
   "security": {
     "cancel": "Gyae",

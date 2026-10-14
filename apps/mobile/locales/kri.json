@@ -724,7 +724,7 @@
     "departmentType": "Dipatmɛnt tayp",
     "chooseADepartmentType": "Chuz wan dipatmɛnt tayp",
     "shortDescriptionShownOnTheDepartment": "Smɔl diskripshɔn we go sho na di dipatmɛnt pej",
-    "lead": "Lid",
+    "lead": "LID",
     "clearDeputy": "Pul di depyuti",
     "pickALead": "Pik wan lid",
     "searchMembersInThisBranch": "Luk fɔ mɛmba dɛn na dis branch.",
@@ -739,7 +739,9 @@
     "noDepartmentsFound": "Wi nɔ fɛn ɛni dipatmɛnt",
     "createDepartment": "Mek di dipatmɛnt",
     "requiresTheDepartmentleaderCapabilityOnThe": "Yu fɔ gɛt di DepartmentLeader kapabiliti na di branch we yu pik, ɔ admin/pasta akses. Yu kin put mɛmba dɛn afta yu mek di dipatmɛnt.",
-    "branch": "Branch"
+    "branch": "Branch",
+    "notInADepartmentYet": "Yu nɔ de na ɛni dipatmɛnt yet",
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Jɔyn wan ministri dipatmɛnt (Wɔship, Ɔsharin, Midia, Pikin dɛn, …) tru yu branch admin. Yu tim, yu lid, ɛn yu rota go sho ya."
   },
   "branches": {
     "phone": "Fon",
@@ -799,7 +801,9 @@
     "selfCheckIn": "Sɛlf chɛk in",
     "enabledForThisBranch": "I de wok fɔ dis branch",
     "noHomeBranchSet": "Nɔ om branch de sɛt",
-    "setYourHomeBranchFromYour": "Sɛt yu om branch frɔm yu profayl, ɔ aks wan admin fɔ sɛt am fɔ yu."
+    "setYourHomeBranchFromYour": "Sɛt yu om branch frɔm yu profayl, ɔ aks wan admin fɔ sɛt am fɔ yu.",
+    "whenOffMembersWontSeeTheImHereButton": "If dis ɔf, mɛmba dɛn nɔ go si di “A de ya” bɔtin. Na dɛsk vɔlɔntia nɔmɔ go rɛkɔd di atɛndans.",
+    "home": "OM"
   },
   "security": {
     "cancel": "Kansul",

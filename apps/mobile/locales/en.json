@@ -684,7 +684,7 @@
     "chooseADepartmentType": "Choose a department type",
     "description": "Description",
     "shortDescriptionShownOnTheDepartment": "Short description shown on the department page",
-    "lead": "Lead",
+    "lead": "LEAD",
     "clearDeputy": "Clear deputy",
     "pickALead": "Pick a lead",
     "searchMembersInThisBranch": "Search members in this branch.",
@@ -704,7 +704,9 @@
     "noDepartmentsFound": "No departments found",
     "endOfList": "End of list",
     "createDepartment": "Create department",
-    "requiresTheDepartmentleaderCapabilityOnThe": "Requires the DepartmentLeader capability on the chosen branch, or admin/pastor access. Members can be added after the department is created."
+    "requiresTheDepartmentleaderCapabilityOnThe": "Requires the DepartmentLeader capability on the chosen branch, or admin/pastor access. Members can be added after the department is created.",
+    "notInADepartmentYet": "You're not in a department yet",
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Join a ministry department (Worship, Ushering, Media, Children, …) via your branch admin. Your team, lead, and rota will land here."
   },
   "branches": {
     "branchName": "Branch name",
@@ -764,7 +766,9 @@
     "selfCheckIn": "Self check-in",
     "enabledForThisBranch": "Enabled for this branch",
     "noHomeBranchSet": "No home branch set",
-    "setYourHomeBranchFromYour": "Set your home branch from your profile, or ask an admin to set one for you."
+    "setYourHomeBranchFromYour": "Set your home branch from your profile, or ask an admin to set one for you.",
+    "whenOffMembersWontSeeTheImHereButton": "When off, members won’t see the “I’m here” button. Attendance is only recorded by a desk volunteer.",
+    "home": "HOME"
   },
   "security": {
     "currentPassword": "Current password",

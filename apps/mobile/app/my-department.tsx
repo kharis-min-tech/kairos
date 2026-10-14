@@ -29,7 +29,7 @@ import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useTranslation } from 'react-i18next';
 
-export default function MyDepartment() {  const { t } = useTranslation(['common', 'common']);
+export default function MyDepartment() {  const { t } = useTranslation(['departments', 'common']);
 
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
@@ -139,7 +139,7 @@ export default function MyDepartment() {  const { t } = useTranslation(['common'
                     lastName={active.leadLastName}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.leadEyebrow}>LEAD</Text>
+                    <Text style={styles.leadEyebrow}>{t('departments:lead')}</Text>
                     <Text style={styles.leadName}>
                       {active.leadFirstName} {active.leadLastName}
                     </Text>
@@ -258,6 +258,7 @@ export default function MyDepartment() {  const { t } = useTranslation(['common'
 }
 
 function EmptyState() {
+  const { t } = useTranslation(['departments', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -265,11 +266,8 @@ function EmptyState() {
       <View style={styles.emptyIconTile}>
         <Building2 color={c.primary} size={22} strokeWidth={1.5} />
       </View>
-      <Text style={styles.emptyTitle}>You&apos;re not in a department yet</Text>
-      <Text style={styles.emptyMeta}>
-        Join a ministry department (Worship, Ushering, Media, Children, …) via
-        your branch admin. Your team, lead, and rota will land here.
-      </Text>
+      <Text style={styles.emptyTitle}>{t('departments:notInADepartmentYet')}</Text>
+      <Text style={styles.emptyMeta}>{t('departments:joinAMinistryDepartmentViaYourBranchAdmin')}</Text>
     </Card>
   );
 }

@@ -690,7 +690,7 @@
     "chooseADepartmentType": "Choisissez un type de département",
     "description": "Description",
     "shortDescriptionShownOnTheDepartment": "Courte description affichée sur la page du département",
-    "lead": "Responsable",
+    "lead": "RESPONSABLE",
     "clearDeputy": "Retirer l'adjoint",
     "pickALead": "Choisir un responsable",
     "searchMembersInThisBranch": "Rechercher des membres dans cette antenne.",
@@ -704,7 +704,9 @@
     "anyDept": "Tout département",
     "noDepartmentsFound": "Aucun département trouvé",
     "createDepartment": "Créer le département",
-    "requiresTheDepartmentleaderCapabilityOnThe": "Nécessite la capacité DepartmentLeader sur l'antenne choisie, ou un accès admin/pasteur. Les membres peuvent être ajoutés après la création du département."
+    "requiresTheDepartmentleaderCapabilityOnThe": "Nécessite la capacité DepartmentLeader sur l'antenne choisie, ou un accès admin/pasteur. Les membres peuvent être ajoutés après la création du département.",
+    "notInADepartmentYet": "Vous n'êtes pas encore dans un département",
+    "joinAMinistryDepartmentViaYourBranchAdmin": "Rejoignez un département de ministère (Louange, Accueil, Média, Enfants, …) via l'administrateur de votre antenne. Votre équipe, votre responsable et votre planning apparaîtront ici."
   },
   "branches": {
     "phone": "Téléphone",
@@ -764,7 +766,9 @@
     "selfCheckIn": "Pointage autonome",
     "enabledForThisBranch": "Activé pour cette antenne",
     "noHomeBranchSet": "Aucune antenne d'attache définie",
-    "setYourHomeBranchFromYour": "Définissez votre antenne d'attache dans votre profil, ou demandez à un administrateur de le faire."
+    "setYourHomeBranchFromYour": "Définissez votre antenne d'attache dans votre profil, ou demandez à un administrateur de le faire.",
+    "whenOffMembersWontSeeTheImHereButton": "Désactivé, les membres ne verront pas le bouton « Je suis là ». La présence est alors enregistrée uniquement par un bénévole à l'accueil.",
+    "home": "PRINCIPALE"
   },
   "security": {
     "cancel": "Annuler",
