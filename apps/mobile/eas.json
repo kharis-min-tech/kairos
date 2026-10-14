@@ -37,6 +37,13 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://kairos.kharis.org"
       }
+    },
+    "preview-ios": {
+      "extends": "preview",
+      "distribution": "store",
+      "ios": {
+        "simulator": false
+      }
     }
   },
   "submit": {
