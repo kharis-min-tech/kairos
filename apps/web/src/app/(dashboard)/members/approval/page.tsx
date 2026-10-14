@@ -115,8 +115,8 @@ export default function MemberApprovalPage() {  const { t } = useTranslation(['m
                         approveMember.mutate(
                           { id: member.id, data: { approved: false } },
                           {
-                            onSuccess: () => toast.success('Registration rejected.'),
-                            onError: () => toast.error('Failed to reject registration. Please try again.'),
+                            onSuccess: () => toast.success(t('members:registrationRejected')),
+                            onError: () => toast.error(t('members:failedRejectRegistrationTryAgain')),
                           },
                         );
                       }}
@@ -129,8 +129,8 @@ export default function MemberApprovalPage() {  const { t } = useTranslation(['m
                         approveMember.mutate(
                           { id: member.id, data: { approved: true } },
                           {
-                            onSuccess: () => toast.success('Member approved.'),
-                            onError: () => toast.error('Failed to approve member. Please try again.'),
+                            onSuccess: () => toast.success(t('members:memberApproved')),
+                            onError: () => toast.error(t('members:failedApproveMemberTryAgain')),
                           },
                         );
                       }}

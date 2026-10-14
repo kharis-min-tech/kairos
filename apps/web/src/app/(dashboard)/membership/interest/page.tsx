@@ -91,7 +91,7 @@ export default function MembershipInterestPage() {  const { t } = useTranslation
 
   function admitSelected() {
     if (!cohortId) {
-      toast.error('Pick the cohort to admit them into.');
+      toast.error(t('membership:pickCohortAdmitThemInto'));
       return;
     }
     const memberIds = [...selected];

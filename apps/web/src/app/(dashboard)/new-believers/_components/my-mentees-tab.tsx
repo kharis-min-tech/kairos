@@ -47,7 +47,7 @@ export function MyMenteesTab({ enrollments }: MyMenteesTabProps) {  const { t } 
         enrollmentId: activeMenteeId,
         data: { note: note.trim() },
       });
-      toast.success('Follow-up logged');
+      toast.success(t('newBelievers:followUpLogged'));
       closeFollowupDialog();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to log follow-up');

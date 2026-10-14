@@ -304,7 +304,7 @@ function OutfitCard({
     deactivate.mutate(
       { branchDeptId, outfitId: outfit.id },
       {
-        onSuccess: () => toast.success('Outfit archived'),
+        onSuccess: () => toast.success(t('departments:outfitArchived')),
         onError: (e) => toast.error(e instanceof Error ? e.message : 'Archive failed'),
       },
     );
@@ -368,7 +368,7 @@ function AssignmentCard({
     remove.mutate(
       { branchDeptId, assignmentId: assignment.id },
       {
-        onSuccess: () => toast.success('Assignment removed'),
+        onSuccess: () => toast.success(t('departments:assignmentRemoved')),
         onError: (e) => toast.error(e instanceof Error ? e.message : 'Remove failed'),
       },
     );
@@ -448,7 +448,7 @@ function UploadForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !imageUrl) {
-      toast.error('Name and image are required');
+      toast.error(t('departments:nameImageRequired'));
       return;
     }
     const trimmedNotes = notes.trim();
@@ -464,7 +464,7 @@ function UploadForm({
       },
       {
         onSuccess: () => {
-          toast.success('Outfit added');
+          toast.success(t('departments:outfitAdded'));
           setName('');
           setImageUrl('');
           setGenderTarget(UniformGenderTarget.Unisex);
@@ -567,7 +567,7 @@ function AssignForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!outfitId || !serviceDate) {
-      toast.error('Outfit and date are required');
+      toast.error(t('departments:outfitDateRequired'));
       return;
     }
     assign.mutate(
@@ -582,7 +582,7 @@ function AssignForm({
       },
       {
         onSuccess: () => {
-          toast.success('Uniform scheduled');
+          toast.success(t('departments:uniformScheduled'));
           setNotes('');
           onDone();
         },

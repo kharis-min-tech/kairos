@@ -399,16 +399,16 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         {
           onSuccess: () => {
             setJoinRequestSent(true);
-            toast.success('Request sent! The fellowship leader and admin have been notified.');
+            toast.success(t('fellowships:requestSentFellowshipLeaderAdminBeen'));
           },
           onError: () => {
-            toast.error('Could not send request. You may already have a pending request.');
+            toast.error(t('fellowships:couldSendRequestMayAlreadyPending'));
           },
         },
       );
     } else {
       setJoinRequestSent(true);
-      toast.success('Request noted! Contact your branch admin to join this fellowship.');
+      toast.success(t('fellowships:requestNotedContactBranchAdminJoin'));
     }
   };
 
@@ -676,7 +676,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
 
   const handleConfirmJoin = () => {
     setJoinSubmitted(true);
-    toast.success('Join request sent! The fellowship leader will be notified.');
+    toast.success(t('fellowships:joinRequestSentFellowshipLeaderNotified'));
   };
 
   // ── Estimate wait time ─────────────────────────────────

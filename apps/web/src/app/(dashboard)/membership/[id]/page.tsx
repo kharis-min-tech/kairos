@@ -225,7 +225,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  
                           { enrollmentId: e.id, score: Number(scores[e.id]) },
                           {
                             onSuccess: () => {
-                              toast.success('Final test recorded.');
+                              toast.success(t('membership:finalTestRecorded'));
                               setScores((s) => ({ ...s, [e.id]: '' }));
                             },
                             onError: (err: unknown) =>
@@ -270,7 +270,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  
                         withdraw.mutate(
                           { enrollmentId: e.id, data: { reason: 'withdrew' } },
                           {
-                            onSuccess: () => toast.success('Enrolment withdrawn.'),
+                            onSuccess: () => toast.success(t('membership:enrolmentWithdrawn')),
                             onError: (err: unknown) =>
                               toast.error(
                                 err instanceof Error ? err.message : 'Could not withdraw.',
@@ -457,7 +457,7 @@ function SessionEditor({
       },
       {
         onSuccess: () => {
-          toast.success(`Session ${sessionNumber} saved.`);
+          toast.success(t('membership:sessionSaved', { number: sessionNumber }));
           onDone();
         },
         onError: (e: unknown) =>
@@ -558,7 +558,7 @@ function SessionRegister({
     save.mutate(
       { records },
       {
-        onSuccess: (res) => toast.success(`Saved ${res.saved} record(s).`),
+        onSuccess: (res) => toast.success(t('membership:savedRecords', { count: res.saved })),
         onError: (e: unknown) =>
           toast.error(e instanceof Error ? e.message : 'Could not save the register.'),
       },
@@ -735,7 +735,7 @@ function GraduationTab({
                     { enrollmentIds: selected, attended: true },
                     {
                       onSuccess: (r) =>
-                        toast.success(`Induction recorded for ${r.updated} member(s).`),
+                        toast.success(t('membership:inductionRecordedFor', { count: r.updated })),
                       onError: (e: unknown) =>
                         toast.error(e instanceof Error ? e.message : 'Could not record.'),
                     },
@@ -755,7 +755,7 @@ function GraduationTab({
                       {
                         onSuccess: (r) => {
                           if (r.graduated > 0) {
-                            toast.success(`Graduated ${r.graduated} member(s).`);
+                            toast.success(t('membership:graduatedMembers', { count: r.graduated }));
                           }
                           // Keep the blocked list on screen rather than in a
                           // toast: "3 not eligible" is useless without the
@@ -818,7 +818,7 @@ function GraduationTab({
                         },
                         {
                           onSuccess: () => {
-                            toast.success('Graduated with an override.');
+                            toast.success(t('membership:graduatedOverride'));
                             setBlocked((prev) =>
                               prev.filter((x) => x.enrollmentId !== b.enrollmentId),
                             );

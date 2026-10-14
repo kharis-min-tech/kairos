@@ -95,7 +95,7 @@ export function EnrollmentDetailDrawer({
         id: enrollment.id,
         data: updateData,
       });
-      toast.success(`Advanced to ${nextStage.label}`);
+      toast.success(t('newBelievers:advancedToStage', { stage: nextStage.label }));
       return true;
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
@@ -138,7 +138,7 @@ export function EnrollmentDetailDrawer({
           ...(removeNotes.trim() ? { notes: removeNotes.trim() } : {}),
         },
       });
-      toast.success('Removed from pipeline');
+      toast.success(t('newBelievers:removedPipeline'));
       resetRemoveModal();
       onClose();
     } catch (err: unknown) {
@@ -153,7 +153,7 @@ export function EnrollmentDetailDrawer({
         id: enrollment.id,
         data: { [field]: value || null },
       });
-      toast.success('Saved');
+      toast.success(t('newBelievers:saved'));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to update');
     }

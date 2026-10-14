@@ -211,7 +211,7 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
               { branchDeptId, memberId, data },
               {
                 onSuccess: () => {
-                  toast.success('Followup logged.');
+                  toast.success(t('departments:followupLogged'));
                   setShowForm(false);
                 },
                 onError: (err) => {
@@ -316,8 +316,8 @@ export function FollowupsTab({ branchDeptId, members, canManage }: FollowupsTabP
                         deleteFollowup.mutate(
                           { branchDeptId, followupId: f.id },
                           {
-                            onSuccess: () => toast.success('Followup deleted.'),
-                            onError: () => toast.error('Failed to delete.'),
+                            onSuccess: () => toast.success(t('departments:followupDeleted')),
+                            onError: () => toast.error(t('departments:failedDelete')),
                           },
                         );
                       }}

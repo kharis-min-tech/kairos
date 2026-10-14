@@ -94,7 +94,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
 
     try {
       await recordAttendance.mutateAsync({ sessionId: session.id, data: { records } });
-      toast.success('Attendance saved');
+      toast.success(t('newBelievers:attendanceSaved'));
       setSaved(true);
       setToggles({});
     } catch (err: unknown) {

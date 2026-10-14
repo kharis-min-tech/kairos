@@ -152,8 +152,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                     approve.mutate(
                       { id, data: { approved: true } },
                       {
-                        onSuccess: () => toast.success('Member approved.'),
-                        onError: () => toast.error('Failed to approve. Please try again.'),
+                        onSuccess: () => toast.success(t('members:memberApproved')),
+                        onError: () => toast.error(t('members:failedApproveTryAgain')),
                       },
                     );
                   }}
@@ -173,7 +173,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                     if (!ok) return;
                     deactivate.mutate(member.id, {
                       onSuccess: () => router.push('/members'),
-                      onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                      onError: () => toast.error(t('members:failedDeactivateMemberTryAgain')),
                     });
                   }}
                 >{t('members:deactivate')}</Button>
@@ -190,8 +190,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                     });
                     if (!ok) return;
                     reactivate.mutate(member.id, {
-                      onSuccess: () => toast.success('Member reactivated.'),
-                      onError: () => toast.error('Failed to reactivate. Please try again.'),
+                      onSuccess: () => toast.success(t('members:memberReactivated')),
+                      onError: () => toast.error(t('members:failedReactivateTryAgain')),
                     });
                   }}
                 >{t('members:reactivate')}</Button>
@@ -271,9 +271,9 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                     setMembershipClass.mutate(
                       { id, completedAt: null },
                       {
-                        onSuccess: () => toast.success('Membership cleared.'),
+                        onSuccess: () => toast.success(t('members:membershipCleared')),
                         onError: () =>
-                          toast.error('Failed to clear membership. Please try again.'),
+                          toast.error(t('members:failedClearMembershipTryAgain')),
                       },
                     );
                   }}
@@ -304,11 +304,11 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                     { id, completedAt: new Date(`${classDateDraft}T00:00:00.000Z`).toISOString() },
                     {
                       onSuccess: () => {
-                        toast.success('Membership certified.');
+                        toast.success(t('members:membershipCertified'));
                         setClassDateDraft('');
                       },
                       onError: () =>
-                        toast.error('Failed to mark membership. Please try again.'),
+                        toast.error(t('members:failedMarkMembershipTryAgain')),
                     },
                   );
                 }}
@@ -364,8 +364,8 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                         removeRole.mutate(
                           { memberId: id, roleAssignmentId: role.id },
                           {
-                            onSuccess: () => toast.success('Role removed.'),
-                            onError: () => toast.error('Failed to remove role. Please try again.'),
+                            onSuccess: () => toast.success(t('members:roleRemoved')),
+                            onError: () => toast.error(t('members:failedRemoveRoleTryAgain')),
                           },
                         );
                       }}

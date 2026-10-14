@@ -215,7 +215,7 @@ export function FellowshipFollowupsTab({
               { fellowshipId, memberId, data },
               {
                 onSuccess: () => {
-                  toast.success('Followup logged.');
+                  toast.success(t('fellowships:followupLogged'));
                   setShowForm(false);
                 },
                 onError: (error) => {
@@ -313,8 +313,8 @@ export function FellowshipFollowupsTab({
                       deleteFollowup.mutate(
                         { fellowshipId, followupId: followup.id },
                         {
-                          onSuccess: () => toast.success('Followup deleted.'),
-                          onError: () => toast.error('Failed to delete.'),
+                          onSuccess: () => toast.success(t('fellowships:followupDeleted')),
+                          onError: () => toast.error(t('fellowships:failedDelete')),
                         },
                       );
                     }}

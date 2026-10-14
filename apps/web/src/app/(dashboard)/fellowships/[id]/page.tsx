@@ -172,10 +172,10 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                 if (!ok) return;
                 deleteFellowship.mutate(id, {
                   onSuccess: () => {
-                    toast.success('Fellowship deactivated.');
+                    toast.success(t('fellowships:fellowshipDeactivated'));
                     router.push('/fellowships');
                   },
-                  onError: () => toast.error('Failed to deactivate. Please try again.'),
+                  onError: () => toast.error(t('fellowships:failedDeactivateTryAgain')),
                 });
               }}
               disabled={deleteFellowship.isPending}
@@ -190,15 +190,15 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
             onClick={() => createJoinRequest.mutate(
               { fellowshipId: id, data: {} },
               {
-                onSuccess: () => toast.success('Request sent! An admin will review and get back to you.'),
+                onSuccess: () => toast.success(t('fellowships:requestSentAdminReviewGetBack')),
                 onError: (error) => {
                   const msg = (error as Error).message;
                   if (msg.includes('pending join request')) {
-                    toast.info('Your request has already been sent. An admin will get back to you!');
+                    toast.info(t('fellowships:yourRequestAlreadyBeenSentAdmin'));
                   } else if (msg.includes('previously been removed')) {
-                    toast.error('You cannot request to join at this time. Please contact an admin.');
+                    toast.error(t('fellowships:youCannotRequestJoinTimeContact'));
                   } else {
-                    toast.error('Something went wrong. Please try again or contact your admin.');
+                    toast.error(t('fellowships:somethingWentWrongTryAgainContact'));
                   }
                 },
               },
@@ -356,7 +356,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                               { fellowshipId: id, data: { memberId: m.id } },
                               {
                                 onSuccess: () => { setShowAddMember(false); setMemberSearch(''); },
-                                onError: () => toast.error('Failed to add member. Please try again.'),
+                                onError: () => toast.error(t('fellowships:failedAddMemberTryAgain')),
                               }
                             );
                           }}
@@ -427,8 +427,8 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                             removeMember.mutate(
                               { fellowshipId: id, memberId: member.memberId },
                               {
-                                onSuccess: () => toast.success('Member removed from this fellowship.'),
-                                onError: () => toast.error('Failed to remove member. Please try again.'),
+                                onSuccess: () => toast.success(t('fellowships:memberRemovedFellowship')),
+                                onError: () => toast.error(t('fellowships:failedRemoveMemberTryAgain')),
                               },
                             );
                           }}
@@ -528,7 +528,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                         },
                         {
                           onSuccess: () => setShowMeetingDialog(false),
-                          onError: () => toast.error('Failed to create meeting. Please try again.'),
+                          onError: () => toast.error(t('fellowships:failedCreateMeetingTryAgain')),
                         }
                       );
                     }}
@@ -743,10 +743,10 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                       ),
                     )
                       .then(() => {
-                        toast.success(`${ids.length} request${ids.length > 1 ? 's' : ''} approved.`);
+                        toast.success(t('fellowships:requestsApproved', { count: ids.length }));
                         setSelectedRequestIds(new Set());
                       })
-                      .catch(() => toast.error('Some requests could not be approved. Please try again.'));
+                      .catch(() => toast.error(t('fellowships:someRequestsCouldApprovedTryAgain')));
                   }}
                   disabled={reviewJoinRequest.isPending}
                   className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
@@ -760,10 +760,10 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                       ),
                     )
                       .then(() => {
-                        toast.success(`${ids.length} request${ids.length > 1 ? 's' : ''} rejected.`);
+                        toast.success(t('fellowships:requestsRejected', { count: ids.length }));
                         setSelectedRequestIds(new Set());
                       })
-                      .catch(() => toast.error('Some requests could not be rejected. Please try again.'));
+                      .catch(() => toast.error(t('fellowships:someRequestsCouldRejectedTryAgain')));
                   }}
                   disabled={reviewJoinRequest.isPending}
                   className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
@@ -819,10 +819,10 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                               { fellowshipId: id, requestId: req.id, data: { status: 'approved' } },
                               {
                                 onSuccess: () => {
-                                  toast.success('Request approved. Member added.');
+                                  toast.success(t('fellowships:requestApprovedMemberAdded'));
                                   setSelectedRequestIds((prev) => { const n = new Set(prev); n.delete(req.id); return n; });
                                 },
-                                onError: () => toast.error('Failed to approve request. Please try again.'),
+                                onError: () => toast.error(t('fellowships:failedApproveRequestTryAgain')),
                               },
                             )}
                             disabled={reviewJoinRequest.isPending}
@@ -833,10 +833,10 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                               { fellowshipId: id, requestId: req.id, data: { status: 'rejected' } },
                               {
                                 onSuccess: () => {
-                                  toast.success('Request rejected.');
+                                  toast.success(t('fellowships:requestRejected'));
                                   setSelectedRequestIds((prev) => { const n = new Set(prev); n.delete(req.id); return n; });
                                 },
-                                onError: () => toast.error('Failed to reject request. Please try again.'),
+                                onError: () => toast.error(t('fellowships:failedRejectRequestTryAgain')),
                               },
                             )}
                             disabled={reviewJoinRequest.isPending}
@@ -922,7 +922,7 @@ function AttendanceForm({
                 },
                 {
                   onSuccess: onDone,
-                  onError: () => toast.error('Failed to save attendance. Please try again.'),
+                  onError: () => toast.error(t('fellowships:failedSaveAttendanceTryAgain')),
                 }
               );
             }}

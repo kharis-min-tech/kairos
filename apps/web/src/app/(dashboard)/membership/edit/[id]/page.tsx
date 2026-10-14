@@ -108,7 +108,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
           setServerError(null);
           update.mutate(payload, {
             onSuccess: () => {
-              toast.success('Cohort updated.');
+              toast.success(t('membership:cohortUpdated'));
               router.push(`/membership/${cohortId}`);
             },
             onError: (e: unknown) => {
@@ -141,7 +141,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
                   if (!ok) return;
                   archive.mutate(cohortId, {
                     onSuccess: () => {
-                      toast.success('Cohort archived.');
+                      toast.success(t('membership:cohortArchived'));
                       router.push('/membership');
                     },
                     onError: (e: unknown) =>

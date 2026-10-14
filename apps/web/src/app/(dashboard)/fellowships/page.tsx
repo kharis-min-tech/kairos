@@ -294,8 +294,8 @@ function FellowshipsContent() {  const { t } = useTranslation(['fellowships', 'c
                             });
                             if (!ok) return;
                             deleteFellowship.mutate(fellowship.id, {
-                              onSuccess: () => toast.success('Fellowship deactivated.'),
-                              onError: () => toast.error('Failed to deactivate fellowship. Please try again.'),
+                              onSuccess: () => toast.success(t('fellowships:fellowshipDeactivated')),
+                              onError: () => toast.error(t('fellowships:failedDeactivateFellowshipTryAgain')),
                             });
                           }}
                         >{t('fellowships:deactivate')}</Button>

@@ -30,7 +30,7 @@ export function NotesTab({ session, canEdit }: Props) {  const { t } = useTransl
         id: session.id,
         data: { feedback: value.trim() },
       });
-      toast.success('Session notes saved');
+      toast.success(t('newBelievers:sessionNotesSaved'));
       setSaved(true);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to save session notes');

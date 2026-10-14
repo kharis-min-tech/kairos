@@ -61,10 +61,10 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
     try {
       if (format === 'html') {
         await downloadMyDataExportHtml();
-        toast.success('Your data has been downloaded as a readable report.');
+        toast.success(t('settings:yourDataBeenDownloadedReadableReport'));
       } else {
         await downloadMyDataExportJson();
-        toast.success('Your data has been downloaded as JSON.');
+        toast.success(t('settings:yourDataBeenDownloadedJson'));
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not export your data. Try again shortly.');

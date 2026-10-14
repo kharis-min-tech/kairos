@@ -1043,7 +1043,7 @@ function ScheduleInterviewDialog({
 
   const submit = () => {
     if (!interviewerOneId) {
-      toast.error('Pick at least one interviewer.');
+      toast.error(t('departments:pickLeastOneInterviewer'));
       return;
     }
     const iso = new Date(`${date}T${time}:00`).toISOString();
@@ -1061,10 +1061,10 @@ function ScheduleInterviewDialog({
       },
       {
         onSuccess: () => {
-          toast.success('Interview scheduled.');
+          toast.success(t('departments:toastInterviewScheduled'));
           onClose();
         },
-        onError: () => toast.error('Failed to schedule interview.'),
+        onError: () => toast.error(t('departments:failedScheduleInterview')),
       },
     );
   };
@@ -1157,10 +1157,10 @@ function RecordInterviewDialog({
       },
       {
         onSuccess: () => {
-          toast.success('Interview recorded.');
+          toast.success(t('departments:interviewRecorded'));
           onClose();
         },
-        onError: () => toast.error('Failed to record interview.'),
+        onError: () => toast.error(t('departments:failedRecordInterview')),
       },
     );
   };
@@ -1232,10 +1232,10 @@ function ExtendOfferDialog({
       },
       {
         onSuccess: () => {
-          toast.success('Offer extended.');
+          toast.success(t('departments:toastOfferExtended'));
           onClose();
         },
-        onError: () => toast.error('Failed to extend offer.'),
+        onError: () => toast.error(t('departments:failedExtendOffer')),
       },
     );
   };
@@ -1296,10 +1296,10 @@ function RejectDialog({
       },
       {
         onSuccess: () => {
-          toast.success('Request rejected.');
+          toast.success(t('departments:requestRejected'));
           onClose();
         },
-        onError: () => toast.error('Failed to reject.'),
+        onError: () => toast.error(t('departments:failedReject')),
       },
     );
   };
@@ -1351,10 +1351,10 @@ function EvaluateProbationDialog({
       },
       {
         onSuccess: () => {
-          toast.success('Probation evaluated.');
+          toast.success(t('departments:probationEvaluated'));
           onClose();
         },
-        onError: () => toast.error('Failed to evaluate.'),
+        onError: () => toast.error(t('departments:failedEvaluate')),
       },
     );
   };

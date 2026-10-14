@@ -690,8 +690,8 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {avgAttendance > 0
-                    ? `Average rate is ${avgAttendance}% over the last 8 weeks.`
-                    : 'Start recording attendance to see trends here.'}
+                    ? t('reports:averageRateOverLast8Weeks', { rate: avgAttendance })
+                    : t('reports:startRecordingAttendanceToSeeTrends')}
                 </p>
                 <Link
                   href="/attendance/reports"
@@ -752,17 +752,17 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                   {myAttendance?.servicesInWindow ?? 0}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Services attended in the last{' '}
-                  {myAttendance?.windowWeeks ?? 8} weeks
+                  {t('reports:servicesAttendedInLastWeeks', {
+                    count: myAttendance?.windowWeeks ?? 8,
+                  })}
                 </p>
                 {myAttendance && myAttendance.currentStreak.length > 0 ? (
                   <p className="mt-3 text-xs text-muted-foreground">
-                    Current streak:{' '}
+                    {t('reports:currentStreak')}{' '}
                     <span className="font-semibold text-foreground">
-                      {myAttendance.currentStreak.length}{' '}
                       {myAttendance.currentStreak.kind === 'attended'
-                        ? 'attended'
-                        : 'missed'}
+                        ? t('reports:streakAttended', { count: myAttendance.currentStreak.length })
+                        : t('reports:streakMissed', { count: myAttendance.currentStreak.length })}
                     </span>
                   </p>
                 ) : null}
@@ -847,9 +847,19 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                   <p className="text-sm">
-                    {totalNewMembers > 0
-                      ? <><span className="font-semibold">{totalNewMembers} new members</span> joined in the last {growthMonths} months. {growthTrending ? 'Growth is accelerating.' : 'Growth is steady.'}</>
-                      : 'No new member signups recorded recently. Consider running outreach programs to drive growth.'}
+                    {totalNewMembers > 0 ? (
+                      <>
+                        <span className="font-semibold">
+                          {t('reports:newMembersCount', { count: totalNewMembers })}
+                        </span>{' '}
+                        {t('reports:joinedInTheLastMonths', { count: growthMonths })}{' '}
+                        {growthTrending
+                          ? t('reports:growthIsAccelerating')
+                          : t('reports:growthIsSteady')}
+                      </>
+                    ) : (
+                      t('reports:noNewMemberSignupsRecently')
+                    )}
                   </p>
                 </div>
               </CardContent>
@@ -942,7 +952,9 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                     <span className="absolute right-0 top-5 z-50 hidden group-hover:block w-48 rounded-md bg-popover border border-border p-2 text-[10px] text-popover-foreground shadow-md">{t('reports:averageNumberOfDaysFromFirst')}</span>
                   </span>
                 </div>
-                <p className="mt-1 text-3xl font-bold tracking-tight text-[#9a6b04] dark:text-[#f8b537]">{effectiveOutreachAnalytics.overview.avgDaysToConversion > 0 ? `${effectiveOutreachAnalytics.overview.avgDaysToConversion} days` : 'No data'}</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-[#9a6b04] dark:text-[#f8b537]">{effectiveOutreachAnalytics.overview.avgDaysToConversion > 0
+              ? t('reports:daysCount', { count: effectiveOutreachAnalytics.overview.avgDaysToConversion })
+              : t('reports:noData')}</p>
               </CardContent>
             </Card>
           </div>
@@ -1017,10 +1029,12 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                 <div className="flex items-start gap-2">
                   <div className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                   <p className="text-sm">
-                    <span className="font-semibold">{effectiveOutreachAnalytics.overview.converted} souls</span> converted out of{' '}
-                    <span className="font-semibold">{effectiveOutreachAnalytics.overview.totalSouls} total</span>, a{' '}
-                    <span className="font-semibold text-emerald-600">{effectiveOutreachAnalytics.overview.conversionRate}% conversion rate</span>.
-                    Average time to conversion is <span className="font-semibold">{effectiveOutreachAnalytics.overview.avgDaysToConversion} days</span>.
+                    {t('reports:soulsConvertedSummary', {
+                      converted: effectiveOutreachAnalytics.overview.converted,
+                      total: effectiveOutreachAnalytics.overview.totalSouls,
+                      rate: effectiveOutreachAnalytics.overview.conversionRate,
+                      days: effectiveOutreachAnalytics.overview.avgDaysToConversion,
+                    })}
                   </p>
                 </div>
               </CardContent>
@@ -1098,7 +1112,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
       <Card>
         <CardContent className="space-y-3 py-6">
           <p className="text-sm font-semibold text-foreground">
-            We couldn&apos;t load {fellowshipName}&apos;s stats.
+            {t('reports:couldntLoadStatsFor', { name: fellowshipName })}
           </p>
           <p className="text-sm text-muted-foreground">
             {statsQ.error instanceof Error ? statsQ.error.message : 'Please try again.'}
@@ -1152,7 +1166,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base font-semibold">{t('reports:meetingsPerWeek')}</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Last 90 days, {fellowshipName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('reports:last90DaysName', { name: fellowshipName })}</p>
             </div>
             <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('reports:scopedFellowship')}</span>
           </div>
@@ -1179,7 +1193,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold">{t('reports:recentActivity')}</CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {fellowshipName} · last 90 days
+            {t('reports:nameLast90Days', { name: fellowshipName })}
           </p>
         </CardHeader>
         <CardContent>
@@ -1386,7 +1400,12 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
             <div>
               <CardTitle className="text-base font-semibold">{t('reports:serviceAttendancePerWeek')}</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {attendance ? `Last ${attendance.windowWeeks} weeks · ${departmentName}` : departmentName}
+                {attendance
+                  ? t('reports:lastWeeksName', {
+                      count: attendance.windowWeeks,
+                      name: departmentName,
+                    })
+                  : departmentName}
               </p>
             </div>
             <span className="rounded-full border border-[#5D3FD3]/30 bg-[#5D3FD3]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('reports:scopedDepartment')}</span>

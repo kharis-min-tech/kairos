@@ -327,8 +327,8 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
                                 });
                                 if (!ok) return;
                                 deactivate.mutate(member.id, {
-                                  onSuccess: () => toast.success('Member removed from system.'),
-                                  onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                                  onSuccess: () => toast.success(t('members:memberRemovedSystem')),
+                                  onError: () => toast.error(t('members:failedDeactivateMemberTryAgain')),
                                 });
                               }}
                             >{t('members:deactivate')}</Button>

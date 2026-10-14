@@ -57,7 +57,7 @@ export default function NewCohortPage() {  const { t } = useTranslation(['member
           setServerError(null);
           createCohort.mutate(payload, {
             onSuccess: (cohort) => {
-              toast.success(`Created ${cohort.name}.`);
+              toast.success(t('membership:createdCohort', { name: cohort.name }));
               router.push(`/membership/${cohort.id}`);
             },
             onError: (e: unknown) => {

@@ -42,7 +42,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
     respond.mutate(
       { branchDeptId, requestId, data: { offerResponse: 'accepted' } },
       {
-        onSuccess: () => toast.success('Offer accepted. Welcome to the team!'),
+        onSuccess: () => toast.success(t('departments:offerAcceptedWelcomeTeam')),
         onError: (err) =>
           toast.error(err instanceof Error ? err.message : 'Failed to accept offer.'),
       },
@@ -60,7 +60,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
     respond.mutate(
       { branchDeptId, requestId, data: { offerResponse: 'declined' } },
       {
-        onSuccess: () => toast.success('Offer declined.'),
+        onSuccess: () => toast.success(t('departments:offerDeclined')),
         onError: (err) =>
           toast.error(err instanceof Error ? err.message : 'Failed to decline offer.'),
       },

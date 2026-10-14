@@ -494,7 +494,7 @@ function GenerateForm({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!templateId) {
-      toast.error('Pick a template');
+      toast.error(t('departments:pickTemplate'));
       return;
     }
     generate.mutate(
@@ -714,7 +714,7 @@ function InstanceDetail({
                           data: { reason },
                         },
                         {
-                          onSuccess: () => toast.success('Swap request submitted'),
+                          onSuccess: () => toast.success(t('departments:swapRequestSubmitted')),
                           onError: (e: unknown) =>
                             toast.error(e instanceof Error ? e.message : 'Failed'),
                         },
@@ -866,7 +866,7 @@ function CreateTemplateForm({
           onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim()) {
-              toast.error('Name is required');
+              toast.error(t('departments:nameRequired'));
               return;
             }
             create.mutate(
@@ -881,7 +881,7 @@ function CreateTemplateForm({
               },
               {
                 onSuccess: () => {
-                  toast.success('Template created');
+                  toast.success(t('departments:templateCreated'));
                   onDone();
                 },
                 onError: (err: unknown) =>
@@ -990,7 +990,7 @@ function TemplateCard({
                 deactivate.mutate(
                   { branchDeptId, templateId: template.id },
                   {
-                    onSuccess: () => toast.success('Template archived'),
+                    onSuccess: () => toast.success(t('departments:templateArchived')),
                     onError: (err: unknown) =>
                       toast.error(err instanceof Error ? err.message : 'Failed'),
                   },
@@ -1104,7 +1104,7 @@ function SlotsManager({
           onSubmit={(e) => {
             e.preventDefault();
             if (!roleName.trim()) {
-              toast.error('Role name required');
+              toast.error(t('departments:roleNameRequired'));
               return;
             }
             create.mutate(
@@ -1115,7 +1115,7 @@ function SlotsManager({
               },
               {
                 onSuccess: () => {
-                  toast.success('Slot added');
+                  toast.success(t('departments:slotAdded'));
                   setRoleName('');
                   setPositions(1);
                 },
@@ -1232,14 +1232,14 @@ function PoolManager({
           onSubmit={(e) => {
             e.preventDefault();
             if (!memberId) {
-              toast.error('Pick a member');
+              toast.error(t('departments:pickMember'));
               return;
             }
             add.mutate(
               { branchDeptId, templateId, data: { memberId } },
               {
                 onSuccess: () => {
-                  toast.success('Added to pool');
+                  toast.success(t('departments:addedPool'));
                   setMemberId('');
                 },
                 onError: (err: unknown) =>
@@ -1418,7 +1418,7 @@ function SwapsSection({
                               data: { decision: 'rejected' },
                             },
                             {
-                              onSuccess: () => toast.success('Rejected'),
+                              onSuccess: () => toast.success(t('departments:rejected')),
                               onError: (err: unknown) =>
                                 toast.error(err instanceof Error ? err.message : 'Failed'),
                             },
@@ -1434,7 +1434,7 @@ function SwapsSection({
                               data: { decision: 'approved' },
                             },
                             {
-                              onSuccess: () => toast.success('Approved'),
+                              onSuccess: () => toast.success(t('departments:approved')),
                               onError: (err: unknown) =>
                                 toast.error(err instanceof Error ? err.message : 'Failed'),
                             },

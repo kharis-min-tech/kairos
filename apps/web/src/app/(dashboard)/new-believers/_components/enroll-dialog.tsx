@@ -109,7 +109,7 @@ export function EnrollDialog({
         mentorId: values.mentorId || undefined,
         notes: notes.trim() || undefined,
       });
-      toast.success('Member enrolled in New Believers programme');
+      toast.success(t('newBelievers:memberEnrolledNewBelieversProgramme'));
       onOpenChange(false);
     } catch (err: unknown) {
       const apiStatus = (err as { status?: number } | null)?.status;

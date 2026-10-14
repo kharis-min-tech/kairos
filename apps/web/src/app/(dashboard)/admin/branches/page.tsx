@@ -127,8 +127,8 @@ export default function BranchesPage() {  const { t } = useTranslation(['branche
                           });
                           if (!ok) return;
                           deleteBranch.mutate(branch.id, {
-                            onSuccess: () => toast.success('Branch deactivated.'),
-                            onError: () => toast.error('Failed to deactivate branch. Please try again.'),
+                            onSuccess: () => toast.success(t('branches:branchDeactivated')),
+                            onError: () => toast.error(t('branches:failedDeactivateBranchTryAgain')),
                           });
                         }}
                       >{t('branches:deactivate')}</Button>

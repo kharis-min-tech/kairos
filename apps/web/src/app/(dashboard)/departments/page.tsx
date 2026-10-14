@@ -297,9 +297,9 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
                             });
                             if (!ok) return;
                             deactivate.mutate(dept.id, {
-                              onSuccess: () => toast.success('Department deactivated.'),
+                              onSuccess: () => toast.success(t('departments:departmentDeactivated')),
                               onError: () =>
-                                toast.error('Failed to deactivate department. Please try again.'),
+                                toast.error(t('departments:failedDeactivateDepartmentTryAgain')),
                             });
                           }}
                         >{t('departments:deactivate')}</Button>

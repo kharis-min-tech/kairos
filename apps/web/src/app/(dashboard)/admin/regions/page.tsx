@@ -73,10 +73,10 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
           id: dialog.region.id,
           data: { regionName, country },
         });
-        toast.success('Region updated.');
+        toast.success(t('admin:regionUpdated'));
       } else if (dialog.kind === 'create') {
         await createRegion.mutateAsync({ regionName, country });
-        toast.success('Region created.');
+        toast.success(t('admin:regionCreated'));
       }
       closeDialog();
     } catch {
@@ -94,7 +94,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
     if (!ok) return;
     try {
       await deleteRegion.mutateAsync(region.id);
-      toast.success('Region deleted.');
+      toast.success(t('admin:regionDeleted'));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete region.');
     }

@@ -100,7 +100,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
   async function handleSave() {
     try {
       await updateEnrollment.mutateAsync({ id, data: editForm });
-      toast.success('Enrollment updated');
+      toast.success(t('newBelievers:enrollmentUpdated'));
       setIsEditing(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to update enrollment');
@@ -169,7 +169,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
 
     try {
       await updateEnrollment.mutateAsync({ id, data: { stage: nextStage.value } });
-      toast.success(`Stage advanced to ${nextStage.label}`);
+      toast.success(t('newBelievers:stageAdvancedTo', { stage: nextStage.label }));
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
     }
@@ -181,7 +181,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
         id,
         data: { stage: 'integrated', joinedDepartmentId: joinDeptId || null },
       });
-      toast.success('Stage advanced to Joined a Department');
+      toast.success(t('newBelievers:stageAdvancedJoinedDepartment'));
       setShowJoinDeptModal(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to advance stage');
@@ -198,7 +198,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
     if (!ok) return;
     try {
       await updateEnrollment.mutateAsync({ id, data: { isActive: false } });
-      toast.success('Enrollment deactivated');
+      toast.success(t('newBelievers:enrollmentDeactivated'));
       router.push('/new-believers');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to deactivate');

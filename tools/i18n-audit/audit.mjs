@@ -110,6 +110,11 @@ function hardcoded(file) {
   for (const m of src.matchAll(TITLE_PROP)) {
     if (/^[A-Za-z]/.test(m[1])) n++;
   }
+  // Toasts are as user-facing as anything on the page and live in callbacks,
+  // so no amount of JSX scanning finds them. There were 133 of them.
+  for (const m of src.matchAll(/toast\.(?:success|error|info|warning|message)\(\s*['"`]([^'"`]{3,})/g)) {
+    if (/[A-Za-z]{3}/.test(m[1])) n++;
+  }
   return n;
 }
 

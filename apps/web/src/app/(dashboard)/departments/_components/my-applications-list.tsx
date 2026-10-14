@@ -58,7 +58,7 @@ export function MyApplicationsList({ items }: Props) {  const { t } = useTransla
     withdraw.mutate(
       { branchDeptId, requestId },
       {
-        onSuccess: () => toast.success('Application withdrawn.'),
+        onSuccess: () => toast.success(t('departments:applicationWithdrawn')),
         onError: (err) =>
           toast.error(err instanceof Error ? err.message : 'Failed to withdraw.'),
       },

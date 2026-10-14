@@ -30,13 +30,19 @@ export function I18nProvider({
 }) {
   const [ready, setReady] = useState(false);
 
-  // Applied during module evaluation rather than in the effect: by the time an
-  // effect runs, a Suspense boundary further down may still be hydrating
-  // against the server's HTML, and switching underneath it is exactly the
-  // mismatch this is here to avoid.
-  if (i18n.language !== initialLanguage) {
-    void i18n.changeLanguage(initialLanguage);
-  }
+  // Once per mount, not on every render: changeLanguage notifies every
+  // subscriber, and doing that mid-render re-entered React and left the login
+  // form unhydrated, so it posted natively with the password in the URL.
+  //
+  // It has to happen before the first paint rather than in an effect, though.
+  // A Suspense boundary hydrates after effects from above it have run, so
+  // switching there lands underneath a boundary still matching the server's
+  // HTML -- which is the mismatch this exists to avoid. Resources are bundled,
+  // so the change applies synchronously.
+  useState(() => {
+    if (i18n.language !== initialLanguage) void i18n.changeLanguage(initialLanguage);
+    return null;
+  });
 
   useEffect(() => {
     void i18n.changeLanguage(resolveLanguage(storedPreference())).finally(() => setReady(true));

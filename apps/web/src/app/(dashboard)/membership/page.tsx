@@ -171,7 +171,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
           <div>
             <p className="text-sm font-medium text-foreground">{t('membership:youAreAConfirmedMember')}</p>
             <p className="text-xs text-muted-foreground">
-              Membership class completed on {formatShortDate(mine.confirmedAt)}.
+              {t('membership:classCompletedOn', { date: formatShortDate(mine.confirmedAt) })}
             </p>
           </div>
         </CardContent>
@@ -186,7 +186,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
         <CardContent className="space-y-3 py-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-medium text-foreground">
-              Your progress in {mine.enrollment.cohortName}
+              {t('membership:yourProgressIn', { name: mine.enrollment.cohortName })}
             </p>
             <Badge variant={readiness?.eligible ? 'default' : 'secondary'}>
               {readiness?.eligible ? 'Ready to graduate' : 'In progress'}
@@ -215,9 +215,10 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
             <div>
               <p className="text-sm font-medium text-foreground">{t('membership:youAreOnTheListFor')}</p>
               <p className="text-xs text-muted-foreground">
-                Added {formatShortDate(interest.expressedAt)}. A membership admin will place
-                you in a cohort. Your place holds until{' '}
-                {formatShortDate(interest.expiresAt)}.
+                {t('membership:addedAdminWillPlaceYou', {
+                  added: formatShortDate(interest.expressedAt),
+                  until: formatShortDate(interest.expiresAt),
+                })}
               </p>
             </div>
           </div>
@@ -227,7 +228,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
             disabled={withdraw.isPending}
             onClick={() =>
               withdraw.mutate(undefined, {
-                onSuccess: () => toast.success('Taken off the list.'),
+                onSuccess: () => toast.success(t('membership:takenOffList')),
                 onError: (e: unknown) =>
                   toast.error(e instanceof Error ? e.message : 'Could not update the list.'),
               })
@@ -251,10 +252,10 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
           </p>
           <p className="text-xs text-muted-foreground">
             {interest?.status === 'lapsed'
-              ? `Your place lapsed on ${formatShortDate(interest.expiresAt)}. Join the list again and you will be considered for the next intake.`
+              ? t('membership:yourPlaceLapsedOn', { date: formatShortDate(interest.expiresAt) })
               : interest?.status === 'withdrawn'
-                ? 'You took yourself off the list. Join again whenever you are ready.'
-                : 'Join the list and a membership admin will place you in an upcoming cohort.'}
+                ? t('membership:youTookYourselfOffTheList')
+                : t('membership:joinTheListAndAdminWillPlaceYou')}
           </p>
         </div>
         <Button
@@ -262,7 +263,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
           disabled={express.isPending}
           onClick={() =>
             express.mutate(undefined, {
-              onSuccess: () => toast.success('You are on the list for the next class.'),
+              onSuccess: () => toast.success(t('membership:youListNextClass')),
               onError: (e: unknown) =>
                 toast.error(e instanceof Error ? e.message : 'Could not join the list.'),
             })
@@ -321,8 +322,10 @@ function ChampionBranchView({
                     {row.memberFirstName} {row.memberLastName}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    Waiting {row.waitingDays} day{row.waitingDays === 1 ? '' : 's'} · added{' '}
-                    {formatShortDate(row.expressedAt)}
+                    {t('membership:waitingDaysAdded', {
+                      count: row.waitingDays,
+                      date: formatShortDate(row.expressedAt),
+                    })}
                   </span>
                 </li>
               ))}
@@ -360,6 +363,7 @@ function ChampionBranchView({
 }
 
 function CohortCard({ cohort }: { cohort: MembershipCohortSummary }) {
+  const { t } = useTranslation(['membership', 'common']);
   const statusTone: Record<MembershipCohortStatus, string> = {
     planned: 'bg-amber-500/10 text-amber-700 dark:text-[#f8b537]',
     active: 'bg-[#5D3FD3]/10 text-[#5D3FD3]',
@@ -390,16 +394,21 @@ function CohortCard({ cohort }: { cohort: MembershipCohortSummary }) {
         <div className="space-y-1 text-xs text-muted-foreground">
           <p className="flex items-center gap-1.5">
             <CalendarDays className="size-3.5" />
-            Starts {formatShortDate(cohort.startDate)}
-            {cohort.graduationDate ? ` · induction ${formatShortDate(cohort.graduationDate)}` : ''}
+            {t('membership:startsOn', { date: formatShortDate(cohort.startDate) })}
+            {cohort.graduationDate
+              ? t('membership:inductionSuffix', { date: formatShortDate(cohort.graduationDate) })
+              : ''}
           </p>
           <p className="flex items-center gap-1.5">
             <Users className="size-3.5" />
-            {cohort.enrolledCount} enrolled · {cohort.graduatedCount} graduated
+            {t('membership:enrolledGraduated', {
+              enrolled: cohort.enrolledCount,
+              graduated: cohort.graduatedCount,
+            })}
           </p>
           <p className="flex items-center gap-1.5">
             <GraduationCap className="size-3.5" />
-            {cohort.sessionCount} of 4 sessions scheduled
+            {t('membership:ofFourSessionsScheduled', { count: cohort.sessionCount })}
           </p>
         </div>
       </CardContent>

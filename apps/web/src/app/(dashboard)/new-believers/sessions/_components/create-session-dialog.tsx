@@ -84,7 +84,7 @@ export function CreateSessionDialog({
 
     try {
       await createSession.mutateAsync(payload);
-      toast.success('Session created');
+      toast.success(t('newBelievers:sessionCreated'));
       form.reset(defaultValues());
       onOpenChange(false);
     } catch (err: unknown) {

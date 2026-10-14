@@ -217,7 +217,7 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
         return next;
       }
       if (next.size >= MAX_BULK_SELECT) {
-        toast.warning(`You can select up to ${MAX_BULK_SELECT} members at a time`);
+        toast.warning(t('newBelievers:canSelectUpTo', { count: MAX_BULK_SELECT }));
         return prev;
       }
       next.add(id);
@@ -238,14 +238,14 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
     }
     setSelectedIds(next);
     if (next.size > 0 && displayedEnrollments.length > MAX_BULK_SELECT) {
-      toast.warning(`Selected first ${MAX_BULK_SELECT} (cap)`);
+      toast.warning(t('newBelievers:selectedFirstCap', { count: MAX_BULK_SELECT }));
     }
   }
 
   async function handleBulkAdvance() {
     if (selectedIds.size === 0 || !bulkTargetStage) return;
     if (selectedRequiresIndividualFeedback) {
-      toast.warning('Session moves need individual feedback. Move one member at a time.');
+      toast.warning(t('newBelievers:sessionMovesNeedIndividualFeedbackMove'));
       return;
     }
     try {
@@ -254,9 +254,9 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
         targetStage: bulkTargetStage,
       });
       if (result.failed === 0) {
-        toast.success(`${result.advanced} member${result.advanced !== 1 ? 's' : ''} advanced`);
+        toast.success(t('newBelievers:membersAdvanced', { count: result.advanced }));
       } else {
-        toast.warning(`${result.advanced} advanced, ${result.failed} failed`);
+        toast.warning(t('newBelievers:advancedAndFailed', { advanced: result.advanced, failed: result.failed }));
       }
       clearSelection();
     } catch (err: unknown) {
@@ -321,9 +321,9 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
             }
           }
           if (reversed) {
-            toast.success('Move undone');
+            toast.success(t('newBelievers:moveUndone'));
           } else {
-            toast.error('Could not undo. Please refresh the page');
+            toast.error(t('newBelievers:couldUndoRefreshPage'));
             void queryClient.invalidateQueries();
           }
         },

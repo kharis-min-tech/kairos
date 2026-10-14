@@ -435,8 +435,8 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                         removeLeadership.mutate(
                           { branchId: id, leadershipId: leader.id },
                           {
-                            onSuccess: () => toast.success('Leader removed.'),
-                            onError: () => toast.error('Failed to remove leader. Please try again.'),
+                            onSuccess: () => toast.success(t('branches:leaderRemoved')),
+                            onError: () => toast.error(t('branches:failedRemoveLeaderTryAgain')),
                           },
                         );
                       }}

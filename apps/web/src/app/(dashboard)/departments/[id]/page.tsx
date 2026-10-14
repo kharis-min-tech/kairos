@@ -241,8 +241,8 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                 createJoinRequest.mutate(
                   { branchDeptId: id, data: {} },
                   {
-                    onSuccess: () => toast.success('Join request submitted.'),
-                    onError: () => toast.error('Failed to submit request.'),
+                    onSuccess: () => toast.success(t('departments:joinRequestSubmitted')),
+                    onError: () => toast.error(t('departments:failedSubmitRequest')),
                   },
                 )
               }
@@ -268,7 +268,7 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                       data: { offerResponse: 'accepted' },
                     },
                     {
-                      onSuccess: () => toast.success('Offer accepted. Probation started.'),
+                      onSuccess: () => toast.success(t('departments:offerAcceptedProbationStarted')),
                       onError: (e: unknown) =>
                         toast.error(
                           e instanceof Error ? e.message : 'Failed to accept offer.',
@@ -289,8 +289,8 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                       data: { offerResponse: 'declined' },
                     },
                     {
-                      onSuccess: () => toast.success('Offer declined.'),
-                      onError: () => toast.error('Failed to decline offer.'),
+                      onSuccess: () => toast.success(t('departments:offerDeclined')),
+                      onError: () => toast.error(t('departments:failedDeclineOffer')),
                     },
                   )
                 }
@@ -307,8 +307,8 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                   withdrawRequest.mutate(
                     { branchDeptId: id, requestId: myOpenRequest.id },
                     {
-                      onSuccess: () => toast.success('Request withdrawn.'),
-                      onError: () => toast.error('Failed to withdraw.'),
+                      onSuccess: () => toast.success(t('departments:requestWithdrawn')),
+                      onError: () => toast.error(t('departments:failedWithdraw')),
                     },
                   )
                 }
@@ -436,11 +436,11 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                         { branchDeptId: id, data: { memberId: memberToAdd } },
                         {
                           onSuccess: () => {
-                            toast.success('Member added.');
+                            toast.success(t('departments:memberAdded'));
                             setMemberToAdd('');
                             setShowAddMember(false);
                           },
-                          onError: () => toast.error('Failed to add member.'),
+                          onError: () => toast.error(t('departments:failedAddMember')),
                         },
                       )
                     }
@@ -498,8 +498,8 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                             removeMember.mutate(
                               { branchDeptId: id, memberId: m.memberId },
                               {
-                                onSuccess: () => toast.success('Member removed.'),
-                                onError: () => toast.error('Failed to remove member.'),
+                                onSuccess: () => toast.success(t('departments:memberRemoved')),
+                                onError: () => toast.error(t('departments:failedRemoveMember')),
                               },
                             );
                           }}
