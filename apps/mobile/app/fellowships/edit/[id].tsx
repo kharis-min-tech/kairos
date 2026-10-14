@@ -22,8 +22,10 @@ import {
 import type { CreateFellowshipRequest, FellowshipType } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { FellowshipForm } from '../_form';
+import { useTranslation } from 'react-i18next';
 
-export default function EditFellowship() {
+export default function EditFellowship() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -73,10 +75,10 @@ export default function EditFellowship() {
 
   async function confirmDelete() {
     const ok = await alert.confirm({
-      title: 'Delete fellowship?',
+      title: t('fellowships:deleteFellowship'),
       message:
         "This deactivates the fellowship and hides it from the directory. Members and past meetings are preserved but the fellowship won't accept new activity.",
-      confirmLabel: 'Delete',
+      confirmLabel: t('fellowships:delete'),
       destructive: true,
     });
     if (!ok) return;
@@ -99,7 +101,7 @@ export default function EditFellowship() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit fellowship</Text>
+          <Text style={styles.headerTitle}>{t('fellowships:editFellowship')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
@@ -114,7 +116,7 @@ export default function EditFellowship() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit fellowship</Text>
+          <Text style={styles.headerTitle}>{t('fellowships:editFellowship')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
@@ -151,22 +153,20 @@ export default function EditFellowship() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Edit fellowship
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('fellowships:editFellowship')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <FellowshipForm
         initial={initial}
-        submitLabel="Save changes"
+        submitLabel={t('fellowships:saveChanges')}
         submitPendingLabel="Saving…"
         submitting={update.isPending}
         serverError={serverError}
         onSubmit={handleSubmit}
         footer={
           <View style={styles.dangerZone}>
-            <Text style={styles.dangerEyebrow}>DANGER ZONE</Text>
+            <Text style={styles.dangerEyebrow}>{t('fellowships:dangerZone')}</Text>
             <Pressable
               onPress={deleting || remove.isPending ? undefined : confirmDelete}
               style={[
@@ -179,10 +179,7 @@ export default function EditFellowship() {
                 {deleting || remove.isPending ? 'Deleting…' : 'Delete fellowship'}
               </Text>
             </Pressable>
-            <Text style={styles.footnote}>
-              Deactivates the fellowship and hides it from the directory. Members and past
-              meetings are preserved.
-            </Text>
+            <Text style={styles.footnote}>{t('fellowships:deactivatesTheFellowshipAndHidesIt')}</Text>
           </View>
         }
       />

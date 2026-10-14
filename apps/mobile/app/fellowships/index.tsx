@@ -38,6 +38,7 @@ import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 25;
 
@@ -52,7 +53,8 @@ function useDebounced<T>(value: T, delay: number): T {
   return v;
 }
 
-export default function FellowshipsDirectory() {
+export default function FellowshipsDirectory() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -118,12 +120,12 @@ export default function FellowshipsDirectory() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Fellowships</Text>
+        <Text style={styles.headerTitle}>{t('fellowships:fellowships')}</Text>
         <View style={styles.headerActions}>
           <Pressable
             onPress={() => router.push('/fellowships/map' as never)}
             hitSlop={8}
-            accessibilityLabel="Open map"
+            accessibilityLabel={t('fellowships:openMap')}
           >
             <MapIcon color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -132,7 +134,7 @@ export default function FellowshipsDirectory() {
               onPress={() => router.push('/fellowships/new')}
               hitSlop={8}
               testID="new-fellowship-btn"
-              accessibilityLabel="New fellowship"
+              accessibilityLabel={t('fellowships:newFellowship')}
             >
               <Plus color={c.primary} size={22} strokeWidth={1.5} />
             </Pressable>
@@ -144,7 +146,7 @@ export default function FellowshipsDirectory() {
         <Input
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search fellowships"
+          placeholder={t('fellowships:searchFellowships')}
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
@@ -163,12 +165,12 @@ export default function FellowshipsDirectory() {
           <ScopeChip
             active={branchScope === 'home'}
             onPress={() => setBranchScope('home')}
-            label="My branch"
+            label={t('fellowships:myBranch')}
           />
           <ScopeChip
             active={branchScope === 'all'}
             onPress={() => setBranchScope('all')}
-            label="All"
+            label={t('fellowships:all')}
           />
         </View>
 
@@ -181,7 +183,7 @@ export default function FellowshipsDirectory() {
           <TypeChip
             active={typeFilter === null}
             onPress={() => setTypeFilter(null)}
-            label="Any type"
+            label={t('fellowships:anyType')}
           />
           {Object.values(FellowshipTypeEnum).map((t) => (
             <TypeChip
@@ -245,7 +247,7 @@ export default function FellowshipsDirectory() {
               <View style={styles.emptyIconTile}>
                 <UsersRound color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No fellowships found</Text>
+              <Text style={styles.emptyTitle}>{t('fellowships:noFellowshipsFound')}</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
                   ? `Nothing matched "${debouncedSearch}". Try a different query or clear filters.`
@@ -291,7 +293,7 @@ export default function FellowshipsDirectory() {
           ) : list.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : filtered.length > 0 ? (
-            <Text style={styles.endOfList}>End of list</Text>
+            <Text style={styles.endOfList}>{t('fellowships:endOfList')}</Text>
           ) : null
         }
       />

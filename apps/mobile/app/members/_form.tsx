@@ -27,6 +27,7 @@ import {
 import type { CreateMemberRequest, UpdateMemberRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { mapboxPublicToken } from '@/lib/config';
+import { useTranslation } from 'react-i18next';
 
 export interface MemberFormValues {
   firstName: string;
@@ -71,7 +72,8 @@ export function MemberForm({
   serverError,
   onSubmit,
   footer,
-}: MemberFormProps) {
+}: MemberFormProps) {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const branches = useQuery({
@@ -194,33 +196,33 @@ export function MemberForm({
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>IDENTITY</Text>
+          <Text style={styles.sectionEyebrow}>{t('members:identity')}</Text>
 
-          <FieldLabel label="First name" required />
+          <FieldLabel label={t('members:firstName')} required />
           <Input
             value={firstName}
             onChangeText={(v) => {
               setFirstName(v);
               clearError('firstName');
             }}
-            placeholder="Given name"
+            placeholder={t('members:givenName')}
             autoCapitalize="words"
             error={errors['firstName']}
           />
 
-          <FieldLabel label="Last name" required />
+          <FieldLabel label={t('members:lastName')} required />
           <Input
             value={lastName}
             onChangeText={(v) => {
               setLastName(v);
               clearError('lastName');
             }}
-            placeholder="Family name"
+            placeholder={t('members:familyName')}
             autoCapitalize="words"
             error={errors['lastName']}
           />
 
-          <FieldLabel label="Middle name" />
+          <FieldLabel label={t('members:middleName')} />
           <Input
             value={middleName}
             onChangeText={setMiddleName}
@@ -228,13 +230,13 @@ export function MemberForm({
           />
 
           <DatePicker
-            label="Date of birth"
+            label={t('members:dateOfBirth')}
             value={dateOfBirth}
             onChange={setDateOfBirth}
             maximumDate={new Date()}
           />
 
-          <FieldLabel label="Gender" />
+          <FieldLabel label={t('members:gender')} />
           <View style={styles.radioRow}>
             {(['Male', 'Female'] as const).map((g) => {
               const active = gender === g;
@@ -256,16 +258,16 @@ export function MemberForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>CONTACT</Text>
+          <Text style={styles.sectionEyebrow}>{t('members:contact')}</Text>
 
-          <FieldLabel label="Email" required={mode === 'create'} />
+          <FieldLabel label={t('members:email')} required={mode === 'create'} />
           <Input
             value={email}
             onChangeText={(v) => {
               setEmail(v);
               clearError('email');
             }}
-            placeholder="name@example.com"
+            placeholder={t('members:nameExampleCom')}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -273,12 +275,10 @@ export function MemberForm({
             error={errors['email']}
           />
           {mode === 'edit' ? (
-            <Text style={styles.helpText}>
-              Email is changed via the profile email-change flow, not here.
-            </Text>
+            <Text style={styles.helpText}>{t('members:emailIsChangedViaTheProfile')}</Text>
           ) : null}
 
-          <FieldLabel label="Phone" />
+          <FieldLabel label={t('members:phone')} />
           <Input
             value={phone}
             onChangeText={setPhone}
@@ -299,28 +299,26 @@ export function MemberForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>BRANCH</Text>
+          <Text style={styles.sectionEyebrow}>{t('members:branch')}</Text>
 
-          <FieldLabel label="Home branch" required={mode === 'create'} />
+          <FieldLabel label={t('members:homeBranch')} required={mode === 'create'} />
           <PickerField
             value={homeBranchLabel}
-            placeholder="Choose a home branch"
+            placeholder={t('members:chooseAHomeBranch')}
             onPress={mode === 'create' ? () => setOpenPicker('homeBranch') : undefined}
             disabled={mode !== 'create'}
             error={errors['homeBranchId']}
           />
           {mode === 'edit' ? (
-            <Text style={styles.helpText}>
-              Home branch changes are handled by an admin, so talk to your branch team.
-            </Text>
+            <Text style={styles.helpText}>{t('members:homeBranchChangesAreHandledBy')}</Text>
           ) : null}
 
-          <FieldLabel label="Secondary branch" />
+          <FieldLabel label={t('members:secondaryBranch')} />
           <View style={styles.deputyRow}>
             <View style={{ flex: 1 }}>
               <PickerField
                 value={secondaryBranchLabel}
-                placeholder="Choose a secondary branch (optional)"
+                placeholder={t('members:chooseASecondaryBranchOptional')}
                 onPress={() => setOpenPicker('secondaryBranch')}
               />
             </View>
@@ -329,7 +327,7 @@ export function MemberForm({
                 onPress={() => setSecondaryBranchId(null)}
                 style={styles.clearBtn}
                 hitSlop={6}
-                accessibilityLabel="Clear secondary branch"
+                accessibilityLabel={t('members:clearSecondaryBranch')}
               >
                 <X color={c.inkFaded} size={14} strokeWidth={1.5} />
               </Pressable>
@@ -359,16 +357,16 @@ export function MemberForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>EMERGENCY CONTACT</Text>
+          <Text style={styles.sectionEyebrow}>{t('members:emergencyContact')}</Text>
 
-          <FieldLabel label="Contact name" />
+          <FieldLabel label={t('members:contactName')} />
           <Input
             value={emergencyContactName}
             onChangeText={setEmergencyContactName}
             autoCapitalize="words"
           />
 
-          <FieldLabel label="Contact phone" />
+          <FieldLabel label={t('members:contactPhone')} />
           <Input
             value={emergencyContactPhone}
             onChangeText={setEmergencyContactPhone}
@@ -377,11 +375,11 @@ export function MemberForm({
             autoCorrect={false}
           />
 
-          <FieldLabel label="Relationship" />
+          <FieldLabel label={t('members:relationship')} />
           <Input
             value={emergencyContactRelationship}
             onChangeText={setEmergencyContactRelationship}
-            placeholder="e.g. Mother, Father, Spouse"
+            placeholder={t('members:eGMotherFatherSpouse')}
             autoCapitalize="words"
           />
         </Card>
@@ -402,7 +400,7 @@ export function MemberForm({
 
       <ValuePickerSheet
         open={openPicker === 'homeBranch'}
-        title="Home branch"
+        title={t('members:homeBranch')}
         onClose={() => setOpenPicker(null)}
         options={branchOptions}
         selected={homeBranchId}
@@ -414,10 +412,10 @@ export function MemberForm({
 
       <ValuePickerSheet
         open={openPicker === 'secondaryBranch'}
-        title="Secondary branch"
+        title={t('members:secondaryBranch')}
         onClose={() => setOpenPicker(null)}
         options={[
-          { value: '', label: 'None' },
+          { value: '', label: t('members:none') },
           ...branchOptions.filter((b) => b.value !== homeBranchId),
         ]}
         selected={secondaryBranchId ?? ''}
@@ -490,7 +488,8 @@ function ValuePickerSheet({
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
-}) {
+}) {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -527,7 +526,7 @@ function ValuePickerSheet({
             })}
           </ScrollView>
           <Pressable style={styles.sheetCancel} onPress={onClose}>
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            <Text style={styles.sheetCancelLabel}>{t('members:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

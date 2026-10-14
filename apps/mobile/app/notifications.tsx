@@ -11,8 +11,10 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
+import { useTranslation } from 'react-i18next';
 
-export default function Notifications() {
+export default function Notifications() {  const { t } = useTranslation(['settings', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -23,27 +25,24 @@ export default function Notifications() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={styles.headerTitle}>{t('settings:notifications')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>Activity feed</Text>
+        <Text style={styles.subTitle}>{t('settings:activityFeed')}</Text>
       </View>
 
       <View style={styles.emptyBlock}>
         <View style={styles.iconTile}>
           <Bell color={c.primary} size={22} strokeWidth={1.5} />
         </View>
-        <Text style={styles.emptyTitle}>Nothing here yet</Text>
-        <Text style={styles.emptyMeta}>
-          The in-app notifications feed lands once the notifications API is wired.
-          Web notifications continue to work in the meantime.
-        </Text>
+        <Text style={styles.emptyTitle}>{t('settings:nothingHereYet')}</Text>
+        <Text style={styles.emptyMeta}>{t('settings:theInAppNotificationsFeedLands')}</Text>
       </View>
 
       <Card padding="md" style={styles.metaCard}>
-        <Text style={styles.metaEyebrow}>What this will show</Text>
+        <Text style={styles.metaEyebrow}>{t('settings:whatThisWillShow')}</Text>
         <Text style={styles.metaLine}>· Approvals waiting on you</Text>
         <Text style={styles.metaLine}>· Rota reminders and swap requests</Text>
         <Text style={styles.metaLine}>· New Believer session completions</Text>

@@ -22,6 +22,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /*
  * Icons only. Each form's title and description come from FORM_DEFINITIONS —
@@ -41,7 +42,8 @@ const FORM_ICONS: Record<FormType, LucideIcon> = {
   baby_dedication: HandHeart,
 };
 
-export default function FormsLanding() {
+export default function FormsLanding() {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -52,16 +54,14 @@ export default function FormsLanding() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Forms</Text>
+        <Text style={styles.headerTitle}>{t('forms:forms')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.introBlock}>
           <Text style={styles.introTitle}>Forms &amp; data capture</Text>
-          <Text style={styles.introMeta}>
-            Capture altar-call responses, baptism and dedication requests, and testimonies.
-          </Text>
+          <Text style={styles.introMeta}>{t('forms:captureAltarCallResponsesBaptismAnd')}</Text>
         </View>
 
         <View style={styles.tileList}>
@@ -79,7 +79,7 @@ export default function FormsLanding() {
                     <Text style={styles.tileDesc}>{definition.description}</Text>
                     {/* Every form renders from its definition now, so there is
                         no longer a "view on web" case. */}
-                    <Text style={styles.tileCta}>Open form</Text>
+                    <Text style={styles.tileCta}>{t('forms:openForm')}</Text>
                   </View>
                   <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
                 </Card>

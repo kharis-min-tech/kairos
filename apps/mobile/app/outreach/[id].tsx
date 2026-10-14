@@ -39,8 +39,10 @@ import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
-export default function OutreachDetail() {
+export default function OutreachDetail() {  const { t } = useTranslation(['outreach', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -135,11 +137,11 @@ export default function OutreachDetail() {
             >
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroBadgePill}>
-                  <Text style={styles.heroBadgePillLabel}>OUTREACH</Text>
+                  <Text style={styles.heroBadgePillLabel}>{t('outreach:outreach')}</Text>
                 </View>
                 {p.isCompleted ? (
                   <View style={styles.heroBadgePillGold}>
-                    <Text style={styles.heroBadgePillGoldLabel}>COMPLETED</Text>
+                    <Text style={styles.heroBadgePillGoldLabel}>{t('outreach:completed')}</Text>
                   </View>
                 ) : null}
               </View>
@@ -164,7 +166,7 @@ export default function OutreachDetail() {
 
             {(p.address || p.city) ? (
               <Card padding="md" style={{ gap: spacing.xs }}>
-                <Text style={styles.sectionEyebrow}>ADDRESS</Text>
+                <Text style={styles.sectionEyebrow}>{t('outreach:address')}</Text>
                 <Pressable
                   onPress={() =>
                     Linking.openURL(
@@ -186,18 +188,18 @@ export default function OutreachDetail() {
             ) : null}
 
             <Card padding="md" style={{ gap: spacing.sm }}>
-              <Text style={styles.sectionEyebrow}>PROGRAM</Text>
+              <Text style={styles.sectionEyebrow}>{t('outreach:program')}</Text>
               <View style={styles.statsGrid}>
                 <View style={styles.statTile}>
                   <Text style={styles.statNumber}>
                     {p.totalSoulsReached ?? 0}
                   </Text>
-                  <Text style={styles.statLabel}>Souls reached</Text>
+                  <Text style={styles.statLabel}>{t('outreach:soulsReached')}</Text>
                 </View>
                 {typeof p.participantCount === 'number' ? (
                   <View style={styles.statTile}>
                     <Text style={styles.statNumber}>{p.participantCount}</Text>
-                    <Text style={styles.statLabel}>Workers</Text>
+                    <Text style={styles.statLabel}>{t('outreach:workers')}</Text>
                   </View>
                 ) : null}
               </View>
@@ -225,7 +227,7 @@ export default function OutreachDetail() {
                 <View style={styles.sectionIconTile}>
                   <Heart color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.sectionTitle}>Souls captured</Text>
+                <Text style={styles.sectionTitle}>{t('outreach:soulsCaptured')}</Text>
                 <Badge
                   label={String(souls.data?.length ?? 0)}
                   variant="neutral"
@@ -236,10 +238,7 @@ export default function OutreachDetail() {
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (souls.data ?? []).length === 0 ? (
                 <Card padding="md">
-                  <Text style={styles.emptyLine}>
-                    No souls captured on this program yet. Capture happens on the web,
-                    or via the Souls pipeline in Follow-ups.
-                  </Text>
+                  <Text style={styles.emptyLine}>{t('outreach:noSoulsCapturedOnThisProgram')}</Text>
                 </Card>
               ) : (
                 <View style={{ gap: spacing.xs }}>
@@ -278,7 +277,7 @@ export default function OutreachDetail() {
                 </View>
               )}
               <Pressable onPress={() => router.push('/souls')}>
-                <Text style={styles.viewAllLink}>View full souls pipeline →</Text>
+                <Text style={styles.viewAllLink}>{t('outreach:viewFullSoulsPipeline')}</Text>
               </Pressable>
             </View>
           </>
@@ -290,8 +289,8 @@ export default function OutreachDetail() {
           open={workerPickerOpen}
           onClose={() => setWorkerPickerOpen(false)}
           branchId={p.branchId}
-          title="Register worker"
-          subtitle="Members in this branch who worked on this outreach."
+          title={t('outreach:registerWorker')}
+          subtitle={t('outreach:membersInThisBranchWhoWorked')}
           onPick={(memberId) => {
             setWorkerPickerOpen(false);
             registerWorker.mutate(memberId);

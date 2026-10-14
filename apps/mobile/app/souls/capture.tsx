@@ -27,6 +27,7 @@ import {
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 const GENDER_OPTIONS = ['Male', 'Female'] as const;
 const AGE_OPTIONS = ['18-25', '26-35', '36-50', '51+'] as const;
@@ -36,7 +37,8 @@ const AGE_OPTIONS = ['18-25', '26-35', '36-50', '51+'] as const;
  * Required: firstName, lastName, phone. Optional program/fellowship/dept
  * attribution so a solo encounter can still be linked to a wider effort.
  */
-export default function CaptureSoul() {
+export default function CaptureSoul() {  const { t } = useTranslation(['souls', 'common']);
+
   const router = useRouter();
   const qc = useQueryClient();
   const styles = useThemedStyles(makeStyles);
@@ -147,7 +149,7 @@ export default function CaptureSoul() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Capture soul</Text>
+        <Text style={styles.headerTitle}>{t('souls:captureSoul')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -164,20 +166,17 @@ export default function CaptureSoul() {
               <Sparkles color={c.gold} size={20} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.heroTitle}>Log an evangelism encounter</Text>
-              <Text style={styles.heroMeta}>
-                Adds the person to the follow-up pipeline. Link to a program
-                below or leave blank for solo/personal work.
-              </Text>
+              <Text style={styles.heroTitle}>{t('souls:logAnEvangelismEncounter')}</Text>
+              <Text style={styles.heroMeta}>{t('souls:addsThePersonToTheFollow')}</Text>
             </View>
           </Card>
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.section}>Person</Text>
+            <Text style={styles.section}>{t('souls:person')}</Text>
             <View style={styles.pairRow}>
               <View style={{ flex: 1 }}>
                 <Input
-                  label="First name"
+                  label={t('souls:firstName')}
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCapitalize="words"
@@ -186,7 +185,7 @@ export default function CaptureSoul() {
               </View>
               <View style={{ flex: 1 }}>
                 <Input
-                  label="Last name"
+                  label={t('souls:lastName')}
                   value={lastName}
                   onChangeText={setLastName}
                   autoCapitalize="words"
@@ -195,7 +194,7 @@ export default function CaptureSoul() {
               </View>
             </View>
             <Input
-              label="Phone"
+              label={t('souls:phone')}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -205,7 +204,7 @@ export default function CaptureSoul() {
               error={errors['phone']}
             />
             <Input
-              label="Email (optional)"
+              label={t('souls:emailOptional')}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -215,7 +214,7 @@ export default function CaptureSoul() {
             />
             <View style={styles.pairRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Gender</Text>
+                <Text style={styles.fieldLabel}>{t('souls:gender')}</Text>
                 <PickerField
                   value={gender}
                   placeholder="—"
@@ -223,7 +222,7 @@ export default function CaptureSoul() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Age range</Text>
+                <Text style={styles.fieldLabel}>{t('souls:ageRange')}</Text>
                 <PickerField
                   value={ageRange}
                   placeholder="—"
@@ -236,13 +235,13 @@ export default function CaptureSoul() {
           <Card padding="md" style={{ gap: spacing.md }}>
             <Text style={styles.section}>Location (optional)</Text>
             <Input
-              label="Address"
+              label={t('souls:address')}
               value={address}
               onChangeText={setAddress}
               autoCapitalize="words"
             />
             <Input
-              label="City"
+              label={t('souls:city')}
               value={city}
               onChangeText={setCity}
               autoCapitalize="words"
@@ -250,22 +249,20 @@ export default function CaptureSoul() {
           </Card>
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.section}>Attribution</Text>
+            <Text style={styles.section}>{t('souls:attribution')}</Text>
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Outreach program</Text>
+              <Text style={styles.fieldLabel}>{t('souls:outreachProgram')}</Text>
               <PickerField
                 value={programLabel}
-                placeholder="Ad-hoc / solo evangelism"
+                placeholder={t('souls:adHocSoloEvangelism')}
                 onPress={() => setPicker('program')}
               />
-              <Text style={styles.hint}>
-                Leave blank if this was a personal/solo encounter.
-              </Text>
+              <Text style={styles.hint}>{t('souls:leaveBlankIfThisWasA')}</Text>
             </View>
 
             {(myFellowships.data?.length ?? 0) > 0 ? (
               <View style={{ gap: 4 }}>
-                <Text style={styles.fieldLabel}>On behalf of a fellowship</Text>
+                <Text style={styles.fieldLabel}>{t('souls:onBehalfOfAFellowship')}</Text>
                 <PickerField
                   value={fellowshipLabel}
                   placeholder="—"
@@ -276,7 +273,7 @@ export default function CaptureSoul() {
 
             {(myDepartments.data?.length ?? 0) > 0 ? (
               <View style={{ gap: 4 }}>
-                <Text style={styles.fieldLabel}>On behalf of a department</Text>
+                <Text style={styles.fieldLabel}>{t('souls:onBehalfOfADepartment')}</Text>
                 <PickerField
                   value={deptLabel}
                   placeholder="—"
@@ -287,11 +284,11 @@ export default function CaptureSoul() {
           </Card>
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.section}>Notes</Text>
+            <Text style={styles.section}>{t('souls:notes')}</Text>
             <Input
               value={notes}
               onChangeText={setNotes}
-              placeholder="What did you share? Anything to follow up on?"
+              placeholder={t('souls:whatDidYouShareAnythingTo')}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -314,7 +311,7 @@ export default function CaptureSoul() {
       {/* Picker sheets */}
       <ChoiceSheet
         open={picker === 'gender'}
-        title="Gender"
+        title={t('souls:gender')}
         options={GENDER_OPTIONS.map((g) => ({ value: g, label: g }))}
         selected={gender}
         onPick={(v) => {
@@ -326,7 +323,7 @@ export default function CaptureSoul() {
       />
       <ChoiceSheet
         open={picker === 'ageRange'}
-        title="Age range"
+        title={t('souls:ageRange')}
         options={AGE_OPTIONS.map((r) => ({ value: r, label: r }))}
         selected={ageRange}
         onPick={(v) => {
@@ -338,7 +335,7 @@ export default function CaptureSoul() {
       />
       <ChoiceSheet
         open={picker === 'program'}
-        title="Outreach program"
+        title={t('souls:outreachProgram')}
         options={(programs.data ?? []).map((p) => ({
           value: p.id,
           label: p.programName,
@@ -353,7 +350,7 @@ export default function CaptureSoul() {
       />
       <ChoiceSheet
         open={picker === 'fellowship'}
-        title="Fellowship"
+        title={t('souls:fellowship')}
         options={(myFellowships.data ?? []).map((f) => ({
           value: f.id,
           label: f.fellowshipName,
@@ -368,7 +365,7 @@ export default function CaptureSoul() {
       />
       <ChoiceSheet
         open={picker === 'department'}
-        title="Department"
+        title={t('souls:department')}
         options={(myDepartments.data ?? []).map((d) => ({
           value: d.id,
           label: d.departmentName,
@@ -422,7 +419,8 @@ function ChoiceSheet({
   onPick: (value: string) => void;
   onClose: () => void;
   showClear?: boolean;
-}) {
+}) {  const { t } = useTranslation(['souls', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -437,11 +435,11 @@ function ChoiceSheet({
                 onPress={() => onPick('')}
                 style={[styles.sheetRow, !selected && styles.sheetRowActive]}
               >
-                <Text style={styles.sheetRowLabel}>None</Text>
+                <Text style={styles.sheetRowLabel}>{t('souls:none')}</Text>
               </Pressable>
             ) : null}
             {options.length === 0 ? (
-              <Text style={styles.sheetEmpty}>Nothing to pick.</Text>
+              <Text style={styles.sheetEmpty}>{t('souls:nothingToPick')}</Text>
             ) : (
               options.map((opt) => {
                 const active = selected === opt.value;

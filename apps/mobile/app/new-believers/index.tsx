@@ -28,6 +28,7 @@ import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const SESSION_TITLES = [
   '1 · Foundations of Faith',
@@ -38,7 +39,8 @@ const SESSION_TITLES = [
 
 const TOTAL_SESSIONS = SESSION_TITLES.length;
 
-export default function NewBelievers() {
+export default function NewBelievers() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -89,7 +91,7 @@ export default function NewBelievers() {
           <Pressable
             onPress={() => router.push('/new-believers/sessions' as never)}
             hitSlop={8}
-            accessibilityLabel="Open sessions"
+            accessibilityLabel={t('newBelievers:openSessions')}
           >
             <CalendarClock color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -171,7 +173,8 @@ function EnrollmentCard({
   teacherName,
   mentorName,
   onPress,
-}: EnrollmentCardProps) {
+}: EnrollmentCardProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const progressValue = Math.min(1, completed / TOTAL_SESSIONS);
@@ -240,9 +243,9 @@ function EnrollmentCard({
       {teacherName || mentorName ? (
         <View style={styles.rolesRow}>
           {teacherName ? (
-            <RoleTile label="Teacher" value={teacherName} />
+            <RoleTile label={t('newBelievers:teacher')} value={teacherName} />
           ) : null}
-          {mentorName ? <RoleTile label="Mentor" value={mentorName} /> : null}
+          {mentorName ? <RoleTile label={t('newBelievers:mentor')} value={mentorName} /> : null}
         </View>
       ) : null}
       </Card>

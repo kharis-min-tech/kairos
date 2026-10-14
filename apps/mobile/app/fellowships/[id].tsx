@@ -49,6 +49,7 @@ import type { FellowshipJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 function formatMeetingDate(iso: string | Date): string {
   const d = iso instanceof Date ? iso : new Date(iso);
@@ -59,7 +60,8 @@ function formatMeetingDate(iso: string | Date): string {
   });
 }
 
-export default function FellowshipDetail() {
+export default function FellowshipDetail() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -193,9 +195,9 @@ export default function FellowshipDetail() {
 
   async function confirmRemoveMember(memberId: string, name: string) {
     const ok = await alert.confirm({
-      title: 'Remove from fellowship?',
+      title: t('fellowships:removeFromFellowship'),
       message: `Remove ${name} from this fellowship. They keep their member record; only this fellowship membership is ended.`,
-      confirmLabel: 'Remove',
+      confirmLabel: t('fellowships:remove'),
       destructive: true,
     });
     if (!ok) return;
@@ -222,7 +224,7 @@ export default function FellowshipDetail() {
           <Pressable
             onPress={() => router.push(`/fellowships/edit/${f.id}`)}
             hitSlop={8}
-            accessibilityLabel="Edit fellowship"
+            accessibilityLabel={t('fellowships:editFellowship')}
           >
             <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -284,7 +286,7 @@ export default function FellowshipDetail() {
               ) : null}
               {f.leaderFirstName ? (
                 <View style={styles.leaderRow}>
-                  <Text style={styles.leaderEyebrow}>LEADER</Text>
+                  <Text style={styles.leaderEyebrow}>{t('fellowships:leader')}</Text>
                   <Text style={styles.leaderName}>
                     {f.leaderFirstName} {f.leaderLastName ?? ''}
                   </Text>
@@ -294,7 +296,7 @@ export default function FellowshipDetail() {
 
             {nextMeeting ? (
               <Card padding="md" style={styles.nextCard}>
-                <Text style={styles.sectionEyebrow}>NEXT MEETING</Text>
+                <Text style={styles.sectionEyebrow}>{t('fellowships:nextMeeting')}</Text>
                 <Text style={styles.nextDate}>
                   {formatMeetingDate(nextMeeting.meetingDate)}
                 </Text>
@@ -317,10 +319,8 @@ export default function FellowshipDetail() {
                     <BarChart3 color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={styles.linkTitle}>Attendance</Text>
-                    <Text style={styles.linkMeta}>
-                      Services + meetings rates, per-member breakdown
-                    </Text>
+                    <Text style={styles.linkTitle}>{t('fellowships:attendance')}</Text>
+                    <Text style={styles.linkMeta}>{t('fellowships:servicesMeetingsRatesPerMemberBreakdown')}</Text>
                   </View>
                   <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
                 </Pressable>
@@ -333,10 +333,8 @@ export default function FellowshipDetail() {
                     <PhoneCall color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={styles.linkTitle}>Follow-ups</Text>
-                    <Text style={styles.linkMeta}>
-                      Overdue members, contact log, next-touch reminders
-                    </Text>
+                    <Text style={styles.linkTitle}>{t('fellowships:followUps')}</Text>
+                    <Text style={styles.linkMeta}>{t('fellowships:overdueMembersContactLogNextTouch')}</Text>
                   </View>
                   <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
                 </Pressable>
@@ -349,7 +347,7 @@ export default function FellowshipDetail() {
                   <View style={styles.sectionIconTile}>
                     <Handshake color={c.gold} size={14} strokeWidth={1.5} />
                   </View>
-                  <Text style={styles.sectionTitle}>Join requests</Text>
+                  <Text style={styles.sectionTitle}>{t('fellowships:joinRequests')}</Text>
                   <Badge
                     label={String(pendingRequests.length)}
                     variant="gold"
@@ -420,7 +418,7 @@ export default function FellowshipDetail() {
                 <View style={styles.sectionIconTile}>
                   <Users color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.sectionTitle}>Members</Text>
+                <Text style={styles.sectionTitle}>{t('fellowships:members')}</Text>
                 <Badge
                   label={String(members.data?.length ?? 0)}
                   variant="neutral"
@@ -431,7 +429,7 @@ export default function FellowshipDetail() {
                     onPress={() => setPickerOpen(true)}
                     style={styles.addMemberBtn}
                     hitSlop={6}
-                    accessibilityLabel="Add member"
+                    accessibilityLabel={t('fellowships:addMember')}
                   >
                     <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
                   </Pressable>
@@ -440,7 +438,7 @@ export default function FellowshipDetail() {
               {members.isLoading ? (
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (members.data ?? []).length === 0 ? (
-                <Text style={styles.emptyLine}>No members recorded yet.</Text>
+                <Text style={styles.emptyLine}>{t('fellowships:noMembersRecordedYet')}</Text>
               ) : (
                 <View style={styles.memberList}>
                   {(members.data ?? []).map((m) => (
@@ -476,9 +474,7 @@ export default function FellowshipDetail() {
                     </Pressable>
                   ))}
                   {canWrite ? (
-                    <Text style={styles.longPressHint}>
-                      Long-press a row to remove them from the fellowship.
-                    </Text>
+                    <Text style={styles.longPressHint}>{t('fellowships:longPressARowToRemove')}</Text>
                   ) : null}
                 </View>
               )}
@@ -489,22 +485,20 @@ export default function FellowshipDetail() {
                 <View style={styles.sectionIconTile}>
                   <Calendar color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.sectionTitle}>Meetings</Text>
+                <Text style={styles.sectionTitle}>{t('fellowships:meetings')}</Text>
                 {canWrite ? (
                   <Pressable
                     onPress={() => setLogMeetingOpen(true)}
                     style={styles.addMemberBtn}
                     hitSlop={6}
-                    accessibilityLabel="Log a meeting"
+                    accessibilityLabel={t('fellowships:logAMeeting')}
                   >
                     <Plus color={c.primary} size={16} strokeWidth={1.5} />
                   </Pressable>
                 ) : null}
               </View>
               {recentPast.length === 0 ? (
-                <Text style={styles.emptyLine}>
-                  No meetings logged yet. Tap + to record one.
-                </Text>
+                <Text style={styles.emptyLine}>{t('fellowships:noMeetingsLoggedYetTapTo')}</Text>
               ) : (
                 <View style={styles.meetingList}>
                   {recentPast.map((m) => (
@@ -569,14 +563,11 @@ export default function FellowshipDetail() {
           >
             <Pressable style={styles.meetingSheet} onPress={(e) => e.stopPropagation()}>
               <View style={styles.meetingSheetHandle} />
-              <Text style={styles.meetingSheetTitle}>Log a meeting</Text>
-              <Text style={styles.meetingSheetHint}>
-                Record when the fellowship met. Attendance can be added later
-                from the meeting card.
-              </Text>
+              <Text style={styles.meetingSheetTitle}>{t('fellowships:logAMeeting')}</Text>
+              <Text style={styles.meetingSheetHint}>{t('fellowships:recordWhenTheFellowshipMetAttendance')}</Text>
 
               <DatePicker
-                label="Date"
+                label={t('fellowships:date')}
                 value={meetingDate}
                 onChange={setMeetingDate}
                 disabled={createMeeting.isPending}
@@ -587,7 +578,7 @@ export default function FellowshipDetail() {
               <TextInput
                 value={meetingTitle}
                 onChangeText={setMeetingTitle}
-                placeholder="e.g. Bible study"
+                placeholder={t('fellowships:eGBibleStudy')}
                 placeholderTextColor={c.inkFaded}
                 style={styles.meetingInput}
                 editable={!createMeeting.isPending}
@@ -597,7 +588,7 @@ export default function FellowshipDetail() {
               <TextInput
                 value={meetingLocation}
                 onChangeText={setMeetingLocation}
-                placeholder="e.g. Main hall"
+                placeholder={t('fellowships:eGMainHall')}
                 placeholderTextColor={c.inkFaded}
                 style={styles.meetingInput}
                 editable={!createMeeting.isPending}
@@ -606,7 +597,7 @@ export default function FellowshipDetail() {
               <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Cancel"
+                    label={t('fellowships:cancel')}
                     variant="ghost"
                     onPress={() => setLogMeetingOpen(false)}
                     disabled={createMeeting.isPending}

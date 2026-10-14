@@ -23,6 +23,7 @@ import {
 } from '@kairos/ui-native';
 import type { FormSubmission, FormSubmissionStatus, FormType } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 const FORM_TITLES: Record<FormType, string> = {
   first_time_visitor: 'First-Time Visitor',
@@ -69,7 +70,8 @@ function formatDate(iso: string | Date): string {
   });
 }
 
-export default function MyFormSubmissions() {
+export default function MyFormSubmissions() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -86,7 +88,7 @@ export default function MyFormSubmissions() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>My submissions</Text>
+        <Text style={styles.headerTitle}>{t('common:mySubmissions')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -101,7 +103,7 @@ export default function MyFormSubmissions() {
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Your form history</Text>
+          <Text style={styles.introTitle}>{t('common:yourFormHistory')}</Text>
           <Text style={styles.introMeta}>
             Every form you&apos;ve filed, most recent first.
           </Text>
@@ -127,7 +129,7 @@ export default function MyFormSubmissions() {
             <View style={styles.emptyIconTile}>
               <FileText color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>Nothing here yet</Text>
+            <Text style={styles.emptyTitle}>{t('common:nothingHereYet')}</Text>
             <Text style={styles.emptyMeta}>
               When you fill out a form (welcome, baptism, testimony, etc.) it&apos;ll show up
               here for you to reference.

@@ -31,10 +31,12 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 type DutyRow = NonNullable<Awaited<ReturnType<typeof api.me.rota>>['data']>[number];
 
-export default function MyRota() {
+export default function MyRota() {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -119,7 +121,7 @@ export default function MyRota() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>My rota</Text>
+        <Text style={styles.headerTitle}>{t('rota:myRota')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -149,9 +151,9 @@ export default function MyRota() {
               <Text style={styles.heroEyebrow}>Next duty · {relativeLabel(next.serviceDate)}</Text>
               <Text style={styles.heroDate}>{longDate(next.serviceDate)}</Text>
               <View style={styles.heroFieldRow}>
-                <HeroField label="Role" value={next.slotRoleName} />
-                <HeroField label="Time" value={next.startTime ?? '—'} />
-                <HeroField label="Status" value={next.status} />
+                <HeroField label={t('rota:role')} value={next.slotRoleName} />
+                <HeroField label={t('rota:time')} value={next.startTime ?? '—'} />
+                <HeroField label={t('rota:status')} value={next.status} />
               </View>
               <View style={styles.heroActions}>
                 <Button
@@ -166,7 +168,7 @@ export default function MyRota() {
                   style={styles.heroButton}
                 />
                 <Button
-                  label="Request swap"
+                  label={t('rota:requestSwap')}
                   size="sm"
                   variant="outline"
                   onPress={() => openSwapSheet(next)}
@@ -178,10 +180,8 @@ export default function MyRota() {
         ) : (
           !rota.isLoading && (
             <Card padding="lg" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No upcoming duties</Text>
-              <Text style={styles.emptyMeta}>
-                Nothing scheduled in the next 180 days.
-              </Text>
+              <Text style={styles.emptyTitle}>{t('rota:noUpcomingDuties')}</Text>
+              <Text style={styles.emptyMeta}>{t('rota:nothingScheduledInTheNextDays')}</Text>
             </Card>
           )
         )}
@@ -202,7 +202,7 @@ export default function MyRota() {
 
         {upcoming.length ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Upcoming</Text>
+            <Text style={styles.sectionTitle}>{t('rota:upcoming')}</Text>
             <View style={styles.upcomingList}>
               {upcoming.map((d) => (
                 <Card key={d.assignmentId} padding="md" style={styles.dutyCard}>
@@ -242,7 +242,8 @@ function SwapRequestSheet({
   onCancel: () => void;
   onConfirm: () => void;
   submitting: boolean;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -254,7 +255,7 @@ function SwapRequestSheet({
         <Pressable style={styles.backdrop} onPress={submitting ? undefined : onCancel}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Request a swap</Text>
+            <Text style={styles.sheetTitle}>{t('rota:requestASwap')}</Text>
             <Text style={styles.sheetMeta}>
               {duty.slotRoleName} · {longDate(duty.serviceDate)}
               {duty.startTime ? ` · ${duty.startTime}` : ''}
@@ -267,7 +268,7 @@ function SwapRequestSheet({
               multiline
               value={reason}
               onChangeText={onReasonChange}
-              placeholder="Optional: why you can't make it"
+              placeholder={t('rota:optionalWhyYouCanTMake')}
               placeholderTextColor={c.inkFaded}
               style={styles.sheetInput}
               editable={!submitting}
@@ -275,7 +276,7 @@ function SwapRequestSheet({
             <View style={styles.sheetFooter}>
               <View style={{ flex: 1 }}>
                 <Button
-                  label="Cancel"
+                  label={t('rota:cancel')}
                   variant="ghost"
                   onPress={onCancel}
                   disabled={submitting}

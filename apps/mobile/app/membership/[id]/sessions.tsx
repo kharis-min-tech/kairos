@@ -32,6 +32,7 @@ import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { PickerSheet } from '../_form';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Schedule the four sessions of a cohort. Gated on `membership:admin` at
@@ -45,7 +46,8 @@ import { PickerSheet } from '../_form';
  * teach different sessions of the same cohort, and being named here confers
  * no permissions at all — admins do the marking.
  */
-export default function CohortSessionsScreen() {
+export default function CohortSessionsScreen() {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -74,7 +76,7 @@ export default function CohortSessionsScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Sessions</Text>
+        <Text style={styles.headerTitle}>{t('membership:sessions')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -82,10 +84,7 @@ export default function CohortSessionsScreen() {
         <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
       ) : (
         <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.blurb}>
-            Every cohort runs four sessions. All four must be scheduled and attended
-            before anyone can graduate, so an unscheduled slot blocks the whole cohort.
-          </Text>
+          <Text style={styles.blurb}>{t('membership:everyCohortRunsFourSessionsAll')}</Text>
 
           {MEMBERSHIP_SESSION_NUMBERS.map((n) => {
             const existing = sessions.find((s) => s.sessionNumber === n);
@@ -117,7 +116,7 @@ export default function CohortSessionsScreen() {
                       </Text>
                     </>
                   ) : (
-                    <Text style={styles.unscheduled}>Not scheduled yet</Text>
+                    <Text style={styles.unscheduled}>{t('membership:notScheduledYet')}</Text>
                   )}
                 </Card>
               </Pressable>
@@ -159,7 +158,8 @@ function SessionEditor({
     notes?: string | null;
   } | null;
   onClose: () => void;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const qc = useQueryClient();
@@ -184,7 +184,7 @@ function SessionEditor({
 
   const teacherOptions = useMemo(
     () => [
-      { value: '', label: 'No teacher assigned' },
+      { value: '', label: t('membership:noTeacherAssigned') },
       ...(members.data ?? []).map((m) => ({
         value: m.id,
         label: `${m.firstName} ${m.lastName}`,
@@ -249,47 +249,45 @@ function SessionEditor({
             keyboardShouldPersistTaps="handled"
           >
             <Card padding="md" style={{ gap: spacing.md }}>
-              <Text style={styles.fieldLabel}>Title</Text>
+              <Text style={styles.fieldLabel}>{t('membership:title')}</Text>
               <Input
                 value={title}
                 onChangeText={(v) => {
                   setTitle(v);
                   setTitleError(null);
                 }}
-                placeholder="e.g. Who we are as a church"
+                placeholder={t('membership:eGWhoWeAreAs')}
                 error={titleError}
               />
 
-              <Text style={styles.fieldLabel}>Date</Text>
+              <Text style={styles.fieldLabel}>{t('membership:date')}</Text>
               <DatePicker
                 value={date}
                 onChange={setDate}
-                placeholder="When this session runs"
+                placeholder={t('membership:whenThisSessionRuns')}
               />
 
-              <Text style={styles.fieldLabel}>Location</Text>
+              <Text style={styles.fieldLabel}>{t('membership:location')}</Text>
               <Input
                 value={location}
                 onChangeText={setLocation}
-                placeholder="e.g. Main hall"
+                placeholder={t('membership:eGMainHall')}
               />
 
-              <Text style={styles.fieldLabel}>Teacher</Text>
+              <Text style={styles.fieldLabel}>{t('membership:teacher')}</Text>
               <Pressable style={styles.pickerField} onPress={() => setTeacherOpen(true)}>
                 <Text style={teacherId ? styles.pickerValue : styles.pickerPlaceholder}>
                   {teacherLabel || 'No teacher assigned'}
                 </Text>
                 <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
               </Pressable>
-              <Text style={styles.hint}>
-                Records who teaches this one session. It grants no permissions.
-              </Text>
+              <Text style={styles.hint}>{t('membership:recordsWhoTeachesThisOneSession')}</Text>
 
-              <Text style={styles.fieldLabel}>Notes</Text>
+              <Text style={styles.fieldLabel}>{t('membership:notes')}</Text>
               <Input
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Optional"
+                placeholder={t('membership:optional')}
                 multiline
                 numberOfLines={3}
               />
@@ -306,7 +304,7 @@ function SessionEditor({
 
       <PickerSheet
         open={teacherOpen}
-        title="Teacher"
+        title={t('membership:teacher')}
         onClose={() => setTeacherOpen(false)}
         options={teacherOptions}
         selected={teacherId}

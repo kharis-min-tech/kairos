@@ -33,6 +33,7 @@ import {
   OAuthProviderIcon,
   OAUTH_PROVIDER_LABEL,
 } from '@/components/oauth-provider-icon';
+import { useTranslation } from 'react-i18next';
 
 const ALL_PROVIDERS: OAuthProviderId[] = ['google', 'microsoft', 'apple'];
 const CONNECTIONS_KEY = ['oauth-connections'] as const;
@@ -44,7 +45,8 @@ const CONNECTIONS_KEY = ['oauth-connections'] as const;
  * responds 422 on the "last sign-in method" lockout guard with the exact
  * message we surface inline.
  */
-export default function ConnectionsScreen() {
+export default function ConnectionsScreen() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -110,7 +112,7 @@ export default function ConnectionsScreen() {
     const confirmed = await alert.confirm({
       title: `Disconnect ${label}?`,
       message: `You won't be able to sign in with ${label} until you reconnect it.`,
-      confirmLabel: 'Disconnect',
+      confirmLabel: t('security:disconnect'),
       destructive: true,
     });
     if (!confirmed) return;
@@ -128,7 +130,7 @@ export default function ConnectionsScreen() {
           buttons: [
             { label: 'OK', variant: 'cancel' },
             {
-              label: 'Change password',
+              label: t('security:changePassword'),
               variant: 'primary',
               onPress: () => router.push('/security/change-password'),
             },
@@ -149,23 +151,20 @@ export default function ConnectionsScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Connected accounts</Text>
+        <Text style={styles.headerTitle}>{t('security:connectedAccounts')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Sign-in methods</Text>
-          <Text style={styles.introMeta}>
-            Link Google, Microsoft, or Apple sign-in to your Kharis account so
-            you can pick any of them at sign-in.
-          </Text>
+          <Text style={styles.introTitle}>{t('security:signInMethods')}</Text>
+          <Text style={styles.introMeta}>{t('security:linkGoogleMicrosoftOrAppleSign')}</Text>
         </View>
 
         {connections.isLoading ? (
           <Card padding="md" style={styles.loadingCard}>
             <ActivityIndicator color={c.primary} />
-            <Text style={styles.loadingText}>Loading your connections…</Text>
+            <Text style={styles.loadingText}>{t('security:loadingYourConnections')}</Text>
           </Card>
         ) : connections.isError ? (
           <Card padding="md">
@@ -175,7 +174,7 @@ export default function ConnectionsScreen() {
                 : 'Could not load your connections.'}
             </Text>
             <Button
-              label="Retry"
+              label={t('security:retry')}
               variant="outline"
               size="sm"
               onPress={() => connections.refetch()}
@@ -203,12 +202,12 @@ export default function ConnectionsScreen() {
                         </Text>
                       </Text>
                     ) : (
-                      <Text style={styles.rowMeta}>Not connected</Text>
+                      <Text style={styles.rowMeta}>{t('security:notConnected')}</Text>
                     )}
                   </View>
                   {conn ? (
                     <Button
-                      label="Disconnect"
+                      label={t('security:disconnect')}
                       variant="outline"
                       size="sm"
                       loading={isBusy}
@@ -220,7 +219,7 @@ export default function ConnectionsScreen() {
                     />
                   ) : (
                     <Button
-                      label="Connect"
+                      label={t('security:connect')}
                       variant="primary"
                       size="sm"
                       iconLeft={<Link2 color="#ffffff" size={14} strokeWidth={2} />}

@@ -25,6 +25,7 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 type Window = 4 | 8 | 12 | 26;
 
@@ -35,7 +36,8 @@ const WINDOW_LABELS: Record<Window, string> = {
   26: '26w',
 };
 
-export default function FellowshipAttendance() {
+export default function FellowshipAttendance() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -83,9 +85,7 @@ export default function FellowshipAttendance() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Attendance
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('fellowships:attendance')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -120,7 +120,7 @@ export default function FellowshipAttendance() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !report.data ? (
           <Card padding="md">
-            <Text style={styles.emptyLine}>No attendance data yet.</Text>
+            <Text style={styles.emptyLine}>{t('fellowships:noAttendanceDataYet')}</Text>
           </Card>
         ) : (
           <>
@@ -129,21 +129,21 @@ export default function FellowshipAttendance() {
             </Text>
 
             <View style={styles.tileRow}>
-              <StatTile label="Active members" value={report.data.activeMembers} tone={c.primary} />
+              <StatTile label={t('fellowships:activeMembers')} value={report.data.activeMembers} tone={c.primary} />
               <StatTile
-                label="Service rate"
+                label={t('fellowships:serviceRate')}
                 value={`${Math.round(report.data.services.rate * 100)}%`}
                 tone={c.gold}
               />
               <StatTile
-                label="Meeting rate"
+                label={t('fellowships:meetingRate')}
                 value={`${Math.round(report.data.meetings.rate * 100)}%`}
                 tone={c.success}
               />
             </View>
 
             <Card padding="md" style={{ gap: 4 }}>
-              <Text style={styles.eyebrow}>SUNDAY SERVICES</Text>
+              <Text style={styles.eyebrow}>{t('fellowships:sundayServices')}</Text>
               <Text style={styles.summaryLine}>
                 {report.data.services.distinctAttendees} distinct attendees across{' '}
                 {report.data.services.totalServices} services · {weeks}w window
@@ -172,7 +172,7 @@ export default function FellowshipAttendance() {
             </Card>
 
             <Card padding="md" style={{ gap: 6 }}>
-              <Text style={styles.eyebrow}>FELLOWSHIP MEETINGS</Text>
+              <Text style={styles.eyebrow}>{t('fellowships:fellowshipMeetings')}</Text>
               <Text style={styles.summaryLine}>
                 {report.data.meetings.distinctAttendees} distinct attendees across{' '}
                 {report.data.meetings.totalMeetings} meetings
@@ -184,18 +184,18 @@ export default function FellowshipAttendance() {
                   {report.data.meetings.lastMeeting.total} present
                 </Text>
               ) : (
-                <Text style={styles.metaFaded}>No meetings logged in this window.</Text>
+                <Text style={styles.metaFaded}>{t('fellowships:noMeetingsLoggedInThisWindow')}</Text>
               )}
             </Card>
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Members</Text>
+                <Text style={styles.sectionTitle}>{t('fellowships:members')}</Text>
                 <Badge label={String(membersSorted.length)} variant="neutral" size="sm" />
               </View>
               {membersSorted.length === 0 ? (
                 <Card padding="md">
-                  <Text style={styles.emptyLine}>No active members.</Text>
+                  <Text style={styles.emptyLine}>{t('fellowships:noActiveMembers')}</Text>
                 </Card>
               ) : (
                 membersSorted.map((m) => (

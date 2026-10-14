@@ -23,6 +23,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 function useDebounced<T>(value: T, delay: number): T {
   const [v, setV] = useState(value);
@@ -102,7 +103,8 @@ export function MemberPickerSheet({
   source = 'members',
   onUseTypedName,
   initialQuery,
-}: MemberPickerSheetProps) {
+}: MemberPickerSheetProps) {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [searchInput, setSearchInput] = useState(initialQuery ?? '');
@@ -163,7 +165,7 @@ export function MemberPickerSheet({
           <Input
             value={searchInput}
             onChangeText={setSearchInput}
-            placeholder="Search by name or email"
+            placeholder={t('members:searchByNameOrEmail')}
             autoCapitalize="none"
             autoCorrect={false}
             autoFocus
@@ -225,16 +227,14 @@ export function MemberPickerSheet({
                   <Text style={styles.name} numberOfLines={1}>
                     Use “{typed}” as a name only
                   </Text>
-                  <Text style={styles.meta}>
-                    They aren’t in the directory, so we’ll record the name without a record.
-                  </Text>
+                  <Text style={styles.meta}>{t('members:theyArenTInTheDirectory')}</Text>
                 </View>
               </Pressable>
             ) : null}
           </ScrollView>
 
           <Pressable style={styles.cancel} onPress={onClose}>
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={styles.cancelLabel}>{t('members:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

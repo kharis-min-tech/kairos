@@ -25,8 +25,10 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
-export default function ChangePassword() {
+export default function ChangePassword() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -69,8 +71,8 @@ export default function ChangePassword() {
     try {
       await change.mutateAsync({ currentPassword, newPassword });
       alert.show({
-        title: 'Password changed',
-        message: 'Your password has been updated.',
+        title: t('security:passwordChanged'),
+        message: t('security:yourPasswordHasBeenUpdated'),
         buttons: [
           { label: 'OK', variant: 'primary', onPress: () => router.back() },
         ],
@@ -88,7 +90,7 @@ export default function ChangePassword() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Change password</Text>
+        <Text style={styles.headerTitle}>{t('security:changePassword')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -111,7 +113,7 @@ export default function ChangePassword() {
           </View>
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.fieldLabel}>Current password *</Text>
+            <Text style={styles.fieldLabel}>{t('security:currentPassword')}</Text>
             <Input
               value={currentPassword}
               onChangeText={(v) => {
@@ -126,7 +128,7 @@ export default function ChangePassword() {
               error={errors['currentPassword']}
             />
 
-            <Text style={styles.fieldLabel}>New password *</Text>
+            <Text style={styles.fieldLabel}>{t('security:newPassword')}</Text>
             <Input
               value={newPassword}
               onChangeText={(v) => {
@@ -139,11 +141,11 @@ export default function ChangePassword() {
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="password-new"
-              placeholder="At least 8 characters"
+              placeholder={t('security:atLeastCharacters')}
               error={errors['newPassword']}
             />
 
-            <Text style={styles.fieldLabel}>Confirm new password *</Text>
+            <Text style={styles.fieldLabel}>{t('security:confirmNewPassword')}</Text>
             <Input
               value={confirmPassword}
               onChangeText={(v) => {

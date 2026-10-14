@@ -28,6 +28,7 @@ import type { MembershipInterestStatus } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 const STATUSES: MembershipInterestStatus[] = ['waiting', 'admitted', 'lapsed', 'withdrawn'];
 
@@ -45,7 +46,8 @@ const STATUSES: MembershipInterestStatus[] = ['waiting', 'admitted', 'lapsed', '
  * entries lapse on their own so that is the default rather than something an
  * admin has to remember.
  */
-export default function MembershipInterestScreen() {
+export default function MembershipInterestScreen() {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -120,7 +122,7 @@ export default function MembershipInterestScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Interest pool</Text>
+        <Text style={styles.headerTitle}>{t('membership:interestPool')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -148,19 +150,13 @@ export default function MembershipInterestScreen() {
           />
         }
       >
-        <Text style={styles.blurb}>
-          Nobody enters a cohort on their own. Pick who goes into the next intake. Entries
-          lapse after six months, so somebody who has been away for a season drops off
-          rather than rolling forward.
-        </Text>
+        <Text style={styles.blurb}>{t('membership:nobodyEntersACohortOnTheir')}</Text>
 
         {selectable && openCohorts.length === 0 ? (
           <Card style={styles.warnCard}>
             <View style={styles.metaRow}>
               <TriangleAlert color={c.danger} size={16} strokeWidth={1.6} />
-              <Text style={styles.metaText}>
-                No cohort is open to admissions. Create one on the web dashboard first.
-              </Text>
+              <Text style={styles.metaText}>{t('membership:noCohortIsOpenToAdmissions')}</Text>
             </View>
           </Card>
         ) : null}

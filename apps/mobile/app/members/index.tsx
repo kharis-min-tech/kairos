@@ -36,6 +36,7 @@ import {
 import type { MemberWithBranchProtected } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 type TypeFilter = 'all' | 'member' | 'attendee';
 type StatusFilter = 'all' | 'approved' | 'pending' | 'rejected';
@@ -58,7 +59,8 @@ function useDebounced<T>(value: T, delay: number): T {
   return v;
 }
 
-export default function MembersDirectory() {
+export default function MembersDirectory() {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -106,13 +108,13 @@ export default function MembersDirectory() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Members</Text>
+        <Text style={styles.headerTitle}>{t('members:members')}</Text>
         <View style={styles.headerActions}>
           {canAdmin ? (
             <Pressable
               onPress={() => router.push('/members/admin')}
               hitSlop={8}
-              accessibilityLabel="Members admin"
+              accessibilityLabel={t('members:membersAdmin')}
             >
               <ShieldCheck color={c.primary} size={20} strokeWidth={1.5} />
             </Pressable>
@@ -122,7 +124,7 @@ export default function MembersDirectory() {
               onPress={() => router.push('/members/new')}
               hitSlop={8}
               testID="new-member-btn"
-              accessibilityLabel="New member"
+              accessibilityLabel={t('members:newMember')}
             >
               <Plus color={c.primary} size={22} strokeWidth={1.5} />
             </Pressable>
@@ -134,7 +136,7 @@ export default function MembersDirectory() {
         <Input
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search by name or email"
+          placeholder={t('members:searchByNameOrEmail')}
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
@@ -242,7 +244,7 @@ export default function MembersDirectory() {
               <View style={styles.emptyIconTile}>
                 <Users color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No members found</Text>
+              <Text style={styles.emptyTitle}>{t('members:noMembersFound')}</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
                   ? `Nothing matched "${debouncedSearch}". Try a different name or email.`
@@ -267,11 +269,11 @@ export default function MembersDirectory() {
                     {m.firstName} {m.lastName}
                   </Text>
                   {m.memberType === 'attendee' ? (
-                    <Badge label="Attendee" variant="gold" size="sm" />
+                    <Badge label={t('members:attendee')} variant="gold" size="sm" />
                   ) : m.memberType === 'child' ? (
-                    <Badge label="Child" variant="info" size="sm" />
+                    <Badge label={t('members:child')} variant="info" size="sm" />
                   ) : m.memberType === 'visitor' ? (
-                    <Badge label="Visitor" variant="neutral" size="sm" />
+                    <Badge label={t('members:visitor')} variant="neutral" size="sm" />
                   ) : null}
                 </View>
                 <Text style={styles.rowMeta} numberOfLines={1}>

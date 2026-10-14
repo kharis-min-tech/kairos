@@ -18,6 +18,7 @@ import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { CohortForm } from '../_form';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Edit a cohort, and archive it. Gated on `membership:admin` at CHURCH scope.
@@ -26,7 +27,8 @@ import { CohortForm } from '../_form';
  * `cancelled`. Enrolments and marks are preserved, which is why the confirm
  * copy says so rather than warning about data loss that does not happen.
  */
-export default function EditCohort() {
+export default function EditCohort() {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -79,10 +81,10 @@ export default function EditCohort() {
 
   async function handleArchive() {
     const ok = await alert.confirm({
-      title: 'Archive this cohort?',
+      title: t('membership:archiveThisCohort'),
       message:
         'It is marked cancelled and hidden from the list. Enrolments, marks and graduations are all preserved, and anyone already graduated stays a confirmed Member.',
-      confirmLabel: 'Archive',
+      confirmLabel: t('membership:archive'),
       destructive: true,
     });
     if (!ok) return;
@@ -103,7 +105,7 @@ export default function EditCohort() {
       <Pressable onPress={() => router.back()} hitSlop={8}>
         <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
       </Pressable>
-      <Text style={styles.headerTitle}>Edit cohort</Text>
+      <Text style={styles.headerTitle}>{t('membership:editCohort')}</Text>
       <View style={{ width: 24 }} />
     </View>
   );
@@ -154,7 +156,7 @@ export default function EditCohort() {
           notes: co.notes ?? '',
         }}
         showStatus
-        submitLabel="Save changes"
+        submitLabel={t('membership:saveChanges')}
         submitPendingLabel="Saving…"
         submitting={update.isPending}
         serverError={serverError}

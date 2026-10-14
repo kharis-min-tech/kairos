@@ -31,6 +31,7 @@ import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
 import { QrScannerModal } from '@/components/qr-scanner-modal';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Parse an admin-facing member QR. The scanner encodes each roster row as
@@ -44,7 +45,8 @@ function parseMemberQr(payload: string): string | null {
   return id.length > 0 ? id : null;
 }
 
-export default function AdminCheckin() {
+export default function AdminCheckin() {  const { t } = useTranslation(['admin', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -141,7 +143,7 @@ export default function AdminCheckin() {
             <ChevronLeft color="#ffffff" size={24} strokeWidth={1.5} />
           </Pressable>
           <View style={styles.headerText}>
-            <Text style={styles.headerEyebrow}>Check-in desk</Text>
+            <Text style={styles.headerEyebrow}>{t('admin:checkInDesk')}</Text>
             <Text style={styles.headerTitle}>
               {activeService?.serviceTitle ?? activeService?.serviceType ?? 'No live service'}
             </Text>
@@ -158,33 +160,33 @@ export default function AdminCheckin() {
           </View>
           <View style={styles.liveChip}>
             <View style={styles.liveDot} />
-            <Text style={styles.liveLabel}>Live</Text>
+            <Text style={styles.liveLabel}>{t('admin:live')}</Text>
           </View>
         </View>
 
         <View style={styles.statTiles}>
-          <StatTile label="Checked in" value={String(checkedIn)} />
-          <StatTile label="Roster" value={String(total)} />
-          <StatTile label="Not yet" value={String(notYet)} />
+          <StatTile label={t('admin:checkedIn')} value={String(checkedIn)} />
+          <StatTile label={t('admin:roster')} value={String(total)} />
+          <StatTile label={t('admin:notYet')} value={String(notYet)} />
         </View>
       </View>
 
       <View style={styles.actionBar}>
         <Button
-          label="Scan QR"
+          label={t('admin:scanQr')}
           size="sm"
           onPress={() => setScannerOpen(true)}
           iconLeft={<ScanLine color="#ffffff" size={14} strokeWidth={2} />}
         />
         <Button
-          label="Walk-in"
+          label={t('admin:walkIn')}
           size="sm"
           variant="outline"
           onPress={() => router.push('/forms/first_time_visitor')}
           iconLeft={<UserPlus color={c.primary} size={14} strokeWidth={2} />}
         />
         <Button
-          label="Show QR"
+          label={t('admin:showQr')}
           size="sm"
           variant="outline"
           onPress={() => {
@@ -205,7 +207,7 @@ export default function AdminCheckin() {
           <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search"
+            placeholder={t('admin:search')}
             placeholderTextColor={c.inkFaded}
             value={search}
             onChangeText={setSearch}
@@ -217,10 +219,8 @@ export default function AdminCheckin() {
 
       {!activeService ? (
         <View style={styles.emptyBlock}>
-          <Text style={styles.emptyTitle}>No service ready</Text>
-          <Text style={styles.emptyMeta}>
-            The check-in desk activates once a service is scheduled for today.
-          </Text>
+          <Text style={styles.emptyTitle}>{t('admin:noServiceReady')}</Text>
+          <Text style={styles.emptyMeta}>{t('admin:theCheckInDeskActivatesOnce')}</Text>
         </View>
       ) : (
         <FlatList
@@ -243,7 +243,7 @@ export default function AdminCheckin() {
             roster.isLoading ? (
               <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
             ) : (
-              <Text style={styles.emptyText}>No matches.</Text>
+              <Text style={styles.emptyText}>{t('admin:noMatches')}</Text>
             )
           }
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
@@ -270,12 +270,12 @@ export default function AdminCheckin() {
                   {isCheckedIn ? (
                     <Badge label={item.status ?? 'Present'} variant="success" size="sm" />
                   ) : (
-                    <Text style={styles.rowMeta}>Not checked in</Text>
+                    <Text style={styles.rowMeta}>{t('admin:notCheckedIn')}</Text>
                   )}
                 </View>
                 {!isCheckedIn ? (
                   <Button
-                    label="Check in"
+                    label={t('admin:checkIn')}
                     size="sm"
                     loading={isPending}
                     onPress={() => checkin.mutate({ memberId: item.memberId })}
@@ -291,8 +291,8 @@ export default function AdminCheckin() {
         visible={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onScan={handleScannedMemberQr}
-        title="Scan member code"
-        hint="Point the camera at a member's Kairos QR to check them in."
+        title={t('admin:scanMemberCode')}
+        hint={t('admin:pointTheCameraAtAMember')}
       />
     </SafeAreaView>
   );

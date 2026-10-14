@@ -48,10 +48,12 @@ import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'overdue' | 'all';
 
-export default function FellowshipFollowups() {
+export default function FellowshipFollowups() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -124,13 +126,11 @@ export default function FellowshipFollowups() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Follow-ups
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('fellowships:followUps')}</Text>
         <Pressable
           onPress={() => setMemberPickerOpen(true)}
           hitSlop={8}
-          accessibilityLabel="New follow-up"
+          accessibilityLabel={t('fellowships:newFollowUp')}
         >
           <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
@@ -175,7 +175,7 @@ export default function FellowshipFollowups() {
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
           ) : (overdue.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>Nothing overdue. Nicely kept up.</Text>
+              <Text style={styles.emptyLine}>{t('fellowships:nothingOverdueNicelyKeptUp')}</Text>
             </Card>
           ) : (
             (overdue.data ?? []).map((row) => (
@@ -195,9 +195,7 @@ export default function FellowshipFollowups() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : allRows.length === 0 ? (
           <Card padding="md">
-            <Text style={styles.emptyLine}>
-              No follow-ups recorded yet. Tap + to record one.
-            </Text>
+            <Text style={styles.emptyLine}>{t('fellowships:noFollowUpsRecordedYetTap')}</Text>
           </Card>
         ) : (
           allRows.map((row) => <FollowupCard key={row.id} row={row} />)
@@ -239,7 +237,8 @@ function OverdueCard({
 }: {
   row: OverdueFollowupRow;
   onNewFollowup: () => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   return (
@@ -270,7 +269,7 @@ function OverdueCard({
       <View style={styles.actionRow}>
         <Pressable style={styles.recordBtn} onPress={onNewFollowup}>
           <Plus color="#ffffff" size={14} strokeWidth={2} />
-          <Text style={styles.recordLabel}>Record follow-up</Text>
+          <Text style={styles.recordLabel}>{t('fellowships:recordFollowUp')}</Text>
         </Pressable>
       </View>
     </Card>
@@ -357,7 +356,8 @@ function CreateSheet({
   member: { memberId: string; memberName: string };
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [contactedAt, setContactedAt] = useState(
     new Date().toISOString().slice(0, 10),
@@ -495,13 +495,13 @@ function CreateSheet({
     <>
       <SheetShell open title={`Follow-up · ${member.memberName}`} onClose={onClose}>
         <DatePicker
-          label="Contacted on"
+          label={t('fellowships:contactedOn')}
           value={contactedAt}
           onChange={setContactedAt}
         />
 
         <View style={{ gap: 4 }}>
-          <Text style={styles.fieldLabel}>Type</Text>
+          <Text style={styles.fieldLabel}>{t('fellowships:type')}</Text>
           <View style={styles.chipRow}>
             {(['contact', 'visit'] as FollowupTypeChoice[]).map((t) => {
               const active = t === type;
@@ -549,12 +549,12 @@ function CreateSheet({
             </View>
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Reached them?</Text>
+              <Text style={styles.fieldLabel}>{t('fellowships:reachedThem')}</Text>
               <View style={styles.chipRow}>
                 {(
                   [
-                    { value: true, label: 'Yes' },
-                    { value: false, label: 'No' },
+                    { value: true, label: t('fellowships:yes') },
+                    { value: false, label: t('fellowships:no') },
                   ] as { value: boolean; label: string }[]
                 ).map(({ value, label }) => {
                   const active = contactReached === value;
@@ -581,13 +581,13 @@ function CreateSheet({
 
             {contactReached === true ? (
               <View style={{ gap: 4 }}>
-                <Text style={styles.fieldLabel}>Interest</Text>
+                <Text style={styles.fieldLabel}>{t('fellowships:interest')}</Text>
                 <View style={styles.chipRow}>
                   {(
                     [
-                      { value: 'interested', label: 'Interested' },
-                      { value: 'not_interested', label: 'Not interested' },
-                      { value: 'undecided', label: 'Undecided' },
+                      { value: 'interested', label: t('fellowships:interested') },
+                      { value: 'not_interested', label: t('fellowships:notInterested') },
+                      { value: 'undecided', label: t('fellowships:undecided') },
                     ] as { value: InterestChoice; label: string }[]
                   ).map(({ value, label }) => {
                     const active = interestLevel === value;
@@ -610,12 +610,12 @@ function CreateSheet({
         ) : (
           <>
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Kind</Text>
+              <Text style={styles.fieldLabel}>{t('fellowships:kind')}</Text>
               <View style={styles.chipRow}>
                 {(
                   [
-                    { value: 'in_person', label: 'In-person' },
-                    { value: 'virtual', label: 'Virtual' },
+                    { value: 'in_person', label: t('fellowships:inPerson') },
+                    { value: 'virtual', label: t('fellowships:virtual') },
                   ] as { value: VisitKindChoice; label: string }[]
                 ).map(({ value, label }) => {
                   const active = visitKind === value;
@@ -638,12 +638,12 @@ function CreateSheet({
             </View>
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Announced?</Text>
+              <Text style={styles.fieldLabel}>{t('fellowships:announced2')}</Text>
               <View style={styles.chipRow}>
                 {(
                   [
-                    { value: true, label: 'Announced' },
-                    { value: false, label: 'Unannounced' },
+                    { value: true, label: t('fellowships:announced') },
+                    { value: false, label: t('fellowships:unannounced') },
                   ] as { value: boolean; label: string }[]
                 ).map(({ value, label }) => {
                   const active = visitAnnounced === value;
@@ -667,7 +667,7 @@ function CreateSheet({
 
             <View style={{ gap: 4 }}>
               <TimePicker
-                label="Arrival time"
+                label={t('fellowships:arrivalTime')}
                 value={arrivalTime}
                 onChange={setArrivalTime}
                 error={errors['arrival'] ?? null}
@@ -675,7 +675,7 @@ function CreateSheet({
             </View>
 
             <TimePicker
-              label="Departure time (optional)"
+              label={t('fellowships:departureTimeOptional')}
               value={departureTime}
               onChange={setDepartureTime}
             />
@@ -701,19 +701,19 @@ function CreateSheet({
                   style={styles.companionAddBtn}
                 >
                   <Plus color="#ffffff" size={12} strokeWidth={2} />
-                  <Text style={styles.companionAddLabel}>Add companion</Text>
+                  <Text style={styles.companionAddLabel}>{t('fellowships:addCompanion')}</Text>
                 </Pressable>
               </ScrollView>
             </View>
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Outcome</Text>
+              <Text style={styles.fieldLabel}>{t('fellowships:outcome')}</Text>
               <View style={styles.chipRow}>
                 {(
                   [
-                    { value: 'present', label: 'Present' },
-                    { value: 'not_present', label: 'Not present' },
-                    { value: 'rescheduled', label: 'Rescheduled' },
+                    { value: 'present', label: t('fellowships:present') },
+                    { value: 'not_present', label: t('fellowships:notPresent') },
+                    { value: 'rescheduled', label: t('fellowships:rescheduled') },
                   ] as { value: VisitOutcomeChoice; label: string }[]
                 ).map(({ value, label }) => {
                   const active = visitOutcome === value;
@@ -738,23 +738,23 @@ function CreateSheet({
         )}
 
         <View style={{ gap: 4 }}>
-          <Text style={styles.fieldLabel}>Notes</Text>
+          <Text style={styles.fieldLabel}>{t('fellowships:notes')}</Text>
           <AutoGrowTextarea
             value={notes}
             onChangeText={setNotes}
-            placeholder="What was discussed?"
+            placeholder={t('fellowships:whatWasDiscussed')}
           />
         </View>
 
         {type === 'visit' ? (
           <>
             <CheckboxRow
-              label="Welfare concern noted"
+              label={t('fellowships:welfareConcernNoted')}
               value={welfareConcern}
               onToggle={() => setWelfareConcern((v) => !v)}
             />
             <CheckboxRow
-              label="Safeguarding matter"
+              label={t('fellowships:safeguardingMatter')}
               value={safeguardingConcern}
               onToggle={() => setSafeguardingConcern((v) => !v)}
             />
@@ -762,7 +762,7 @@ function CreateSheet({
         ) : null}
 
         <DatePicker
-          label="Next follow-up (optional)"
+          label={t('fellowships:nextFollowUpOptional')}
           value={nextDate}
           onChange={setNextDate}
         />
@@ -785,8 +785,8 @@ function CreateSheet({
           setCompanions((prev) => (prev.includes(memberId) ? prev : [...prev, memberId]));
           setCompanionPickerOpen(false);
         }}
-        title="Add companion"
-        subtitle="Who came along on the visit?"
+        title={t('fellowships:addCompanion')}
+        subtitle={t('fellowships:whoCameAlongOnTheVisit')}
       />
     </>
   );
@@ -880,13 +880,14 @@ function MemberPickSheet({
   members: FellowshipMemberWithDetails[];
   onClose: () => void;
   onPick: (m: FellowshipMemberWithDetails) => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
-    <SheetShell open={open} title="Which member?" onClose={onClose}>
+    <SheetShell open={open} title={t('fellowships:whichMember')} onClose={onClose}>
       {members.length === 0 ? (
-        <Text style={styles.emptyLine}>No members in this fellowship yet.</Text>
+        <Text style={styles.emptyLine}>{t('fellowships:noMembersInThisFellowshipYet')}</Text>
       ) : (
         members.map((m) => (
           <Pressable key={m.id} style={styles.pickRow} onPress={() => onPick(m)}>

@@ -1,3 +1,8 @@
+// Load the translation catalogue for every test. The app gets this via the
+// root layout; a test that renders one screen would otherwise see t() return
+// the key path instead of the English string.
+import '@/lib/i18n';
+
 /**
  * SecureStore mock that models the ONE behaviour biometric sign-in depends on:
  * an item written with `requireAuthentication` can refuse to come back out.

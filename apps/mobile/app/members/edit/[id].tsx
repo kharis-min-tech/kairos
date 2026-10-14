@@ -21,8 +21,10 @@ import type { UpdateMemberRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { MemberForm } from '../_form';
+import { useTranslation } from 'react-i18next';
 
-export default function EditMember() {
+export default function EditMember() {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -94,7 +96,7 @@ export default function EditMember() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit member</Text>
+          <Text style={styles.headerTitle}>{t('members:editMember')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
@@ -109,7 +111,7 @@ export default function EditMember() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit member</Text>
+          <Text style={styles.headerTitle}>{t('members:editMember')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
@@ -161,7 +163,7 @@ export default function EditMember() {
       <MemberForm
         mode="edit"
         initial={initial}
-        submitLabel="Save changes"
+        submitLabel={t('members:saveChanges')}
         submitPendingLabel="Saving…"
         submitting={update.isPending}
         serverError={serverError}

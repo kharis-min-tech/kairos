@@ -32,6 +32,7 @@ import type { RotaSwapRequestWithDetails } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 type Filter = 'pending' | 'approved' | 'rejected' | 'cancelled' | 'all';
 
@@ -43,7 +44,8 @@ const FILTER_LABELS: Record<Filter, string> = {
   all: 'All',
 };
 
-export default function SwapRequestsAdmin() {
+export default function SwapRequestsAdmin() {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -100,9 +102,7 @@ export default function SwapRequestsAdmin() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Swap requests
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('rota:swapRequests')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -190,18 +190,19 @@ function SwapCard({
   row: RotaSwapRequestWithDetails;
   onApprove: () => void;
   onReject: () => void;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const pending = row.status === 'pending';
   const badge =
     row.status === 'approved'
-      ? { label: 'Approved', variant: 'success' as const }
+      ? { label: t('rota:approved'), variant: 'success' as const }
       : row.status === 'rejected'
-        ? { label: 'Rejected', variant: 'danger' as const }
+        ? { label: t('rota:rejected'), variant: 'danger' as const }
         : row.status === 'cancelled'
-          ? { label: 'Cancelled', variant: 'neutral' as const }
-          : { label: 'Pending', variant: 'gold' as const };
+          ? { label: t('rota:cancelled'), variant: 'neutral' as const }
+          : { label: t('rota:pending'), variant: 'gold' as const };
   return (
     <Card padding="md" style={{ gap: spacing.sm }}>
       <View style={styles.row}>
@@ -234,28 +235,26 @@ function SwapCard({
             lastName={row.proposedLastName ?? undefined}
           />
           <View style={{ flex: 1 }}>
-            <Text style={styles.metaFaded}>Proposed swap</Text>
+            <Text style={styles.metaFaded}>{t('rota:proposedSwap')}</Text>
             <Text style={styles.proposedName}>
               {row.proposedFirstName} {row.proposedLastName ?? ''}
             </Text>
           </View>
         </View>
       ) : (
-        <Text style={styles.metaFaded}>
-          Open swap, with no specific member proposed. Anyone from the pool can cover.
-        </Text>
+        <Text style={styles.metaFaded}>{t('rota:openSwapWithNoSpecificMember')}</Text>
       )}
 
       {row.reason ? (
         <View style={styles.reasonBlock}>
-          <Text style={styles.reasonLabel}>REASON</Text>
+          <Text style={styles.reasonLabel}>{t('rota:reason')}</Text>
           <Text style={styles.reasonText}>{row.reason}</Text>
         </View>
       ) : null}
 
       {row.reviewNotes ? (
         <View style={styles.reviewNotesBlock}>
-          <Text style={styles.reviewNotesLabel}>REVIEW NOTES</Text>
+          <Text style={styles.reviewNotesLabel}>{t('rota:reviewNotes')}</Text>
           <Text style={styles.reviewNotesText}>{row.reviewNotes}</Text>
         </View>
       ) : null}
@@ -264,11 +263,11 @@ function SwapCard({
         <View style={styles.actionRow}>
           <Pressable style={styles.approveBtn} onPress={onApprove}>
             <Check color="#ffffff" size={14} strokeWidth={2} />
-            <Text style={styles.approveLabel}>Approve</Text>
+            <Text style={styles.approveLabel}>{t('rota:approve')}</Text>
           </Pressable>
           <Pressable style={styles.rejectBtn} onPress={onReject}>
             <X color={c.danger} size={14} strokeWidth={2} />
-            <Text style={styles.rejectLabel}>Reject</Text>
+            <Text style={styles.rejectLabel}>{t('rota:reject')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -286,7 +285,8 @@ function ReviewSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [notes, setNotes] = useState('');
 
@@ -331,7 +331,7 @@ function ReviewSheet({
               <Input
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Why is this being approved / rejected?"
+                placeholder={t('rota:whyIsThisBeingApprovedRejected')}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -346,7 +346,7 @@ function ReviewSheet({
               onPress={() => mutate.mutate()}
             />
             <Pressable style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelLabel}>Cancel</Text>
+              <Text style={styles.cancelLabel}>{t('rota:cancel')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>

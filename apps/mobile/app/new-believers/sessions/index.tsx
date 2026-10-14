@@ -26,6 +26,7 @@ import type { NewBelieverSession } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 const STAGE_LABELS: Record<string, string> = {
   'session-1': 'Session 1 · Foundations of Faith',
@@ -41,7 +42,8 @@ function isUpcoming(sessionDate: string): boolean {
   return d >= today.getTime();
 }
 
-export default function NewBelieverSessionsIndex() {
+export default function NewBelieverSessionsIndex() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -87,12 +89,12 @@ export default function NewBelieverSessionsIndex() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Sessions</Text>
+        <Text style={styles.headerTitle}>{t('newBelievers:sessions')}</Text>
         {canCreateSession ? (
           <Pressable
             onPress={() => router.push('/new-believers/sessions/new' as never)}
             hitSlop={8}
-            accessibilityLabel="Create new session"
+            accessibilityLabel={t('newBelievers:createNewSession')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -115,17 +117,14 @@ export default function NewBelieverSessionsIndex() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No sessions yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create the first session to start taking attendance for your
-              New Believers class.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('newBelievers:noSessionsYet')}</Text>
+            <Text style={styles.emptyMeta}>{t('newBelievers:createTheFirstSessionToStart')}</Text>
           </View>
         ) : (
           <>
             {upcoming.length > 0 ? (
               <View style={styles.group}>
-                <Text style={styles.groupHeader}>Upcoming</Text>
+                <Text style={styles.groupHeader}>{t('newBelievers:upcoming')}</Text>
                 {upcoming.map((s) => (
                   <SessionRow key={s.id} session={s} onPress={() => router.push(`/new-believers/sessions/${s.id}` as never)} />
                 ))}
@@ -134,7 +133,7 @@ export default function NewBelieverSessionsIndex() {
 
             {past.length > 0 ? (
               <View style={styles.group}>
-                <Text style={styles.groupHeader}>Past</Text>
+                <Text style={styles.groupHeader}>{t('newBelievers:past')}</Text>
                 {past.map((s) => (
                   <SessionRow key={s.id} session={s} onPress={() => router.push(`/new-believers/sessions/${s.id}` as never)} />
                 ))}

@@ -28,6 +28,7 @@ import {
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 const STAGE_OPTIONS = [
   { value: 'session-1', label: 'Session 1 · Foundations of Faith' },
@@ -36,7 +37,8 @@ const STAGE_OPTIONS = [
   { value: 'session-4', label: 'Session 4 · The Importance of Fellowship' },
 ];
 
-export default function CreateSession() {
+export default function CreateSession() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -114,7 +116,7 @@ export default function CreateSession() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New session</Text>
+        <Text style={styles.headerTitle}>{t('newBelievers:newSession')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -124,20 +126,20 @@ export default function CreateSession() {
       >
         <ScrollView contentContainerStyle={styles.container}>
           <Card padding="md" style={{ gap: spacing.md }}>
-            <FieldLabel label="Session stage" required />
+            <FieldLabel label={t('newBelievers:sessionStage')} required />
             <PickerField
               value={stageLabel}
               onPress={() => setPickerOpen('stage')}
             />
 
             <DatePicker
-              label="Date"
+              label={t('newBelievers:date')}
               value={sessionDate}
               onChange={setSessionDate}
               error={errors['sessionDate']}
             />
 
-            <FieldLabel label="Location" required />
+            <FieldLabel label={t('newBelievers:location')} required />
             <Input
               value={location}
               onChangeText={(v) => {
@@ -148,24 +150,24 @@ export default function CreateSession() {
                   return n;
                 });
               }}
-              placeholder="e.g. Main hall"
+              placeholder={t('newBelievers:eGMainHall')}
               autoCapitalize="words"
               error={errors['location']}
             />
 
-            <FieldLabel label="Teacher" required />
+            <FieldLabel label={t('newBelievers:teacher')} required />
             <PickerField
               value={teacherLabel}
-              placeholder="Pick a teacher"
+              placeholder={t('newBelievers:pickATeacher')}
               onPress={() => setPickerOpen('teacher')}
               error={errors['teacherId']}
             />
 
-            <FieldLabel label="Notes" />
+            <FieldLabel label={t('newBelievers:notes')} />
             <Input
               value={notes}
               onChangeText={setNotes}
-              placeholder="Optional teacher notes"
+              placeholder={t('newBelievers:optionalTeacherNotes')}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -175,7 +177,7 @@ export default function CreateSession() {
 
           {duplicate ? (
             <View style={styles.dupBanner}>
-              <Text style={styles.dupTitle}>Session already exists</Text>
+              <Text style={styles.dupTitle}>{t('newBelievers:sessionAlreadyExists')}</Text>
               <Text style={styles.dupBody}>
                 A {stageLabel} session on {sessionDate} is already on the books for
                 this branch. Creating another will result in a duplicate. Pick a
@@ -200,9 +202,9 @@ export default function CreateSession() {
               if (!validate()) return;
               if (duplicate) {
                 const ok = await alert.confirm({
-                  title: 'Create anyway?',
+                  title: t('newBelievers:createAnyway'),
                   message: `A ${stageLabel} session on ${sessionDate} already exists in this branch. Are you sure you want to create a duplicate?`,
-                  confirmLabel: 'Create anyway',
+                  confirmLabel: t('newBelievers:createAnyway2'),
                   destructive: true,
                 });
                 if (!ok) return;
@@ -223,7 +225,7 @@ export default function CreateSession() {
         <Pressable style={styles.backdrop} onPress={() => setPickerOpen(null)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Session stage</Text>
+            <Text style={styles.sheetTitle}>{t('newBelievers:sessionStage')}</Text>
             {STAGE_OPTIONS.map((opt) => {
               const active = opt.value === stage;
               return (
@@ -261,7 +263,7 @@ export default function CreateSession() {
         <Pressable style={styles.backdrop} onPress={() => setPickerOpen(null)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Teacher</Text>
+            <Text style={styles.sheetTitle}>{t('newBelievers:teacher')}</Text>
             <ScrollView style={{ maxHeight: 400 }}>
               {(branchMembers.data ?? []).map((m) => {
                 const active = m.id === teacherId;

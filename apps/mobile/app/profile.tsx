@@ -29,8 +29,10 @@ import {
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function Profile() {
+export default function Profile() {  const { t } = useTranslation(['settings', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -98,7 +100,7 @@ export default function Profile() {
   if (!user) {
     return (
       <SafeAreaView style={styles.safe}>
-        <Text style={styles.emptyText}>Not signed in.</Text>
+        <Text style={styles.emptyText}>{t('settings:notSignedIn')}</Text>
       </SafeAreaView>
     );
   }
@@ -114,7 +116,7 @@ export default function Profile() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>{t('settings:profile')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -130,7 +132,7 @@ export default function Profile() {
             <Pressable
               onPress={uploading ? undefined : handleEditPhoto}
               style={styles.editBadge}
-              accessibilityLabel="Edit photo"
+              accessibilityLabel={t('settings:editPhoto')}
               disabled={uploading}
             >
               {uploading ? (
@@ -149,7 +151,7 @@ export default function Profile() {
           </Text>
           <View style={styles.badgeRow}>
             {user.approvalStatus === 'approved' ? (
-              <Badge label="Confirmed member" variant="primary" />
+              <Badge label={t('settings:confirmedMember')} variant="primary" />
             ) : (
               <Badge label={user.approvalStatus} variant="neutral" />
             )}
@@ -159,36 +161,36 @@ export default function Profile() {
 
         <View style={styles.statsRow}>
           <StatTile
-            label="Since"
+            label={t('settings:since')}
             value={membershipYear ? String(membershipYear) : '—'}
           />
           <StatTile
-            label="Attendance"
+            label={t('settings:attendance')}
             value={
               stats.data?.recentAttendance?.total
                 ? `${stats.data.recentAttendance.present}/${stats.data.recentAttendance.total}`
                 : '—'
             }
           />
-          <StatTile label="Given YTD" value="—" />
+          <StatTile label={t('settings:givenYtd')} value="—" />
         </View>
 
-        <Section title="Church context">
+        <Section title={t('settings:churchContext')}>
           <RowItem
-            label="Home branch"
+            label={t('settings:homeBranch')}
             value={homeBranch?.branchName ?? '—'}
           />
-          <RowItem label="Fellowship" value="—" />
-          <RowItem label="Departments" value="—" />
+          <RowItem label={t('settings:fellowship')} value="—" />
+          <RowItem label={t('settings:departments')} value="—" />
         </Section>
 
-        <Section title="Personal">
+        <Section title={t('settings:personal')}>
           <RowItem
-            label="Date of birth"
+            label={t('settings:dateOfBirth')}
             value={user.dateOfBirth ? formatShortDate(user.dateOfBirth) : '—'}
           />
           <RowItem
-            label="Address"
+            label={t('settings:address')}
             value={
               user.address
                 ? [user.address, user.city, user.postalCode].filter(Boolean).join(', ')
@@ -196,7 +198,7 @@ export default function Profile() {
             }
           />
           <RowItem
-            label="Emergency contact"
+            label={t('settings:emergencyContact')}
             value={user.emergencyContactName ?? '—'}
           />
         </Section>
@@ -206,46 +208,46 @@ export default function Profile() {
           style={styles.editRow}
         >
           <Pencil color={c.primary} size={16} strokeWidth={1.5} />
-          <Text style={styles.editLabel}>Edit profile</Text>
+          <Text style={styles.editLabel}>{t('settings:editProfile')}</Text>
         </Pressable>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>{t('settings:settings')}</Text>
           <Card padding="none" style={styles.sectionCard}>
             <SettingsRow
               icon={<Bell color={c.primary} size={16} strokeWidth={1.5} />}
-              label="Notifications"
-              hint="Manage what you're pinged for"
+              label={t('settings:notifications')}
+              hint={t('settings:manageWhatYouRePingedFor')}
               onPress={() => router.push('/notification-preferences')}
             />
             <SettingsRow
               icon={<Palette color={c.primary} size={16} strokeWidth={1.5} />}
-              label="Appearance"
-              hint="Light, dark, or system"
+              label={t('settings:appearance')}
+              hint={t('settings:lightDarkOrSystem')}
               onPress={() => router.push('/appearance' as never)}
             />
             <SettingsRow
               icon={<ShieldCheck color={c.primary} size={16} strokeWidth={1.5} />}
-              label="Security"
-              hint="Password, email, sign-in activity"
+              label={t('settings:security')}
+              hint={t('settings:passwordEmailSignInActivity')}
               onPress={() => router.push('/security')}
             />
             <SettingsRow
               icon={<Download color={c.primary} size={16} strokeWidth={1.5} />}
-              label="Export my data"
-              hint="Download everything we hold on you"
+              label={t('settings:exportMyData')}
+              hint={t('settings:downloadEverythingWeHoldOnYou')}
               onPress={() => router.push('/settings/export' as never)}
             />
             <SettingsRow
               icon={<FileText color={c.primary} size={16} strokeWidth={1.5} />}
-              label="Consent history"
-              hint="Terms, privacy, safeguarding"
+              label={t('settings:consentHistory')}
+              hint={t('settings:termsPrivacySafeguarding')}
               onPress={() => router.push('/settings/consent' as never)}
             />
             <SettingsRow
               icon={<Trash2 color={c.danger} size={16} strokeWidth={1.5} />}
-              label="Delete my account"
-              hint="Permanently remove your account"
+              label={t('settings:deleteMyAccount')}
+              hint={t('settings:permanentlyRemoveYourAccount')}
               destructive
               last
               onPress={() => router.push('/settings/delete-account' as never)}

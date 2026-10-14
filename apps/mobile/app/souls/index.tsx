@@ -35,6 +35,7 @@ import {
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 25;
 
@@ -84,7 +85,8 @@ interface SoulRow {
   assignedMemberLastName?: string | null;
 }
 
-export default function SoulsDirectory() {
+export default function SoulsDirectory() {  const { t } = useTranslation(['souls', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -126,12 +128,12 @@ export default function SoulsDirectory() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Souls</Text>
+        <Text style={styles.headerTitle}>{t('souls:souls')}</Text>
         <View style={styles.headerActions}>
           <Pressable
             onPress={() => router.push('/souls/capture' as never)}
             hitSlop={8}
-            accessibilityLabel="Capture soul"
+            accessibilityLabel={t('souls:captureSoul')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -145,7 +147,7 @@ export default function SoulsDirectory() {
         <Input
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search souls"
+          placeholder={t('souls:searchSouls')}
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
@@ -198,7 +200,7 @@ export default function SoulsDirectory() {
               <AlertCircle color="#ffffff" size={12} strokeWidth={2} />
             ) : null}
           </View>
-          <Text style={styles.overdueLabel}>Only show overdue follow-ups</Text>
+          <Text style={styles.overdueLabel}>{t('souls:onlyShowOverdueFollowUps')}</Text>
         </Pressable>
       </View>
 
@@ -251,7 +253,7 @@ export default function SoulsDirectory() {
               <View style={styles.emptyIconTile}>
                 <Handshake color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No souls found</Text>
+              <Text style={styles.emptyTitle}>{t('souls:noSoulsFound')}</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
                   ? `Nothing matched "${debouncedSearch}".`
@@ -281,7 +283,7 @@ export default function SoulsDirectory() {
                       <Text style={styles.rowMeta}>{s.phone}</Text>
                     </>
                   ) : (
-                    <Text style={styles.rowMeta}>No phone</Text>
+                    <Text style={styles.rowMeta}>{t('souls:noPhone')}</Text>
                   )}
                   <Text style={styles.rowMetaDot}>·</Text>
                   <Text style={styles.rowMeta}>{formatShortDate(s.createdAt)}</Text>
@@ -289,7 +291,7 @@ export default function SoulsDirectory() {
                     <>
                       <Text style={styles.rowMetaDot}>·</Text>
                       <AlertCircle color={c.danger} size={12} strokeWidth={1.5} />
-                      <Text style={[styles.rowMeta, { color: c.danger }]}>Overdue</Text>
+                      <Text style={[styles.rowMeta, { color: c.danger }]}>{t('souls:overdue')}</Text>
                     </>
                   ) : null}
                 </View>
@@ -298,7 +300,7 @@ export default function SoulsDirectory() {
                     Assigned to {s.assignedMemberFirstName} {s.assignedMemberLastName ?? ''}
                   </Text>
                 ) : (
-                  <Text style={styles.rowSubMeta}>Unassigned</Text>
+                  <Text style={styles.rowSubMeta}>{t('souls:unassigned')}</Text>
                 )}
               </View>
               <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
@@ -311,7 +313,7 @@ export default function SoulsDirectory() {
           ) : list.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : rows.length > 0 ? (
-            <Text style={styles.endOfList}>End of list</Text>
+            <Text style={styles.endOfList}>{t('souls:endOfList')}</Text>
           ) : null
         }
       />

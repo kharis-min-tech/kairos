@@ -15,6 +15,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Member-facing "show my QR" screen. Displays a static QR encoding
@@ -26,7 +27,8 @@ import { useAuthStore } from '@/store/auth';
  *   - Admin projects rotating QR → members scan → self check-in
  *   - Member displays personal QR → admin scans → admin marks them present
  */
-export default function MyQr() {
+export default function MyQr() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -51,11 +53,9 @@ export default function MyQr() {
             <ChevronLeft color="#ffffff" size={24} strokeWidth={1.5} />
           </Pressable>
           <View style={styles.headerText}>
-            <Text style={styles.headerEyebrow}>Show to admin</Text>
-            <Text style={styles.headerTitle}>My check-in QR</Text>
-            <Text style={styles.headerMeta}>
-              Hand your phone to the check-in team at any time.
-            </Text>
+            <Text style={styles.headerEyebrow}>{t('common:showToAdmin')}</Text>
+            <Text style={styles.headerTitle}>{t('common:myCheckInQr')}</Text>
+            <Text style={styles.headerMeta}>{t('common:handYourPhoneToTheCheck')}</Text>
           </View>
         </View>
       </View>
@@ -75,16 +75,12 @@ export default function MyQr() {
             {user?.email ? (
               <Text style={styles.email}>{user.email}</Text>
             ) : null}
-            <Text style={styles.qrSubHint}>
-              This code identifies you, so no one else can check in as you.
-            </Text>
+            <Text style={styles.qrSubHint}>{t('common:thisCodeIdentifiesYouSoNo')}</Text>
           </View>
         ) : (
           <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>Sign in to see your QR</Text>
-            <Text style={styles.emptyMeta}>
-              Your personal check-in code lives with your account.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('common:signInToSeeYourQr')}</Text>
+            <Text style={styles.emptyMeta}>{t('common:yourPersonalCheckInCodeLives')}</Text>
           </View>
         )}
       </View>

@@ -37,6 +37,7 @@ import {
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 const STATUSES = [
   'New',
@@ -60,7 +61,8 @@ const STATUS_VARIANT: Record<
   'Lost Contact': 'neutral',
 };
 
-export default function SoulDetail() {
+export default function SoulDetail() {  const { t } = useTranslation(['souls', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -151,9 +153,9 @@ export default function SoulDetail() {
       return;
     }
     const ok = await alert.confirm({
-      title: 'Convert to member?',
+      title: t('souls:convertToMember'),
       message: `Convert ${s.firstName} ${s.lastName} into a full member record. This creates a new Member and links it to this soul.`,
-      confirmLabel: 'Convert',
+      confirmLabel: t('souls:convert'),
     });
     if (!ok) return;
     convert.mutate(undefined, {
@@ -221,13 +223,13 @@ export default function SoulDetail() {
                 />
                 {s.isOverdue ? (
                   <View style={styles.heroBadgePillRed}>
-                    <Text style={styles.heroBadgePillRedLabel}>OVERDUE</Text>
+                    <Text style={styles.heroBadgePillRedLabel}>{t('souls:overdue')}</Text>
                   </View>
                 ) : null}
                 {s.convertedToMemberId ? (
                   <View style={styles.heroBadgePillGold}>
                     <BadgeCheck color={c.gold} size={10} strokeWidth={2} />
-                    <Text style={styles.heroBadgePillGoldLabel}>CONVERTED</Text>
+                    <Text style={styles.heroBadgePillGoldLabel}>{t('souls:converted')}</Text>
                   </View>
                 ) : null}
               </View>
@@ -241,7 +243,7 @@ export default function SoulDetail() {
 
             {(s.phone || s.email || s.address) ? (
               <Card padding="md" style={{ gap: spacing.sm }}>
-                <Text style={styles.sectionEyebrow}>CONTACT</Text>
+                <Text style={styles.sectionEyebrow}>{t('souls:contact')}</Text>
                 {s.phone ? (
                   <Pressable
                     onPress={() => Linking.openURL(`tel:${s.phone}`)}
@@ -289,7 +291,7 @@ export default function SoulDetail() {
             ) : null}
 
             <Card padding="md" style={{ gap: spacing.sm }}>
-              <Text style={styles.sectionEyebrow}>STATUS</Text>
+              <Text style={styles.sectionEyebrow}>{t('souls:status')}</Text>
               <View style={styles.statusRow}>
                 {STATUSES.map((st) => {
                   const active = s.status === st;
@@ -315,14 +317,11 @@ export default function SoulDetail() {
                   );
                 })}
               </View>
-              <Text style={styles.helpText}>
-                Tap a status to update. Full follow-up history and reassignment live
-                on the web for now.
-              </Text>
+              <Text style={styles.helpText}>{t('souls:tapAStatusToUpdateFull')}</Text>
             </Card>
 
             <Card padding="md" style={{ gap: spacing.sm }}>
-              <Text style={styles.sectionEyebrow}>ASSIGNMENT</Text>
+              <Text style={styles.sectionEyebrow}>{t('souls:assignment')}</Text>
               {s.assignedMemberFirstName ? (
                 <Pressable
                   onPress={() =>
@@ -341,13 +340,11 @@ export default function SoulDetail() {
                     <Text style={styles.memberName}>
                       {s.assignedMemberFirstName} {s.assignedMemberLastName ?? ''}
                     </Text>
-                    <Text style={styles.memberMeta}>Following up</Text>
+                    <Text style={styles.memberMeta}>{t('souls:followingUp')}</Text>
                   </View>
                 </Pressable>
               ) : (
-                <Text style={styles.emptyLine}>
-                  Not assigned to anyone yet. Reassignment lives on the web.
-                </Text>
+                <Text style={styles.emptyLine}>{t('souls:notAssignedToAnyoneYetReassignment')}</Text>
               )}
               {typeof s.daysSinceLastFollowUp === 'number' ? (
                 <Text style={styles.helpText}>
@@ -360,7 +357,7 @@ export default function SoulDetail() {
 
             {followUpsList.length > 0 ? (
               <Card padding="md" style={{ gap: spacing.sm }}>
-                <Text style={styles.sectionEyebrow}>RECENT FOLLOW-UPS</Text>
+                <Text style={styles.sectionEyebrow}>{t('souls:recentFollowUps')}</Text>
                 {followUpsList.slice(0, 5).map((f, idx) => {
                   const followUp = f as {
                     id?: string;
@@ -410,7 +407,7 @@ export default function SoulDetail() {
                     <Heart color={c.primary} size={18} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.linkTitle}>Captured at</Text>
+                    <Text style={styles.linkTitle}>{t('souls:capturedAt')}</Text>
                     <Text style={styles.linkMeta}>{s.outreachProgramName}</Text>
                   </View>
                 </Card>
@@ -419,7 +416,7 @@ export default function SoulDetail() {
 
             {s.notes ? (
               <Card padding="md" style={{ gap: spacing.xs }}>
-                <Text style={styles.sectionEyebrow}>NOTES</Text>
+                <Text style={styles.sectionEyebrow}>{t('souls:notes')}</Text>
                 <Text style={styles.notesBody}>{s.notes}</Text>
               </Card>
             ) : null}
@@ -451,7 +448,7 @@ export default function SoulDetail() {
                     <BadgeCheck color={c.success} size={18} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.linkTitle}>Converted to member</Text>
+                    <Text style={styles.linkTitle}>{t('souls:convertedToMember')}</Text>
                     <Text style={styles.linkMeta}>
                       {s.convertedMemberFirstName} {s.convertedMemberLastName ?? ''}
                     </Text>

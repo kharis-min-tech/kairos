@@ -23,8 +23,10 @@ import {
 import type { UpdateBranchRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { BranchForm } from '../_form';
+import { useTranslation } from 'react-i18next';
 
-export default function EditBranch() {
+export default function EditBranch() {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -74,9 +76,9 @@ export default function EditBranch() {
 
   async function confirmDelete(name: string) {
     const ok = await alert.confirm({
-      title: 'Deactivate branch?',
+      title: t('branches:deactivateBranch'),
       message: `Deactivate ${name}. Members stay assigned but the branch is hidden from directories and won't accept new activity.`,
-      confirmLabel: 'Deactivate',
+      confirmLabel: t('branches:deactivate'),
       destructive: true,
     });
     if (!ok) return;
@@ -99,7 +101,7 @@ export default function EditBranch() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit branch</Text>
+          <Text style={styles.headerTitle}>{t('branches:editBranch')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
@@ -114,7 +116,7 @@ export default function EditBranch() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit branch</Text>
+          <Text style={styles.headerTitle}>{t('branches:editBranch')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
@@ -160,7 +162,7 @@ export default function EditBranch() {
       <BranchForm
         mode="edit"
         initial={initial}
-        submitLabel="Save changes"
+        submitLabel={t('branches:saveChanges')}
         submitPendingLabel="Saving…"
         submitting={update.isPending}
         serverError={serverError}
@@ -176,18 +178,15 @@ export default function EditBranch() {
                   <ShieldCheck color={c.primary} size={18} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={styles.linkTitle}>Branch admins</Text>
-                  <Text style={styles.linkMeta}>
-                    Manage who can invite members, edit settings, and assign roles for
-                    this branch.
-                  </Text>
+                  <Text style={styles.linkTitle}>{t('branches:branchAdmins')}</Text>
+                  <Text style={styles.linkMeta}>{t('branches:manageWhoCanInviteMembersEdit')}</Text>
                 </View>
                 <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
               </Card>
             </Pressable>
 
             <View style={styles.dangerZone}>
-              <Text style={styles.dangerEyebrow}>DANGER ZONE</Text>
+              <Text style={styles.dangerEyebrow}>{t('branches:dangerZone')}</Text>
               <Pressable
                 onPress={
                   deleting || remove.isPending
@@ -204,9 +203,7 @@ export default function EditBranch() {
                   {deleting || remove.isPending ? 'Deactivating…' : 'Deactivate branch'}
                 </Text>
               </Pressable>
-              <Text style={styles.footnote}>
-                Hides the branch from directories. Members and history are preserved.
-              </Text>
+              <Text style={styles.footnote}>{t('branches:hidesTheBranchFromDirectoriesMembers')}</Text>
             </View>
           </>
         }

@@ -42,6 +42,7 @@ import { api } from '@/lib/api-client';
 import { formatShortDate } from '@kairos/core';
 import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 type WindowMonths = 3 | 6 | 12;
 type WindowChoice = { value: WindowMonths; label: string };
@@ -83,7 +84,8 @@ const WEEK_PRESETS: { value: WindowWeeks; label: string }[] = [
   { value: 26, label: '26w' },
 ];
 
-export default function Reports() {
+export default function Reports() {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -229,8 +231,8 @@ export default function Reports() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Reports</Text>
-          <Text style={styles.headerSub}>Attendance analytics</Text>
+          <Text style={styles.headerTitle}>{t('reports:reports')}</Text>
+          <Text style={styles.headerSub}>{t('reports:attendanceAnalytics')}</Text>
         </View>
         <View style={{ width: 24 }} />
       </View>
@@ -273,13 +275,13 @@ export default function Reports() {
               hitSlop={6}
               style={styles.scopeClear}
             >
-              <Text style={styles.scopeClearLabel}>Clear</Text>
+              <Text style={styles.scopeClearLabel}>{t('reports:clear')}</Text>
             </Pressable>
           ) : null}
         </View>
 
         <View style={styles.presetRow}>
-          <Text style={styles.presetLabel}>Window</Text>
+          <Text style={styles.presetLabel}>{t('reports:window')}</Text>
           {WEEK_PRESETS.map((p) => {
             const active = p.value === windowWeeks;
             return (
@@ -318,7 +320,7 @@ export default function Reports() {
             <View style={styles.sectionIconTile}>
               <PieChart color={c.primary} size={14} strokeWidth={1.5} />
             </View>
-            <Text style={styles.sectionTitle}>How often people show up</Text>
+            <Text style={styles.sectionTitle}>{t('reports:howOftenPeopleShowUp')}</Text>
           </View>
           <View style={styles.windowRow}>
             {WINDOW_CHOICES.map((w) => {
@@ -357,10 +359,7 @@ export default function Reports() {
           error={missing.error}
         />
 
-        <Text style={styles.footnote}>
-          Reports are scoped to your branch. Filter by department or fellowship
-          from the chip above.
-        </Text>
+        <Text style={styles.footnote}>{t('reports:reportsAreScopedToYourBranch')}</Text>
       </ScrollView>
 
       <ScopePickerModal
@@ -396,7 +395,8 @@ function ScopePickerModal({
   scopeKind: ScopeKind;
   scopeId: string | null;
   onPick: (kind: ScopeKind, id: string | null) => void;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -404,7 +404,7 @@ function ScopePickerModal({
       <Pressable style={styles.scopeBackdrop} onPress={onClose}>
         <Pressable style={styles.scopeSheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.scopeSheetHandle} />
-          <Text style={styles.scopeSheetTitle}>Filter reports by…</Text>
+          <Text style={styles.scopeSheetTitle}>{t('reports:filterReportsBy')}</Text>
 
           <Pressable
             onPress={() => onPick('branch', null)}
@@ -413,16 +413,16 @@ function ScopePickerModal({
               scopeKind === 'branch' && styles.scopeSheetRowActive,
             ]}
           >
-            <Text style={styles.scopeSheetRowLabel}>Whole branch</Text>
+            <Text style={styles.scopeSheetRowLabel}>{t('reports:wholeBranch')}</Text>
             {scopeKind === 'branch' ? (
               <Check color={c.primary} size={16} strokeWidth={2} />
             ) : null}
           </Pressable>
 
-          <Text style={styles.scopeSheetHeader}>Departments</Text>
+          <Text style={styles.scopeSheetHeader}>{t('reports:departments')}</Text>
           <ScrollView style={{ maxHeight: 200 }}>
             {departments.length === 0 ? (
-              <Text style={styles.scopeEmpty}>No departments in this branch.</Text>
+              <Text style={styles.scopeEmpty}>{t('reports:noDepartmentsInThisBranch')}</Text>
             ) : (
               departments.map((d) => {
                 const active = scopeKind === 'department' && scopeId === d.id;
@@ -448,10 +448,10 @@ function ScopePickerModal({
             )}
           </ScrollView>
 
-          <Text style={styles.scopeSheetHeader}>Fellowships</Text>
+          <Text style={styles.scopeSheetHeader}>{t('reports:fellowships')}</Text>
           <ScrollView style={{ maxHeight: 200 }}>
             {fellowships.length === 0 ? (
-              <Text style={styles.scopeEmpty}>No fellowships in this branch.</Text>
+              <Text style={styles.scopeEmpty}>{t('reports:noFellowshipsInThisBranch')}</Text>
             ) : (
               fellowships.map((f) => {
                 const active = scopeKind === 'fellowship' && scopeId === f.id;
@@ -493,7 +493,8 @@ function SummaryTile({
   } | null | undefined;
   loading: boolean;
   error: unknown;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   if (loading) {
@@ -517,7 +518,7 @@ function SummaryTile({
   return (
     <Card padding="md" style={{ gap: spacing.sm }}>
       <View style={styles.summaryHeader}>
-        <Text style={styles.sectionEyebrow}>ATTENDANCE · LAST 4 WEEKS</Text>
+        <Text style={styles.sectionEyebrow}>{t('reports:attendanceLastWeeks')}</Text>
       </View>
       <View style={styles.summaryRow}>
         <View style={{ flex: 1 }}>
@@ -528,9 +529,9 @@ function SummaryTile({
           </Text>
         </View>
         <View style={styles.miniStats}>
-          <MiniStat label="Present" value={bd.present} tone={c.successText} />
-          <MiniStat label="Late" value={bd.late} tone={c.goldDark} />
-          <MiniStat label="Virtual" value={bd.virtual} tone={c.info} />
+          <MiniStat label={t('reports:present')} value={bd.present} tone={c.successText} />
+          <MiniStat label={t('reports:late')} value={bd.late} tone={c.goldDark} />
+          <MiniStat label={t('reports:virtual')} value={bd.virtual} tone={c.info} />
         </View>
       </View>
     </Card>
@@ -556,7 +557,8 @@ function TrendsCard({
   data: { weekStart: string; attendees: number; distinctAttendees: number }[];
   loading: boolean;
   error: unknown;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const priorAvg = useMemo(() => {
@@ -579,7 +581,7 @@ function TrendsCard({
         <View style={styles.sectionIconTile}>
           <BarChart3 color={c.primary} size={14} strokeWidth={1.5} />
         </View>
-        <Text style={styles.sectionTitle}>Weekly attendance</Text>
+        <Text style={styles.sectionTitle}>{t('reports:weeklyAttendance')}</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.md }}>
         {loading ? (
@@ -589,7 +591,7 @@ function TrendsCard({
             {error instanceof Error ? error.message : 'Could not load trends.'}
           </Text>
         ) : data.length === 0 ? (
-          <Text style={styles.emptyLine}>No attendance recorded yet.</Text>
+          <Text style={styles.emptyLine}>{t('reports:noAttendanceRecordedYet')}</Text>
         ) : (
           <>
             {latest ? (
@@ -638,7 +640,8 @@ function TrendsChart({
   data,
 }: {
   data: { weekStart: string; attendees: number; distinctAttendees: number }[];
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const width = Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2;
@@ -766,11 +769,11 @@ function TrendsChart({
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: c.primary }]} />
-          <Text style={styles.legendLabel}>Check-ins</Text>
+          <Text style={styles.legendLabel}>{t('reports:checkIns')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: c.gold }]} />
-          <Text style={styles.legendLabel}>Distinct members</Text>
+          <Text style={styles.legendLabel}>{t('reports:distinctMembers')}</Text>
         </View>
       </View>
     </View>
@@ -798,7 +801,8 @@ function FrequencyBucketsCard({
     | undefined;
   loading: boolean;
   error: unknown;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   if (loading) {
@@ -820,7 +824,7 @@ function FrequencyBucketsCard({
   if (!data) {
     return (
       <Card padding="md">
-        <Text style={styles.emptyLine}>No attendance recorded yet.</Text>
+        <Text style={styles.emptyLine}>{t('reports:noAttendanceRecordedYet')}</Text>
       </Card>
     );
   }
@@ -869,7 +873,8 @@ function FirstTimeReturningCard({
   data: { weekStart: string; firstTime: number; returning: number }[];
   loading: boolean;
   error: unknown;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const totals = useMemo(() => {
@@ -888,7 +893,7 @@ function FirstTimeReturningCard({
         <View style={styles.sectionIconTile}>
           <Sparkles color={c.primary} size={14} strokeWidth={1.5} />
         </View>
-        <Text style={styles.sectionTitle}>First-time vs returning</Text>
+        <Text style={styles.sectionTitle}>{t('reports:firstTimeVsReturning')}</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.md }}>
         {loading ? (
@@ -898,16 +903,16 @@ function FirstTimeReturningCard({
             {error instanceof Error ? error.message : 'Could not load this report.'}
           </Text>
         ) : data.length === 0 ? (
-          <Text style={styles.emptyLine}>No attendance recorded yet.</Text>
+          <Text style={styles.emptyLine}>{t('reports:noAttendanceRecordedYet')}</Text>
         ) : (
           <>
             <View style={styles.summaryRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.headlineNumber}>{totals.ft.toLocaleString()}</Text>
-                <Text style={styles.headlineSub}>first-timers · last 8 weeks</Text>
+                <Text style={styles.headlineSub}>{t('reports:firstTimersLastWeeks')}</Text>
               </View>
               <View style={styles.miniStats}>
-                <MiniStat label="Returning" value={totals.ret} tone={c.primary} />
+                <MiniStat label={t('reports:returning')} value={totals.ret} tone={c.primary} />
               </View>
             </View>
             <FirstTimeChart data={data} />
@@ -922,7 +927,8 @@ function FirstTimeChart({
   data,
 }: {
   data: { weekStart: string; firstTime: number; returning: number }[];
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const width = Dimensions.get('window').width - spacing.lg * 2 - spacing.md * 2;
@@ -1021,11 +1027,11 @@ function FirstTimeChart({
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: c.gold }]} />
-          <Text style={styles.legendLabel}>First-time</Text>
+          <Text style={styles.legendLabel}>{t('reports:firstTime')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: c.primary }]} />
-          <Text style={styles.legendLabel}>Returning</Text>
+          <Text style={styles.legendLabel}>{t('reports:returning')}</Text>
         </View>
       </View>
     </View>
@@ -1042,7 +1048,8 @@ function HeatmapCard({
   loading: boolean;
   error: unknown;
   hasBranch: boolean;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -1051,13 +1058,11 @@ function HeatmapCard({
         <View style={styles.sectionIconTile}>
           <LayoutGrid color={c.primary} size={14} strokeWidth={1.5} />
         </View>
-        <Text style={styles.sectionTitle}>Attendance heatmap</Text>
+        <Text style={styles.sectionTitle}>{t('reports:attendanceHeatmap')}</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.sm }}>
         {!hasBranch ? (
-          <Text style={styles.emptyLine}>
-            Set a home branch on your profile to see the heatmap.
-          </Text>
+          <Text style={styles.emptyLine}>{t('reports:setAHomeBranchOnYour')}</Text>
         ) : loading ? (
           <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.md }} />
         ) : error ? (
@@ -1065,9 +1070,7 @@ function HeatmapCard({
             {error instanceof Error ? error.message : 'Could not load this report.'}
           </Text>
         ) : !data || data.services.length === 0 || data.members.length === 0 ? (
-          <Text style={styles.emptyLine}>
-            Not enough attendance data to draw the heatmap yet.
-          </Text>
+          <Text style={styles.emptyLine}>{t('reports:notEnoughAttendanceDataToDraw')}</Text>
         ) : (
           <HeatmapGrid data={data} />
         )}
@@ -1086,7 +1089,8 @@ const HEATMAP_LATE = '#f59e0b';
 const HEATMAP_ABSENT_BG = 'rgba(254,226,226,0.6)'; // red-100 @ 60%
 const HEATMAP_ABSENT_BORDER = '#fca5a5'; // red-300
 
-function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
+function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   // Render the last 8 services (most recent on the right) and the top 15
@@ -1143,15 +1147,15 @@ function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_PRESENT }]} />
-          <Text style={styles.legendLabel}>Present</Text>
+          <Text style={styles.legendLabel}>{t('reports:present')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_VIRTUAL }]} />
-          <Text style={styles.legendLabel}>Virtual</Text>
+          <Text style={styles.legendLabel}>{t('reports:virtual')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_LATE }]} />
-          <Text style={styles.legendLabel}>Late</Text>
+          <Text style={styles.legendLabel}>{t('reports:late')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View
@@ -1165,7 +1169,7 @@ function HeatmapGrid({ data }: { data: AttendanceHeatmap }) {
               },
             ]}
           />
-          <Text style={styles.legendLabel}>Absent</Text>
+          <Text style={styles.legendLabel}>{t('reports:absent')}</Text>
         </View>
       </View>
     </View>
@@ -1224,7 +1228,8 @@ function MissingMembersCard({
   data: { memberId: string; firstName: string; lastName: string; missedStreak: number }[];
   loading: boolean;
   error: unknown;
-}) {
+}) {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -1234,7 +1239,7 @@ function MissingMembersCard({
         <View style={styles.sectionIconTile}>
           <UserX color={c.primary} size={14} strokeWidth={1.5} />
         </View>
-        <Text style={styles.sectionTitle}>Not seen recently</Text>
+        <Text style={styles.sectionTitle}>{t('reports:notSeenRecently')}</Text>
       </View>
       <Card padding="md" style={{ gap: spacing.sm }}>
         {loading ? (
@@ -1244,7 +1249,7 @@ function MissingMembersCard({
             {error instanceof Error ? error.message : 'Could not load this report.'}
           </Text>
         ) : data.length === 0 ? (
-          <Text style={styles.emptyLine}>Everyone attended the most recent service.</Text>
+          <Text style={styles.emptyLine}>{t('reports:everyoneAttendedTheMostRecentService')}</Text>
         ) : (
           data.slice(0, 5).map((m, idx) => (
             <Pressable

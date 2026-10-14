@@ -34,6 +34,7 @@ import { formatShortDate } from '@kairos/core';
 import type { FollowupQueueRow, MeActivityItem, MeFollowupItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 type FilterKind =
   | 'all'
@@ -150,7 +151,8 @@ const SUB_META: Record<Tab, string> = {
   activity: 'Every touchpoint you’ve personally logged, most recent first.',
 };
 
-export default function FollowUps() {
+export default function FollowUps() {  const { t } = useTranslation(['concerns', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -215,7 +217,7 @@ export default function FollowUps() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Follow-ups</Text>
+        <Text style={styles.headerTitle}>{t('concerns:followUps')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -292,7 +294,7 @@ export default function FollowUps() {
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
               ) : (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>All caught up</Text>
+                  <Text style={styles.emptyTitle}>{t('concerns:allCaughtUp')}</Text>
                   <Text style={styles.emptyMeta}>
                     {filter === 'all'
                       ? 'Nothing pending right now. Enjoy the quiet.'
@@ -324,7 +326,7 @@ export default function FollowUps() {
               <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
             ) : (
               <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>Nothing here yet</Text>
+                <Text style={styles.emptyTitle}>{t('concerns:nothingHereYet')}</Text>
                 <Text style={styles.emptyMeta}>
                   Follow-ups you record (fellowship, department, mentor, and
                   souls captured) will show up here.
@@ -359,18 +361,19 @@ function ActivityRow({
 }: {
   item: MeActivityItem;
   onPress: () => void;
-}) {
+}) {  const { t } = useTranslation(['concerns', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
 
   const meta =
     item.kind === 'soul_capture'
-      ? { label: 'Soul', icon: Handshake, variant: 'primary' as const }
+      ? { label: t('concerns:soul'), icon: Handshake, variant: 'primary' as const }
       : item.kind === 'fellowship_followup'
-        ? { label: 'Fellowship', icon: UsersRound, variant: 'gold' as const }
+        ? { label: t('concerns:fellowship'), icon: UsersRound, variant: 'gold' as const }
         : item.kind === 'department_followup'
-          ? { label: 'Department', icon: Building2, variant: 'info' as const }
-          : { label: 'Mentee', icon: Sparkles, variant: 'success' as const };
+          ? { label: t('concerns:department'), icon: Building2, variant: 'info' as const }
+          : { label: t('concerns:mentee'), icon: Sparkles, variant: 'success' as const };
   const Icon = meta.icon;
 
   const contextLine =

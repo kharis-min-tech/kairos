@@ -37,10 +37,12 @@ import type {
 import { UniformGenderTarget } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'schedule' | 'outfits';
 
-export default function DepartmentUniforms() {
+export default function DepartmentUniforms() {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -102,9 +104,9 @@ export default function DepartmentUniforms() {
 
   async function confirmDeactivateOutfit(o: DepartmentUniformOutfit) {
     const ok = await alert.confirm({
-      title: 'Archive outfit?',
+      title: t('departments:archiveOutfit2'),
       message: `"${o.name}" will stop appearing when scheduling future services.`,
-      confirmLabel: 'Archive',
+      confirmLabel: t('departments:archive'),
       destructive: true,
     });
     if (!ok) return;
@@ -113,9 +115,9 @@ export default function DepartmentUniforms() {
 
   async function confirmRemoveAssignment(a: DepartmentUniformScheduleWithOutfit) {
     const ok = await alert.confirm({
-      title: 'Remove assignment?',
+      title: t('departments:removeAssignment2'),
       message: `Remove "${a.outfitName}" from ${new Date(a.serviceDate).toLocaleDateString()}.`,
-      confirmLabel: 'Remove',
+      confirmLabel: t('departments:remove'),
       destructive: true,
     });
     if (!ok) return;
@@ -128,13 +130,13 @@ export default function DepartmentUniforms() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Uniforms</Text>
+        <Text style={styles.headerTitle}>{t('departments:uniforms')}</Text>
         <Pressable
           onPress={() =>
             tab === 'outfits' ? setOutfitSheet({ mode: 'new' }) : setAssignSheet(true)
           }
           hitSlop={8}
-          accessibilityLabel="Add"
+          accessibilityLabel={t('departments:add')}
         >
           <Plus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
@@ -181,9 +183,7 @@ export default function DepartmentUniforms() {
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
           ) : (upcoming.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>
-                No upcoming assignments. Tap + to schedule an outfit for a service.
-              </Text>
+              <Text style={styles.emptyLine}>{t('departments:noUpcomingAssignmentsTapToSchedule')}</Text>
             </Card>
           ) : (
             (upcoming.data ?? []).map((a) => (
@@ -248,7 +248,8 @@ function ScheduleCard({
 }: {
   row: DepartmentUniformScheduleWithOutfit;
   onRemove: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -273,7 +274,7 @@ function ScheduleCard({
         </Text>
         {row.notes ? <Text style={styles.metaFaded}>{row.notes}</Text> : null}
       </View>
-      <Pressable onPress={onRemove} hitSlop={8} accessibilityLabel="Remove assignment">
+      <Pressable onPress={onRemove} hitSlop={8} accessibilityLabel={t('departments:removeAssignment')}>
         <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
       </Pressable>
     </Card>
@@ -288,7 +289,8 @@ function OutfitCard({
   outfit: DepartmentUniformOutfit;
   onEdit: () => void;
   onArchive: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -308,7 +310,7 @@ function OutfitCard({
           </View>
           {outfit.notes ? <Text style={styles.metaFaded}>{outfit.notes}</Text> : null}
         </View>
-        <Pressable onPress={onArchive} hitSlop={8} accessibilityLabel="Archive outfit">
+        <Pressable onPress={onArchive} hitSlop={8} accessibilityLabel={t('departments:archiveOutfit')}>
           <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
         </Pressable>
       </Card>
@@ -328,7 +330,8 @@ function OutfitSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [name, setName] = useState(outfit?.name ?? '');
@@ -423,11 +426,11 @@ function OutfitSheet({
   return (
     <SheetShell open title={mode === 'new' ? 'New outfit' : 'Edit outfit'} onClose={onClose}>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Name</Text>
-        <Input value={name} onChangeText={setName} placeholder="e.g. White shirt + black trousers" />
+        <Text style={styles.label}>{t('departments:name')}</Text>
+        <Input value={name} onChangeText={setName} placeholder={t('departments:eGWhiteShirtBlackTrousers')} />
       </View>
       <View style={{ gap: 6 }}>
-        <Text style={styles.label}>Photo</Text>
+        <Text style={styles.label}>{t('departments:photo')}</Text>
         <View style={styles.uploadRow}>
           <View style={styles.uploadPreview}>
             {imageUrl ? (
@@ -460,13 +463,13 @@ function OutfitSheet({
               disabled={uploading}
             >
               <Camera color={c.primary} size={14} strokeWidth={2} />
-              <Text style={styles.uploadBtnLabel}>Take a photo</Text>
+              <Text style={styles.uploadBtnLabel}>{t('departments:takeAPhoto')}</Text>
             </Pressable>
           </View>
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Applies to</Text>
+        <Text style={styles.label}>{t('departments:appliesTo')}</Text>
         <View style={styles.chipRow}>
           {Object.values(UniformGenderTarget).map((g) => {
             const active = g === gender;
@@ -489,7 +492,7 @@ function OutfitSheet({
         <Input
           value={notes}
           onChangeText={setNotes}
-          placeholder="Anything the team should know"
+          placeholder={t('departments:anythingTheTeamShouldKnow')}
           multiline
           numberOfLines={3}
           textAlignVertical="top"
@@ -521,7 +524,8 @@ function AssignSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [outfitId, setOutfitId] = useState<string>(outfits[0]?.id ?? '');
   const [serviceDate, setServiceDate] = useState(
@@ -546,15 +550,13 @@ function AssignSheet({
   });
 
   return (
-    <SheetShell open title="Assign outfit to service" onClose={onClose}>
+    <SheetShell open title={t('departments:assignOutfitToService')} onClose={onClose}>
       {outfits.length === 0 ? (
-        <Text style={styles.emptyLine}>
-          Add an outfit first from the Outfits tab.
-        </Text>
+        <Text style={styles.emptyLine}>{t('departments:addAnOutfitFirstFromThe')}</Text>
       ) : (
         <>
           <View style={{ gap: 4 }}>
-            <Text style={styles.label}>Outfit</Text>
+            <Text style={styles.label}>{t('departments:outfit')}</Text>
             <View style={{ gap: 4 }}>
               {outfits.map((o) => {
                 const active = o.id === outfitId;
@@ -572,12 +574,12 @@ function AssignSheet({
             </View>
           </View>
           <DatePicker
-            label="Service date"
+            label={t('departments:serviceDate')}
             value={serviceDate}
             onChange={setServiceDate}
           />
           <View style={{ gap: 4 }}>
-            <Text style={styles.label}>Applies to</Text>
+            <Text style={styles.label}>{t('departments:appliesTo')}</Text>
             <View style={styles.chipRow}>
               {Object.values(UniformGenderTarget).map((g) => {
                 const active = g === gender;
@@ -600,7 +602,7 @@ function AssignSheet({
             <Input
               value={notes}
               onChangeText={setNotes}
-              placeholder="Optional"
+              placeholder={t('departments:optional')}
               multiline
               numberOfLines={2}
               textAlignVertical="top"

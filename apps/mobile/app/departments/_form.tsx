@@ -24,6 +24,7 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 export type CreateDepartmentPayload = Parameters<typeof api.departments.create>[0];
 type UpdateDepartmentPayload = Parameters<typeof api.departments.update>[1];
@@ -58,7 +59,8 @@ export function DepartmentForm({
   serverError,
   onSubmit,
   footer,
-}: DepartmentFormProps) {
+}: DepartmentFormProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const branches = useQuery({
@@ -160,31 +162,31 @@ export function DepartmentForm({
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>DEPARTMENT</Text>
+          <Text style={styles.sectionEyebrow}>{t('departments:department')}</Text>
 
-          <FieldLabel label="Branch" required={mode === 'create'} />
+          <FieldLabel label={t('departments:branch')} required={mode === 'create'} />
           <PickerField
             value={branchLabel}
-            placeholder="Choose a branch"
+            placeholder={t('departments:chooseABranch')}
             onPress={mode === 'create' ? () => setOpenPicker('branch') : undefined}
             disabled={mode !== 'create'}
             error={errors['branchId']}
           />
 
-          <FieldLabel label="Department type" required={mode === 'create'} />
+          <FieldLabel label={t('departments:departmentType')} required={mode === 'create'} />
           <PickerField
             value={departmentLabel}
-            placeholder="Choose a department type"
+            placeholder={t('departments:chooseADepartmentType')}
             onPress={mode === 'create' ? () => setOpenPicker('department') : undefined}
             disabled={mode !== 'create'}
             error={errors['departmentId']}
           />
 
-          <FieldLabel label="Description" />
+          <FieldLabel label={t('departments:description')} />
           <Input
             value={description}
             onChangeText={setDescription}
-            placeholder="Short description shown on the department page"
+            placeholder={t('departments:shortDescriptionShownOnTheDepartment')}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -193,9 +195,9 @@ export function DepartmentForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>LEADERSHIP</Text>
+          <Text style={styles.sectionEyebrow}>{t('departments:leadership')}</Text>
 
-          <FieldLabel label="Lead" required />
+          <FieldLabel label={t('departments:lead')} required />
           <PickerField
             value={leadName}
             placeholder={branchId ? 'Choose a lead' : 'Choose a branch first'}
@@ -204,7 +206,7 @@ export function DepartmentForm({
             error={errors['leadMemberId']}
           />
 
-          <FieldLabel label="Deputy" />
+          <FieldLabel label={t('departments:deputy')} />
           <View style={styles.deputyRow}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <PickerField
@@ -219,7 +221,7 @@ export function DepartmentForm({
                 onPress={() => setDeputyMemberId(null)}
                 style={styles.deputyClearBtn}
                 hitSlop={6}
-                accessibilityLabel="Clear deputy"
+                accessibilityLabel={t('departments:clearDeputy')}
               >
                 <X color={c.inkFaded} size={14} strokeWidth={1.5} />
               </Pressable>
@@ -243,7 +245,7 @@ export function DepartmentForm({
 
       <ValuePickerSheet
         open={openPicker === 'branch'}
-        title="Branch"
+        title={t('departments:branch')}
         onClose={() => setOpenPicker(null)}
         options={branchOptions}
         selected={branchId}
@@ -258,7 +260,7 @@ export function DepartmentForm({
 
       <ValuePickerSheet
         open={openPicker === 'department'}
-        title="Department type"
+        title={t('departments:departmentType')}
         onClose={() => setOpenPicker(null)}
         options={departmentOptions}
         selected={departmentId}
@@ -273,8 +275,8 @@ export function DepartmentForm({
         onClose={() => setOpenPicker(null)}
         branchId={branchId}
         selectedMemberId={leadMemberId || undefined}
-        title="Pick a lead"
-        subtitle="Search members in this branch."
+        title={t('departments:pickALead')}
+        subtitle={t('departments:searchMembersInThisBranch')}
         onPick={(memberId) => {
           setLeadMemberId(memberId);
           clearError('leadMemberId');
@@ -288,8 +290,8 @@ export function DepartmentForm({
         branchId={branchId}
         selectedMemberId={deputyMemberId ?? undefined}
         excludeMemberIds={leadMemberId ? new Set([leadMemberId]) : undefined}
-        title="Pick a deputy"
-        subtitle="Optional. Search members in this branch."
+        title={t('departments:pickADeputy')}
+        subtitle={t('departments:optionalSearchMembersInThisBranch')}
         onPick={(memberId) => {
           setDeputyMemberId(memberId);
           setOpenPicker(null);
@@ -373,7 +375,8 @@ function ValuePickerSheet({
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -410,7 +413,7 @@ function ValuePickerSheet({
             })}
           </ScrollView>
           <Pressable style={styles.sheetCancel} onPress={onClose}>
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            <Text style={styles.sheetCancelLabel}>{t('departments:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

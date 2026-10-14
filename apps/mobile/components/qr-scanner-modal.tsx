@@ -19,6 +19,7 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Reusable QR scanner sheet. Handles permission gating, per-scan debounce,
@@ -50,7 +51,8 @@ export function QrScannerModal({
   /** Toast shown briefly when a scanned QR is rejected. Defaults to a
    *  generic "keep scanning" nudge. */
   rejectionMessage?: string;
-}) {
+}) {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [permission, requestPermission] = useCameraPermissions();
@@ -154,7 +156,7 @@ export function QrScannerModal({
             <ActivityIndicator color={c.primary} />
           ) : !permission.granted ? (
             <View style={styles.permissionBlock}>
-              <Text style={styles.permissionTitle}>Camera permission needed</Text>
+              <Text style={styles.permissionTitle}>{t('common:cameraPermissionNeeded')}</Text>
               <Text style={styles.permissionMeta}>
                 {permission.canAskAgain
                   ? 'Tap allow so we can scan the QR code.'
@@ -162,7 +164,7 @@ export function QrScannerModal({
               </Text>
               {permission.canAskAgain ? (
                 <Pressable style={styles.permissionBtn} onPress={requestPermission}>
-                  <Text style={styles.permissionBtnLabel}>Allow camera</Text>
+                  <Text style={styles.permissionBtnLabel}>{t('common:allowCamera')}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -179,7 +181,7 @@ export function QrScannerModal({
               {decoding ? (
                 <View style={styles.decodingPill}>
                   <ActivityIndicator color="#ffffff" size="small" />
-                  <Text style={styles.decodingLabel}>Reading…</Text>
+                  <Text style={styles.decodingLabel}>{t('common:reading')}</Text>
                 </View>
               ) : rejection ? (
                 <View style={styles.rejectionPill}>

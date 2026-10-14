@@ -24,8 +24,10 @@ import {
 import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
 import * as biometric from '@/lib/biometric';
+import { useTranslation } from 'react-i18next';
 
-export default function SecurityHub() {
+export default function SecurityHub() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -36,41 +38,38 @@ export default function SecurityHub() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Security</Text>
+        <Text style={styles.headerTitle}>{t('security:security')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Account security</Text>
-          <Text style={styles.introMeta}>
-            Change your password, move your account to a new email, or review recent
-            sign-in activity.
-          </Text>
+          <Text style={styles.introTitle}>{t('security:accountSecurity')}</Text>
+          <Text style={styles.introMeta}>{t('security:changeYourPasswordMoveYourAccount')}</Text>
         </View>
 
         <View style={styles.list}>
           <NavLink
             icon={KeyRound}
-            title="Change password"
+            title={t('security:changePassword')}
             meta="Update your login password. You'll need your current one."
             onPress={() => router.push('/security/change-password')}
           />
           <NavLink
             icon={Mail}
-            title="Change email"
+            title={t('security:changeEmail')}
             meta="Move your account to a new email. Both addresses get notified."
             onPress={() => router.push('/security/change-email')}
           />
           <NavLink
             icon={Link2}
-            title="Connected accounts"
+            title={t('security:connectedAccounts')}
             meta="Link or disconnect Google, Microsoft, and Apple sign-in."
             onPress={() => router.push('/security/connections' as never)}
           />
           <NavLink
             icon={History}
-            title="Recent activity"
+            title={t('security:recentActivity')}
             meta="Sign-ins, password changes, and role updates on your account."
             onPress={() => router.push('/recent-activity')}
           />
@@ -94,7 +93,8 @@ export default function SecurityHub() {
  * explanation when hardware exists but nothing is enrolled. A toggle that
  * silently does nothing is what this feature is replacing.
  */
-function BiometricToggle() {
+function BiometricToggle() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const refreshToken = useAuthStore((s) => s.refreshToken);
@@ -170,9 +170,9 @@ function BiometricToggle() {
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={styles.linkTitle}>Sign in with {cap.label}</Text>
         {!cap.isEnrolled ? (
-          <Text style={styles.linkMeta}>Set it up in your device settings first.</Text>
+          <Text style={styles.linkMeta}>{t('security:setItUpInYourDevice')}</Text>
         ) : !enabled ? (
-          <Text style={styles.linkMeta}>Skip your password.</Text>
+          <Text style={styles.linkMeta}>{t('security:skipYourPassword')}</Text>
         ) : null}
       </View>
       <Switch

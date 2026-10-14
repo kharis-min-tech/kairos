@@ -24,6 +24,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import type { CreateMembershipCohortRequest, MembershipCohortStatus } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_OPTIONS: MembershipCohortStatus[] = [
   'planned',
@@ -89,7 +90,8 @@ export function CohortForm({
   serverError,
   onSubmit,
   footer,
-}: CohortFormProps) {
+}: CohortFormProps) {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
 
   const [name, setName] = useState(initial?.name ?? EMPTY_COHORT_FORM.name);
@@ -178,64 +180,64 @@ export function CohortForm({
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>DETAILS</Text>
+          <Text style={styles.sectionEyebrow}>{t('membership:details')}</Text>
 
-          <FieldLabel label="Cohort name" required />
+          <FieldLabel label={t('membership:cohortName')} required />
           <Input
             value={name}
             onChangeText={(v) => {
               setName(v);
               clearError('name');
             }}
-            placeholder="e.g. Autumn 2026"
+            placeholder={t('membership:eGAutumn')}
             autoCapitalize="words"
             error={errors['name']}
           />
 
-          <FieldLabel label="Description" />
+          <FieldLabel label={t('membership:description')} />
           <Input
             value={description}
             onChangeText={setDescription}
-            placeholder="Optional"
+            placeholder={t('membership:optional')}
             multiline
             numberOfLines={3}
           />
 
-          <FieldLabel label="Start date" required />
+          <FieldLabel label={t('membership:startDate')} required />
           <DatePicker
             value={startDate}
             onChange={(v) => {
               setStartDate(v);
               clearError('startDate');
             }}
-            placeholder="When the first session runs"
+            placeholder={t('membership:whenTheFirstSessionRuns')}
             error={errors['startDate']}
           />
 
-          <FieldLabel label="Induction / graduation date" />
+          <FieldLabel label={t('membership:inductionGraduationDate')} />
           <DatePicker
             value={graduationDate}
             onChange={(v) => {
               setGraduationDate(v);
               clearError('graduationDate');
             }}
-            placeholder="The ceremony"
+            placeholder={t('membership:theCeremony')}
             error={errors['graduationDate']}
           />
 
-          <FieldLabel label="Final test deadline" />
+          <FieldLabel label={t('membership:finalTestDeadline')} />
           <DatePicker
             value={finalTestDeadline}
             onChange={setFinalTestDeadline}
-            placeholder="Sit and pass by this date"
+            placeholder={t('membership:sitAndPassByThisDate')}
           />
 
           {showStatus ? (
             <>
-              <FieldLabel label="Status" />
+              <FieldLabel label={t('membership:status')} />
               <PickerField
                 value={status}
-                placeholder="Choose a status"
+                placeholder={t('membership:chooseAStatus')}
                 onPress={() => setStatusOpen(true)}
               />
             </>
@@ -243,23 +245,18 @@ export function CohortForm({
 
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fieldLabel}>Open to admissions</Text>
-              <Text style={styles.hint}>
-                Turn this off to stop admitting people without ending the cohort.
-              </Text>
+              <Text style={styles.fieldLabel}>{t('membership:openToAdmissions')}</Text>
+              <Text style={styles.hint}>{t('membership:turnThisOffToStopAdmitting')}</Text>
             </View>
             <Switch value={enrolmentOpen} onValueChange={setEnrolmentOpen} />
           </View>
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>PASS MARKS</Text>
-          <Text style={styles.hint}>
-            Applied to this cohort only. A mark is stored with its pass flag at the time
-            it is recorded, so changing these later never rewrites past results.
-          </Text>
+          <Text style={styles.sectionEyebrow}>{t('membership:passMarks')}</Text>
+          <Text style={styles.hint}>{t('membership:appliedToThisCohortOnlyA')}</Text>
 
-          <FieldLabel label="Homework" required />
+          <FieldLabel label={t('membership:homework')} required />
           <Input
             value={homeworkPassMark}
             onChangeText={(v) => {
@@ -270,7 +267,7 @@ export function CohortForm({
             error={errors['homeworkPassMark']}
           />
 
-          <FieldLabel label="Quiz" required />
+          <FieldLabel label={t('membership:quiz')} required />
           <Input
             value={quizPassMark}
             onChangeText={(v) => {
@@ -281,7 +278,7 @@ export function CohortForm({
             error={errors['quizPassMark']}
           />
 
-          <FieldLabel label="Final test" required />
+          <FieldLabel label={t('membership:finalTest')} required />
           <Input
             value={finalTestPassMark}
             onChangeText={(v) => {
@@ -294,11 +291,11 @@ export function CohortForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>NOTES</Text>
+          <Text style={styles.sectionEyebrow}>{t('membership:notes')}</Text>
           <Input
             value={notes}
             onChangeText={setNotes}
-            placeholder="Anything the team should know"
+            placeholder={t('membership:anythingTheTeamShouldKnow')}
             multiline
             numberOfLines={3}
           />
@@ -317,7 +314,7 @@ export function CohortForm({
 
       <PickerSheet
         open={statusOpen}
-        title="Status"
+        title={t('membership:status')}
         onClose={() => setStatusOpen(false)}
         options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
         selected={status}
@@ -380,7 +377,8 @@ export function PickerSheet({
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -415,7 +413,7 @@ export function PickerSheet({
             })}
           </ScrollView>
           <Pressable style={styles.sheetCancel} onPress={onClose}>
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            <Text style={styles.sheetCancelLabel}>{t('membership:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

@@ -23,8 +23,10 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function RollcallLanding() {
+export default function RollcallLanding() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -55,7 +57,7 @@ export default function RollcallLanding() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Fellowship attendance</Text>
+        <Text style={styles.headerTitle}>{t('attendance:fellowshipAttendance')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -70,10 +72,8 @@ export default function RollcallLanding() {
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Take the register</Text>
-          <Text style={styles.introMeta}>
-            Pick a fellowship, then mark attendance for its next meeting.
-          </Text>
+          <Text style={styles.introTitle}>{t('attendance:takeTheRegister')}</Text>
+          <Text style={styles.introMeta}>{t('attendance:pickAFellowshipThenMarkAttendance')}</Text>
         </View>
 
         {fellowships.isLoading ? (
@@ -85,7 +85,7 @@ export default function RollcallLanding() {
             <View style={styles.emptyIconTile}>
               <ClipboardList color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>No fellowships to lead</Text>
+            <Text style={styles.emptyTitle}>{t('attendance:noFellowshipsToLead')}</Text>
             <Text style={styles.emptyMeta}>
               Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders
               and members alike can record attendance for their group.

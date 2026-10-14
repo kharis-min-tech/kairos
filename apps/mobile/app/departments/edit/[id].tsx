@@ -21,10 +21,12 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { DepartmentForm } from '../_form';
+import { useTranslation } from 'react-i18next';
 
 type UpdatePayload = Parameters<typeof api.departments.update>[1];
 
-export default function EditDepartment() {
+export default function EditDepartment() {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -74,10 +76,10 @@ export default function EditDepartment() {
 
   async function confirmDelete() {
     const ok = await alert.confirm({
-      title: 'Deactivate department?',
+      title: t('departments:deactivateDepartment'),
       message:
         "This deactivates the department and hides it from the directory. The team's history is preserved but the department won't accept new activity.",
-      confirmLabel: 'Deactivate',
+      confirmLabel: t('departments:deactivate'),
       destructive: true,
     });
     if (!ok) return;
@@ -100,7 +102,7 @@ export default function EditDepartment() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit department</Text>
+          <Text style={styles.headerTitle}>{t('departments:editDepartment')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
@@ -115,7 +117,7 @@ export default function EditDepartment() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Edit department</Text>
+          <Text style={styles.headerTitle}>{t('departments:editDepartment')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
@@ -145,23 +147,21 @@ export default function EditDepartment() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Edit department
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('departments:editDepartment')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <DepartmentForm
         mode="edit"
         initial={initial}
-        submitLabel="Save changes"
+        submitLabel={t('departments:saveChanges')}
         submitPendingLabel="Saving…"
         submitting={update.isPending}
         serverError={serverError}
         onSubmit={handleSubmit}
         footer={
           <View style={styles.dangerZone}>
-            <Text style={styles.dangerEyebrow}>DANGER ZONE</Text>
+            <Text style={styles.dangerEyebrow}>{t('departments:dangerZone')}</Text>
             <Pressable
               onPress={deleting || remove.isPending ? undefined : confirmDelete}
               style={[

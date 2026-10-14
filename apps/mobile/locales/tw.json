@@ -18,7 +18,13 @@
       "checkIn": "Kyerɛ sɛ waba",
       "give": "Ma",
       "more": "Pii"
-    }
+    },
+    "iAcceptTheTermsOfService": "Mepene Nhyehyɛeɛ ne Kokoamsɛm Nkrataa so.",
+    "approvals": "Apene so",
+    "myAttendance": "Me mmaeɛ",
+    "myDepartment": "Me dwumadibea",
+    "myFellowship": "Me fekuo",
+    "recentActivity": "Deɛ asi nnansa yi"
   },
   "more": {
     "title": "Pii",
@@ -96,7 +102,15 @@
       "restartNote": "Deɛ wopaw no yɛ adwuma seesei na yɛbɛkae wɔ fon yi so.",
       "draft": "Nkyerɛaseɛ a wɔnhwɛeɛ",
       "draftMeta": "Wɔakyerɛ Krio ne Twi ase nanso ɔmanfoɔ a wɔka no nhwɛɛ mu. Ka biribiara a ɛnteɛ kyerɛ yɛn."
-    }
+    },
+    "notifications": "Amanneɛbɔ",
+    "homeBranch": "Wo asɔre baa",
+    "departments": "Adwumakuo",
+    "dateOfBirth": "Da a wɔwoo wo",
+    "address": "Baabi a wote",
+    "emergencyContact": "Obi a yɛbɛfrɛ no wɔ ɔhaw mu",
+    "security": "Ahobammɔ",
+    "settings": "Nhyehyɛeɛ ho"
   },
   "home": {
     "today": "Ɛnnɛ",
@@ -275,5 +289,106 @@
       "Male": "Ɔbarima",
       "Female": "Ɔbaa"
     }
+  },
+  "forms": {
+    "cancel": "Gyae",
+    "dormantAttendees": "Wɔn a wɔmmba bio",
+    "formSubmissions": "Krataa a wɔde kɔeɛ"
+  },
+  "reports": {
+    "reports": "Amanneɛbɔ nkrataa",
+    "departments": "Adwumakuo",
+    "fellowships": "Nkabomfekuo"
+  },
+  "members": {
+    "dateOfBirth": "Da a wɔwoo wo",
+    "fellowships": "Nkabomfekuo",
+    "departments": "Adwumakuo",
+    "cancel": "Gyae",
+    "firstName": "Din a ɛdi kan",
+    "lastName": "Abusua din",
+    "middleName": "Mfinimfini din",
+    "gender": "Ɔbarima anaa ɔbaa",
+    "phone": "Telefon",
+    "homeBranch": "Wo asɔre baa",
+    "relationship": "Abusuabɔ",
+    "child": "Ɔba",
+    "openProfile": "Bue profayl"
+  },
+  "fellowships": {
+    "followUps": "Nkɔdi akyi",
+    "cancel": "Gyae",
+    "myBranch": "Me asɔre baa",
+    "fellowships": "Nkabomfekuo"
+  },
+  "departments": {
+    "followUps": "Nkɔdi akyi",
+    "optional": "Sɛ wopɛ a",
+    "cancel": "Gyae",
+    "name": "Din",
+    "rota": "Nnwuma nhyehyɛeɛ",
+    "myBranch": "Me asɔre baa",
+    "departments": "Adwumakuo"
+  },
+  "branches": {
+    "phone": "Telefon",
+    "cancel": "Gyae",
+    "myBranch": "Me asɔre baa",
+    "services": "Nsom"
+  },
+  "security": {
+    "cancel": "Gyae",
+    "privacyConsent": "Kokoamsɛm ne pene so",
+    "recentActivity": "Deɛ asi nnansa yi",
+    "done": "Ɛwie",
+    "checkYourInbox": "Hwɛ wo email mu",
+    "atLeastCharacters": "Nkyerɛw 8 anaa deɛ ɛboro saa",
+    "retry": "Sɔ hwɛ bio",
+    "security": "Ahobammɔ"
+  },
+  "admin": {
+    "retry": "Sɔ hwɛ bio",
+    "search": "Hwehwɛ",
+    "checkInDesk": "Mmaeɛ pono",
+    "cancel": "Gyae",
+    "regions": "Mpɔtam"
+  },
+  "attendance": {
+    "thisWeek": "Dapɛn yi",
+    "services": "Nsom",
+    "cancel": "Gyae",
+    "fellowshipAttendance": "Fekuo mmaeɛ"
+  },
+  "concerns": {
+    "concerns": "Nsɛm a ɛhia",
+    "followUps": "Nkɔdi akyi"
+  },
+  "membership": {
+    "optional": "Sɛ wopɛ a",
+    "save": "Sie",
+    "cancel": "Gyae",
+    "membershipClasses": "Amanfoɔ adesua"
+  },
+  "newBelievers": {
+    "cancel": "Gyae"
+  },
+  "outreach": {
+    "done": "Ɛwie",
+    "cancel": "Gyae"
+  },
+  "rota": {
+    "cancel": "Gyae",
+    "optional": "Sɛ wopɛ a",
+    "name": "Din"
+  },
+  "souls": {
+    "firstName": "Din a ɛdi kan",
+    "lastName": "Abusua din",
+    "phone": "Telefon",
+    "address": "Baabi a wote",
+    "gender": "Ɔbarima anaa ɔbaa",
+    "souls": "Akra",
+    "soulsDashboard": "Akra dashboard",
+    "followUps": "Nkɔdi akyi"
   }
 }

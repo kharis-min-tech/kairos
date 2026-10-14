@@ -25,8 +25,10 @@ import {
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function DeleteAccountSettings() {
+export default function DeleteAccountSettings() {  const { t } = useTranslation(['settings', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -59,10 +61,10 @@ export default function DeleteAccountSettings() {
       return;
     }
     const ok = await alert.confirm({
-      title: 'Delete account?',
+      title: t('settings:deleteAccount'),
       message:
         'This will permanently delete your account. This cannot be undone.',
-      confirmLabel: 'Delete',
+      confirmLabel: t('settings:delete2'),
       destructive: true,
     });
     if (ok) mutate.mutate();
@@ -74,7 +76,7 @@ export default function DeleteAccountSettings() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Delete my account</Text>
+        <Text style={styles.headerTitle}>{t('settings:deleteMyAccount')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -86,33 +88,29 @@ export default function DeleteAccountSettings() {
           <Card padding="md" style={{ gap: spacing.md, borderWidth: 1, borderColor: 'rgba(220,38,38,0.35)' }}>
             <View style={styles.iconRow}>
               <ShieldAlert color={c.danger} size={20} strokeWidth={1.5} />
-              <Text style={styles.title}>This is permanent</Text>
+              <Text style={styles.title}>{t('settings:thisIsPermanent')}</Text>
             </View>
-            <Text style={styles.body}>
-              Deleting your account removes your profile and revokes your
-              access. Aggregated attendance / participation history is retained
-              in an anonymised form for church record-keeping.
-            </Text>
+            <Text style={styles.body}>{t('settings:deletingYourAccountRemovesYourProfile')}</Text>
           </Card>
 
           <Card padding="md" style={{ gap: spacing.md }}>
             <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Current password</Text>
+              <Text style={styles.label}>{t('settings:currentPassword')}</Text>
               <Input
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
                 secureToggle
-                placeholder="Confirm it's really you"
+                placeholder={t('settings:confirmItSReallyYou')}
               />
             </View>
             <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Type DELETE to confirm</Text>
+              <Text style={styles.label}>{t('settings:typeDeleteToConfirm')}</Text>
               <Input
                 value={confirmText}
                 onChangeText={setConfirmText}
                 autoCapitalize="characters"
-                placeholder="DELETE"
+                placeholder={t('settings:delete')}
               />
             </View>
             <Button

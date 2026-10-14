@@ -27,8 +27,10 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function NewOutreachProgram() {
+export default function NewOutreachProgram() {  const { t } = useTranslation(['outreach', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -119,7 +121,7 @@ export default function NewOutreachProgram() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New program</Text>
+        <Text style={styles.headerTitle}>{t('outreach:newProgram')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -129,22 +131,22 @@ export default function NewOutreachProgram() {
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.sectionEyebrow}>PROGRAM</Text>
+            <Text style={styles.sectionEyebrow}>{t('outreach:program')}</Text>
 
-            <FieldLabel label="Program name" required />
+            <FieldLabel label={t('outreach:programName')} required />
             <Input
               value={programName}
               onChangeText={(v) => {
                 setProgramName(v);
                 clearError('programName');
               }}
-              placeholder="e.g. Central Market outreach"
+              placeholder={t('outreach:eGCentralMarketOutreach')}
               autoCapitalize="words"
               error={errors['programName']}
             />
 
             <DatePicker
-              label="Program date"
+              label={t('outreach:programDate')}
               value={programDate}
               onChange={(v) => {
                 setProgramDate(v);
@@ -153,23 +155,23 @@ export default function NewOutreachProgram() {
               error={errors['programDate']}
             />
 
-            <FieldLabel label="Location" required />
+            <FieldLabel label={t('outreach:location')} required />
             <Input
               value={location}
               onChangeText={(v) => {
                 setLocation(v);
                 clearError('location');
               }}
-              placeholder="e.g. Central Market square"
+              placeholder={t('outreach:eGCentralMarketSquare')}
               autoCapitalize="words"
               error={errors['location']}
             />
 
-            <FieldLabel label="Description" />
+            <FieldLabel label={t('outreach:description')} />
             <Input
               value={description}
               onChangeText={setDescription}
-              placeholder="What are you doing at this outreach?"
+              placeholder={t('outreach:whatAreYouDoingAtThis')}
               multiline
               numberOfLines={3}
               textAlignVertical="top"
@@ -180,13 +182,13 @@ export default function NewOutreachProgram() {
           <Card padding="md" style={{ gap: spacing.md }}>
             <Text style={styles.sectionEyebrow}>ADDRESS &amp; BRANCH</Text>
 
-            <FieldLabel label="Address" />
+            <FieldLabel label={t('outreach:address')} />
             <Input value={address} onChangeText={setAddress} autoCapitalize="words" />
 
-            <FieldLabel label="City" />
+            <FieldLabel label={t('outreach:city')} />
             <Input value={city} onChangeText={setCity} autoCapitalize="words" />
 
-            <FieldLabel label="Owning branch" required />
+            <FieldLabel label={t('outreach:owningBranch')} required />
             <Pressable
               style={[
                 styles.pickerField,
@@ -215,10 +217,7 @@ export default function NewOutreachProgram() {
             onPress={handleSubmit}
           />
 
-          <Text style={styles.footnote}>
-            After creating the program you can register workers and start capturing
-            souls reached during the outreach.
-          </Text>
+          <Text style={styles.footnote}>{t('outreach:afterCreatingTheProgramYouCan')}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -231,7 +230,7 @@ export default function NewOutreachProgram() {
         <Pressable style={styles.modalBackdrop} onPress={() => setBranchPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Owning branch</Text>
+            <Text style={styles.sheetTitle}>{t('outreach:owningBranch')}</Text>
             <ScrollView style={{ maxHeight: 380 }}>
               {branchOptions.map((opt) => {
                 const isSelected = opt.value === branchId;
@@ -264,7 +263,7 @@ export default function NewOutreachProgram() {
               style={styles.sheetCancel}
               onPress={() => setBranchPickerOpen(false)}
             >
-              <Text style={styles.sheetCancelLabel}>Cancel</Text>
+              <Text style={styles.sheetCancelLabel}>{t('outreach:cancel')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>

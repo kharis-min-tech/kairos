@@ -24,6 +24,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_LABEL: Record<string, string> = {
   New: 'New',
@@ -56,7 +57,8 @@ interface FollowUpsOverview {
   ragCounts?: { RED: number; AMBER: number; GREEN: number };
 }
 
-export default function SoulsDashboard() {
+export default function SoulsDashboard() {  const { t } = useTranslation(['souls', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -98,7 +100,7 @@ export default function SoulsDashboard() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Souls dashboard</Text>
+        <Text style={styles.headerTitle}>{t('souls:soulsDashboard')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -128,17 +130,17 @@ export default function SoulsDashboard() {
               <View style={styles.donutRow}>
                 <Donut
                   segments={[
-                    { value: rag.RED, color: c.danger, label: 'Red' },
-                    { value: rag.AMBER, color: c.gold, label: 'Amber' },
-                    { value: rag.GREEN, color: c.success, label: 'Green' },
+                    { value: rag.RED, color: c.danger, label: t('souls:red') },
+                    { value: rag.AMBER, color: c.gold, label: t('souls:amber') },
+                    { value: rag.GREEN, color: c.success, label: t('souls:green') },
                   ]}
                   centerLabel={String(total)}
                   centerSub="total"
                 />
                 <View style={{ flex: 1, gap: spacing.xs }}>
-                  <RagLegendRow label="Red" value={rag.RED} tone={c.danger} />
-                  <RagLegendRow label="Amber" value={rag.AMBER} tone={c.gold} />
-                  <RagLegendRow label="Green" value={rag.GREEN} tone={c.success} />
+                  <RagLegendRow label={t('souls:red')} value={rag.RED} tone={c.danger} />
+                  <RagLegendRow label={t('souls:amber')} value={rag.AMBER} tone={c.gold} />
+                  <RagLegendRow label={t('souls:green')} value={rag.GREEN} tone={c.success} />
                 </View>
               </View>
               <Text style={styles.ragHint}>
@@ -148,7 +150,7 @@ export default function SoulsDashboard() {
 
             {statusRows.length > 0 ? (
               <Card padding="md" style={{ gap: spacing.md }}>
-                <Text style={styles.sectionTitle}>By status</Text>
+                <Text style={styles.sectionTitle}>{t('souls:byStatus')}</Text>
                 <View style={styles.donutRow}>
                   <Donut
                     segments={statusRows.map((r) => ({
@@ -181,16 +183,16 @@ export default function SoulsDashboard() {
             ) : null}
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Follow-ups</Text>
+              <Text style={styles.sectionTitle}>{t('souls:followUps')}</Text>
               <View style={styles.tileRow}>
                 <StatTile
-                  label="Overdue"
+                  label={t('souls:overdue')}
                   value={String(followUpsOverdue)}
                   tone={followUpsOverdue > 0 ? c.danger : c.inkFaded}
                   icon={<Flame color="#ffffff" size={14} strokeWidth={2} />}
                 />
                 <StatTile
-                  label="Due this week"
+                  label={t('souls:dueThisWeek')}
                   value={String(followUpsDueThisWeek)}
                   tone={c.primary}
                 />
@@ -198,21 +200,21 @@ export default function SoulsDashboard() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Jump to</Text>
+              <Text style={styles.sectionTitle}>{t('souls:jumpTo')}</Text>
               <LinkRow
-                label="Capture a soul"
+                label={t('souls:captureASoul')}
                 sub="Log an evangelism encounter"
                 onPress={() => router.push('/souls/capture' as never)}
                 iconTone={c.primary}
                 icon={<Sparkles color={c.primary} size={16} strokeWidth={1.5} />}
               />
               <LinkRow
-                label="All souls"
+                label={t('souls:allSouls')}
                 sub={`${total} in scope`}
                 onPress={() => router.push('/souls')}
               />
               <LinkRow
-                label="Follow-ups queue"
+                label={t('souls:followUpsQueue')}
                 sub={
                   followUpsOverdue + followUpsDueThisWeek > 0
                     ? `${followUpsOverdue + followUpsDueThisWeek} awaiting`

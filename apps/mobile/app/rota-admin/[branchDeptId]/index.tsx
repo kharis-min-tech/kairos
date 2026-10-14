@@ -44,6 +44,7 @@ import type {
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -54,7 +55,8 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
  * live on-device. Tap a template to edit its metadata / roles / pool; the
  * "+ New" button creates a fresh template.
  */
-export default function RotaAdmin() {
+export default function RotaAdmin() {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -180,15 +182,15 @@ export default function RotaAdmin() {
       >
         {stats.data ? (
           <View style={styles.statRow}>
-            <StatTile label="Upcoming" value={stats.data.upcomingCount} tone={c.primary} />
-            <StatTile label="Published" value={stats.data.publishedCount} tone={c.success} />
-            <StatTile label="Draft" value={stats.data.draftCount} tone={c.gold} />
+            <StatTile label={t('rota:upcoming')} value={stats.data.upcomingCount} tone={c.primary} />
+            <StatTile label={t('rota:published')} value={stats.data.publishedCount} tone={c.success} />
+            <StatTile label={t('rota:draft')} value={stats.data.draftCount} tone={c.gold} />
           </View>
         ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Templates</Text>
+            <Text style={styles.sectionTitle}>{t('rota:templates')}</Text>
             <Pressable
               onPress={() =>
                 router.push(`/rota-admin/${branchDeptId}/template/new` as never)
@@ -197,17 +199,14 @@ export default function RotaAdmin() {
               hitSlop={6}
             >
               <Plus color={c.primary} size={14} strokeWidth={2} />
-              <Text style={styles.newBtnLabel}>New</Text>
+              <Text style={styles.newBtnLabel}>{t('rota:new')}</Text>
             </Pressable>
           </View>
           {templates.isLoading ? (
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : rows.length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyText}>
-                No templates yet. Tap New to set up your first one. Pick a
-                weekday, add roles, and add pool members.
-              </Text>
+              <Text style={styles.emptyText}>{t('rota:noTemplatesYetTapNewTo')}</Text>
             </Card>
           ) : (
             rows.map((t) => (
@@ -239,21 +238,19 @@ export default function RotaAdmin() {
             <Repeat color={c.primary} size={16} strokeWidth={1.5} />
           </View>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={styles.linkTitle}>Swap requests</Text>
-            <Text style={styles.linkMeta}>Approve or reject pending swaps</Text>
+            <Text style={styles.linkTitle}>{t('rota:swapRequests')}</Text>
+            <Text style={styles.linkMeta}>{t('rota:approveOrRejectPendingSwaps')}</Text>
           </View>
           <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
         </Pressable>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upcoming instances</Text>
+          <Text style={styles.sectionTitle}>{t('rota:upcomingInstances')}</Text>
           {instances.isLoading ? (
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : instRows.length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyText}>
-                No upcoming instances. Tap Generate on a template above.
-              </Text>
+              <Text style={styles.emptyText}>{t('rota:noUpcomingInstancesTapGenerateOn')}</Text>
             </Card>
           ) : (
             instRows.map((i) => (
@@ -293,7 +290,8 @@ function TemplateRow({
   template: RotaTemplateWithSummary;
   onOpen: () => void;
   onGenerate: () => void;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const last = template.lastGeneratedAt
@@ -321,7 +319,7 @@ function TemplateRow({
         </View>
         <Pressable onPress={onGenerate} style={styles.generateBtn} hitSlop={6}>
           <Zap color="#ffffff" size={14} strokeWidth={2} />
-          <Text style={styles.generateLabel}>Generate</Text>
+          <Text style={styles.generateLabel}>{t('rota:generate')}</Text>
         </Pressable>
       </Card>
     </Pressable>
@@ -419,7 +417,8 @@ function GenerateSheet({
   onCancel: () => void;
   onConfirm: () => void;
   submitting: boolean;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -431,25 +430,21 @@ function GenerateSheet({
         <Pressable style={styles.backdrop} onPress={submitting ? undefined : onCancel}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Generate rota</Text>
+            <Text style={styles.sheetTitle}>{t('rota:generateRota')}</Text>
             <Text style={styles.sheetMeta}>
               {template.name} · {template.slotCount} role
               {template.slotCount === 1 ? '' : 's'} · {template.poolCount} in pool
             </Text>
-            <Text style={styles.sheetHint}>
-              Auto-assigns members from the pool by rotation for each service
-              date in the range. Existing instances in range keep their
-              assignments, with no double-booking.
-            </Text>
+            <Text style={styles.sheetHint}>{t('rota:autoAssignsMembersFromThePool')}</Text>
 
             <DatePicker
-              label="Start date"
+              label={t('rota:startDate')}
               value={startDate}
               onChange={onStartChange}
               disabled={submitting}
             />
 
-            <Text style={styles.sheetLabel}>Weeks to generate</Text>
+            <Text style={styles.sheetLabel}>{t('rota:weeksToGenerate')}</Text>
             <TextInput
               value={weeks}
               onChangeText={onWeeksChange}
@@ -463,7 +458,7 @@ function GenerateSheet({
             <View style={styles.sheetFooter}>
               <View style={{ flex: 1 }}>
                 <Button
-                  label="Cancel"
+                  label={t('rota:cancel')}
                   variant="ghost"
                   onPress={onCancel}
                   disabled={submitting}
@@ -483,9 +478,7 @@ function GenerateSheet({
               </View>
             </View>
             {template.poolCount === 0 ? (
-              <Text style={styles.sheetWarning}>
-                Tap the template to add pool members before generating.
-              </Text>
+              <Text style={styles.sheetWarning}>{t('rota:tapTheTemplateToAddPool')}</Text>
             ) : null}
           </Pressable>
         </Pressable>

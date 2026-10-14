@@ -18,6 +18,7 @@ import {
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Rotating QR display for the check-in desk. Polls `getQrToken` on the
@@ -25,7 +26,8 @@ import { useAuthStore } from '@/store/auth';
  * The verifier accepts current OR previous bucket, so a stale QR still works
  * for up to 60s after rotation. See docs/self-check-in.md.
  */
-export default function AdminCheckinQr() {
+export default function AdminCheckinQr() {  const { t } = useTranslation(['admin', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -73,9 +75,9 @@ export default function AdminCheckinQr() {
             <ChevronLeft color="#ffffff" size={24} strokeWidth={1.5} />
           </Pressable>
           <View style={styles.headerText}>
-            <Text style={styles.headerEyebrow}>Show to congregation</Text>
-            <Text style={styles.headerTitle}>Self check-in QR</Text>
-            <Text style={styles.headerMeta}>Refreshes every 30 seconds.</Text>
+            <Text style={styles.headerEyebrow}>{t('admin:showToCongregation')}</Text>
+            <Text style={styles.headerTitle}>{t('admin:selfCheckInQr')}</Text>
+            <Text style={styles.headerMeta}>{t('admin:refreshesEverySeconds')}</Text>
           </View>
         </View>
       </View>
@@ -83,20 +85,20 @@ export default function AdminCheckinQr() {
       <View style={styles.body}>
         {!validServiceId ? (
           <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>No service in scope</Text>
-            <Text style={styles.emptyMeta}>Open a service from the desk first.</Text>
+            <Text style={styles.emptyTitle}>{t('admin:noServiceInScope')}</Text>
+            <Text style={styles.emptyMeta}>{t('admin:openAServiceFromTheDesk')}</Text>
           </View>
         ) : token.isLoading ? (
           <ActivityIndicator color={c.primary} />
         ) : token.isError ? (
           <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>Could not load QR</Text>
+            <Text style={styles.emptyTitle}>{t('admin:couldNotLoadQr')}</Text>
             <Text style={styles.emptyMeta}>
               {token.error instanceof Error ? token.error.message : 'Please try again.'}
             </Text>
             <Pressable style={styles.retry} onPress={() => token.refetch()}>
               <RefreshCw color={c.primary} size={14} strokeWidth={2} />
-              <Text style={styles.retryLabel}>Retry</Text>
+              <Text style={styles.retryLabel}>{t('admin:retry')}</Text>
             </Pressable>
           </View>
         ) : qrValue ? (
@@ -107,12 +109,8 @@ export default function AdminCheckinQr() {
               color="#1a1c1c"
               backgroundColor="#ffffff"
             />
-            <Text style={styles.qrHint}>
-              Open Kairos → Check-in → Scan QR
-            </Text>
-            <Text style={styles.qrSubHint}>
-              Rotates every 30s. Previous code stays valid a moment longer.
-            </Text>
+            <Text style={styles.qrHint}>{t('admin:openKairosCheckInScanQr')}</Text>
+            <Text style={styles.qrSubHint}>{t('admin:rotatesEverySPreviousCodeStays')}</Text>
           </View>
         ) : null}
       </View>

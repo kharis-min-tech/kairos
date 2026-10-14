@@ -28,6 +28,7 @@ import {
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 type Range = '6w' | '3m' | 'ytd';
 
@@ -42,7 +43,8 @@ const RANGE_LABELS: Record<Range, string> = {
   ytd: 'YTD',
 };
 
-export default function AttendanceComparison() {
+export default function AttendanceComparison() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -87,8 +89,8 @@ export default function AttendanceComparison() {
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Service attendance</Text>
-          <Text style={styles.headerSub}>Sundays across recent weeks</Text>
+          <Text style={styles.headerTitle}>{t('attendance:serviceAttendance')}</Text>
+          <Text style={styles.headerSub}>{t('attendance:sundaysAcrossRecentWeeks')}</Text>
         </View>
         <View style={{ width: 24 }} />
       </View>
@@ -127,10 +129,10 @@ export default function AttendanceComparison() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
         ) : (
           <Card padding="lg" style={styles.heroCard}>
-            <Text style={styles.heroEyebrow}>This week</Text>
+            <Text style={styles.heroEyebrow}>{t('attendance:thisWeek')}</Text>
             <Text style={styles.heroNumber}>
               {today?.attendees ?? 0}
-              <Text style={styles.heroUnit}> attending</Text>
+              <Text style={styles.heroUnit}>{t('attendance:attending')}</Text>
             </Text>
             {priorAvg > 0 ? (
               <View style={[styles.deltaRow, !trendUp && styles.deltaDown]}>
@@ -159,14 +161,14 @@ export default function AttendanceComparison() {
 
         {trends.data && trends.data.length > 0 ? (
           <Card padding="md" style={styles.chartCard}>
-            <Text style={styles.chartLabel}>Weekly attendance</Text>
+            <Text style={styles.chartLabel}>{t('attendance:weeklyAttendance')}</Text>
             <BarChart data={trends.data} />
           </Card>
         ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Missing recently</Text>
+            <Text style={styles.sectionTitle}>{t('attendance:missingRecently')}</Text>
             {missing.data && missing.data.length > 0 ? (
               <Text style={styles.sectionCount}>{missing.data.length}</Text>
             ) : null}
@@ -176,7 +178,7 @@ export default function AttendanceComparison() {
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
           ) : (missing.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyText}>Everyone accounted for.</Text>
+              <Text style={styles.emptyText}>{t('attendance:everyoneAccountedFor')}</Text>
             </Card>
           ) : (
             <Card padding="none" style={styles.missingCard}>
@@ -211,7 +213,8 @@ function BarChart({
   data,
 }: {
   data: { weekStart: string; attendees: number }[];
-}) {
+}) {  const { t } = useTranslation(['attendance', 'common']);
+
   const c = useColors();
   const screenWidth = Dimensions.get('window').width;
   const chartWidth = screenWidth - spacing.lg * 2 - spacing.md * 2;

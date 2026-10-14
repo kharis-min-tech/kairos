@@ -33,12 +33,14 @@ import type { CreateRegionRequest, Region, UpdateRegionRequest } from '@kairos/t
 import { COUNTRIES_BY_CONTINENT } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 const ALL_COUNTRIES: string[] = Object.values(COUNTRIES_BY_CONTINENT)
   .flat()
   .sort();
 
-export default function Regions() {
+export default function Regions() {  const { t } = useTranslation(['admin', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -83,9 +85,9 @@ export default function Regions() {
       return;
     }
     const ok = await alert.confirm({
-      title: 'Delete region?',
+      title: t('admin:deleteRegion'),
       message: `Delete ${r.regionName}. This can't be undone.`,
-      confirmLabel: 'Delete',
+      confirmLabel: t('admin:delete'),
       destructive: true,
     });
     if (!ok) return;
@@ -104,7 +106,7 @@ export default function Regions() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Regions</Text>
+        <Text style={styles.headerTitle}>{t('admin:regions')}</Text>
         {canManageRegions ? (
           <Pressable
             onPress={() => {
@@ -113,7 +115,7 @@ export default function Regions() {
             }}
             hitSlop={8}
             testID="new-region-btn"
-            accessibilityLabel="New region"
+            accessibilityLabel={t('admin:newRegion')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -146,10 +148,7 @@ export default function Regions() {
                 </Text>
               </Card>
             ) : null}
-            <Text style={styles.introBlurb}>
-              Regions group your branches for reporting and directory browsing. Tap a
-              region to rename it or change country. Long-press to delete an empty region.
-            </Text>
+            <Text style={styles.introBlurb}>{t('admin:regionsGroupYourBranchesForReporting')}</Text>
           </View>
         }
         ListEmptyComponent={
@@ -158,8 +157,8 @@ export default function Regions() {
               <View style={styles.emptyIconTile}>
                 <MapIcon color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No regions yet</Text>
-              <Text style={styles.emptyMeta}>Tap + to create the first one.</Text>
+              <Text style={styles.emptyTitle}>{t('admin:noRegionsYet')}</Text>
+              <Text style={styles.emptyMeta}>{t('admin:tapToCreateTheFirstOne')}</Text>
             </Card>
           ) : null
         }
@@ -256,7 +255,8 @@ function RegionFormSheet({
   submitting: boolean;
   onClose: () => void;
   onSubmit: (data: CreateRegionRequest) => Promise<void> | void;
-}) {
+}) {  const { t } = useTranslation(['admin', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [regionName, setRegionName] = useState(initial?.regionName ?? '');
@@ -304,7 +304,7 @@ function RegionFormSheet({
           </Text>
 
           <View style={{ gap: spacing.sm }}>
-            <Text style={styles.fieldLabel}>Region name *</Text>
+            <Text style={styles.fieldLabel}>{t('admin:regionName')}</Text>
             <Input
               value={regionName}
               onChangeText={(v) => {
@@ -315,14 +315,14 @@ function RegionFormSheet({
                   return n;
                 });
               }}
-              placeholder="e.g. Greater Accra"
+              placeholder={t('admin:eGGreaterAccra')}
               autoCapitalize="words"
               error={errors['regionName']}
             />
           </View>
 
           <View style={{ gap: spacing.sm }}>
-            <Text style={styles.fieldLabel}>Country *</Text>
+            <Text style={styles.fieldLabel}>{t('admin:country')}</Text>
             <Pressable
               style={[
                 styles.pickerField,
@@ -341,7 +341,7 @@ function RegionFormSheet({
 
           <View style={styles.sheetActions}>
             <Button
-              label="Cancel"
+              label={t('admin:cancel')}
               variant="outline"
               size="md"
               onPress={onClose}
@@ -372,11 +372,11 @@ function RegionFormSheet({
         <Pressable style={styles.modalBackdrop} onPress={() => setCountryPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Country</Text>
+            <Text style={styles.sheetTitle}>{t('admin:country2')}</Text>
             <Input
               value={countryQuery}
               onChangeText={setCountryQuery}
-              placeholder="Search countries"
+              placeholder={t('admin:searchCountries')}
               autoCapitalize="none"
               autoCorrect={false}
               leadingSlot={
@@ -417,7 +417,7 @@ function RegionFormSheet({
               })}
             </ScrollView>
             <Pressable style={styles.sheetCancel} onPress={() => setCountryPickerOpen(false)}>
-              <Text style={styles.sheetCancelLabel}>Cancel</Text>
+              <Text style={styles.sheetCancelLabel}>{t('admin:cancel')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>

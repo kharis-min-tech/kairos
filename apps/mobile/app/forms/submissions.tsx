@@ -27,6 +27,7 @@ import type { FormSubmission, FormType } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 const FORM_LABEL: Record<string, string> = {
   altar_call: 'Altar call',
@@ -62,7 +63,8 @@ const STATUS_FILTERS: { key: 'all' | 'new' | 'reviewed' | 'converted' | 'dismiss
   { key: 'dismissed', label: 'Dismissed' },
 ];
 
-export default function FormsSubmissions() {
+export default function FormsSubmissions() {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -98,7 +100,7 @@ export default function FormsSubmissions() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Form submissions</Text>
+        <Text style={styles.headerTitle}>{t('forms:formSubmissions')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -173,10 +175,8 @@ export default function FormsSubmissions() {
             <View style={styles.emptyIcon}>
               <FileText color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>No submissions</Text>
-            <Text style={styles.emptyMeta}>
-              Nothing matches these filters yet.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('forms:noSubmissions')}</Text>
+            <Text style={styles.emptyMeta}>{t('forms:nothingMatchesTheseFiltersYet')}</Text>
           </Card>
         ) : (
           list.map((s) => <Row key={s.id} row={s} />)

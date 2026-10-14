@@ -26,6 +26,7 @@ import {
 import { formatShortDate } from '@kairos/core';
 import type { ServiceAttendanceRow } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_TONE: Record<string, 'success' | 'gold' | 'info' | 'neutral'> = {
   Present: 'success',
@@ -33,7 +34,8 @@ const STATUS_TONE: Record<string, 'success' | 'gold' | 'info' | 'neutral'> = {
   Virtual: 'info',
 };
 
-export default function AttendanceServiceDetail() {
+export default function AttendanceServiceDetail() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -76,7 +78,7 @@ export default function AttendanceServiceDetail() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Service</Text>
+        <Text style={styles.headerTitle}>{t('attendance:service')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -96,7 +98,7 @@ export default function AttendanceServiceDetail() {
         {loading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !service.data ? (
-          <Text style={styles.emptyText}>Service not found.</Text>
+          <Text style={styles.emptyText}>{t('attendance:serviceNotFound')}</Text>
         ) : (
           <>
             <Card padding="md" style={{ gap: spacing.sm }}>
@@ -132,10 +134,10 @@ export default function AttendanceServiceDetail() {
             </Card>
 
             <View style={styles.summaryRow}>
-              <SummaryTile label="Total" value={total} tone={c.primary} />
-              <SummaryTile label="Present" value={counts.Present ?? 0} tone={c.success} />
-              <SummaryTile label="Late" value={counts.Late ?? 0} tone={c.gold} />
-              <SummaryTile label="Virtual" value={counts.Virtual ?? 0} tone={c.info} />
+              <SummaryTile label={t('attendance:total')} value={total} tone={c.primary} />
+              <SummaryTile label={t('attendance:present')} value={counts.Present ?? 0} tone={c.success} />
+              <SummaryTile label={t('attendance:late')} value={counts.Late ?? 0} tone={c.gold} />
+              <SummaryTile label={t('attendance:virtual')} value={counts.Virtual ?? 0} tone={c.info} />
             </View>
 
             <ScrollView
@@ -163,7 +165,7 @@ export default function AttendanceServiceDetail() {
             </ScrollView>
 
             {filtered.length === 0 ? (
-              <Text style={styles.emptyText}>No attendance records.</Text>
+              <Text style={styles.emptyText}>{t('attendance:noAttendanceRecords')}</Text>
             ) : (
               filtered.map((r) => <AttendeeRow key={r.memberId} row={r} onPress={() => router.push(`/members/${r.memberId}` as never)} />)
             )}
@@ -191,7 +193,8 @@ function AttendeeRow({
 }: {
   row: ServiceAttendanceRow;
   onPress: () => void;
-}) {
+}) {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const tone = STATUS_TONE[row.attendanceStatus] ?? 'neutral';
@@ -204,7 +207,7 @@ function AttendeeRow({
             {row.memberFirstName} {row.memberLastName}
           </Text>
           {row.isFirstTimeVisitor ? (
-            <Text style={styles.rowMeta}>First-time visitor</Text>
+            <Text style={styles.rowMeta}>{t('attendance:firstTimeVisitor')}</Text>
           ) : row.arrivalTime ? (
             <Text style={styles.rowMeta}>
               Arrived{' '}

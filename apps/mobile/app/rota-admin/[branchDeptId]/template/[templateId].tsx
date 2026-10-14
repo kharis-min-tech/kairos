@@ -45,6 +45,7 @@ import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 const WEEKDAYS = [
   { value: 0, label: 'Sun' },
@@ -56,7 +57,8 @@ const WEEKDAYS = [
   { value: 6, label: 'Sat' },
 ];
 
-export default function RotaTemplateDetail() {
+export default function RotaTemplateDetail() {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -180,10 +182,10 @@ export default function RotaTemplateDetail() {
 
   async function confirmDeactivate() {
     const ok = await alert.confirm({
-      title: 'Archive template?',
+      title: t('rota:archiveTemplate'),
       message:
         'Existing instances stay put but no new ones can be generated. You can leave it in place if you might use it again.',
-      confirmLabel: 'Archive',
+      confirmLabel: t('rota:archive'),
       destructive: true,
     });
     if (!ok) return;
@@ -192,9 +194,9 @@ export default function RotaTemplateDetail() {
 
   async function confirmRemoveSlot(slot: RotaTemplateSlot) {
     const ok = await alert.confirm({
-      title: 'Remove role?',
+      title: t('rota:removeRole2'),
       message: `Remove "${slot.roleName}". Future generated instances will no longer include this role.`,
-      confirmLabel: 'Remove',
+      confirmLabel: t('rota:remove'),
       destructive: true,
     });
     if (!ok) return;
@@ -203,9 +205,9 @@ export default function RotaTemplateDetail() {
 
   async function confirmRemovePool(row: RotaPoolMemberWithDetails) {
     const ok = await alert.confirm({
-      title: 'Remove from pool?',
+      title: t('rota:removeFromPool2'),
       message: `${row.memberFirstName} ${row.memberLastName} will stop being auto-assigned on new instances.`,
-      confirmLabel: 'Remove',
+      confirmLabel: t('rota:remove'),
       destructive: true,
     });
     if (!ok) return;
@@ -230,7 +232,7 @@ export default function RotaTemplateDetail() {
         <Pressable
           onPress={() => setEditOpen(true)}
           hitSlop={8}
-          accessibilityLabel="Edit template"
+          accessibilityLabel={t('rota:editTemplate')}
         >
           <Pencil color={c.primary} size={20} strokeWidth={1.5} />
         </Pressable>
@@ -276,13 +278,13 @@ export default function RotaTemplateDetail() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <ListChecks color={c.primary} size={14} strokeWidth={1.5} />
-                <Text style={styles.sectionTitle}>Roles</Text>
+                <Text style={styles.sectionTitle}>{t('rota:roles')}</Text>
                 <Badge label={String(slots.data?.length ?? 0)} variant="neutral" size="sm" />
                 <Pressable
                   onPress={() => setSlotSheet({ mode: 'new' })}
                   style={styles.addBtn}
                   hitSlop={6}
-                  accessibilityLabel="Add role"
+                  accessibilityLabel={t('rota:addRole')}
                 >
                   <Plus color={c.primary} size={16} strokeWidth={1.5} />
                 </Pressable>
@@ -291,10 +293,7 @@ export default function RotaTemplateDetail() {
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (slots.data ?? []).length === 0 ? (
                 <Card padding="md">
-                  <Text style={styles.emptyText}>
-                    No roles yet. Add at least one role so the generator can fill
-                    positions from the pool.
-                  </Text>
+                  <Text style={styles.emptyText}>{t('rota:noRolesYetAddAtLeast')}</Text>
                 </Card>
               ) : (
                 (slots.data ?? [])
@@ -317,14 +316,14 @@ export default function RotaTemplateDetail() {
                       <Pressable
                         onPress={() => setSlotSheet({ mode: 'edit', slot: s })}
                         hitSlop={8}
-                        accessibilityLabel="Edit role"
+                        accessibilityLabel={t('rota:editRole')}
                       >
                         <Pencil color={c.inkMuted} size={16} strokeWidth={1.5} />
                       </Pressable>
                       <Pressable
                         onPress={() => confirmRemoveSlot(s)}
                         hitSlop={8}
-                        accessibilityLabel="Remove role"
+                        accessibilityLabel={t('rota:removeRole')}
                       >
                         <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
                       </Pressable>
@@ -336,13 +335,13 @@ export default function RotaTemplateDetail() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Users color={c.primary} size={14} strokeWidth={1.5} />
-                <Text style={styles.sectionTitle}>Pool</Text>
+                <Text style={styles.sectionTitle}>{t('rota:pool')}</Text>
                 <Badge label={String(pool.data?.length ?? 0)} variant="neutral" size="sm" />
                 <Pressable
                   onPress={() => setPoolPickerOpen(true)}
                   style={styles.addBtn}
                   hitSlop={6}
-                  accessibilityLabel="Add pool member"
+                  accessibilityLabel={t('rota:addPoolMember')}
                 >
                   <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
                 </Pressable>
@@ -351,10 +350,7 @@ export default function RotaTemplateDetail() {
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (pool.data ?? []).length === 0 ? (
                 <Card padding="md">
-                  <Text style={styles.emptyText}>
-                    No pool members. Add people who can be assigned when instances
-                    are generated.
-                  </Text>
+                  <Text style={styles.emptyText}>{t('rota:noPoolMembersAddPeopleWho')}</Text>
                 </Card>
               ) : (
                 (pool.data ?? []).map((row) => (
@@ -378,7 +374,7 @@ export default function RotaTemplateDetail() {
                     <Pressable
                       onPress={() => confirmRemovePool(row)}
                       hitSlop={8}
-                      accessibilityLabel="Remove from pool"
+                      accessibilityLabel={t('rota:removeFromPool')}
                     >
                       <Trash2 color={c.danger} size={16} strokeWidth={1.5} />
                     </Pressable>
@@ -389,7 +385,7 @@ export default function RotaTemplateDetail() {
 
             <Pressable style={styles.dangerRow} onPress={confirmDeactivate}>
               <Trash2 color={c.danger} size={14} strokeWidth={1.5} />
-              <Text style={styles.dangerText}>Archive template</Text>
+              <Text style={styles.dangerText}>{t('rota:archiveTemplate2')}</Text>
             </Pressable>
           </>
         )}
@@ -401,8 +397,8 @@ export default function RotaTemplateDetail() {
           onClose={() => setPoolPickerOpen(false)}
           branchId={dept.data.branchId}
           excludeMemberIds={poolMemberIds}
-          title="Add to pool"
-          subtitle="Members added here can be assigned when instances are generated."
+          title={t('rota:addToPool')}
+          subtitle={t('rota:membersAddedHereCanBeAssigned')}
           onPick={(memberId) => {
             setPoolPickerOpen(false);
             addPool.mutate(memberId);
@@ -463,7 +459,8 @@ function EditTemplateSheet({
   initial: { name: string; weekday: number; defaultStartTime: string; notes: string };
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [name, setName] = useState(initial.name);
   const [weekday, setWeekday] = useState(initial.weekday);
@@ -490,13 +487,13 @@ function EditTemplateSheet({
   });
 
   return (
-    <SheetShell open={open} title="Edit template" onClose={onClose}>
+    <SheetShell open={open} title={t('rota:editTemplate')} onClose={onClose}>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Name</Text>
-        <Input value={name} onChangeText={setName} placeholder="Template name" />
+        <Text style={styles.label}>{t('rota:name')}</Text>
+        <Input value={name} onChangeText={setName} placeholder={t('rota:templateName')} />
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Service day</Text>
+        <Text style={styles.label}>{t('rota:serviceDay')}</Text>
         <View style={styles.weekdayRow}>
           {WEEKDAYS.map((d) => {
             const active = d.value === weekday;
@@ -517,16 +514,16 @@ function EditTemplateSheet({
         </View>
       </View>
       <TimePicker
-        label="Default start time"
+        label={t('rota:defaultStartTime')}
         value={startTime}
         onChange={setStartTime}
       />
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Notes</Text>
+        <Text style={styles.label}>{t('rota:notes')}</Text>
         <Input
           value={notes}
           onChangeText={setNotes}
-          placeholder="Optional"
+          placeholder={t('rota:optional')}
           multiline
           numberOfLines={3}
           textAlignVertical="top"
@@ -563,7 +560,8 @@ function SlotSheet({
   templateId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [roleName, setRoleName] = useState(slot?.roleName ?? '');
   const [positions, setPositions] = useState(String(slot?.positionsRequired ?? 1));
@@ -612,16 +610,16 @@ function SlotSheet({
       onClose={onClose}
     >
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Role name</Text>
+        <Text style={styles.label}>{t('rota:roleName')}</Text>
         <Input
           value={roleName}
           onChangeText={setRoleName}
-          placeholder="e.g. Sound engineer"
+          placeholder={t('rota:eGSoundEngineer')}
           autoCapitalize="sentences"
         />
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Positions required</Text>
+        <Text style={styles.label}>{t('rota:positionsRequired')}</Text>
         <Input
           value={positions}
           onChangeText={setPositions}
@@ -634,7 +632,7 @@ function SlotSheet({
         <Input
           value={notes}
           onChangeText={setNotes}
-          placeholder="Anything the generator or team should know"
+          placeholder={t('rota:anythingTheGeneratorOrTeamShould')}
           multiline
           numberOfLines={3}
           textAlignVertical="top"

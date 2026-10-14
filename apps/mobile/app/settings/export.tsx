@@ -22,8 +22,10 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
-export default function ExportSettings() {
+export default function ExportSettings() {  const { t } = useTranslation(['settings', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -60,7 +62,7 @@ export default function ExportSettings() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Export my data</Text>
+        <Text style={styles.headerTitle}>{t('settings:exportMyData')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -68,7 +70,7 @@ export default function ExportSettings() {
         <Card padding="md" style={{ gap: spacing.md }}>
           <View style={styles.iconRow}>
             <Download color={c.primary} size={20} strokeWidth={1.5} />
-            <Text style={styles.title}>Download everything we hold on you</Text>
+            <Text style={styles.title}>{t('settings:downloadEverythingWeHoldOnYou')}</Text>
           </View>
           <Text style={styles.body}>
             This produces a JSON file with your profile, attendance history,

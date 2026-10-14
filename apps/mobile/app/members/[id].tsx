@@ -56,6 +56,7 @@ import {
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 function formatDate(iso: string | Date | null | undefined): string {
   if (!iso) return '—';
@@ -68,7 +69,8 @@ function formatDate(iso: string | Date | null | undefined): string {
   });
 }
 
-export default function MemberProfile() {
+export default function MemberProfile() {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -141,9 +143,9 @@ export default function MemberProfile() {
 
   async function confirmDeactivate(name: string) {
     const ok = await alert.confirm({
-      title: 'Deactivate member?',
+      title: t('members:deactivateMember'),
       message: `Deactivate ${name}. They lose access and stop appearing in the directory. You can reactivate them later.`,
-      confirmLabel: 'Deactivate',
+      confirmLabel: t('members:deactivate'),
       destructive: true,
     });
     if (!ok) return;
@@ -158,9 +160,9 @@ export default function MemberProfile() {
 
   async function confirmReject(name: string) {
     const ok = await alert.confirm({
-      title: 'Reject signup?',
+      title: t('members:rejectSignup'),
       message: `Reject ${name}'s signup. Their account stays but is marked rejected, and a branch admin can undo this later.`,
-      confirmLabel: 'Reject',
+      confirmLabel: t('members:reject'),
       destructive: true,
     });
     if (!ok) return;
@@ -207,9 +209,9 @@ export default function MemberProfile() {
     branchName?: string,
   ) {
     const ok = await alert.confirm({
-      title: 'Revoke role?',
+      title: t('members:revokeRole'),
       message: `Remove the ${roleName} role${branchName ? ` for ${branchName}` : ''}. The member keeps everything else.`,
-      confirmLabel: 'Revoke',
+      confirmLabel: t('members:revoke'),
       destructive: true,
     });
     if (!ok) return;
@@ -272,7 +274,7 @@ export default function MemberProfile() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Member</Text>
+          <Text style={styles.headerTitle}>{t('members:member')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
@@ -287,7 +289,7 @@ export default function MemberProfile() {
           <Pressable onPress={() => router.back()} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Member</Text>
+          <Text style={styles.headerTitle}>{t('members:member')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
@@ -325,7 +327,7 @@ export default function MemberProfile() {
           <Pressable
             onPress={() => router.push(`/members/edit/${m.id}`)}
             hitSlop={8}
-            accessibilityLabel="Edit member"
+            accessibilityLabel={t('members:editMember')}
           >
             <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -365,13 +367,13 @@ export default function MemberProfile() {
             {isConfirmed ? (
               <View style={styles.heroBadgePillGold}>
                 <BadgeCheck color={c.gold} size={10} strokeWidth={2} />
-                <Text style={styles.heroBadgePillGoldLabel}>CONFIRMED</Text>
+                <Text style={styles.heroBadgePillGoldLabel}>{t('members:confirmed')}</Text>
               </View>
             ) : null}
             {m.redacted ? (
               <View style={styles.heroBadgePillRed}>
                 <ShieldAlert color="#ffffff" size={10} strokeWidth={2} />
-                <Text style={styles.heroBadgePillRedLabel}>PROTECTED</Text>
+                <Text style={styles.heroBadgePillRedLabel}>{t('members:protected')}</Text>
               </View>
             ) : null}
           </View>
@@ -382,17 +384,14 @@ export default function MemberProfile() {
         {m.redacted ? (
           <Card padding="md" style={styles.redactedBanner}>
             <Shield color={c.info} size={16} strokeWidth={1.5} />
-            <Text style={styles.redactedLabel}>
-              Contact details are redacted because this record is protected. Reach out to a
-              branch admin if you need more information.
-            </Text>
+            <Text style={styles.redactedLabel}>{t('members:contactDetailsAreRedactedBecauseThis')}</Text>
           </Card>
         ) : null}
 
         {!m.redacted &&
         (m.email || m.phone || m.address || m.city) ? (
           <Card padding="md" style={{ gap: spacing.sm }}>
-            <Text style={styles.sectionEyebrow}>CONTACT</Text>
+            <Text style={styles.sectionEyebrow}>{t('members:contact')}</Text>
             {m.email ? (
               <Pressable
                 onPress={() => Linking.openURL(`mailto:${m.email}`)}
@@ -440,38 +439,38 @@ export default function MemberProfile() {
         ) : null}
 
         <Card padding="md" style={{ gap: spacing.sm }}>
-          <Text style={styles.sectionEyebrow}>MEMBERSHIP</Text>
+          <Text style={styles.sectionEyebrow}>{t('members:membership')}</Text>
           <InfoRow
             icon={<Calendar color={c.primary} size={14} strokeWidth={1.5} />}
-            label="Member since"
+            label={t('members:memberSince')}
             value={formatDate(m.membershipDate)}
           />
           {m.membershipClassCompletedAt ? (
             <InfoRow
               icon={<BadgeCheck color={c.gold} size={14} strokeWidth={1.5} />}
-              label="Class completed"
+              label={t('members:classCompleted')}
               value={formatDate(m.membershipClassCompletedAt)}
             />
           ) : null}
           {m.secondaryBranchId ? (
             <InfoRow
               icon={<Building2 color={c.primary} size={14} strokeWidth={1.5} />}
-              label="Secondary branch"
+              label={t('members:secondaryBranch')}
               value={m.isAtSecondaryBranch ? 'Currently visiting' : 'Registered'}
             />
           ) : null}
           {!m.redacted && m.dateOfBirth ? (
             <InfoRow
               icon={<Calendar color={c.primary} size={14} strokeWidth={1.5} />}
-              label="Date of birth"
+              label={t('members:dateOfBirth')}
               value={formatDate(m.dateOfBirth)}
             />
           ) : null}
         </Card>
 
-        <Section title="Fellowships" icon={UsersRound} loading={fellowships.isLoading}>
+        <Section title={t('members:fellowships')} icon={UsersRound} loading={fellowships.isLoading}>
           {(fellowships.data ?? []).length === 0 ? (
-            <Text style={styles.emptyLine}>Not in any fellowships yet.</Text>
+            <Text style={styles.emptyLine}>{t('members:notInAnyFellowshipsYet')}</Text>
           ) : (
             (fellowships.data ?? []).map((f) => (
               <Pressable
@@ -488,9 +487,9 @@ export default function MemberProfile() {
           )}
         </Section>
 
-        <Section title="Departments" icon={Building2} loading={departments.isLoading}>
+        <Section title={t('members:departments')} icon={Building2} loading={departments.isLoading}>
           {(departments.data ?? []).length === 0 ? (
-            <Text style={styles.emptyLine}>Not in any departments yet.</Text>
+            <Text style={styles.emptyLine}>{t('members:notInAnyDepartmentsYet')}</Text>
           ) : (
             (departments.data ?? []).map((d) => (
               <Pressable
@@ -509,7 +508,7 @@ export default function MemberProfile() {
 
         {(isSelf || canManageMember) ? (
           <Section
-            title="Follow-up history"
+            title={t('members:followUpHistory')}
             icon={History}
             loading={followupHistory.isLoading}
           >
@@ -532,13 +531,13 @@ export default function MemberProfile() {
             <View style={styles.sectionIconTile}>
               <Sparkles color={c.primary} size={14} strokeWidth={1.5} />
             </View>
-            <Text style={styles.sectionTitle}>Roles</Text>
+            <Text style={styles.sectionTitle}>{t('members:roles')}</Text>
             {canManageRoles ? (
               <Pressable
                 onPress={() => setRolePickerOpen(true)}
                 style={styles.addRoleBtn}
                 hitSlop={6}
-                accessibilityLabel="Add role"
+                accessibilityLabel={t('members:addRole')}
               >
                 <Plus color={c.primary} size={16} strokeWidth={1.5} />
               </Pressable>
@@ -571,9 +570,7 @@ export default function MemberProfile() {
                   </Pressable>
                 ))}
                 {canManageRoles ? (
-                  <Text style={styles.longPressHint}>
-                    Long-press a role to revoke it.
-                  </Text>
+                  <Text style={styles.longPressHint}>{t('members:longPressARoleToRevoke')}</Text>
                 ) : null}
               </>
             )}
@@ -583,7 +580,7 @@ export default function MemberProfile() {
         {!m.redacted &&
         (m.emergencyContactName || m.emergencyContactPhone) ? (
           <Card padding="md" style={{ gap: spacing.sm }}>
-            <Text style={styles.sectionEyebrow}>EMERGENCY CONTACT</Text>
+            <Text style={styles.sectionEyebrow}>{t('members:emergencyContact')}</Text>
             {m.emergencyContactName ? (
               <Text style={styles.emergencyName}>
                 {m.emergencyContactName}
@@ -610,14 +607,12 @@ export default function MemberProfile() {
             <View style={styles.sectionIconTile}>
               <Settings color={c.primary} size={14} strokeWidth={1.5} />
             </View>
-            <Text style={styles.sectionTitle}>Manage</Text>
+            <Text style={styles.sectionTitle}>{t('members:manage')}</Text>
           </View>
           <Card padding="md" style={{ gap: spacing.sm }}>
             {m.approvalStatus === 'pending' && canApprove ? (
               <>
-                <Text style={styles.manageBlurb}>
-                  This member signup is waiting for review.
-                </Text>
+                <Text style={styles.manageBlurb}>{t('members:thisMemberSignupIsWaitingFor')}</Text>
                 <View style={styles.manageRow}>
                   <Pressable
                     style={[styles.manageBtn, styles.manageBtnPrimary]}
@@ -643,9 +638,7 @@ export default function MemberProfile() {
                     disabled={approve.isPending}
                   >
                     <X color={c.danger} size={14} strokeWidth={2} />
-                    <Text style={[styles.manageBtnLabel, { color: c.danger }]}>
-                      Reject
-                    </Text>
+                    <Text style={[styles.manageBtnLabel, { color: c.danger }]}>{t('members:reject')}</Text>
                   </Pressable>
                 </View>
                 <View style={styles.manageDivider} />
@@ -752,7 +745,8 @@ function RolePickerSheet({
   onClose: () => void;
   defaultBranchId: string;
   onPick: (roleId: string, branchId: string) => void;
-}) {
+}) {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const allRoles = useQuery({
@@ -776,10 +770,8 @@ function RolePickerSheet({
       <Pressable style={styles.modalBackdrop} onPress={onClose}>
         <Pressable style={styles.rolePickerSheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.rolePickerHandle} />
-          <Text style={styles.rolePickerTitle}>Assign a role</Text>
-          <Text style={styles.rolePickerSub}>
-            Pick a role and the branch it applies to.
-          </Text>
+          <Text style={styles.rolePickerTitle}>{t('members:assignARole')}</Text>
+          <Text style={styles.rolePickerSub}>{t('members:pickARoleAndTheBranch')}</Text>
 
           <ScrollView style={{ maxHeight: 380 }}>
             {allRoles.isLoading ? (
@@ -821,7 +813,7 @@ function RolePickerSheet({
 
           {pickedRoleId ? (
             <View style={styles.branchPickerRow}>
-              <Text style={styles.branchPickerLabel}>Branch</Text>
+              <Text style={styles.branchPickerLabel}>{t('members:branch')}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -857,7 +849,7 @@ function RolePickerSheet({
 
           <View style={styles.rolePickerActions}>
             <Pressable style={styles.rolePickerCancel} onPress={onClose}>
-              <Text style={styles.rolePickerCancelLabel}>Cancel</Text>
+              <Text style={styles.rolePickerCancelLabel}>{t('members:cancel')}</Text>
             </Pressable>
             <Pressable
               style={[
@@ -869,7 +861,7 @@ function RolePickerSheet({
                 if (pickedRoleId && branchId) onPick(pickedRoleId, branchId);
               }}
             >
-              <Text style={styles.rolePickerAssignLabel}>Assign</Text>
+              <Text style={styles.rolePickerAssignLabel}>{t('members:assign')}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -958,7 +950,8 @@ function FollowupHistoryRow({
     recordedByFirstName: string;
     recordedByLastName: string;
   };
-}) {
+}) {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const isVisit = row.type === 'visit';
@@ -1036,10 +1029,10 @@ function FollowupHistoryRow({
         {(row.welfareConcern || row.safeguardingConcern) ? (
           <View style={styles.historyChipRow}>
             {row.welfareConcern ? (
-              <Badge label="Welfare" variant="gold" size="sm" />
+              <Badge label={t('members:welfare')} variant="gold" size="sm" />
             ) : null}
             {row.safeguardingConcern ? (
-              <Badge label="Safeguarding" variant="danger" size="sm" />
+              <Badge label={t('members:safeguarding')} variant="danger" size="sm" />
             ) : null}
           </View>
         ) : null}

@@ -30,6 +30,7 @@ import {
   type UpdateNotificationPreferenceRequest,
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 type SelectValue = 'off' | 'immediate' | 'digest_daily';
 
@@ -51,7 +52,8 @@ function fromSelect(value: SelectValue): { enabled: boolean; cadence: Notificati
 
 const QUERY_KEY = ['me', 'notification-preferences'] as const;
 
-export default function NotificationPreferences() {
+export default function NotificationPreferences() {  const { t } = useTranslation(['settings', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -78,7 +80,7 @@ export default function NotificationPreferences() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={styles.headerTitle}>{t('settings:notifications')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -93,10 +95,8 @@ export default function NotificationPreferences() {
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Email preferences</Text>
-          <Text style={styles.introMeta}>
-            Choose which categories reach your inbox and how often.
-          </Text>
+          <Text style={styles.introTitle}>{t('settings:emailPreferences')}</Text>
+          <Text style={styles.introMeta}>{t('settings:chooseWhichCategoriesReachYourInbox')}</Text>
         </View>
 
         {prefs.isLoading ? (
@@ -116,7 +116,7 @@ export default function NotificationPreferences() {
           <Card padding="md">
             <View style={styles.cardTitleRow}>
               <Bell color={c.primary} size={16} strokeWidth={1.5} />
-              <Text style={styles.cardTitle}>By category</Text>
+              <Text style={styles.cardTitle}>{t('settings:byCategory')}</Text>
             </View>
 
             {NOTIFICATION_CATEGORIES.map((category, idx) => {
@@ -138,7 +138,7 @@ export default function NotificationPreferences() {
                     {isSecurity ? (
                       <View style={styles.lockedBadge}>
                         <Lock color={c.primary} size={10} strokeWidth={2} />
-                        <Badge label="Always on" variant="primary" size="sm" />
+                        <Badge label={t('settings:alwaysOn')} variant="primary" size="sm" />
                       </View>
                     ) : null}
                   </View>
@@ -186,10 +186,7 @@ export default function NotificationPreferences() {
           </Card>
         ) : null}
 
-        <Text style={styles.footnote}>
-          Daily digest sends a single 8 AM roundup per category instead of an email per event.
-          Security alerts always go immediately.
-        </Text>
+        <Text style={styles.footnote}>{t('settings:dailyDigestSendsASingleAm')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

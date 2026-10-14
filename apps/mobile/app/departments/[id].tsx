@@ -39,8 +39,10 @@ import {
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
-export default function DepartmentDetail() {
+export default function DepartmentDetail() {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -96,9 +98,9 @@ export default function DepartmentDetail() {
 
   async function confirmRemoveMember(memberId: string, name: string) {
     const ok = await alert.confirm({
-      title: 'Remove from department?',
+      title: t('departments:removeFromDepartment'),
       message: `Remove ${name} from this department. They keep their member record; only this department membership is ended.`,
-      confirmLabel: 'Remove',
+      confirmLabel: t('departments:remove'),
       destructive: true,
     });
     if (!ok) return;
@@ -125,7 +127,7 @@ export default function DepartmentDetail() {
           <Pressable
             onPress={() => router.push(`/departments/edit/${d.id}`)}
             hitSlop={8}
-            accessibilityLabel="Edit department"
+            accessibilityLabel={t('departments:editDepartment')}
           >
             <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -166,7 +168,7 @@ export default function DepartmentDetail() {
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}
             >
-              <Text style={styles.heroEyebrow}>DEPARTMENT</Text>
+              <Text style={styles.heroEyebrow}>{t('departments:department')}</Text>
               <Text style={styles.heroTitle}>{d.departmentName}</Text>
               {d.branchName ? <Text style={styles.heroBranch}>{d.branchName}</Text> : null}
               {d.description ? (
@@ -197,7 +199,7 @@ export default function DepartmentDetail() {
                       lastName={d.deputyLastName ?? undefined}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.leadEyebrow}>DEPUTY</Text>
+                      <Text style={styles.leadEyebrow}>{t('departments:deputy')}</Text>
                       <Text style={styles.leadName}>
                         {d.deputyFirstName} {d.deputyLastName ?? ''}
                       </Text>
@@ -219,7 +221,7 @@ export default function DepartmentDetail() {
                   <Handshake color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={styles.rotaTitle}>Recruitment</Text>
+                  <Text style={styles.rotaTitle}>{t('departments:recruitment')}</Text>
                   <Text style={styles.rotaMeta}>
                     {d.pendingJoinRequestCount
                       ? `${d.pendingJoinRequestCount} awaiting review: interview → offer`
@@ -239,10 +241,8 @@ export default function DepartmentDetail() {
                   <ClipboardList color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={styles.rotaTitle}>Rota</Text>
-                  <Text style={styles.rotaMeta}>
-                    Templates, generation, per-slot assignments
-                  </Text>
+                  <Text style={styles.rotaTitle}>{t('departments:rota')}</Text>
+                  <Text style={styles.rotaMeta}>{t('departments:templatesGenerationPerSlotAssignments')}</Text>
                 </View>
                 <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
               </Pressable>
@@ -257,10 +257,8 @@ export default function DepartmentDetail() {
                   <PhoneCall color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={styles.rotaTitle}>Follow-ups</Text>
-                  <Text style={styles.rotaMeta}>
-                    Overdue members, contact log, next-touch reminders
-                  </Text>
+                  <Text style={styles.rotaTitle}>{t('departments:followUps')}</Text>
+                  <Text style={styles.rotaMeta}>{t('departments:overdueMembersContactLogNextTouch')}</Text>
                 </View>
                 <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
               </Pressable>
@@ -275,10 +273,8 @@ export default function DepartmentDetail() {
                   <Shirt color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={styles.rotaTitle}>Uniforms</Text>
-                  <Text style={styles.rotaMeta}>
-                    Outfit library + per-service assignments
-                  </Text>
+                  <Text style={styles.rotaTitle}>{t('departments:uniforms')}</Text>
+                  <Text style={styles.rotaMeta}>{t('departments:outfitLibraryPerServiceAssignments')}</Text>
                 </View>
                 <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
               </Pressable>
@@ -289,7 +285,7 @@ export default function DepartmentDetail() {
                 <View style={styles.sectionIconTile}>
                   <Users color={c.primary} size={14} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.sectionTitle}>Team</Text>
+                <Text style={styles.sectionTitle}>{t('departments:team')}</Text>
                 <Badge
                   label={String(members.data?.length ?? 0)}
                   variant="neutral"
@@ -300,7 +296,7 @@ export default function DepartmentDetail() {
                     onPress={() => setPickerOpen(true)}
                     style={styles.addMemberBtn}
                     hitSlop={6}
-                    accessibilityLabel="Add member"
+                    accessibilityLabel={t('departments:addMember')}
                   >
                     <UserPlus color={c.primary} size={16} strokeWidth={1.5} />
                   </Pressable>
@@ -309,7 +305,7 @@ export default function DepartmentDetail() {
               {members.isLoading ? (
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.sm }} />
               ) : (members.data ?? []).length === 0 ? (
-                <Text style={styles.emptyLine}>No members recorded yet.</Text>
+                <Text style={styles.emptyLine}>{t('departments:noMembersRecordedYet')}</Text>
               ) : (
                 <View style={styles.memberList}>
                   {(members.data ?? []).map((m) => (
@@ -344,13 +340,11 @@ export default function DepartmentDetail() {
                         </Text>
                       </View>
                       {m.membershipStatus === 'probation' ? (
-                        <Badge label="Probation" variant="gold" size="sm" />
+                        <Badge label={t('departments:probation')} variant="gold" size="sm" />
                       ) : null}
                     </Pressable>
                   ))}
-                  <Text style={styles.longPressHint}>
-                    Long-press a row to remove them from the department.
-                  </Text>
+                  <Text style={styles.longPressHint}>{t('departments:longPressARowToRemove')}</Text>
                 </View>
               )}
             </View>

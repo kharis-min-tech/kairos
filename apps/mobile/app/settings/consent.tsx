@@ -25,8 +25,10 @@ import type { ConsentStatus, ConsentType } from '@kairos/types';
 import { CONSENT_TYPE_LABEL, CONSENT_TYPE_DESCRIPTION } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
-export default function ConsentSettings() {
+export default function ConsentSettings() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -60,7 +62,7 @@ export default function ConsentSettings() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Consent history</Text>
+        <Text style={styles.headerTitle}>{t('security:consentHistory')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -80,7 +82,7 @@ export default function ConsentSettings() {
           <>
             {required.length > 0 ? (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>REQUIRED</Text>
+                <Text style={styles.sectionTitle}>{t('security:required')}</Text>
                 {required.map((s) => (
                   <ConsentCard key={s.consentType} status={s} onToggle={record.mutate} />
                 ))}
@@ -88,7 +90,7 @@ export default function ConsentSettings() {
             ) : null}
             {optional.length > 0 ? (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>OPTIONAL</Text>
+                <Text style={styles.sectionTitle}>{t('security:optional')}</Text>
                 {optional.map((s) => (
                   <ConsentCard key={s.consentType} status={s} onToggle={record.mutate} />
                 ))}
@@ -107,7 +109,8 @@ function ConsentCard({
 }: {
   status: ConsentStatus;
   onToggle: (args: { consentType: ConsentType; granted: boolean }) => void;
-}) {
+}) {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -130,9 +133,7 @@ function ConsentCard({
           : ''}
       </Text>
       {status.needsAccept ? (
-        <Text style={styles.needAccept}>
-          A newer version is available. Toggle to re-accept.
-        </Text>
+        <Text style={styles.needAccept}>{t('security:aNewerVersionIsAvailableToggle')}</Text>
       ) : null}
     </Card>
   );

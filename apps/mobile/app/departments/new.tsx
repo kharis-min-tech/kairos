@@ -14,10 +14,12 @@ import {
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { DepartmentForm } from './_form';
+import { useTranslation } from 'react-i18next';
 
 type CreatePayload = Parameters<typeof api.departments.create>[0];
 
-export default function NewDepartment() {
+export default function NewDepartment() {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -54,23 +56,20 @@ export default function NewDepartment() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New department</Text>
+        <Text style={styles.headerTitle}>{t('departments:newDepartment')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <DepartmentForm
         mode="create"
         initial={{ branchId: user?.homeBranchId ?? '' }}
-        submitLabel="Create department"
+        submitLabel={t('departments:createDepartment')}
         submitPendingLabel="Creating…"
         submitting={create.isPending}
         serverError={serverError}
         onSubmit={handleSubmit}
         footer={
-          <Text style={styles.footnote}>
-            Requires the DepartmentLeader capability on the chosen branch, or admin/pastor
-            access. Members can be added after the department is created.
-          </Text>
+          <Text style={styles.footnote}>{t('departments:requiresTheDepartmentleaderCapabilityOnThe')}</Text>
         }
       />
     </SafeAreaView>

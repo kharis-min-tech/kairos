@@ -29,8 +29,10 @@ import type {
 import { useAuthStore } from '@/store/auth';
 import { api } from '@/lib/api-client';
 import { MemberForm } from './_form';
+import { useTranslation } from 'react-i18next';
 
-export default function NewMember() {
+export default function NewMember() {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -78,7 +80,7 @@ export default function NewMember() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <View style={{ width: 24 }} />
-          <Text style={styles.headerTitle}>Member created</Text>
+          <Text style={styles.headerTitle}>{t('members:memberCreated')}</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -96,43 +98,41 @@ export default function NewMember() {
 
           <Card padding="md" style={styles.credsCard}>
             <View style={styles.credRow}>
-              <Text style={styles.credLabel}>Email</Text>
+              <Text style={styles.credLabel}>{t('members:email')}</Text>
               <Text style={styles.credValue} numberOfLines={1}>
                 {created.member.email}
               </Text>
             </View>
             <View style={styles.credDivider} />
             <View style={styles.credRow}>
-              <Text style={styles.credLabel}>Temporary password</Text>
+              <Text style={styles.credLabel}>{t('members:temporaryPassword')}</Text>
               <View style={styles.credPwPill}>
                 <KeyRound color={c.primary} size={14} strokeWidth={1.5} />
                 <Text style={styles.credPwText} selectable>
                   {created.generatedPassword}
                 </Text>
               </View>
-              <Text style={styles.credHint}>
-                Long-press the password to select and copy, or use Share below.
-              </Text>
+              <Text style={styles.credHint}>{t('members:longPressThePasswordToSelect')}</Text>
             </View>
           </Card>
 
           <View style={styles.successActions}>
             <Button
-              label="Share credentials"
+              label={t('members:shareCredentials')}
               variant="primary"
               size="md"
               fullWidth
               onPress={sharePassword}
             />
             <Button
-              label="Open profile"
+              label={t('members:openProfile')}
               variant="outline"
               size="md"
               fullWidth
               onPress={() => router.replace(`/members/${created.member.id}`)}
             />
             <Button
-              label="Add another"
+              label={t('members:addAnother')}
               variant="ghost"
               size="md"
               fullWidth
@@ -150,14 +150,14 @@ export default function NewMember() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New member</Text>
+        <Text style={styles.headerTitle}>{t('members:newMember')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <MemberForm
         mode="create"
         initial={{ homeBranchId: user?.homeBranchId ?? '' }}
-        submitLabel="Create member"
+        submitLabel={t('members:createMember')}
         submitPendingLabel="Creating…"
         submitting={create.isPending}
         serverError={serverError}

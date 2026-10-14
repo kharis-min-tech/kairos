@@ -38,6 +38,7 @@ import {
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
+import { useTranslation } from 'react-i18next';
 
 // Derive legal pages from the same origin as the API so staging builds land
 // on staging.kairos.kharis.org/legal/* rather than production.
@@ -54,7 +55,8 @@ function docHrefFor(consentType: ConsentType): string | null {
 
 const QUERY_KEY = ['me', 'consent'] as const;
 
-export default function PrivacyConsent() {
+export default function PrivacyConsent() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -79,7 +81,7 @@ export default function PrivacyConsent() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Privacy & consent</Text>
+        <Text style={styles.headerTitle}>{t('security:privacyConsent')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -103,7 +105,7 @@ export default function PrivacyConsent() {
         <Card padding="md">
           <View style={styles.cardTitleRow}>
             <FileText color={c.primary} size={16} strokeWidth={1.5} />
-            <Text style={styles.cardTitle}>Consent records</Text>
+            <Text style={styles.cardTitle}>{t('security:consentRecords')}</Text>
           </View>
 
           {consent.isLoading ? (
@@ -147,7 +149,7 @@ export default function PrivacyConsent() {
                       {CONSENT_TYPE_LABEL[status.consentType]}
                     </Text>
                     {status.required ? (
-                      <Badge label="Required" variant="primary" size="sm" />
+                      <Badge label={t('security:required')} variant="primary" size="sm" />
                     ) : null}
                   </View>
                   <Text style={styles.consentDesc}>
@@ -155,7 +157,7 @@ export default function PrivacyConsent() {
                   </Text>
                   {href ? (
                     <Pressable onPress={() => Linking.openURL(href)} style={styles.docLink}>
-                      <Text style={styles.docLinkLabel}>Read the current version</Text>
+                      <Text style={styles.docLinkLabel}>{t('security:readTheCurrentVersion')}</Text>
                       <ExternalLink color={c.primary} size={12} strokeWidth={1.5} />
                     </Pressable>
                   ) : null}

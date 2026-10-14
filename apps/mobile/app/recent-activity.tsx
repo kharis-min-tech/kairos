@@ -34,6 +34,7 @@ import {
 } from '@kairos/ui-native';
 import { AUDIT_ACTION_LABEL, AuditAction, type AuditLogRow } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 interface ActionVisual {
   Icon: LucideIcon;
@@ -71,7 +72,8 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleString('en-GB');
 }
 
-export default function RecentActivity() {
+export default function RecentActivity() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -87,7 +89,7 @@ export default function RecentActivity() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Recent activity</Text>
+        <Text style={styles.headerTitle}>{t('security:recentActivity')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -102,10 +104,8 @@ export default function RecentActivity() {
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Security activity</Text>
-          <Text style={styles.introMeta}>
-            Your last sign-ins, password changes, and role updates.
-          </Text>
+          <Text style={styles.introTitle}>{t('security:securityActivity')}</Text>
+          <Text style={styles.introMeta}>{t('security:yourLastSignInsPasswordChanges')}</Text>
         </View>
 
         {activity.isLoading ? (
@@ -123,7 +123,7 @@ export default function RecentActivity() {
 
         {activity.data && activity.data.entries.length === 0 ? (
           <Card padding="md">
-            <Text style={styles.emptyLine}>No activity recorded yet.</Text>
+            <Text style={styles.emptyLine}>{t('security:noActivityRecordedYet')}</Text>
           </Card>
         ) : null}
 
@@ -145,7 +145,7 @@ export default function RecentActivity() {
                         {AUDIT_ACTION_LABEL[entry.action]}
                       </Text>
                       {entry.outcome === 'failure' ? (
-                        <Badge label="Failed" variant="danger" size="sm" />
+                        <Badge label={t('security:failed')} variant="danger" size="sm" />
                       ) : null}
                     </View>
                     <Text style={styles.entryMeta}>{formatTime(entry.createdAt)}</Text>

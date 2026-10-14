@@ -22,11 +22,13 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 const WINDOW_CHOICES = [3, 4, 6, 8, 12] as const;
 type WindowChoice = (typeof WINDOW_CHOICES)[number];
 
-export default function MissingMembersFullList() {
+export default function MissingMembersFullList() {  const { t } = useTranslation(['reports', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -46,12 +48,12 @@ export default function MissingMembersFullList() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Not seen recently</Text>
+        <Text style={styles.headerTitle}>{t('reports:notSeenRecently')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.filterRow}>
-        <Text style={styles.filterLabel}>Missing across the last</Text>
+        <Text style={styles.filterLabel}>{t('reports:missingAcrossTheLast')}</Text>
         <View style={styles.chipRow}>
           {WINDOW_CHOICES.map((n) => {
             const active = n === services;
@@ -87,7 +89,7 @@ export default function MissingMembersFullList() {
             <View style={styles.emptyIcon}>
               <UserX color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>All accounted for</Text>
+            <Text style={styles.emptyTitle}>{t('reports:allAccountedFor')}</Text>
             <Text style={styles.emptyMeta}>
               Everyone attended in the last {services} services.
             </Text>

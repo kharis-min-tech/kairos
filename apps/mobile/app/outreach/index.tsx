@@ -37,6 +37,7 @@ import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 25;
 type CompletedFilter = 'active' | 'completed' | 'all';
@@ -50,7 +51,8 @@ function useDebounced<T>(value: T, delay: number): T {
   return v;
 }
 
-export default function OutreachDirectory() {
+export default function OutreachDirectory() {  const { t } = useTranslation(['outreach', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -110,13 +112,13 @@ export default function OutreachDirectory() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Outreach</Text>
+        <Text style={styles.headerTitle}>{t('outreach:outreach')}</Text>
         {canCreateOutreach ? (
           <Pressable
             onPress={() => router.push('/outreach/new')}
             hitSlop={8}
             testID="new-outreach-btn"
-            accessibilityLabel="New outreach program"
+            accessibilityLabel={t('outreach:newOutreachProgram')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -129,7 +131,7 @@ export default function OutreachDirectory() {
         <Input
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search programs"
+          placeholder={t('outreach:searchPrograms')}
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
@@ -213,7 +215,7 @@ export default function OutreachDirectory() {
               <View style={styles.emptyIconTile}>
                 <Heart color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No outreach programs</Text>
+              <Text style={styles.emptyTitle}>{t('outreach:noOutreachPrograms')}</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
                   ? `Nothing matched "${debouncedSearch}".`
@@ -234,7 +236,7 @@ export default function OutreachDirectory() {
                     {p.programName}
                   </Text>
                   {p.isCompleted ? (
-                    <Badge label="Done" variant="success" size="sm" />
+                    <Badge label={t('outreach:done')} variant="success" size="sm" />
                   ) : null}
                 </View>
                 <View style={styles.rowMetaLine}>
@@ -272,7 +274,7 @@ export default function OutreachDirectory() {
           ) : list.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : rows.length > 0 ? (
-            <Text style={styles.endOfList}>End of list</Text>
+            <Text style={styles.endOfList}>{t('outreach:endOfList')}</Text>
           ) : null
         }
       />

@@ -25,6 +25,7 @@ import {
 import { formatShortDate } from '@kairos/core';
 import type { MeApprovalItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 type FilterKind = 'all' | 'member_signup' | 'fellowship_join' | 'department_join';
 
@@ -44,7 +45,8 @@ const FILTERS: { key: FilterKind; label: string }[] = [
   { key: 'department_join', label: 'Departments' },
 ];
 
-export default function Approvals() {
+export default function Approvals() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -82,12 +84,12 @@ export default function Approvals() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Approvals</Text>
+        <Text style={styles.headerTitle}>{t('common:approvals')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.subHeader}>
-        <Text style={styles.subTitle}>Waiting on you</Text>
+        <Text style={styles.subTitle}>{t('common:waitingOnYou')}</Text>
         <Text style={styles.subMeta}>
           {(inbox.data ?? []).length} item{(inbox.data ?? []).length === 1 ? '' : 's'} across your
           fellowships, departments and branch signups.
@@ -132,7 +134,7 @@ export default function Approvals() {
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>All caught up</Text>
+              <Text style={styles.emptyTitle}>{t('common:allCaughtUp')}</Text>
               <Text style={styles.emptyMeta}>
                 {filter === 'all'
                   ? 'Nothing needs your approval right now.'

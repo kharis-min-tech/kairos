@@ -34,6 +34,7 @@ import {
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { mapboxPublicToken } from '@/lib/config';
+import { useTranslation } from 'react-i18next';
 
 const DAY_OPTIONS = [
   'Sunday',
@@ -82,7 +83,8 @@ export function BranchForm({
   serverError,
   onSubmit,
   footer,
-}: BranchFormProps) {
+}: BranchFormProps) {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const regions = useQuery({
@@ -174,29 +176,29 @@ export function BranchForm({
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>BRANCH</Text>
+          <Text style={styles.sectionEyebrow}>{t('branches:branch')}</Text>
 
-          <FieldLabel label="Branch name" required />
+          <FieldLabel label={t('branches:branchName')} required />
           <Input
             value={branchName}
             onChangeText={(v) => {
               setBranchName(v);
               clearError('branchName');
             }}
-            placeholder="e.g. Kharis Accra"
+            placeholder={t('branches:eGKharisAccra')}
             autoCapitalize="words"
             error={errors['branchName']}
           />
 
-          <FieldLabel label="Region" required />
+          <FieldLabel label={t('branches:region')} required />
           <PickerField
             value={regionLabel}
-            placeholder="Choose a region"
+            placeholder={t('branches:chooseARegion')}
             onPress={() => setOpenPicker('region')}
             error={errors['regionId']}
           />
 
-          <FieldLabel label="Type" />
+          <FieldLabel label={t('branches:type')} />
           <View style={styles.radioRow}>
             {Object.values(BranchTypeEnum).map((t) => {
               const active = branchType === t;
@@ -217,7 +219,7 @@ export function BranchForm({
           </View>
 
           <DatePicker
-            label="Established date"
+            label={t('branches:establishedDate')}
             value={establishedDate}
             onChange={setEstablishedDate}
             maximumDate={new Date()}
@@ -245,7 +247,7 @@ export function BranchForm({
             }}
           />
 
-          <FieldLabel label="Phone" />
+          <FieldLabel label={t('branches:phone')} />
           <Input
             value={phone}
             onChangeText={setPhone}
@@ -254,7 +256,7 @@ export function BranchForm({
             autoCorrect={false}
           />
 
-          <FieldLabel label="Email" />
+          <FieldLabel label={t('branches:email')} />
           <Input
             value={email}
             onChangeText={setEmail}
@@ -266,34 +268,32 @@ export function BranchForm({
 
         <Card padding="md" style={{ gap: spacing.sm }}>
           <View style={styles.scheduleHeader}>
-            <Text style={styles.sectionEyebrow}>SERVICE SCHEDULE</Text>
+            <Text style={styles.sectionEyebrow}>{t('branches:serviceSchedule')}</Text>
             <Pressable
               onPress={addServiceRow}
               style={styles.addRowBtn}
               hitSlop={6}
-              accessibilityLabel="Add service"
+              accessibilityLabel={t('branches:addService')}
             >
               <Plus color={c.primary} size={16} strokeWidth={1.5} />
             </Pressable>
           </View>
           {serviceSchedule.length === 0 ? (
-            <Text style={styles.emptyLine}>
-              No services scheduled. Tap + to add a weekly service.
-            </Text>
+            <Text style={styles.emptyLine}>{t('branches:noServicesScheduledTapToAdd')}</Text>
           ) : (
             serviceSchedule.map((row, idx) => (
               <View key={idx} style={styles.scheduleRow}>
                 <View style={styles.scheduleFields}>
                   <View style={{ flex: 1 }}>
-                    <FieldLabel label="Day" />
+                    <FieldLabel label={t('branches:day')} />
                     <PickerField
                       value={row.day}
-                      placeholder="Day"
+                      placeholder={t('branches:day')}
                       onPress={() => setOpenPicker(idx)}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <FieldLabel label="Time" />
+                    <FieldLabel label={t('branches:time')} />
                     <TimePicker
                       value={row.time}
                       onChange={(v) => updateServiceRow(idx, { time: v })}
@@ -301,11 +301,11 @@ export function BranchForm({
                     />
                   </View>
                 </View>
-                <FieldLabel label="Type" />
+                <FieldLabel label={t('branches:type')} />
                 <Input
                   value={row.type}
                   onChangeText={(v) => updateServiceRow(idx, { type: v })}
-                  placeholder="e.g. Sunday Service, Prayer meeting"
+                  placeholder={t('branches:eGSundayServicePrayerMeeting')}
                   autoCapitalize="words"
                 />
                 <Pressable
@@ -314,7 +314,7 @@ export function BranchForm({
                   hitSlop={4}
                 >
                   <Trash2 color={c.danger} size={14} strokeWidth={1.5} />
-                  <Text style={styles.removeRowLabel}>Remove service</Text>
+                  <Text style={styles.removeRowLabel}>{t('branches:removeService')}</Text>
                 </Pressable>
               </View>
             ))
@@ -337,7 +337,7 @@ export function BranchForm({
 
       <ValuePickerSheet
         open={openPicker === 'region'}
-        title="Region"
+        title={t('branches:region')}
         onClose={() => setOpenPicker(null)}
         options={regionOptions}
         selected={regionId}
@@ -349,7 +349,7 @@ export function BranchForm({
 
       <ValuePickerSheet
         open={typeof openPicker === 'number'}
-        title="Meeting day"
+        title={t('branches:meetingDay')}
         onClose={() => setOpenPicker(null)}
         options={DAY_OPTIONS.map((d) => ({ value: d, label: d }))}
         selected={typeof openPicker === 'number' ? serviceSchedule[openPicker]?.day ?? '' : ''}
@@ -423,7 +423,8 @@ function ValuePickerSheet({
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
-}) {
+}) {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -460,7 +461,7 @@ function ValuePickerSheet({
             })}
           </ScrollView>
           <Pressable style={styles.sheetCancel} onPress={onClose}>
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            <Text style={styles.sheetCancelLabel}>{t('branches:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

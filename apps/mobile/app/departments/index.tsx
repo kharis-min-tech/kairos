@@ -35,6 +35,7 @@ import type { BranchDepartmentWithDetails } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 25;
 
@@ -49,7 +50,8 @@ function useDebounced<T>(value: T, delay: number): T {
   return v;
 }
 
-export default function DepartmentsDirectory() {
+export default function DepartmentsDirectory() {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -119,13 +121,13 @@ export default function DepartmentsDirectory() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Departments</Text>
+        <Text style={styles.headerTitle}>{t('departments:departments')}</Text>
         {canCreateDepartment ? (
           <Pressable
             onPress={() => router.push('/departments/new')}
             hitSlop={8}
             testID="new-department-btn"
-            accessibilityLabel="New department"
+            accessibilityLabel={t('departments:newDepartment')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -138,7 +140,7 @@ export default function DepartmentsDirectory() {
         <Input
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search departments"
+          placeholder={t('departments:searchDepartments')}
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
@@ -157,12 +159,12 @@ export default function DepartmentsDirectory() {
           <ScopeChip
             active={branchScope === 'home'}
             onPress={() => setBranchScope('home')}
-            label="My branch"
+            label={t('departments:myBranch')}
           />
           <ScopeChip
             active={branchScope === 'all'}
             onPress={() => setBranchScope('all')}
-            label="All"
+            label={t('departments:all')}
           />
         </View>
 
@@ -175,7 +177,7 @@ export default function DepartmentsDirectory() {
           <TypeChip
             active={typeFilter === null}
             onPress={() => setTypeFilter(null)}
-            label="Any dept"
+            label={t('departments:anyDept')}
           />
           {(globalDepts.data ?? []).map((d) => (
             <TypeChip
@@ -239,7 +241,7 @@ export default function DepartmentsDirectory() {
               <View style={styles.emptyIconTile}>
                 <Building2 color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No departments found</Text>
+              <Text style={styles.emptyTitle}>{t('departments:noDepartmentsFound')}</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
                   ? `Nothing matched "${debouncedSearch}". Try a different query or clear filters.`
@@ -291,7 +293,7 @@ export default function DepartmentsDirectory() {
           ) : list.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : filtered.length > 0 ? (
-            <Text style={styles.endOfList}>End of list</Text>
+            <Text style={styles.endOfList}>{t('departments:endOfList')}</Text>
           ) : null
         }
       />

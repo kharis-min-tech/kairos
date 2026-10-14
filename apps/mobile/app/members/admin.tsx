@@ -26,6 +26,7 @@ import {
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'approval' | 'unguarded' | 'dormant';
 
@@ -35,7 +36,8 @@ const TAB_LABELS: Record<Tab, string> = {
   dormant: 'Dormant minors',
 };
 
-export default function MembersAdmin() {
+export default function MembersAdmin() {  const { t } = useTranslation(['members', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -101,9 +103,9 @@ export default function MembersAdmin() {
 
   async function confirmReject(id: string, name: string) {
     const ok = await alert.confirm({
-      title: 'Reject sign-up?',
+      title: t('members:rejectSignUp'),
       message: `Deny ${name}'s account. They can re-apply later if needed.`,
-      confirmLabel: 'Reject',
+      confirmLabel: t('members:reject'),
       destructive: true,
     });
     if (ok) reject.mutate(id);
@@ -111,9 +113,9 @@ export default function MembersAdmin() {
 
   async function confirmArchiveMinor(id: string, name: string) {
     const ok = await alert.confirm({
-      title: 'Archive minor?',
+      title: t('members:archiveMinor'),
       message: `Archive ${name}'s child record. Only do this if the child is no longer with the church.`,
-      confirmLabel: 'Archive',
+      confirmLabel: t('members:archive'),
       destructive: true,
     });
     if (ok) reviewMinor.mutate({ id, decision: 'archived' });
@@ -127,7 +129,7 @@ export default function MembersAdmin() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Members admin</Text>
+        <Text style={styles.headerTitle}>{t('members:membersAdmin')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -170,7 +172,7 @@ export default function MembersAdmin() {
         {tab === 'approval' ? (
           (pending.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>No sign-ups waiting on approval.</Text>
+              <Text style={styles.emptyLine}>{t('members:noSignUpsWaitingOnApproval')}</Text>
             </Card>
           ) : (
             (pending.data ?? []).map((m) => (
@@ -197,7 +199,7 @@ export default function MembersAdmin() {
                     }
                     style={styles.rejectBtn}
                     hitSlop={6}
-                    accessibilityLabel="Reject"
+                    accessibilityLabel={t('members:reject')}
                     disabled={approve.isPending || reject.isPending}
                   >
                     <X color={c.danger} size={16} strokeWidth={2} />
@@ -206,7 +208,7 @@ export default function MembersAdmin() {
                     onPress={() => approve.mutate(m.id)}
                     style={styles.approveBtn}
                     hitSlop={6}
-                    accessibilityLabel="Approve"
+                    accessibilityLabel={t('members:approve')}
                     disabled={approve.isPending || reject.isPending}
                   >
                     <Check color="#ffffff" size={16} strokeWidth={2} />
@@ -220,9 +222,7 @@ export default function MembersAdmin() {
         {tab === 'unguarded' ? (
           (unguarded.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>
-                All minors have an active guardian record.
-              </Text>
+              <Text style={styles.emptyLine}>{t('members:allMinorsHaveAnActiveGuardian')}</Text>
             </Card>
           ) : (
             <>
@@ -266,9 +266,7 @@ export default function MembersAdmin() {
         {tab === 'dormant' ? (
           (dormant.data ?? []).length === 0 ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>
-                Nothing needs a safeguarding-lead review.
-              </Text>
+              <Text style={styles.emptyLine}>{t('members:nothingNeedsASafeguardingLeadReview')}</Text>
             </Card>
           ) : (
             (dormant.data ?? []).map((m) => (
@@ -300,7 +298,7 @@ export default function MembersAdmin() {
                     style={styles.keepBtn}
                     disabled={reviewMinor.isPending}
                   >
-                    <Text style={styles.keepLabel}>Keep active</Text>
+                    <Text style={styles.keepLabel}>{t('members:keepActive')}</Text>
                   </Pressable>
                   <Pressable
                     onPress={() =>
@@ -309,7 +307,7 @@ export default function MembersAdmin() {
                     style={styles.archiveBtn}
                     disabled={reviewMinor.isPending}
                   >
-                    <Text style={styles.archiveLabel}>Archive</Text>
+                    <Text style={styles.archiveLabel}>{t('members:archive')}</Text>
                   </Pressable>
                 </View>
               </Card>

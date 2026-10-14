@@ -32,6 +32,7 @@ import {
 import type { CreateFellowshipMeetingRequest, FellowshipMeeting } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -47,7 +48,8 @@ function formatMeetingDate(iso: string | Date): string {
   });
 }
 
-export default function RollcallFellowship() {
+export default function RollcallFellowship() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -144,7 +146,7 @@ export default function RollcallFellowship() {
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Meetings</Text>
+          <Text style={styles.introTitle}>{t('attendance:meetings')}</Text>
           {fellowship.data?.branchName ? (
             <Text style={styles.introMeta}>{fellowship.data.branchName}</Text>
           ) : null}
@@ -166,7 +168,7 @@ export default function RollcallFellowship() {
 
         {upcoming.length > 0 ? (
           <View>
-            <Text style={styles.sectionEyebrow}>UPCOMING</Text>
+            <Text style={styles.sectionEyebrow}>{t('attendance:upcoming')}</Text>
             <View style={styles.list}>
               {upcoming.map((m) => (
                 <MeetingRow
@@ -181,7 +183,7 @@ export default function RollcallFellowship() {
 
         {past.length > 0 ? (
           <View>
-            <Text style={styles.sectionEyebrow}>RECENT</Text>
+            <Text style={styles.sectionEyebrow}>{t('attendance:recent')}</Text>
             <View style={styles.list}>
               {past.slice(0, 8).map((m) => (
                 <MeetingRow
@@ -200,7 +202,7 @@ export default function RollcallFellowship() {
             <View style={styles.emptyIconTile}>
               <Calendar color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>No meetings yet</Text>
+            <Text style={styles.emptyTitle}>{t('attendance:noMeetingsYet')}</Text>
             <Text style={styles.emptyMeta}>
               Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take
               the register.

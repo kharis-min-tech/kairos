@@ -18,6 +18,7 @@ import type {
   HomePulseWarning,
   HomeTaskItem,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The four blocks the control centre is built from. Each takes data plus an
@@ -111,7 +112,8 @@ export function NeedsYouBlock({
 }: {
   items: HomeTaskItem[];
   onPress: (item: HomeTaskItem) => void;
-}) {
+}) {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   if (items.length === 0) return null;
@@ -120,7 +122,7 @@ export function NeedsYouBlock({
 
   return (
     <View style={styles.block}>
-      <SectionHeader label="Needs you" count={total} />
+      <SectionHeader label={t('common:needsYou')} count={total} />
       <Card padding="none" style={styles.taskCard}>
         {items.map((item, index) => (
           <Pressable
@@ -262,14 +264,15 @@ export function GettingStartedBlock({
 }: {
   items: HomeGettingStartedItem[];
   onPress: (item: HomeGettingStartedItem) => void;
-}) {
+}) {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   if (items.length === 0) return null;
 
   return (
     <View style={styles.block}>
-      <SectionHeader label="Getting started" />
+      <SectionHeader label={t('common:gettingStarted')} />
       <Card padding="none" style={styles.taskCard}>
         {items.map((item, index) => (
           <Pressable
@@ -313,14 +316,15 @@ export function RecentActivityBlock({
 }: {
   items: HomeActivityItem[];
   onPress: (item: HomeActivityItem) => void;
-}) {
+}) {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   if (items.length === 0) return null;
 
   return (
     <View style={styles.block}>
-      <SectionHeader label="Recent activity" />
+      <SectionHeader label={t('common:recentActivity')} />
       <Card padding="none" style={styles.taskCard}>
         {items.map((item, index) => (
           <Pressable
@@ -358,10 +362,11 @@ export function RecentActivityBlock({
  * or failed request renders every block as null and the screen reads as
  * "nothing here" — which is exactly how it looked on 2026-10-04.
  */
-export function HomeSkeleton() {
+export function HomeSkeleton() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   return (
-    <View style={styles.block} accessibilityLabel="Loading your dashboard">
+    <View style={styles.block} accessibilityLabel={t('common:loadingYourDashboard')}>
       {[0, 1, 2].map((i) => (
         <View key={i} style={styles.skeletonCard} />
       ))}
@@ -373,7 +378,8 @@ export function HomeSkeleton() {
  * Surfaces the API's own message rather than a generic failure. The home
  * payload is the whole screen, so a silent failure leaves nothing to look at.
  */
-export function HomeError({ message, onRetry }: { message: string; onRetry: () => void }) {
+export function HomeError({ message, onRetry }: { message: string; onRetry: () => void }) {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -387,10 +393,10 @@ export function HomeError({ message, onRetry }: { message: string; onRetry: () =
         <Pressable
           onPress={onRetry}
           accessibilityRole="button"
-          accessibilityLabel="Retry"
+          accessibilityLabel={t('common:retry')}
           style={styles.retryButton}
         >
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={styles.retryText}>{t('common:retry')}</Text>
         </Pressable>
       </Card>
     </View>
@@ -398,20 +404,21 @@ export function HomeError({ message, onRetry }: { message: string; onRetry: () =
 }
 
 /** Personal attendance streak — the only number a plain member gets. */
-export function StreakBlock({ weeks, onPress }: { weeks: number; onPress: () => void }) {
+export function StreakBlock({ weeks, onPress }: { weeks: number; onPress: () => void }) {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
 
   return (
     <View style={styles.block}>
-      <SectionHeader label="You" />
+      <SectionHeader label={t('common:you')} />
       <Pressable onPress={onPress} accessibilityRole="button">
         <Card padding="md" style={styles.streakCard}>
           <View style={styles.rowBody}>
             <Text style={styles.streakValue}>
               {weeks} week{weeks === 1 ? '' : 's'} running
             </Text>
-            <Text style={styles.rowSubtitle}>My attendance</Text>
+            <Text style={styles.rowSubtitle}>{t('common:myAttendance')}</Text>
           </View>
           <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
         </Card>

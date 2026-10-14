@@ -26,12 +26,14 @@ import type { ServiceSummary } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 function isFuture(iso: string): boolean {
   return new Date(iso).getTime() >= Date.now() - 6 * 60 * 60 * 1000;
 }
 
-export default function AttendanceServicesList() {
+export default function AttendanceServicesList() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -74,12 +76,12 @@ export default function AttendanceServicesList() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Services</Text>
+        <Text style={styles.headerTitle}>{t('attendance:services')}</Text>
         {canCreateService ? (
           <Pressable
             onPress={() => router.push('/attendance/new' as never)}
             hitSlop={8}
-            accessibilityLabel="Create service"
+            accessibilityLabel={t('attendance:createService')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -105,16 +107,14 @@ export default function AttendanceServicesList() {
             <View style={styles.emptyIcon}>
               <Calendar color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>No services yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create the first service to start recording attendance.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('attendance:noServicesYet')}</Text>
+            <Text style={styles.emptyMeta}>{t('attendance:createTheFirstServiceToStart')}</Text>
           </Card>
         ) : (
           <>
             {upcoming.length > 0 ? (
               <View style={styles.group}>
-                <Text style={styles.groupHeader}>Upcoming</Text>
+                <Text style={styles.groupHeader}>{t('attendance:upcoming')}</Text>
                 {upcoming.map((s) => (
                   <ServiceRow
                     key={s.id}
@@ -126,7 +126,7 @@ export default function AttendanceServicesList() {
             ) : null}
             {past.length > 0 ? (
               <View style={styles.group}>
-                <Text style={styles.groupHeader}>Past</Text>
+                <Text style={styles.groupHeader}>{t('attendance:past')}</Text>
                 {past.map((s) => (
                   <ServiceRow
                     key={s.id}

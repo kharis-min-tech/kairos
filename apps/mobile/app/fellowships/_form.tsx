@@ -28,6 +28,7 @@ import type { CreateFellowshipRequest, FellowshipType } from '@kairos/types';
 import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { mapboxPublicToken } from '@/lib/config';
+import { useTranslation } from 'react-i18next';
 
 const DAY_OPTIONS = [
   'Sunday',
@@ -90,7 +91,8 @@ export function FellowshipForm({
   serverError,
   onSubmit,
   footer,
-}: FellowshipFormProps) {
+}: FellowshipFormProps) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const branches = useQuery({
@@ -172,41 +174,41 @@ export function FellowshipForm({
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>DETAILS</Text>
+          <Text style={styles.sectionEyebrow}>{t('fellowships:details')}</Text>
 
-          <FieldLabel label="Fellowship name" required />
+          <FieldLabel label={t('fellowships:fellowshipName')} required />
           <Input
             value={name}
             onChangeText={(v) => {
               setName(v);
               clearError('name');
             }}
-            placeholder="e.g. Central K-Group"
+            placeholder={t('fellowships:eGCentralKGroup')}
             autoCapitalize="words"
             error={errors['name']}
           />
 
-          <FieldLabel label="Branch" required />
+          <FieldLabel label={t('fellowships:branch')} required />
           <PickerField
             value={branchLabel}
-            placeholder="Choose a branch"
+            placeholder={t('fellowships:chooseABranch')}
             onPress={() => setOpenPicker('branch')}
             error={errors['branchId']}
           />
 
-          <FieldLabel label="Type" required />
+          <FieldLabel label={t('fellowships:type')} required />
           <PickerField
             value={fellowshipType}
-            placeholder="Choose a fellowship type"
+            placeholder={t('fellowships:chooseAFellowshipType')}
             onPress={() => setOpenPicker('type')}
             error={errors['fellowshipType']}
           />
 
-          <FieldLabel label="Description" />
+          <FieldLabel label={t('fellowships:description')} />
           <Input
             value={description}
             onChangeText={setDescription}
-            placeholder="Short description shown on the fellowship page"
+            placeholder={t('fellowships:shortDescriptionShownOnTheFellowship')}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
@@ -215,36 +217,33 @@ export function FellowshipForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>MEETING</Text>
+          <Text style={styles.sectionEyebrow}>{t('fellowships:meeting')}</Text>
 
-          <FieldLabel label="Meeting day" />
+          <FieldLabel label={t('fellowships:meetingDay')} />
           <PickerField
             value={meetingDay}
-            placeholder="Choose a day"
+            placeholder={t('fellowships:chooseADay')}
             onPress={() => setOpenPicker('day')}
           />
 
-          <FieldLabel label="Meeting time" />
+          <FieldLabel label={t('fellowships:meetingTime')} />
           <TimePicker
             value={meetingTime}
             onChange={setMeetingTime}
             minuteInterval={5}
           />
 
-          <FieldLabel label="Schedule" />
+          <FieldLabel label={t('fellowships:schedule')} />
           <PickerField
             value={meetingSchedule}
-            placeholder="Choose a cadence"
+            placeholder={t('fellowships:chooseACadence')}
             onPress={() => setOpenPicker('schedule')}
           />
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>MEETING LOCATION</Text>
-          <Text style={styles.hint}>
-            Optional. Leave blank if the fellowship meets at the parent branch.
-            Set it for K-Groups or off-site fellowships so they land on the map.
-          </Text>
+          <Text style={styles.sectionEyebrow}>{t('fellowships:meetingLocation')}</Text>
+          <Text style={styles.hint}>{t('fellowships:optionalLeaveBlankIfTheFellowship')}</Text>
           <AddressAutofillInput
             accessToken={mapboxPublicToken}
             value={{
@@ -280,7 +279,7 @@ export function FellowshipForm({
 
       <PickerSheet
         open={openPicker === 'branch'}
-        title="Branch"
+        title={t('fellowships:branch')}
         onClose={() => setOpenPicker(null)}
         options={branchOptions}
         selected={branchId}
@@ -292,7 +291,7 @@ export function FellowshipForm({
 
       <PickerSheet
         open={openPicker === 'type'}
-        title="Fellowship type"
+        title={t('fellowships:fellowshipType')}
         onClose={() => setOpenPicker(null)}
         options={Object.values(FellowshipTypeEnum).map((t) => ({ value: t, label: t }))}
         selected={fellowshipType}
@@ -304,7 +303,7 @@ export function FellowshipForm({
 
       <PickerSheet
         open={openPicker === 'day'}
-        title="Meeting day"
+        title={t('fellowships:meetingDay')}
         onClose={() => setOpenPicker(null)}
         options={DAY_OPTIONS.map((d) => ({ value: d, label: d }))}
         selected={meetingDay}
@@ -313,7 +312,7 @@ export function FellowshipForm({
 
       <PickerSheet
         open={openPicker === 'schedule'}
-        title="Schedule"
+        title={t('fellowships:schedule')}
         onClose={() => setOpenPicker(null)}
         options={SCHEDULE_OPTIONS.map((s) => ({ value: s, label: s }))}
         selected={meetingSchedule}
@@ -377,7 +376,8 @@ function PickerSheet({
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -414,7 +414,7 @@ function PickerSheet({
             })}
           </ScrollView>
           <Pressable style={styles.sheetCancel} onPress={onClose}>
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            <Text style={styles.sheetCancelLabel}>{t('fellowships:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

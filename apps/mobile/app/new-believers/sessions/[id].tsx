@@ -27,6 +27,7 @@ import { formatShortDate } from '@kairos/core';
 import type { NewBelieverEnrollmentWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 type Status = 'present' | 'absent' | null;
 
@@ -39,7 +40,8 @@ interface RosterRow {
   status: Status; // null = untouched
 }
 
-export default function NewBelieverSessionDetail() {
+export default function NewBelieverSessionDetail() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -149,7 +151,7 @@ export default function NewBelieverSessionDetail() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Session</Text>
+        <Text style={styles.headerTitle}>{t('newBelievers:session')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -170,7 +172,7 @@ export default function NewBelieverSessionDetail() {
         {loading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !session.data ? (
-          <Text style={styles.emptyText}>Session not found.</Text>
+          <Text style={styles.emptyText}>{t('newBelievers:sessionNotFound')}</Text>
         ) : (
           <>
             <Card padding="md" style={{ gap: spacing.sm }}>
@@ -200,7 +202,7 @@ export default function NewBelieverSessionDetail() {
 
             <View style={styles.sectionBlock}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Attendance</Text>
+                <Text style={styles.sectionTitle}>{t('newBelievers:attendance')}</Text>
                 <Text style={styles.sectionMeta}>
                   {roster.length} enrolled at this stage · tap to cycle
                 </Text>
@@ -232,7 +234,7 @@ export default function NewBelieverSessionDetail() {
         <View style={styles.footerBar}>
           <View style={{ flex: 1 }}>
             <Button
-              label="Discard"
+              label={t('newBelievers:discard')}
               variant="ghost"
               onPress={() => setPending({})}
               disabled={save.isPending}
@@ -261,7 +263,8 @@ function RosterRowView({
   status: Status;
   dirty: boolean;
   onPress: () => void;
-}) {
+}) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -272,7 +275,7 @@ function RosterRowView({
           <Text style={styles.rosterName}>
             {row.firstName} {row.lastName}
           </Text>
-          {dirty ? <Text style={styles.rosterDirty}>Unsaved</Text> : null}
+          {dirty ? <Text style={styles.rosterDirty}>{t('newBelievers:unsaved')}</Text> : null}
         </View>
         <StatusPill status={status} />
       </Card>
@@ -280,14 +283,15 @@ function RosterRowView({
   );
 }
 
-function StatusPill({ status }: { status: Status }) {
+function StatusPill({ status }: { status: Status }) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   if (status === 'present') {
     return (
       <View style={[styles.pill, styles.pillPresent]}>
         <Check color="#ffffff" size={14} strokeWidth={2.5} />
-        <Text style={styles.pillLabel}>Present</Text>
+        <Text style={styles.pillLabel}>{t('newBelievers:present')}</Text>
       </View>
     );
   }
@@ -295,13 +299,13 @@ function StatusPill({ status }: { status: Status }) {
     return (
       <View style={[styles.pill, styles.pillAbsent]}>
         <X color="#ffffff" size={14} strokeWidth={2.5} />
-        <Text style={styles.pillLabel}>Absent</Text>
+        <Text style={styles.pillLabel}>{t('newBelievers:absent')}</Text>
       </View>
     );
   }
   return (
     <View style={[styles.pill, styles.pillEmpty]}>
-      <Text style={styles.pillLabelEmpty}>Tap to mark</Text>
+      <Text style={styles.pillLabelEmpty}>{t('newBelievers:tapToMark')}</Text>
     </View>
   );
 }

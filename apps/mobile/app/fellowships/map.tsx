@@ -42,6 +42,7 @@ import type { FellowshipWithBranch } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { mapboxPublicToken } from '@/lib/config';
+import { useTranslation } from 'react-i18next';
 
 const TYPE_COLORS: Record<string, string> = {
   [FellowshipType.KGroups]: '#8b5cf6',
@@ -92,7 +93,8 @@ interface NearestState {
   userCoords: [number, number]; // [lat, lng]
 }
 
-export default function FellowshipsMap() {
+export default function FellowshipsMap() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -290,10 +292,7 @@ export default function FellowshipsMap() {
           {pins.length === 0 && !fellowships.isLoading ? (
             <View style={styles.emptyOverlay}>
               <Card padding="md">
-                <Text style={styles.emptyText}>
-                  No fellowships with coordinates yet. Edit a fellowship or its
-                  parent branch and pick an address to place it on the map.
-                </Text>
+                <Text style={styles.emptyText}>{t('fellowships:noFellowshipsWithCoordinatesYetEdit')}</Text>
               </Card>
             </View>
           ) : null}
@@ -339,7 +338,8 @@ export default function FellowshipsMap() {
 
 // ─── Header ─────────────────────────────────────────────────
 
-function Header({ onBack }: { onBack: () => void }) {
+function Header({ onBack }: { onBack: () => void }) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -347,7 +347,7 @@ function Header({ onBack }: { onBack: () => void }) {
       <Pressable onPress={onBack} hitSlop={8}>
         <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
       </Pressable>
-      <Text style={styles.headerTitle}>Fellowships map</Text>
+      <Text style={styles.headerTitle}>{t('fellowships:fellowshipsMap')}</Text>
       <View style={{ width: 24 }} />
     </View>
   );
@@ -359,7 +359,8 @@ function PostcodeSearch({
   onLocate,
 }: {
   onLocate: (query: string) => Promise<string | null>;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [value, setValue] = useState('');
@@ -387,7 +388,7 @@ function PostcodeSearch({
             setError(null);
           }}
           onSubmitEditing={handleGo}
-          placeholder="POSTCODE OR CITY…"
+          placeholder={t('fellowships:postcodeOrCity')}
           placeholderTextColor={c.inkFaded}
           autoCapitalize="characters"
           autoCorrect={false}
@@ -407,13 +408,14 @@ function PostcodeSearch({
   );
 }
 
-function CountryButton({ onPress }: { onPress: () => void }) {
+function CountryButton({ onPress }: { onPress: () => void }) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
     <Pressable style={styles.countryBtn} onPress={onPress}>
       <Globe color={c.primary} size={14} strokeWidth={1.5} />
-      <Text style={styles.countryBtnLabel}>Jump to country</Text>
+      <Text style={styles.countryBtnLabel}>{t('fellowships:jumpToCountry')}</Text>
     </Pressable>
   );
 }
@@ -426,7 +428,8 @@ function CountryPicker({
   open: boolean;
   onClose: () => void;
   onPick: (c: CountryData) => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [query, setQuery] = useState('');
   const filtered = query.trim()
@@ -437,13 +440,13 @@ function CountryPicker({
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Jump to country</Text>
+          <Text style={styles.sheetTitle}>{t('fellowships:jumpToCountry')}</Text>
           <View style={styles.sheetSearchRow}>
             <Search color="#888" size={14} strokeWidth={1.5} />
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Search country…"
+              placeholder={t('fellowships:searchCountry')}
               autoCapitalize="words"
               autoCorrect={false}
               style={styles.sheetSearchInput}
@@ -451,7 +454,7 @@ function CountryPicker({
           </View>
           <ScrollView style={{ maxHeight: 360 }}>
             {filtered.length === 0 ? (
-              <Text style={styles.searchError}>No matches.</Text>
+              <Text style={styles.searchError}>{t('fellowships:noMatches')}</Text>
             ) : (
               filtered.map((c) => (
                 <Pressable
@@ -480,7 +483,8 @@ function SelectedCard({
   fellowship: FellowshipWithBranch;
   onClose: () => void;
   onOpen: () => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -501,7 +505,7 @@ function SelectedCard({
         </View>
         <Badge label={fellowship.fellowshipType} variant="primary" size="sm" />
         <Pressable onPress={onOpen} style={styles.openBtn}>
-          <Text style={styles.openLabel}>Open fellowship →</Text>
+          <Text style={styles.openLabel}>{t('fellowships:openFellowship')}</Text>
         </Pressable>
       </Card>
     </View>
@@ -518,17 +522,18 @@ function NearestCard({
   nearest: NearestState;
   onClose: () => void;
   onOpen: () => void;
-}) {
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const { fellowship, distanceKm, userCoords } = nearest;
   const dest: [number, number] = [fellowship.latitude, fellowship.longitude];
 
   const travelModes = [
-    { label: 'Walk', mins: Math.round((distanceKm / 5) * 60), icon: Footprints, mode: 'walking' as const },
-    { label: 'Bus', mins: Math.round((distanceKm / 20) * 60), icon: Bus, mode: 'transit' as const },
-    { label: 'Car', mins: Math.round((distanceKm / 40) * 60), icon: Car, mode: 'driving' as const },
-    { label: 'Train', mins: Math.round((distanceKm / 60) * 60), icon: Train, mode: 'transit' as const },
+    { label: t('fellowships:walk'), mins: Math.round((distanceKm / 5) * 60), icon: Footprints, mode: 'walking' as const },
+    { label: t('fellowships:bus'), mins: Math.round((distanceKm / 20) * 60), icon: Bus, mode: 'transit' as const },
+    { label: t('fellowships:car'), mins: Math.round((distanceKm / 40) * 60), icon: Car, mode: 'driving' as const },
+    { label: t('fellowships:train'), mins: Math.round((distanceKm / 60) * 60), icon: Train, mode: 'transit' as const },
   ];
 
   function displayTime(mins: number): string {
@@ -564,7 +569,7 @@ function NearestCard({
       <Card padding="md" style={{ gap: spacing.sm }}>
         <View style={styles.selectedHead}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.nearestEyebrow}>NEAREST FELLOWSHIP</Text>
+            <Text style={styles.nearestEyebrow}>{t('fellowships:nearestFellowship')}</Text>
             <Text style={styles.nearestName}>{fellowship.fellowshipName}</Text>
             <Text style={styles.selectedMeta}>
               {fellowship.branchName} · {distanceKm.toFixed(1)} km away
@@ -593,22 +598,22 @@ function NearestCard({
         </View>
 
         <View style={styles.appRow}>
-          <Text style={styles.appRowLabel}>Open in</Text>
+          <Text style={styles.appRowLabel}>{t('fellowships:openIn')}</Text>
           {Platform.OS === 'ios' ? (
             <Pressable onPress={openInAppleMaps} style={styles.appLink}>
-              <Text style={styles.appLinkLabel}>Apple Maps</Text>
+              <Text style={styles.appLinkLabel}>{t('fellowships:appleMaps')}</Text>
             </Pressable>
           ) : null}
           <Pressable onPress={() => openInMap('driving')} style={styles.appLink}>
-            <Text style={styles.appLinkLabel}>Google Maps</Text>
+            <Text style={styles.appLinkLabel}>{t('fellowships:googleMaps')}</Text>
           </Pressable>
           <Pressable onPress={openInWaze} style={styles.appLink}>
-            <Text style={styles.appLinkLabel}>Waze</Text>
+            <Text style={styles.appLinkLabel}>{t('fellowships:waze')}</Text>
           </Pressable>
         </View>
 
         <Pressable onPress={onOpen} style={styles.openBtn}>
-          <Text style={styles.openLabel}>Open fellowship →</Text>
+          <Text style={styles.openLabel}>{t('fellowships:openFellowship')}</Text>
         </Pressable>
       </Card>
     </View>

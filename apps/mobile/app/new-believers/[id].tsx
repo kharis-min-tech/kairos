@@ -35,6 +35,7 @@ import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 interface StageDef {
   value: NewBelieverStageValue;
@@ -64,7 +65,8 @@ function getNextStage(stage: string): StageDef | undefined {
   return STAGES[idx + 1];
 }
 
-export default function EnrollmentDetail() {
+export default function EnrollmentDetail() {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -247,10 +249,10 @@ export default function EnrollmentDetail() {
 
   async function deactivate() {
     const ok = await alert.confirm({
-      title: 'Deactivate enrollment?',
+      title: t('newBelievers:deactivateEnrollment'),
       message:
         'This member will be removed from the active pipeline. You can re-enrol them later.',
-      confirmLabel: 'Deactivate',
+      confirmLabel: t('newBelievers:deactivate'),
       destructive: true,
     });
     if (!ok) return;
@@ -268,7 +270,7 @@ export default function EnrollmentDetail() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Enrollment</Text>
+        <Text style={styles.headerTitle}>{t('newBelievers:enrollment')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -285,7 +287,7 @@ export default function EnrollmentDetail() {
         {enrollment.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !data ? (
-          <Text style={styles.emptyText}>Enrollment not found.</Text>
+          <Text style={styles.emptyText}>{t('newBelievers:enrollmentNotFound')}</Text>
         ) : (
           <>
             <Card padding="md" style={{ gap: spacing.sm }}>
@@ -344,9 +346,7 @@ export default function EnrollmentDetail() {
                 onPress={() => router.push('/new-believers/sessions' as never)}
                 style={styles.attendanceHintCard}
               >
-                <Text style={styles.attendanceHintTitle}>
-                  Attendance needed first
-                </Text>
+                <Text style={styles.attendanceHintTitle}>{t('newBelievers:attendanceNeededFirst')}</Text>
                 <Text style={styles.attendanceHintBody}>
                   Before marking {stageDef?.label ?? data.stage} complete, take
                   attendance in the session. Tap here to open Sessions.
@@ -358,7 +358,7 @@ export default function EnrollmentDetail() {
               <View style={styles.actionRow}>
                 {isSessionStage && !currentSessionDone ? (
                   <Button
-                    label="Mark session complete"
+                    label={t('newBelievers:markSessionComplete')}
                     variant="secondary"
                     onPress={() => openMarkComplete(false)}
                     disabled={update.isPending || !canMarkComplete}
@@ -375,14 +375,14 @@ export default function EnrollmentDetail() {
             ) : null}
 
             <Card padding="md" style={{ gap: spacing.sm }}>
-              <Text style={styles.sectionTitle}>Details</Text>
+              <Text style={styles.sectionTitle}>{t('newBelievers:details')}</Text>
               <DetailRow
-                label="Stage"
+                label={t('newBelievers:stage')}
                 value={stageDef?.label ?? data.stage}
                 onPress={isTeam ? () => setStageSheetOpen(true) : undefined}
               />
               <DetailRow
-                label="Teacher"
+                label={t('newBelievers:teacher')}
                 value={
                   data.teacherFirstName
                     ? `${data.teacherFirstName} ${data.teacherLastName ?? ''}`.trim()
@@ -391,7 +391,7 @@ export default function EnrollmentDetail() {
                 onPress={isTeam ? () => setPickerOpen('teacher') : undefined}
               />
               <DetailRow
-                label="Mentor"
+                label={t('newBelievers:mentor')}
                 value={
                   data.mentorFirstName
                     ? `${data.mentorFirstName} ${data.mentorLastName ?? ''}`.trim()
@@ -400,19 +400,19 @@ export default function EnrollmentDetail() {
                 onPress={isTeam ? () => setPickerOpen('mentor') : undefined}
               />
               <DetailRow
-                label="Completed"
+                label={t('newBelievers:completed')}
                 value={data.completedAt ? formatShortDate(data.completedAt) : '—'}
               />
               {data.notes ? (
                 <View style={{ marginTop: spacing.xs }}>
-                  <Text style={styles.detailLabel}>Notes</Text>
+                  <Text style={styles.detailLabel}>{t('newBelievers:notes')}</Text>
                   <Text style={styles.notesBody}>{data.notes}</Text>
                 </View>
               ) : null}
             </Card>
 
             <Card padding="md" style={{ gap: spacing.sm }}>
-              <Text style={styles.sectionTitle}>Journey</Text>
+              <Text style={styles.sectionTitle}>{t('newBelievers:journey')}</Text>
               {STAGES.map((s, idx) => {
                 const isDone = idx < currentIdx;
                 const isCurrent = idx === currentIdx;
@@ -475,7 +475,7 @@ export default function EnrollmentDetail() {
               <Card padding="md" style={{ gap: spacing.sm }}>
                 <View style={styles.mentorHeader}>
                   <Handshake color={c.primary} size={14} strokeWidth={1.5} />
-                  <Text style={styles.sectionTitle}>Mentor follow-ups</Text>
+                  <Text style={styles.sectionTitle}>{t('newBelievers:mentorFollowUps')}</Text>
                   <Badge
                     label={String(mentorFollowups.data?.length ?? 0)}
                     variant="neutral"
@@ -484,7 +484,7 @@ export default function EnrollmentDetail() {
                 </View>
 
                 <Button
-                  label="Record follow-up"
+                  label={t('newBelievers:recordFollowUp')}
                   variant="primary"
                   iconLeft={<MessageSquarePlus color="#ffffff" size={14} strokeWidth={2} />}
                   onPress={() => setMentorNoteOpen(true)}
@@ -493,9 +493,7 @@ export default function EnrollmentDetail() {
                 {mentorFollowups.isLoading ? (
                   <ActivityIndicator color={c.primary} />
                 ) : (mentorFollowups.data ?? []).length === 0 ? (
-                  <Text style={styles.mentorEmpty}>
-                    No follow-ups recorded yet. Record the first one above.
-                  </Text>
+                  <Text style={styles.mentorEmpty}>{t('newBelievers:noFollowUpsRecordedYetRecord')}</Text>
                 ) : (
                   (mentorFollowups.data ?? []).map((f) => (
                     <View key={f.id} style={styles.mentorRow}>
@@ -514,7 +512,7 @@ export default function EnrollmentDetail() {
 
             {isTeam ? (
               <Pressable style={styles.deactivateRow} onPress={deactivate}>
-                <Text style={styles.deactivateText}>Deactivate enrollment</Text>
+                <Text style={styles.deactivateText}>{t('newBelievers:deactivateEnrollment2')}</Text>
               </Pressable>
             ) : null}
           </>
@@ -535,23 +533,20 @@ export default function EnrollmentDetail() {
           <Pressable style={styles.modalBackdrop} onPress={() => setMentorNoteOpen(false)}>
             <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
               <View style={styles.sheetHandle} />
-              <Text style={styles.sheetTitle}>Record mentor follow-up</Text>
-              <Text style={styles.sheetHint}>
-                What did you cover today? Anything the next mentor or admin should
-                know.
-              </Text>
+              <Text style={styles.sheetTitle}>{t('newBelievers:recordMentorFollowUp')}</Text>
+              <Text style={styles.sheetHint}>{t('newBelievers:whatDidYouCoverTodayAnything')}</Text>
               <TextInput
                 multiline
                 value={mentorNote}
                 onChangeText={setMentorNote}
-                placeholder="Encouragement, prayer points, next steps…"
+                placeholder={t('newBelievers:encouragementPrayerPointsNextSteps')}
                 placeholderTextColor={c.inkFaded}
                 style={styles.feedbackInput}
               />
               <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Cancel"
+                    label={t('newBelievers:cancel')}
                     variant="ghost"
                     onPress={() => setMentorNoteOpen(false)}
                   />
@@ -579,7 +574,7 @@ export default function EnrollmentDetail() {
         <Pressable style={styles.modalBackdrop} onPress={() => setStageSheetOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Change stage</Text>
+            <Text style={styles.sheetTitle}>{t('newBelievers:changeStage')}</Text>
             {STAGES.map((s) => {
               const active = data?.stage === s.value;
               return (
@@ -632,14 +627,14 @@ export default function EnrollmentDetail() {
                 multiline
                 value={feedback}
                 onChangeText={setFeedback}
-                placeholder="How did the session go?"
+                placeholder={t('newBelievers:howDidTheSessionGo')}
                 placeholderTextColor={c.inkFaded}
                 style={styles.feedbackInput}
               />
               <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Cancel"
+                    label={t('newBelievers:cancel')}
                     variant="ghost"
                     onPress={() => setFeedbackOpen(false)}
                   />

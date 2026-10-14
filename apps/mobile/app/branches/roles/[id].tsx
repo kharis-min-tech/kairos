@@ -32,8 +32,10 @@ import {
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
-export default function BranchRoles() {
+export default function BranchRoles() {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -83,9 +85,9 @@ export default function BranchRoles() {
 
   async function confirmRevoke(assignmentId: string, name: string) {
     const ok = await alert.confirm({
-      title: 'Revoke branch admin?',
+      title: t('branches:revokeBranchAdmin'),
       message: `Remove ${name} as a Branch System Admin. They keep their member record and any other roles.`,
-      confirmLabel: 'Revoke',
+      confirmLabel: t('branches:revoke'),
       destructive: true,
     });
     if (!ok) return;
@@ -104,13 +106,11 @@ export default function BranchRoles() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Branch admins
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('branches:branchAdmins')}</Text>
         <Pressable
           onPress={() => setPickerOpen(true)}
           hitSlop={8}
-          accessibilityLabel="Add branch admin"
+          accessibilityLabel={t('branches:addBranchAdmin')}
         >
           <UserPlus color={c.primary} size={22} strokeWidth={1.5} />
         </Pressable>
@@ -159,7 +159,7 @@ export default function BranchRoles() {
             <View style={styles.sectionIconTile}>
               <ShieldCheck color={c.primary} size={14} strokeWidth={1.5} />
             </View>
-            <Text style={styles.sectionTitle}>Branch System Admins</Text>
+            <Text style={styles.sectionTitle}>{t('branches:branchSystemAdmins')}</Text>
             <Badge label={String(activeAssignments.length)} variant="neutral" size="sm" />
           </View>
 
@@ -168,11 +168,8 @@ export default function BranchRoles() {
               <View style={styles.emptyIconTile}>
                 <UserIcon color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No branch admins yet</Text>
-              <Text style={styles.emptyMeta}>
-                Tap the + in the header to promote a member. At least one Branch System
-                Admin per branch is recommended.
-              </Text>
+              <Text style={styles.emptyTitle}>{t('branches:noBranchAdminsYet')}</Text>
+              <Text style={styles.emptyMeta}>{t('branches:tapTheInTheHeaderTo')}</Text>
             </Card>
           ) : (
             <Card padding="md" style={{ gap: spacing.xs }}>
@@ -208,9 +205,7 @@ export default function BranchRoles() {
                   <Badge label={a.roleName} variant="primary" size="sm" />
                 </Pressable>
               ))}
-              <Text style={styles.longPressHint}>
-                Long-press a row to revoke.
-              </Text>
+              <Text style={styles.longPressHint}>{t('branches:longPressARowToRevoke')}</Text>
             </Card>
           )}
         </View>
@@ -228,8 +223,8 @@ export default function BranchRoles() {
           onClose={() => setPickerOpen(false)}
           branchId={branch.data.id}
           excludeMemberIds={activeMemberIds}
-          title="Promote a member"
-          subtitle="Pick a member from this branch to make them a Branch System Admin."
+          title={t('branches:promoteAMember')}
+          subtitle={t('branches:pickAMemberFromThisBranch')}
           onPick={(memberId) => {
             setPickerOpen(false);
             assign.mutate(memberId, {

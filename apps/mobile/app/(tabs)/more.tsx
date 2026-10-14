@@ -345,7 +345,7 @@ export default function More() {
           <Text style={styles.signOutLabel}>{t('common:signOut')}</Text>
         </Pressable>
 
-        <Text style={styles.footerLabel}>Kairos v1.0 · Kharis Church</Text>
+        <Text style={styles.footerLabel}>{t('common:kairosVKharisChurch')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

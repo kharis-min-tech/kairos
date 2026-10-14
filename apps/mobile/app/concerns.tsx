@@ -26,6 +26,7 @@ import type { ConcernInboxItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'welfare' | 'safeguarding';
 
@@ -42,7 +43,8 @@ type Tab = 'welfare' | 'safeguarding';
  *   /api/me/followups/welfare
  *   /api/me/followups/safeguarding
  */
-export default function ConcernsInbox() {
+export default function ConcernsInbox() {  const { t } = useTranslation(['concerns', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -80,7 +82,7 @@ export default function ConcernsInbox() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Concerns</Text>
+        <Text style={styles.headerTitle}>{t('concerns:concerns')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -141,7 +143,8 @@ export default function ConcernsInbox() {
   );
 }
 
-function ConcernRow({ row }: { row: ConcernInboxItem }) {
+function ConcernRow({ row }: { row: ConcernInboxItem }) {  const { t } = useTranslation(['concerns', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -194,14 +197,14 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {
             {row.notes}
           </Text>
         ) : (
-          <Text style={styles.noNotesText}>No notes recorded on this follow-up.</Text>
+          <Text style={styles.noNotesText}>{t('concerns:noNotesRecordedOnThisFollow')}</Text>
         )}
         <View style={styles.chipRow}>
           {row.welfareConcern ? (
-            <Badge label="Welfare" variant="gold" size="sm" />
+            <Badge label={t('concerns:welfare')} variant="gold" size="sm" />
           ) : null}
           {row.safeguardingConcern ? (
-            <Badge label="Safeguarding" variant="danger" size="sm" />
+            <Badge label={t('concerns:safeguarding')} variant="danger" size="sm" />
           ) : null}
         </View>
       </Card>

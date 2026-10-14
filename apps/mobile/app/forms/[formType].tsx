@@ -57,6 +57,7 @@ import {
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { MemberPickerSheet, type PickedMember } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 const CONSENT_POLICY_VERSION = '2026-06-v1';
 const YES_NO = [
@@ -75,7 +76,8 @@ type FieldValue = FormFieldValue;
 type RowValues = FormRowValues;
 type FormState = FormValues;
 
-export default function FormRenderer() {
+export default function FormRenderer() {  const { t } = useTranslation(['forms', 'common']);
+
   const router = useRouter();
   const params = useLocalSearchParams<{ formType: string }>();
   const formType = params.formType;
@@ -83,7 +85,7 @@ export default function FormRenderer() {
   if (!isFormType(formType)) {
     return (
       <NotFoundState
-        title="Form not found"
+        title={t('forms:formNotFound')}
         message={`"${formType}" isn't a form we recognise.`}
         onBack={() => router.replace('/forms')}
       />
@@ -105,7 +107,8 @@ function NotFoundState({
   title: string;
   message: string;
   onBack: () => void;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -114,13 +117,13 @@ function NotFoundState({
         <Pressable onPress={onBack} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Form</Text>
+        <Text style={styles.headerTitle}>{t('forms:form')}</Text>
         <View style={{ width: 24 }} />
       </View>
       <View style={styles.centered}>
         <Text style={styles.emptyTitle}>{title}</Text>
         <Text style={styles.emptyMessage}>{message}</Text>
-        <Button label="Back to forms" variant="primary" size="md" onPress={onBack} />
+        <Button label={t('forms:backToForms')} variant="primary" size="md" onPress={onBack} />
       </View>
     </SafeAreaView>
   );
@@ -132,7 +135,8 @@ function DeclarativeForm({
 }: {
   definition: FormDefinition;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const now = useMemo(() => new Date(), []);
@@ -342,15 +346,13 @@ function DeclarativeForm({
                 <Text style={styles.consentBody}>{subjectLink.helpText}</Text>
               ) : null}
               {isAnonymous ? (
-                <Text style={styles.helpText}>
-                  An anonymous submission won’t be linked to anyone’s record.
-                </Text>
+                <Text style={styles.helpText}>{t('forms:anAnonymousSubmissionWonTBe')}</Text>
               ) : (
                 <>
                   <PersonRow
                     state={subjectMemberId ? 'linked' : 'empty'}
                     name={subject ? `${subject.firstName} ${subject.lastName}` : null}
-                    placeholder="Search by name or phone"
+                    placeholder={t('forms:searchByNameOrPhone')}
                     linkedTag="Directory member"
                     onPress={() => setSubjectOpen(true)}
                     onClear={subjectMemberId ? unlinkSubject : undefined}
@@ -392,7 +394,7 @@ function DeclarativeForm({
           })}
 
           <Card padding="md" style={{ gap: spacing.sm }}>
-            <Text style={styles.consentTitle}>Privacy notice</Text>
+            <Text style={styles.consentTitle}>{t('forms:privacyNotice')}</Text>
             <Text style={styles.consentBody}>
               Kharis Church uses the information you provide to contact you and administer
               church-related activities. It&apos;s stored securely until no longer required.
@@ -401,7 +403,7 @@ function DeclarativeForm({
             <CheckboxRow
               value={consentAck}
               onChange={setConsentAck}
-              label="I have read the privacy notice and confirm I have the subject's consent to record this information."
+              label={t('forms:iHaveReadThePrivacyNotice')}
             />
           </Card>
 
@@ -445,7 +447,8 @@ function SuccessScreen({
   message: string;
   onDone: () => void;
   onSubmitAnother: () => void;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -458,12 +461,12 @@ function SuccessScreen({
         <Text style={styles.emptyMessage}>{message}</Text>
         <View style={styles.successActions}>
           <Button
-            label="Submit another"
+            label={t('forms:submitAnother')}
             variant="primary"
             size="md"
             onPress={onSubmitAnother}
           />
-          <Button label="Back to forms" variant="outline" size="md" onPress={onDone} />
+          <Button label={t('forms:backToForms')} variant="outline" size="md" onPress={onDone} />
         </View>
       </View>
     </SafeAreaView>
@@ -528,7 +531,8 @@ function RepeatableBlock({
   addRow: (group: RepeatableGroupDef) => void;
   removeRow: (group: RepeatableGroupDef, index: number) => void;
   now: Date;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const itemLabel = block.itemLabel ?? 'Item';
@@ -552,7 +556,7 @@ function RepeatableBlock({
                   style={styles.removeRowBtn}
                 >
                   <Trash2 color={c.danger} size={14} strokeWidth={1.5} />
-                  <Text style={styles.removeRowLabel}>Remove</Text>
+                  <Text style={styles.removeRowLabel}>{t('forms:remove')}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -1001,7 +1005,8 @@ function SelectField({
   required?: boolean;
   helpText?: string;
   error?: string;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const [open, setOpen] = useState(false);
@@ -1057,7 +1062,7 @@ function SelectField({
               })}
             </ScrollView>
             <Pressable style={styles.selectCancelBtn} onPress={() => setOpen(false)}>
-              <Text style={styles.selectCancelLabel}>Cancel</Text>
+              <Text style={styles.selectCancelLabel}>{t('forms:cancel')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>

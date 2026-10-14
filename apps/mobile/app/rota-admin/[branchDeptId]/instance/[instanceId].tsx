@@ -40,6 +40,7 @@ import type {
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_TONE: Record<string, 'primary' | 'success' | 'gold' | 'danger' | 'neutral'> = {
   Assigned: 'primary',
@@ -49,7 +50,8 @@ const STATUS_TONE: Record<string, 'primary' | 'success' | 'gold' | 'danger' | 'n
   Open: 'neutral',
 };
 
-export default function RotaInstanceDetail() {
+export default function RotaInstanceDetail() {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -127,10 +129,10 @@ export default function RotaInstanceDetail() {
   const regenerate = useMutation({
     mutationFn: async () => {
       const ok = await alert.confirm({
-        title: 'Regenerate this instance?',
+        title: t('rota:regenerateThisInstance'),
         message:
           'Assignments will be recomputed from the pool by rotation. Manual tweaks on this instance will be lost.',
-        confirmLabel: 'Regenerate',
+        confirmLabel: t('rota:regenerate'),
         destructive: true,
       });
       if (!ok) throw new Error('cancelled');
@@ -186,7 +188,7 @@ export default function RotaInstanceDetail() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Rota instance</Text>
+        <Text style={styles.headerTitle}>{t('rota:rotaInstance')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -206,7 +208,7 @@ export default function RotaInstanceDetail() {
         {loading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !instance.data ? (
-          <Text style={styles.emptyText}>Instance not found.</Text>
+          <Text style={styles.emptyText}>{t('rota:instanceNotFound')}</Text>
         ) : (
           <>
             <Card padding="md" style={{ gap: spacing.sm }}>
@@ -254,7 +256,7 @@ export default function RotaInstanceDetail() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Regenerate"
+                    label={t('rota:regenerate')}
                     variant="secondary"
                     size="sm"
                     loading={regenerate.isPending}
@@ -265,12 +267,10 @@ export default function RotaInstanceDetail() {
             </Card>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Assignments</Text>
+              <Text style={styles.sectionTitle}>{t('rota:assignments')}</Text>
               {assignments.length === 0 ? (
                 <Card padding="md">
-                  <Text style={styles.emptyText}>
-                    No slots on this instance yet.
-                  </Text>
+                  <Text style={styles.emptyText}>{t('rota:noSlotsOnThisInstanceYet')}</Text>
                 </Card>
               ) : (
                 assignments.map((a) => (
@@ -323,7 +323,8 @@ function AssignmentRow({
   row: RotaAssignmentWithDetails;
   onPress: () => void;
   onClear?: () => void;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const tone = STATUS_TONE[row.status] ?? 'neutral';
@@ -351,7 +352,7 @@ function AssignmentRow({
             </View>
           </View>
         ) : (
-          <Text style={styles.openLabel}>Open, tap to assign</Text>
+          <Text style={styles.openLabel}>{t('rota:openTapToAssign')}</Text>
         )}
       </View>
       <View style={styles.rowActions}>
@@ -384,7 +385,8 @@ function PoolPickerSheet({
   onCancel: () => void;
   onPick: (memberId: string) => void;
   submitting: boolean;
-}) {
+}) {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const sorted = useMemo(
@@ -411,9 +413,7 @@ function PoolPickerSheet({
               style={{ marginVertical: spacing.md }}
             />
           ) : sorted.length === 0 ? (
-            <Text style={styles.emptyText}>
-              No pool members yet. Add them from web.
-            </Text>
+            <Text style={styles.emptyText}>{t('rota:noPoolMembersYetAddThem')}</Text>
           ) : (
             <ScrollView style={{ maxHeight: 380 }}>
               {sorted
@@ -443,7 +443,7 @@ function PoolPickerSheet({
                           {m.memberFirstName} {m.memberLastName}
                         </Text>
                         {preferred ? (
-                          <Text style={styles.poolPreferred}>Preferred role</Text>
+                          <Text style={styles.poolPreferred}>{t('rota:preferredRole')}</Text>
                         ) : m.preferredRoleName ? (
                           <Text style={styles.poolOtherRole}>
                             Prefers {m.preferredRoleName}
@@ -465,7 +465,7 @@ function PoolPickerSheet({
             disabled={submitting}
           >
             <XIcon color={c.inkMuted} size={14} strokeWidth={1.5} />
-            <Text style={styles.sheetCancelLabel}>Cancel</Text>
+            <Text style={styles.sheetCancelLabel}>{t('rota:cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

@@ -18,7 +18,13 @@
       "checkIn": "Pointage",
       "give": "Don",
       "more": "Plus"
-    }
+    },
+    "iAcceptTheTermsOfService": "J'accepte les conditions d'utilisation et la politique de confidentialité.",
+    "approvals": "Approbations",
+    "myAttendance": "Ma présence",
+    "myDepartment": "Mon département",
+    "myFellowship": "Ma cellule",
+    "recentActivity": "Activité récente"
   },
   "more": {
     "sections": {
@@ -96,7 +102,14 @@
       "restartNote": "Votre choix s'applique immédiatement et est conservé sur cet appareil.",
       "draft": "Traduction provisoire",
       "draftMeta": "Le krio et le twi sont traduits mais pas encore relus par un locuteur natif. Signalez-nous tout ce qui sonne faux."
-    }
+    },
+    "homeBranch": "Antenne d'attache",
+    "departments": "Départements",
+    "dateOfBirth": "Date de naissance",
+    "address": "Adresse",
+    "emergencyContact": "Contact d'urgence",
+    "security": "Sécurité",
+    "settings": "Paramètres"
   },
   "auth": {
     "shared": {
@@ -239,16 +252,73 @@
       "Female": "Femme"
     }
   },
-  "forms": {},
+  "forms": {
+    "cancel": "Annuler",
+    "dormantAttendees": "Participants inactifs",
+    "formSubmissions": "Formulaires envoyés"
+  },
   "myGroups": {},
   "rollcall": {},
-  "reports": {},
-  "members": {},
-  "fellowships": {},
-  "departments": {},
-  "branches": {},
-  "security": {},
-  "admin": {},
+  "reports": {
+    "reports": "Rapports",
+    "departments": "Départements",
+    "fellowships": "Cellules"
+  },
+  "members": {
+    "dateOfBirth": "Date de naissance",
+    "fellowships": "Cellules",
+    "departments": "Départements",
+    "cancel": "Annuler",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "middleName": "Deuxième prénom",
+    "gender": "Genre",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "homeBranch": "Antenne d'attache",
+    "relationship": "Lien de parenté",
+    "child": "Enfant",
+    "openProfile": "Ouvrir le profil"
+  },
+  "fellowships": {
+    "followUps": "Suivis",
+    "cancel": "Annuler",
+    "myBranch": "Mon antenne",
+    "fellowships": "Cellules"
+  },
+  "departments": {
+    "followUps": "Suivis",
+    "optional": "Facultatif",
+    "cancel": "Annuler",
+    "name": "Nom",
+    "rota": "Planning de service",
+    "myBranch": "Mon antenne",
+    "departments": "Départements"
+  },
+  "branches": {
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "cancel": "Annuler",
+    "myBranch": "Mon antenne",
+    "services": "Cultes"
+  },
+  "security": {
+    "cancel": "Annuler",
+    "privacyConsent": "Confidentialité et consentement",
+    "recentActivity": "Activité récente",
+    "done": "Terminé",
+    "checkYourInbox": "Consultez votre boîte mail",
+    "atLeastCharacters": "Au moins 8 caractères",
+    "retry": "Réessayer",
+    "security": "Sécurité"
+  },
+  "admin": {
+    "retry": "Réessayer",
+    "search": "Rechercher",
+    "checkInDesk": "Accueil des présences",
+    "cancel": "Annuler",
+    "regions": "Régions"
+  },
   "help": {},
   "home": {
     "today": "Aujourd'hui",
@@ -286,5 +356,43 @@
     "recentAttendance": "Présences récentes",
     "whichService": "Quel culte ?",
     "cancel": "Annuler"
+  },
+  "attendance": {
+    "thisWeek": "Cette semaine",
+    "services": "Cultes",
+    "cancel": "Annuler",
+    "fellowshipAttendance": "Présence en cellule"
+  },
+  "concerns": {
+    "concerns": "Préoccupations",
+    "followUps": "Suivis"
+  },
+  "membership": {
+    "optional": "Facultatif",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "membershipClasses": "Cours d'adhésion"
+  },
+  "newBelievers": {
+    "cancel": "Annuler"
+  },
+  "outreach": {
+    "done": "Terminé",
+    "cancel": "Annuler"
+  },
+  "rota": {
+    "cancel": "Annuler",
+    "optional": "Facultatif",
+    "name": "Nom"
+  },
+  "souls": {
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "gender": "Genre",
+    "souls": "Âmes",
+    "soulsDashboard": "Tableau de bord des âmes",
+    "followUps": "Suivis"
   }
 }

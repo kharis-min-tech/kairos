@@ -14,8 +14,10 @@ import {
 import type { CreateBranchRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { BranchForm } from './_form';
+import { useTranslation } from 'react-i18next';
 
-export default function NewBranch() {
+export default function NewBranch() {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -48,22 +50,19 @@ export default function NewBranch() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New branch</Text>
+        <Text style={styles.headerTitle}>{t('branches:newBranch')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <BranchForm
         mode="create"
-        submitLabel="Create branch"
+        submitLabel={t('branches:createBranch')}
         submitPendingLabel="Creating…"
         submitting={create.isPending}
         serverError={serverError}
         onSubmit={handleSubmit}
         footer={
-          <Text style={styles.footnote}>
-            Requires admin access. Leadership assignments are made separately after
-            creation.
-          </Text>
+          <Text style={styles.footnote}>{t('branches:requiresAdminAccessLeadershipAssignmentsAre')}</Text>
         }
       />
     </SafeAreaView>

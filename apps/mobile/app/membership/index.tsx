@@ -36,6 +36,7 @@ import { CHURCH_SCOPE } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Membership classes.
@@ -57,7 +58,8 @@ import { useCapabilities } from '@/lib/capabilities';
  *
  * Independent of the New Believers pipeline by design.
  */
-export default function MembershipScreen() {
+export default function MembershipScreen() {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -115,7 +117,7 @@ export default function MembershipScreen() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Membership classes</Text>
+        <Text style={styles.headerTitle}>{t('membership:membershipClasses')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -159,8 +161,8 @@ export default function MembershipScreen() {
             >
               <ListChecks color={c.primary} size={18} strokeWidth={1.5} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.adminRowLabel}>Interest pool</Text>
-                <Text style={styles.metaText}>Admit people into a cohort</Text>
+                <Text style={styles.adminRowLabel}>{t('membership:interestPool')}</Text>
+                <Text style={styles.metaText}>{t('membership:admitPeopleIntoACohort')}</Text>
               </View>
               <ChevronRight color={c.inkFaded} size={18} strokeWidth={1.5} />
             </Pressable>
@@ -170,8 +172,8 @@ export default function MembershipScreen() {
             >
               <Plus color={c.primary} size={18} strokeWidth={1.5} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.adminRowLabel}>New cohort</Text>
-                <Text style={styles.metaText}>Start the next membership class</Text>
+                <Text style={styles.adminRowLabel}>{t('membership:newCohort')}</Text>
+                <Text style={styles.metaText}>{t('membership:startTheNextMembershipClass')}</Text>
               </View>
               <ChevronRight color={c.inkFaded} size={18} strokeWidth={1.5} />
             </Pressable>
@@ -186,10 +188,8 @@ export default function MembershipScreen() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (cohorts.data ?? []).length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No cohorts yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create one from Interest pool to start admitting people.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('membership:noCohortsYet')}</Text>
+            <Text style={styles.emptyMeta}>{t('membership:createOneFromInterestPoolTo')}</Text>
           </View>
         ) : (
           (cohorts.data ?? []).map((co) => (
@@ -261,7 +261,8 @@ function MyMembership({
   onLeave: () => void;
   joining: boolean;
   leaving: boolean;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   if (!mine) return null;
 
   if (mine.confirmedAt) {
@@ -269,7 +270,7 @@ function MyMembership({
       <Card style={styles.confirmedCard}>
         <View style={styles.metaRow}>
           <CheckCircle2 color={c.success} size={18} strokeWidth={1.6} />
-          <Text style={styles.confirmedTitle}>You are a confirmed Member</Text>
+          <Text style={styles.confirmedTitle}>{t('membership:youAreAConfirmedMember')}</Text>
         </View>
         <Text style={styles.metaText}>
           Membership class completed on {formatShortDate(mine.confirmedAt)}.
@@ -282,7 +283,7 @@ function MyMembership({
     return (
       <Card style={styles.card}>
         <View style={styles.cardHead}>
-          <Text style={styles.cardTitle}>Your progress</Text>
+          <Text style={styles.cardTitle}>{t('membership:yourProgress')}</Text>
           <Badge
             label={mine.readiness?.eligible ? 'Ready to graduate' : 'In progress'}
             variant={mine.readiness?.eligible ? 'success' : 'neutral'}
@@ -309,7 +310,7 @@ function MyMembership({
       <Card style={styles.card}>
         <View style={styles.metaRow}>
           <Clock color={c.primary} size={18} strokeWidth={1.6} />
-          <Text style={styles.confirmedTitle}>You are on the list</Text>
+          <Text style={styles.confirmedTitle}>{t('membership:youAreOnTheList')}</Text>
         </View>
         <Text style={styles.metaText}>
           Added {formatShortDate(interest.expressedAt)}. A membership admin will place you

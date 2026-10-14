@@ -33,6 +33,7 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 function useDebounced<T>(value: T, delay: number): T {
   const [v, setV] = useState(value);
@@ -43,7 +44,8 @@ function useDebounced<T>(value: T, delay: number): T {
   return v;
 }
 
-export default function BranchesDirectory() {
+export default function BranchesDirectory() {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -77,13 +79,13 @@ export default function BranchesDirectory() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Branches</Text>
+        <Text style={styles.headerTitle}>{t('branches:branches')}</Text>
         {canCreateBranch ? (
           <Pressable
             onPress={() => router.push('/branches/new')}
             hitSlop={8}
             testID="new-branch-btn"
-            accessibilityLabel="New branch"
+            accessibilityLabel={t('branches:newBranch')}
           >
             <Plus color={c.primary} size={22} strokeWidth={1.5} />
           </Pressable>
@@ -96,7 +98,7 @@ export default function BranchesDirectory() {
         <Input
           value={searchInput}
           onChangeText={setSearchInput}
-          placeholder="Search branches"
+          placeholder={t('branches:searchBranches')}
           autoCapitalize="none"
           autoCorrect={false}
           leadingSlot={
@@ -153,7 +155,7 @@ export default function BranchesDirectory() {
               <View style={styles.emptyIconTile}>
                 <Building2 color={c.primary} size={22} strokeWidth={1.5} />
               </View>
-              <Text style={styles.emptyTitle}>No branches</Text>
+              <Text style={styles.emptyTitle}>{t('branches:noBranches')}</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
                   ? `Nothing matched "${debouncedSearch}".`

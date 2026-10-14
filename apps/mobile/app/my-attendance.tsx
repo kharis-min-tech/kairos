@@ -26,6 +26,7 @@ import {
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 type Window = 4 | 12 | 26;
 const WINDOWS: { value: Window; label: string }[] = [
@@ -57,7 +58,8 @@ function formatPct(rate: number): string {
   return `${Math.round(rate * 100)}%`;
 }
 
-export default function MyAttendance() {
+export default function MyAttendance() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -76,7 +78,7 @@ export default function MyAttendance() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>My attendance</Text>
+        <Text style={styles.headerTitle}>{t('common:myAttendance')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -156,18 +158,18 @@ export default function MyAttendance() {
             </LinearGradient>
 
             <Card padding="md" style={{ gap: spacing.sm }}>
-              <Text style={styles.sectionEyebrow}>BREAKDOWN</Text>
+              <Text style={styles.sectionEyebrow}>{t('common:breakdown')}</Text>
               <View style={styles.miniStatsRow}>
-                <MiniStat label="Present" value={s.presentOnTimeCount} tone={c.successText} />
-                <MiniStat label="Late" value={s.lateCount} tone={c.goldDark} />
-                <MiniStat label="Virtual" value={s.virtualCount} tone={c.info} />
-                <MiniStat label="Missed" value={s.missedCount} tone={c.danger} />
+                <MiniStat label={t('common:present')} value={s.presentOnTimeCount} tone={c.successText} />
+                <MiniStat label={t('common:late')} value={s.lateCount} tone={c.goldDark} />
+                <MiniStat label={t('common:virtual')} value={s.virtualCount} tone={c.info} />
+                <MiniStat label={t('common:missed')} value={s.missedCount} tone={c.danger} />
               </View>
             </Card>
 
             {s.lastService ? (
               <Card padding="md" style={{ gap: spacing.xs }}>
-                <Text style={styles.sectionEyebrow}>LAST SERVICE</Text>
+                <Text style={styles.sectionEyebrow}>{t('common:lastService')}</Text>
                 <View style={styles.lastServiceRow}>
                   <View style={styles.lastServiceIconTile}>
                     <Calendar color={c.primary} size={16} strokeWidth={1.5} />
@@ -189,7 +191,7 @@ export default function MyAttendance() {
 
             {s.history.length > 0 ? (
               <View style={styles.section}>
-                <Text style={styles.sectionEyebrow}>HISTORY</Text>
+                <Text style={styles.sectionEyebrow}>{t('common:history')}</Text>
                 <Card padding="md" style={{ gap: spacing.xs }}>
                   {s.history.map((h, idx) => (
                     <View
@@ -222,10 +224,7 @@ export default function MyAttendance() {
               </View>
             ) : (
               <Card padding="md">
-                <Text style={styles.emptyLine}>
-                  No service history in this window. Your attendance shows up here as
-                  soon as a leader records you at a service.
-                </Text>
+                <Text style={styles.emptyLine}>{t('common:noServiceHistoryInThisWindow')}</Text>
               </Card>
             )}
           </>

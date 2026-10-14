@@ -28,13 +28,15 @@ import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Dormant attendees — visitors captured from altar-call / first-timer forms
  * who never enrolled in the New Believers pipeline. Leaders review them here
  * to either promote (via NB enrollment elsewhere) or archive in bulk.
  */
-export default function FormsAttendees() {
+export default function FormsAttendees() {  const { t } = useTranslation(['forms', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -85,8 +87,8 @@ export default function FormsAttendees() {
     if (selected.size === 0) return;
     const ok = await alert.confirm({
       title: `Archive ${selected.size}?`,
-      message: 'They will no longer show up in dormant lists. Their form submissions stay in the record.',
-      confirmLabel: 'Archive',
+      message: t('forms:theyWillNoLongerShowUp'),
+      confirmLabel: t('forms:archive'),
       destructive: true,
     });
     if (ok) archive.mutate();
@@ -98,14 +100,11 @@ export default function FormsAttendees() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Dormant attendees</Text>
+        <Text style={styles.headerTitle}>{t('forms:dormantAttendees')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
-      <Text style={styles.subMeta}>
-        Attendees captured from forms who never enrolled in the New Believers
-        pipeline. Select and archive to declutter the list.
-      </Text>
+      <Text style={styles.subMeta}>{t('forms:attendeesCapturedFromFormsWhoNever')}</Text>
 
       <ScrollView
         contentContainerStyle={styles.container}
@@ -124,10 +123,8 @@ export default function FormsAttendees() {
             <View style={styles.emptyIcon}>
               <Users color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>All caught up</Text>
-            <Text style={styles.emptyMeta}>
-              No dormant attendees to review right now.
-            </Text>
+            <Text style={styles.emptyTitle}>{t('forms:allCaughtUp')}</Text>
+            <Text style={styles.emptyMeta}>{t('forms:noDormantAttendeesToReviewRight')}</Text>
           </Card>
         ) : (
           list.map((a) => {
@@ -153,7 +150,7 @@ export default function FormsAttendees() {
                     </Text>
                   </View>
                   {a.hasEnrollment ? (
-                    <Badge label="Enrolled" variant="success" size="sm" />
+                    <Badge label={t('forms:enrolled')} variant="success" size="sm" />
                   ) : null}
                 </Card>
               </Pressable>
@@ -166,7 +163,7 @@ export default function FormsAttendees() {
         <View style={styles.footerBar}>
           <View style={{ flex: 1 }}>
             <Button
-              label="Clear"
+              label={t('forms:clear')}
               variant="ghost"
               onPress={() => setSelected(new Set())}
               disabled={archive.isPending}

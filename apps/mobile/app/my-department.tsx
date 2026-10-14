@@ -27,8 +27,10 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function MyDepartment() {
+export default function MyDepartment() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -67,7 +69,7 @@ export default function MyDepartment() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>My department</Text>
+        <Text style={styles.headerTitle}>{t('common:myDepartment')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -119,7 +121,7 @@ export default function MyDepartment() {
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}
             >
-              <Text style={styles.heroEyebrow}>DEPARTMENT</Text>
+              <Text style={styles.heroEyebrow}>{t('common:department')}</Text>
               <Text style={styles.heroTitle}>{active.departmentName}</Text>
               {active.branchName ? (
                 <Text style={styles.heroBranch}>{active.branchName}</Text>
@@ -152,7 +154,7 @@ export default function MyDepartment() {
                       lastName={active.deputyLastName ?? undefined}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.leadEyebrow}>DEPUTY</Text>
+                      <Text style={styles.leadEyebrow}>{t('common:deputy')}</Text>
                       <Text style={styles.leadName}>
                         {active.deputyFirstName} {active.deputyLastName ?? ''}
                       </Text>
@@ -164,7 +166,7 @@ export default function MyDepartment() {
 
             {myMembership ? (
               <Card padding="md" style={styles.membershipCard}>
-                <Text style={styles.sectionEyebrow}>YOUR MEMBERSHIP</Text>
+                <Text style={styles.sectionEyebrow}>{t('common:yourMembership')}</Text>
                 <View style={styles.membershipRow}>
                   <Text style={styles.membershipStatus}>
                     {myMembership.membershipStatus === 'active' ? 'Active' : 'On probation'}
@@ -203,8 +205,8 @@ export default function MyDepartment() {
                   <Calendar color={c.primary} size={18} strokeWidth={1.5} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.linkTitle}>My rota</Text>
-                  <Text style={styles.linkMeta}>Upcoming duties in this department</Text>
+                  <Text style={styles.linkTitle}>{t('common:myRota')}</Text>
+                  <Text style={styles.linkMeta}>{t('common:upcomingDutiesInThisDepartment')}</Text>
                 </View>
               </Card>
             </Pressable>
@@ -214,13 +216,13 @@ export default function MyDepartment() {
                 <View style={styles.sectionIconTile}>
                   <Users color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.sectionHeaderText}>Team</Text>
+                <Text style={styles.sectionHeaderText}>{t('common:team')}</Text>
                 <Badge label={String(members.data?.length ?? 0)} variant="neutral" size="sm" />
               </View>
               {members.isLoading ? (
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
               ) : (members.data ?? []).length === 0 ? (
-                <Text style={styles.emptyLine}>No members recorded yet.</Text>
+                <Text style={styles.emptyLine}>{t('common:noMembersRecordedYet')}</Text>
               ) : (
                 <View style={styles.memberList}>
                   {(members.data ?? []).map((m) => (
@@ -241,7 +243,7 @@ export default function MyDepartment() {
                         </Text>
                       </View>
                       {m.membershipStatus === 'probation' ? (
-                        <Badge label="Probation" variant="gold" size="sm" />
+                        <Badge label={t('common:probation')} variant="gold" size="sm" />
                       ) : null}
                     </Pressable>
                   ))}

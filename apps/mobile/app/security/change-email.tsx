@@ -25,8 +25,10 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function ChangeEmail() {
+export default function ChangeEmail() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -85,14 +87,14 @@ export default function ChangeEmail() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.headerBar}>
           <View style={{ width: 24 }} />
-          <Text style={styles.headerTitle}>Check your inbox</Text>
+          <Text style={styles.headerTitle}>{t('security:checkYourInbox')}</Text>
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
           <View style={styles.successIcon}>
             <Mail color={c.primary} size={48} strokeWidth={1.5} />
           </View>
-          <Text style={styles.successTitle}>Confirm your new email</Text>
+          <Text style={styles.successTitle}>{t('security:confirmYourNewEmail')}</Text>
           <Text style={styles.successMeta}>
             We&apos;ve sent a confirmation link to{' '}
             <Text style={{ fontWeight: '700' }}>{newEmail.trim()}</Text>. Open it to
@@ -100,7 +102,7 @@ export default function ChangeEmail() {
             link that stays valid for 24 hours.
           </Text>
           <Button
-            label="Done"
+            label={t('security:done')}
             variant="primary"
             size="md"
             fullWidth
@@ -117,7 +119,7 @@ export default function ChangeEmail() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Change email</Text>
+        <Text style={styles.headerTitle}>{t('security:changeEmail')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -142,20 +144,20 @@ export default function ChangeEmail() {
 
           {user?.email ? (
             <Card padding="md" style={{ gap: 2 }}>
-              <Text style={styles.currentLabel}>CURRENT EMAIL</Text>
+              <Text style={styles.currentLabel}>{t('security:currentEmail')}</Text>
               <Text style={styles.currentValue}>{user.email}</Text>
             </Card>
           ) : null}
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.fieldLabel}>New email *</Text>
+            <Text style={styles.fieldLabel}>{t('security:newEmail')}</Text>
             <Input
               value={newEmail}
               onChangeText={(v) => {
                 setNewEmail(v);
                 clearError('newEmail');
               }}
-              placeholder="name@example.com"
+              placeholder={t('security:nameExampleCom')}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -163,7 +165,7 @@ export default function ChangeEmail() {
               error={errors['newEmail']}
             />
 
-            <Text style={styles.fieldLabel}>Current password *</Text>
+            <Text style={styles.fieldLabel}>{t('security:currentPassword')}</Text>
             <Input
               value={currentPassword}
               onChangeText={(v) => {

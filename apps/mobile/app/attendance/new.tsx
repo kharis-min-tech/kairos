@@ -31,10 +31,12 @@ import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import { useTranslation } from 'react-i18next';
 
 const TYPE_OPTIONS: ServiceType[] = ['Sunday', 'Midweek', 'Special'];
 
-export default function CreateService() {
+export default function CreateService() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -113,7 +115,7 @@ export default function CreateService() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New service</Text>
+        <Text style={styles.headerTitle}>{t('attendance:newService')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -126,7 +128,7 @@ export default function CreateService() {
           keyboardShouldPersistTaps="handled"
         >
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.fieldLabel}>Service type</Text>
+            <Text style={styles.fieldLabel}>{t('attendance:serviceType')}</Text>
             <PickerField
               value={serviceType}
               onPress={() => setPickerOpen(true)}
@@ -135,7 +137,7 @@ export default function CreateService() {
             <View style={styles.rowFields}>
               <View style={{ flex: 1 }}>
                 <DatePicker
-                  label="Date"
+                  label={t('attendance:date')}
                   value={serviceDate}
                   onChange={setServiceDate}
                   error={errors['date']}
@@ -143,7 +145,7 @@ export default function CreateService() {
               </View>
               <View style={{ flex: 1 }}>
                 <TimePicker
-                  label="Time"
+                  label={t('attendance:time')}
                   value={serviceTime}
                   onChange={setServiceTime}
                   minuteInterval={5}
@@ -158,7 +160,7 @@ export default function CreateService() {
                 <Input
                   value={serviceTitle}
                   onChangeText={setServiceTitle}
-                  placeholder="e.g. Watch-night service"
+                  placeholder={t('attendance:eGWatchNightService')}
                   autoCapitalize="words"
                   error={errors['title']}
                 />
@@ -169,7 +171,7 @@ export default function CreateService() {
             <Input
               value={topic}
               onChangeText={setTopic}
-              placeholder="e.g. Faith that moves"
+              placeholder={t('attendance:eGFaithThatMoves')}
               autoCapitalize="sentences"
             />
 
@@ -228,8 +230,8 @@ export default function CreateService() {
         onClose={() => setPreacherPickerOpen(false)}
         branchId={branchId}
         selectedMemberId={preacherId}
-        title="Pick preacher"
-        subtitle="Any member in this branch can be tagged as the preacher."
+        title={t('attendance:pickPreacher')}
+        subtitle={t('attendance:anyMemberInThisBranchCan')}
         onPick={(id) => {
           setPreacherId(id);
           setPreacherPickerOpen(false);
@@ -245,7 +247,7 @@ export default function CreateService() {
         <Pressable style={styles.backdrop} onPress={() => setPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Service type</Text>
+            <Text style={styles.sheetTitle}>{t('attendance:serviceType')}</Text>
             {TYPE_OPTIONS.map((t) => {
               const active = t === serviceType;
               return (

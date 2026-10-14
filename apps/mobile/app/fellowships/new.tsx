@@ -15,8 +15,10 @@ import type { CreateFellowshipRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { FellowshipForm } from './_form';
+import { useTranslation } from 'react-i18next';
 
-export default function NewFellowship() {
+export default function NewFellowship() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -52,13 +54,13 @@ export default function NewFellowship() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New fellowship</Text>
+        <Text style={styles.headerTitle}>{t('fellowships:newFellowship')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <FellowshipForm
         initial={{ branchId: user?.homeBranchId ?? '' }}
-        submitLabel="Create fellowship"
+        submitLabel={t('fellowships:createFellowship')}
         submitPendingLabel="Creating…"
         submitting={create.isPending}
         serverError={serverError}

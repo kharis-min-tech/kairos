@@ -44,6 +44,7 @@ import type { DepartmentJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 type Stage = 'open' | 'terminal' | 'all';
 
@@ -76,7 +77,8 @@ type ActionKind =
   | 'reject'
   | null;
 
-export default function DepartmentRecruitment() {
+export default function DepartmentRecruitment() {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -156,9 +158,7 @@ export default function DepartmentRecruitment() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Recruitment
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{t('departments:recruitment')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -306,7 +306,8 @@ function ApplicantCard({
   onOffer: () => void;
   onProbation: () => void;
   onReject: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -361,7 +362,7 @@ function ApplicantCard({
         hitSlop={4}
         style={styles.profileLinkRow}
       >
-        <Text style={styles.profileLink}>View member profile →</Text>
+        <Text style={styles.profileLink}>{t('departments:viewMemberProfile')}</Text>
       </Pressable>
 
       {row.notes ? (
@@ -410,19 +411,19 @@ function ApplicantCard({
 
       <View style={styles.actionRow}>
         {canSchedule ? (
-          <ActionButton icon={<Calendar size={14} color={c.primary} />} label="Schedule interview" onPress={onSchedule} />
+          <ActionButton icon={<Calendar size={14} color={c.primary} />} label={t('departments:scheduleInterview')} onPress={onSchedule} />
         ) : null}
         {canRecord ? (
-          <ActionButton icon={<Users size={14} color={c.primary} />} label="Record interview" onPress={onRecord} />
+          <ActionButton icon={<Users size={14} color={c.primary} />} label={t('departments:recordInterview')} onPress={onRecord} />
         ) : null}
         {canOffer ? (
-          <ActionButton icon={<Award size={14} color={c.primary} />} label="Extend offer" onPress={onOffer} />
+          <ActionButton icon={<Award size={14} color={c.primary} />} label={t('departments:extendOffer')} onPress={onOffer} />
         ) : null}
         {canProbation ? (
-          <ActionButton icon={<ShieldAlert size={14} color={c.primary} />} label="Evaluate probation" onPress={onProbation} />
+          <ActionButton icon={<ShieldAlert size={14} color={c.primary} />} label={t('departments:evaluateProbation')} onPress={onProbation} />
         ) : null}
         {canReject ? (
-          <ActionButton icon={<X size={14} color={c.danger} />} label="Reject" onPress={onReject} tone="danger" />
+          <ActionButton icon={<X size={14} color={c.danger} />} label={t('departments:reject')} onPress={onReject} tone="danger" />
         ) : null}
       </View>
     </Card>
@@ -566,7 +567,8 @@ function ScheduleInterviewSheet({
   members: { id: string; firstName: string; lastName: string }[];
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('10:00');
@@ -602,7 +604,7 @@ function ScheduleInterviewSheet({
   return (
     <SheetShell
       open={open}
-      title="Schedule interview"
+      title={t('departments:scheduleInterview')}
       onClose={onClose}
       footer={
         <>
@@ -618,15 +620,15 @@ function ScheduleInterviewSheet({
             }}
           />
           <Pressable style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={styles.cancelLabel}>{t('departments:cancel')}</Text>
           </Pressable>
         </>
       }
     >
-      <DatePicker label="Date" value={date} onChange={setDate} />
-      <TimePicker label="Time" value={time} onChange={setTime} />
+      <DatePicker label={t('departments:date')} value={date} onChange={setDate} />
+      <TimePicker label={t('departments:time')} value={time} onChange={setTime} />
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Format</Text>
+        <Text style={styles.fieldLabel}>{t('departments:format')}</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {(['in_person', 'virtual'] as const).map((f) => {
             const active = format === f;
@@ -646,17 +648,17 @@ function ScheduleInterviewSheet({
       </View>
       <View style={{ gap: 4 }}>
         <Text style={styles.fieldLabel}>Location {format === 'virtual' ? '(meeting link)' : '(room / address)'}</Text>
-        <Input value={location} onChangeText={setLocation} placeholder="Optional" />
+        <Input value={location} onChangeText={setLocation} placeholder={t('departments:optional')} />
       </View>
       <MemberPickerRow
-        label="Interviewer 1"
+        label={t('departments:interviewer')}
         members={members}
         value={oneId}
         onChange={setOneId}
         exclude={twoId}
       />
       <MemberPickerRow
-        label="Interviewer 2 (optional)"
+        label={t('departments:interviewerOptional')}
         members={members}
         value={twoId}
         onChange={setTwoId}
@@ -678,7 +680,8 @@ function RecordInterviewSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [outcome, setOutcome] = useState<'pass' | 'fail'>('pass');
   const [notes, setNotes] = useState('');
@@ -702,7 +705,7 @@ function RecordInterviewSheet({
   return (
     <SheetShell
       open={open}
-      title="Record interview outcome"
+      title={t('departments:recordInterviewOutcome')}
       onClose={onClose}
       footer={
         <>
@@ -714,13 +717,13 @@ function RecordInterviewSheet({
             onPress={() => mutate.mutate()}
           />
           <Pressable style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={styles.cancelLabel}>{t('departments:cancel')}</Text>
           </Pressable>
         </>
       }
     >
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Outcome</Text>
+        <Text style={styles.fieldLabel}>{t('departments:outcome')}</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {(['pass', 'fail'] as const).map((o) => {
             const active = outcome === o;
@@ -739,11 +742,11 @@ function RecordInterviewSheet({
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Notes</Text>
+        <Text style={styles.fieldLabel}>{t('departments:notes')}</Text>
         <Input
           value={notes}
           onChangeText={setNotes}
-          placeholder="Optional notes"
+          placeholder={t('departments:optionalNotes')}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -766,7 +769,8 @@ function ExtendOfferSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [expires, setExpires] = useState('');
   const [message, setMessage] = useState('');
@@ -791,7 +795,7 @@ function ExtendOfferSheet({
   return (
     <SheetShell
       open={open}
-      title="Extend offer"
+      title={t('departments:extendOffer')}
       onClose={onClose}
       footer={
         <>
@@ -803,18 +807,18 @@ function ExtendOfferSheet({
             onPress={() => mutate.mutate()}
           />
           <Pressable style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={styles.cancelLabel}>{t('departments:cancel')}</Text>
           </Pressable>
         </>
       }
     >
-      <DatePicker label="Offer expires (optional)" value={expires} onChange={setExpires} />
+      <DatePicker label={t('departments:offerExpiresOptional')} value={expires} onChange={setExpires} />
       <View style={{ gap: 4 }}>
         <Text style={styles.fieldLabel}>Message (optional)</Text>
         <Input
           value={message}
           onChangeText={setMessage}
-          placeholder="Welcome them and set expectations"
+          placeholder={t('departments:welcomeThemAndSetExpectations')}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -846,7 +850,8 @@ function ProbationSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [outcome, setOutcome] = useState<'passed' | 'failed'>('passed');
   const [notes, setNotes] = useState('');
@@ -869,7 +874,7 @@ function ProbationSheet({
   return (
     <SheetShell
       open={open}
-      title="Evaluate probation"
+      title={t('departments:evaluateProbation')}
       onClose={onClose}
       footer={
         <>
@@ -881,13 +886,13 @@ function ProbationSheet({
             onPress={() => mutate.mutate()}
           />
           <Pressable style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={styles.cancelLabel}>{t('departments:cancel')}</Text>
           </Pressable>
         </>
       }
     >
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Outcome</Text>
+        <Text style={styles.fieldLabel}>{t('departments:outcome')}</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           {(['passed', 'failed'] as const).map((o) => {
             const active = outcome === o;
@@ -906,11 +911,11 @@ function ProbationSheet({
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Notes</Text>
+        <Text style={styles.fieldLabel}>{t('departments:notes')}</Text>
         <Input
           value={notes}
           onChangeText={setNotes}
-          placeholder="Optional"
+          placeholder={t('departments:optional')}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -933,7 +938,8 @@ function RejectSheet({
   branchDeptId: string;
   onClose: () => void;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const [notes, setNotes] = useState('');
 
@@ -952,7 +958,7 @@ function RejectSheet({
   return (
     <SheetShell
       open={open}
-      title="Reject application"
+      title={t('departments:rejectApplication')}
       onClose={onClose}
       footer={
         <>
@@ -964,7 +970,7 @@ function RejectSheet({
             onPress={() => mutate.mutate()}
           />
           <Pressable style={styles.cancelBtn} onPress={onClose}>
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={styles.cancelLabel}>{t('departments:cancel')}</Text>
           </Pressable>
         </>
       }
@@ -974,7 +980,7 @@ function RejectSheet({
         <Input
           value={notes}
           onChangeText={setNotes}
-          placeholder="Why is this being rejected?"
+          placeholder={t('departments:whyIsThisBeingRejected')}
           multiline
           numberOfLines={4}
           textAlignVertical="top"

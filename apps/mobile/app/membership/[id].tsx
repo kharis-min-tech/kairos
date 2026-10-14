@@ -43,6 +43,7 @@ import type {
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'roster' | 'sessions' | 'graduation';
 
@@ -62,7 +63,8 @@ type Tab = 'roster' | 'sessions' | 'graduation';
  * permissions — different people teach different sessions of one cohort, and
  * admins do the marking.
  */
-export default function CohortDetailScreen() {
+export default function CohortDetailScreen() {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -105,7 +107,7 @@ export default function CohortDetailScreen() {
             onPress={() => router.push(`/membership/${cohortId}/sessions` as never)}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Schedule sessions"
+            accessibilityLabel={t('membership:scheduleSessions')}
           >
             <CalendarPlus color={c.ink} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -113,7 +115,7 @@ export default function CohortDetailScreen() {
             onPress={() => router.push(`/membership/edit/${cohortId}` as never)}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Edit cohort"
+            accessibilityLabel={t('membership:editCohort')}
           >
             <Pencil color={c.ink} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -150,7 +152,7 @@ export default function CohortDetailScreen() {
         {cohort.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : !cohort.data ? (
-          <Text style={styles.metaText}>Cohort not found.</Text>
+          <Text style={styles.metaText}>{t('membership:cohortNotFound')}</Text>
         ) : (
           <>
             <View style={styles.metaRow}>
@@ -192,7 +194,8 @@ function Roster({
   rows: MembershipEnrollmentWithMember[];
   styles: ReturnType<typeof makeStyles>;
   c: ThemeColors;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const qc = useQueryClient();
   const [scores, setScores] = useState<Record<string, string>>({});
 
@@ -226,7 +229,7 @@ function Roster({
       title: `Withdraw ${r.memberFirstName}?`,
       message:
         'They come off this cohort and can be admitted to a later one. Their marks are kept. Use "deferred to next" if they intend to return.',
-      confirmLabel: 'Withdraw',
+      confirmLabel: t('membership:withdraw'),
       destructive: true,
     });
     if (!ok) return;
@@ -236,8 +239,8 @@ function Roster({
   if (rows.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>Nobody admitted yet</Text>
-        <Text style={styles.metaText}>Admit people from the interest pool.</Text>
+        <Text style={styles.emptyTitle}>{t('membership:nobodyAdmittedYet')}</Text>
+        <Text style={styles.metaText}>{t('membership:admitPeopleFromTheInterestPool')}</Text>
       </View>
     );
   }
@@ -271,12 +274,12 @@ function Roster({
               ) : r.finalTestPassed === false ? (
                 <Badge label={`Test failed (${r.finalTestScore})`} variant="danger" size="sm" />
               ) : (
-                <Text style={styles.metaText}>Final test not sat</Text>
+                <Text style={styles.metaText}>{t('membership:finalTestNotSat')}</Text>
               )}
               {r.inductionAttended ? (
                 <View style={styles.metaRow}>
                   <CheckCircle2 color={c.success} size={14} strokeWidth={1.6} />
-                  <Text style={styles.metaText}>Inducted</Text>
+                  <Text style={styles.metaText}>{t('membership:inducted')}</Text>
                 </View>
               ) : null}
             </View>
@@ -288,13 +291,13 @@ function Roster({
                 <Input
                   value={score}
                   onChangeText={(v) => setScores((s) => ({ ...s, [r.id]: v }))}
-                  placeholder="Final test %"
+                  placeholder={t('membership:finalTest')}
                   keyboardType="number-pad"
                   accessibilityLabel={`${r.memberFirstName} ${r.memberLastName} final test score`}
                   containerStyle={{ flex: 1 }}
                 />
                 <Button
-                  label="Save"
+                  label={t('membership:save')}
                   variant="secondary"
                   disabled={!scoreValid || recordFinalTest.isPending}
                   onPress={() =>
@@ -330,17 +333,15 @@ function Sessions({
   roster: MembershipEnrollmentWithMember[];
   styles: ReturnType<typeof makeStyles>;
   c: ThemeColors;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (sessions.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>No sessions scheduled</Text>
-        <Text style={styles.metaText}>
-          A cohort needs all four before anyone can graduate. Schedule them on the web
-          dashboard.
-        </Text>
+        <Text style={styles.emptyTitle}>{t('membership:noSessionsScheduled')}</Text>
+        <Text style={styles.metaText}>{t('membership:aCohortNeedsAllFourBefore')}</Text>
       </View>
     );
   }
@@ -392,7 +393,8 @@ function Register({
   roster: MembershipEnrollmentWithMember[];
   styles: ReturnType<typeof makeStyles>;
   c: ThemeColors;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const qc = useQueryClient();
   const active = useMemo(() => roster.filter((r) => r.status === 'enrolled'), [roster]);
   const [draft, setDraft] = useState<
@@ -434,7 +436,7 @@ function Register({
   }
 
   if (active.length === 0) {
-    return <Text style={styles.metaText}>No active enrolments to mark.</Text>;
+    return <Text style={styles.metaText}>{t('membership:noActiveEnrolmentsToMark')}</Text>;
   }
 
   return (
@@ -465,7 +467,7 @@ function Register({
               <Input
                 value={d?.homework ?? ''}
                 onChangeText={(v) => patch(r.id, { homework: v })}
-                placeholder="Homework"
+                placeholder={t('membership:homework')}
                 keyboardType="number-pad"
                 accessibilityLabel={`${name} homework score`}
                 containerStyle={styles.scoreInput}
@@ -473,7 +475,7 @@ function Register({
               <Input
                 value={d?.quiz ?? ''}
                 onChangeText={(v) => patch(r.id, { quiz: v })}
-                placeholder="Quiz"
+                placeholder={t('membership:quiz')}
                 keyboardType="number-pad"
                 accessibilityLabel={`${name} quiz score`}
                 containerStyle={styles.scoreInput}
@@ -504,7 +506,8 @@ function Graduation({
   rows: MembershipEnrollmentWithMember[];
   styles: ReturnType<typeof makeStyles>;
   c: ThemeColors;
-}) {
+}) {  const { t } = useTranslation(['membership', 'common']);
+
   const qc = useQueryClient();
   const active = useMemo(() => rows.filter((r) => r.status === 'enrolled'), [rows]);
 
@@ -565,7 +568,7 @@ function Graduation({
   if (active.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>Nobody left to graduate</Text>
+        <Text style={styles.emptyTitle}>{t('membership:nobodyLeftToGraduate')}</Text>
       </View>
     );
   }
@@ -579,11 +582,7 @@ function Graduation({
           <GraduationCap color={c.primary} size={16} strokeWidth={1.6} />
           <Text style={styles.cardTitle}>{active.length} still enrolled</Text>
         </View>
-        <Text style={styles.metaText}>
-          Graduating checks all six requirements per person and skips anyone who has not
-          met them. Whoever is skipped is listed below with the reasons, and can be
-          graduated anyway with a written reason for the audit trail.
-        </Text>
+        <Text style={styles.metaText}>{t('membership:graduatingChecksAllSixRequirementsPer')}</Text>
       </Card>
 
       {notInducted.length > 0 ? (
@@ -622,18 +621,15 @@ function Graduation({
               <Input
                 value={overrideReason}
                 onChangeText={setOverrideReason}
-                placeholder="Why are you overriding the gate?"
+                placeholder={t('membership:whyAreYouOverridingTheGate')}
                 multiline
                 numberOfLines={2}
-                accessibilityLabel="Override reason"
+                accessibilityLabel={t('membership:overrideReason')}
               />
-              <Text style={styles.hint}>
-                This is appended to the enrolment notes and kept permanently. Be specific
-                enough that someone reading it in a year understands the decision.
-              </Text>
+              <Text style={styles.hint}>{t('membership:thisIsAppendedToTheEnrolment')}</Text>
               <View style={styles.overrideActions}>
                 <Button
-                  label="Cancel"
+                  label={t('membership:cancel')}
                   variant="secondary"
                   onPress={() => {
                     setOverrideFor(null);
@@ -657,7 +653,7 @@ function Graduation({
             </>
           ) : (
             <Button
-              label="Override and graduate"
+              label={t('membership:overrideAndGraduate')}
               variant="secondary"
               onPress={() => {
                 setOverrideFor(b.enrollmentId);

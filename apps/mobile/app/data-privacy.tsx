@@ -30,10 +30,12 @@ import {
 import type { DeleteAccountRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 const DELETE_CONFIRM_PHRASE = 'DELETE MY ACCOUNT';
 
-export default function DataPrivacy() {
+export default function DataPrivacy() {  const { t } = useTranslation(['security', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -124,7 +126,7 @@ export default function DataPrivacy() {
 </head>
 <body>
 <header>
-  <h1>Kharis: my data</h1>
+  <h1>{t('security:kharisMyData')}</h1>
   <p class="meta">Exported ${esc(stamp)}</p>
 </header>
 ${sections}
@@ -171,10 +173,8 @@ ${sections}
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Your data</Text>
-          <Text style={styles.introMeta}>
-            Export a copy of what we hold, or permanently delete your account.
-          </Text>
+          <Text style={styles.introTitle}>{t('security:yourData')}</Text>
+          <Text style={styles.introMeta}>{t('security:exportACopyOfWhatWe')}</Text>
         </View>
 
         <Card padding="md" style={styles.actionCard}>
@@ -183,11 +183,8 @@ ${sections}
               <Download color={c.primary} size={18} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={styles.actionTitle}>Export my data</Text>
-              <Text style={styles.actionMeta}>
-                Get a JSON copy of your personal data via the share sheet, then save to Files,
-                email to yourself, or open in another app.
-              </Text>
+              <Text style={styles.actionTitle}>{t('security:exportMyData')}</Text>
+              <Text style={styles.actionMeta}>{t('security:getAJsonCopyOfYour')}</Text>
             </View>
           </View>
           <Button
@@ -206,15 +203,12 @@ ${sections}
               <Trash2 color={c.danger} size={18} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={styles.actionTitle}>Delete my account</Text>
-              <Text style={styles.actionMeta}>
-                Permanently scrub your personal data. Attendance and consent history are
-                anonymised, not fully removed. This cannot be undone.
-              </Text>
+              <Text style={styles.actionTitle}>{t('security:deleteMyAccount')}</Text>
+              <Text style={styles.actionMeta}>{t('security:permanentlyScrubYourPersonalDataAttendance')}</Text>
             </View>
           </View>
           <Pressable style={styles.deleteButton} onPress={openDeleteDialog}>
-            <Text style={styles.deleteButtonLabel}>Delete account…</Text>
+            <Text style={styles.deleteButtonLabel}>{t('security:deleteAccount')}</Text>
           </Pressable>
         </Card>
       </ScrollView>
@@ -233,13 +227,9 @@ ${sections}
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <ShieldOff color={c.danger} size={20} strokeWidth={1.5} />
-              <Text style={styles.modalTitle}>Delete my account</Text>
+              <Text style={styles.modalTitle}>{t('security:deleteMyAccount')}</Text>
             </View>
-            <Text style={styles.modalDescription}>
-              This will scrub your name, email, phone, address, photo, and other personal
-              details from Kharis Church. Your attendance history and consent audit trail
-              stay in place but are anonymised. This action cannot be undone.
-            </Text>
+            <Text style={styles.modalDescription}>{t('security:thisWillScrubYourNameEmail')}</Text>
 
             <View style={{ gap: spacing.md, marginTop: spacing.md }}>
               <Input
@@ -250,7 +240,7 @@ ${sections}
                 autoCorrect={false}
               />
               <Input
-                label="Current password"
+                label={t('security:currentPassword')}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -267,7 +257,7 @@ ${sections}
 
             <View style={styles.modalFooter}>
               <Button
-                label="Cancel"
+                label={t('security:cancel')}
                 variant="outline"
                 size="md"
                 onPress={() => setDeleteOpen(false)}

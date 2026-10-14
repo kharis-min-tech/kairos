@@ -410,9 +410,7 @@ export default function SignupScreen() {
                       <Check color="#ffffff" size={12} strokeWidth={2.5} />
                     ) : null}
                   </View>
-                  <Text style={styles.consentText}>
-                    I accept the Terms of Service and Privacy Notice.
-                  </Text>
+                  <Text style={styles.consentText}>{t('common:iAcceptTheTermsOfService')}</Text>
                 </Pressable>
                 {errors['acceptedPolicies'] ? (
                   <Text style={styles.errorLine}>{errors['acceptedPolicies']}</Text>

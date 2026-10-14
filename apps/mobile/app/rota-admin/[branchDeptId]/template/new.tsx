@@ -25,6 +25,7 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
+import { useTranslation } from 'react-i18next';
 
 const WEEKDAYS = [
   { value: 0, label: 'Sun' },
@@ -36,7 +37,8 @@ const WEEKDAYS = [
   { value: 6, label: 'Sat' },
 ];
 
-export default function NewRotaTemplate() {
+export default function NewRotaTemplate() {  const { t } = useTranslation(['rota', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const router = useRouter();
   const qc = useQueryClient();
@@ -82,7 +84,7 @@ export default function NewRotaTemplate() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color="#111" size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New rota template</Text>
+        <Text style={styles.headerTitle}>{t('rota:newRotaTemplate')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -93,7 +95,7 @@ export default function NewRotaTemplate() {
         <ScrollView contentContainerStyle={styles.container}>
           <Card padding="md" style={{ gap: spacing.md }}>
             <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Template name</Text>
+              <Text style={styles.label}>{t('rota:templateName')}</Text>
               <Input
                 value={name}
                 onChangeText={(v) => {
@@ -104,14 +106,14 @@ export default function NewRotaTemplate() {
                     return n;
                   });
                 }}
-                placeholder="e.g. Sunday first service"
+                placeholder={t('rota:eGSundayFirstService')}
                 autoCapitalize="words"
                 error={errors['name']}
               />
             </View>
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Service day</Text>
+              <Text style={styles.label}>{t('rota:serviceDay')}</Text>
               <View style={styles.weekdayRow}>
                 {WEEKDAYS.map((d) => {
                   const active = d.value === weekday;
@@ -136,7 +138,7 @@ export default function NewRotaTemplate() {
             </View>
 
             <TimePicker
-              label="Default start time (optional)"
+              label={t('rota:defaultStartTimeOptional')}
               value={defaultStartTime}
               onChange={setDefaultStartTime}
             />
@@ -146,7 +148,7 @@ export default function NewRotaTemplate() {
               <Input
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Anything the team should know"
+                placeholder={t('rota:anythingTheTeamShouldKnow')}
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
@@ -155,10 +157,7 @@ export default function NewRotaTemplate() {
             </View>
           </Card>
 
-          <Text style={styles.footnote}>
-            After creating the template, add role slots and pool members, then
-            generate instances for a date range.
-          </Text>
+          <Text style={styles.footnote}>{t('rota:afterCreatingTheTemplateAddRole')}</Text>
 
           <Button
             label={create.isPending ? 'Creating…' : 'Create template'}

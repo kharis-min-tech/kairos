@@ -27,8 +27,10 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
-export default function MyFellowship() {
+export default function MyFellowship() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -86,7 +88,7 @@ export default function MyFellowship() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>My fellowship</Text>
+        <Text style={styles.headerTitle}>{t('common:myFellowship')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -173,7 +175,7 @@ export default function MyFellowship() {
                     lastName={active.leaderLastName ?? undefined}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.leaderEyebrow}>LEADER</Text>
+                    <Text style={styles.leaderEyebrow}>{t('common:leader')}</Text>
                     <Text style={styles.leaderName}>
                       {active.leaderFirstName} {active.leaderLastName ?? ''}
                     </Text>
@@ -184,7 +186,7 @@ export default function MyFellowship() {
 
             {nextMeeting ? (
               <Card padding="md" style={styles.section}>
-                <Text style={styles.sectionEyebrow}>NEXT MEETING</Text>
+                <Text style={styles.sectionEyebrow}>{t('common:nextMeeting')}</Text>
                 <Text style={styles.sectionTitle}>
                   {nextMeeting.meetingTitle ?? 'Fellowship meeting'}
                 </Text>
@@ -206,15 +208,13 @@ export default function MyFellowship() {
                 <View style={styles.sectionIconTile}>
                   <UsersRound color={c.primary} size={16} strokeWidth={1.5} />
                 </View>
-                <Text style={styles.sectionHeaderText}>
-                  Members
-                </Text>
+                <Text style={styles.sectionHeaderText}>{t('common:members')}</Text>
                 <Badge label={String(members.data?.length ?? 0)} variant="neutral" size="sm" />
               </View>
               {members.isLoading ? (
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.md }} />
               ) : (members.data ?? []).length === 0 ? (
-                <Text style={styles.emptyLine}>No members recorded yet.</Text>
+                <Text style={styles.emptyLine}>{t('common:noMembersRecordedYet')}</Text>
               ) : (
                 <View style={styles.memberList}>
                   {(members.data ?? []).map((m) => (
@@ -249,7 +249,7 @@ export default function MyFellowship() {
                   <View style={styles.sectionIconTile}>
                     <Calendar color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
-                  <Text style={styles.sectionHeaderText}>Recent meetings</Text>
+                  <Text style={styles.sectionHeaderText}>{t('common:recentMeetings')}</Text>
                 </View>
                 {recentPast.map((m) => (
                   <View key={m.id} style={styles.meetingRow}>
@@ -273,7 +273,8 @@ export default function MyFellowship() {
   );
 }
 
-function EmptyState() {
+function EmptyState() {  const { t } = useTranslation(['common', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -282,11 +283,7 @@ function EmptyState() {
         <Users color={c.primary} size={22} strokeWidth={1.5} />
       </View>
       <Text style={styles.emptyTitle}>You&apos;re not in a fellowship yet</Text>
-      <Text style={styles.emptyMeta}>
-        Ask your pastor or branch admin to add you to a K-Group or fellowship.
-        Once added, your fellowship details, members, and upcoming meetings show
-        up here.
-      </Text>
+      <Text style={styles.emptyMeta}>{t('common:askYourPastorOrBranchAdmin')}</Text>
     </Card>
   );
 }

@@ -48,6 +48,7 @@ import {
   flushPendingRollcall,
   getPendingRollcall,
 } from '@/lib/rollcall-queue';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_ORDER: AttendanceStatus[] = ['Present', 'Absent', 'Late', 'Excused'];
 
@@ -107,7 +108,8 @@ function formatMeetingDate(iso: string | Date): string {
   });
 }
 
-export default function RollcallMeeting() {
+export default function RollcallMeeting() {  const { t } = useTranslation(['attendance', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -283,8 +285,8 @@ export default function RollcallMeeting() {
         await flushPendingRollcall(meetingId);
         setPendingLocally(false);
         alert.show({
-          title: 'Saved',
-          message: 'Attendance recorded.',
+          title: t('attendance:saved'),
+          message: t('attendance:attendanceRecorded'),
           buttons: [
             { label: 'OK', variant: 'primary', onPress: () => router.back() },
           ],
@@ -336,7 +338,7 @@ export default function RollcallMeeting() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>Register</Text>
+        <Text style={styles.headerTitle}>{t('attendance:register')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -364,7 +366,7 @@ export default function RollcallMeeting() {
               <View style={styles.offlineBanner}>
                 <CloudOff color={c.goldDark} size={16} strokeWidth={1.5} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.offlineTitle}>Saved locally · will sync</Text>
+                  <Text style={styles.offlineTitle}>{t('attendance:savedLocallyWillSync')}</Text>
                   <Text style={styles.offlineMeta}>
                     Your attendance is safe on this device. We&apos;ll upload it as
                     soon as we can reach the server.
@@ -411,9 +413,7 @@ export default function RollcallMeeting() {
                   hitSlop={4}
                 >
                   <CheckCheck color={c.successText} size={14} strokeWidth={2} />
-                  <Text style={[styles.batchBtnLabel, { color: c.successText }]}>
-                    All present
-                  </Text>
+                  <Text style={[styles.batchBtnLabel, { color: c.successText }]}>{t('attendance:allPresent')}</Text>
                 </Pressable>
                 <Pressable
                   style={styles.batchBtn}
@@ -421,9 +421,7 @@ export default function RollcallMeeting() {
                   hitSlop={4}
                 >
                   <UserX color={c.danger} size={14} strokeWidth={2} />
-                  <Text style={[styles.batchBtnLabel, { color: c.danger }]}>
-                    All not-here
-                  </Text>
+                  <Text style={[styles.batchBtnLabel, { color: c.danger }]}>{t('attendance:allNotHere')}</Text>
                 </Pressable>
               </View>
             ) : null}
@@ -439,9 +437,7 @@ export default function RollcallMeeting() {
         ListEmptyComponent={
           !isBusy ? (
             <Card padding="md">
-              <Text style={styles.emptyLine}>
-                No members in this fellowship yet.
-              </Text>
+              <Text style={styles.emptyLine}>{t('attendance:noMembersInThisFellowshipYet')}</Text>
             </Card>
           ) : null
         }
@@ -505,10 +501,7 @@ export default function RollcallMeeting() {
                 loading={record.isPending}
                 onPress={handleSave}
               />
-              <Text style={styles.footnote}>
-                Everyone defaults to Present. Tap the button to cycle Absent → Late → Excused
-                → Present. Hold to pick directly.
-              </Text>
+              <Text style={styles.footnote}>{t('attendance:everyoneDefaultsToPresentTapThe')}</Text>
             </View>
           ) : null
         }
@@ -528,7 +521,7 @@ export default function RollcallMeeting() {
                 <Text style={styles.pickerTitle}>
                   {pickerFor.memberFirstName} {pickerFor.memberLastName}
                 </Text>
-                <Text style={styles.pickerSub}>Pick an attendance status</Text>
+                <Text style={styles.pickerSub}>{t('attendance:pickAnAttendanceStatus')}</Text>
                 <View style={{ gap: spacing.xs, marginTop: spacing.md }}>
                   {STATUS_ORDER.map((s) => {
                     const active =
@@ -568,7 +561,7 @@ export default function RollcallMeeting() {
                   style={styles.pickerCancel}
                   onPress={() => setPickerFor(null)}
                 >
-                  <Text style={styles.pickerCancelLabel}>Cancel</Text>
+                  <Text style={styles.pickerCancelLabel}>{t('attendance:cancel')}</Text>
                 </Pressable>
               </>
             ) : null}

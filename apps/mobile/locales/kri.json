@@ -18,7 +18,13 @@
       "checkIn": "Chɛk in",
       "give": "Gi",
       "more": "Mɔ"
-    }
+    },
+    "iAcceptTheTermsOfService": "A gri wit di Tɛms ɛn di Prayvasi Notis.",
+    "approvals": "Apruval",
+    "myAttendance": "Mi atɛndans",
+    "myDepartment": "Mi dipatmɛnt",
+    "myFellowship": "Mi fɛloship",
+    "recentActivity": "Wetin apin resɛntli"
   },
   "more": {
     "title": "Mɔ",
@@ -96,7 +102,15 @@
       "restartNote": "Wetin yu chuz de wok naw ɛn wi go memba am na dis fon.",
       "draft": "Transleshɔn we dɛn nɔ chɛk yet",
       "draftMeta": "Krio ɛn Twi dɔn translet bɔt nɔbɔdi we na nativ spika nɔ chɛk am yet. Tɛl wi ɛnitin we nɔ rayt."
-    }
+    },
+    "notifications": "Notifikeshɔn",
+    "homeBranch": "Om branch",
+    "departments": "Dipatmɛnt",
+    "dateOfBirth": "De we yu bɔn",
+    "address": "Adrɛs",
+    "emergencyContact": "Pɔsin fɔ kɔl na ɛmajɛnsi",
+    "security": "Sekyuriti",
+    "settings": "Sɛtin"
   },
   "home": {
     "today": "Tide",
@@ -275,5 +289,107 @@
       "Male": "Man",
       "Female": "Uman"
     }
+  },
+  "forms": {
+    "cancel": "Kansul",
+    "dormantAttendees": "Pipul we nɔ de kam igen",
+    "formSubmissions": "Fɔm dɛn we dɛn sɛn"
+  },
+  "reports": {
+    "reports": "Ripɔt",
+    "departments": "Dipatmɛnt",
+    "fellowships": "Fɛloship"
+  },
+  "members": {
+    "dateOfBirth": "De we yu bɔn",
+    "fellowships": "Fɛloship",
+    "departments": "Dipatmɛnt",
+    "cancel": "Kansul",
+    "firstName": "Fɔs nem",
+    "lastName": "Las nem",
+    "middleName": "Midul nem",
+    "gender": "Jɛnda",
+    "email": "Imel",
+    "phone": "Fon",
+    "homeBranch": "Om branch",
+    "relationship": "Aw una tay",
+    "child": "Pikin",
+    "openProfile": "Opin profayl"
+  },
+  "fellowships": {
+    "followUps": "Fɔlo ɔp",
+    "cancel": "Kansul",
+    "myBranch": "Mi branch",
+    "fellowships": "Fɛloship"
+  },
+  "departments": {
+    "followUps": "Fɔlo ɔp",
+    "optional": "If yu want",
+    "cancel": "Kansul",
+    "name": "Nem",
+    "myBranch": "Mi branch",
+    "departments": "Dipatmɛnt"
+  },
+  "branches": {
+    "phone": "Fon",
+    "email": "Imel",
+    "cancel": "Kansul",
+    "myBranch": "Mi branch",
+    "services": "Sɛvis"
+  },
+  "security": {
+    "cancel": "Kansul",
+    "privacyConsent": "Prayvasi ɛn kɔnsɛnt",
+    "recentActivity": "Wetin apin resɛntli",
+    "done": "I dɔn",
+    "checkYourInbox": "Chɛk yu imel",
+    "atLeastCharacters": "Nɔ lɛs dan 8 lɛta",
+    "retry": "Tray bak",
+    "security": "Sekyuriti"
+  },
+  "admin": {
+    "retry": "Tray bak",
+    "search": "Luk fɔ",
+    "checkInDesk": "Chɛk in dɛsk",
+    "cancel": "Kansul",
+    "regions": "Rijɔn"
+  },
+  "attendance": {
+    "thisWeek": "Dis wik",
+    "services": "Sɛvis",
+    "cancel": "Kansul",
+    "fellowshipAttendance": "Fɛloship atɛndans"
+  },
+  "concerns": {
+    "concerns": "Kɔnsan",
+    "followUps": "Fɔlo ɔp"
+  },
+  "membership": {
+    "optional": "If yu want",
+    "save": "Sev",
+    "cancel": "Kansul",
+    "membershipClasses": "Mɛmbaship klas"
+  },
+  "newBelievers": {
+    "cancel": "Kansul"
+  },
+  "outreach": {
+    "done": "I dɔn",
+    "cancel": "Kansul"
+  },
+  "rota": {
+    "cancel": "Kansul",
+    "optional": "If yu want",
+    "name": "Nem"
+  },
+  "souls": {
+    "firstName": "Fɔs nem",
+    "lastName": "Las nem",
+    "phone": "Fon",
+    "address": "Adrɛs",
+    "gender": "Jɛnda",
+    "souls": "Sol",
+    "soulsDashboard": "Sol dashbɔd",
+    "followUps": "Fɔlo ɔp"
   }
 }

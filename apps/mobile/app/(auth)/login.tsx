@@ -271,7 +271,7 @@ export default function LoginScreen() {
               </Animated.View>
             </Animated.View>
             <Animated.View style={[styles.brandText, brandEntrance]}>
-              <Text style={styles.brandLabel}>Kharis Church</Text>
+              <Text style={styles.brandLabel}>{t('common:kharisChurch')}</Text>
               <Text style={styles.verse}>
                 {verse.before}
                 <Text style={styles.versePrimary}>{verse.primaryWord}</Text>

@@ -16,6 +16,7 @@ import type { CreateMembershipCohortRequest } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { CohortForm } from './_form';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Create a membership cohort. Gated on `membership:admin` at CHURCH scope.
@@ -23,7 +24,8 @@ import { CohortForm } from './_form';
  * No branch picker: a cohort is church-wide and carries no `branchId`, which
  * is also why no branch-scoped grant can authorise creating one.
  */
-export default function NewCohort() {
+export default function NewCohort() {  const { t } = useTranslation(['membership', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -62,21 +64,18 @@ export default function NewCohort() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>New cohort</Text>
+        <Text style={styles.headerTitle}>{t('membership:newCohort')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <CohortForm
-        submitLabel="Create cohort"
+        submitLabel={t('membership:createCohort')}
         submitPendingLabel="Creating…"
         submitting={create.isPending}
         serverError={serverError}
         onSubmit={handleSubmit}
         footer={
-          <Text style={styles.footnote}>
-            Schedule the four sessions and admit people from the interest pool once the
-            cohort exists.
-          </Text>
+          <Text style={styles.footnote}>{t('membership:scheduleTheFourSessionsAndAdmit')}</Text>
         }
       />
     </SafeAreaView>

@@ -34,10 +34,12 @@ import { alert } from '@/lib/alert';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 type Scope = 'home' | 'secondary';
 
-export default function MyBranch() {
+export default function MyBranch() {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -94,12 +96,12 @@ export default function MyBranch() {
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
-        <Text style={styles.headerTitle}>My branch</Text>
+        <Text style={styles.headerTitle}>{t('branches:myBranch')}</Text>
         {active && canManageBranch ? (
           <Pressable
             onPress={() => router.push(`/branches/edit/${active.id}`)}
             hitSlop={8}
-            accessibilityLabel="Edit branch"
+            accessibilityLabel={t('branches:editBranch')}
           >
             <Pencil color={c.primary} size={20} strokeWidth={1.5} />
           </Pressable>
@@ -148,9 +150,7 @@ export default function MyBranch() {
             >
               <Text
                 style={[styles.chipEyebrow, scope === 'secondary' && styles.chipLabelActive]}
-              >
-                SECONDARY
-              </Text>
+              >{t('branches:secondary')}</Text>
               <Text
                 style={[styles.chipLabel, scope === 'secondary' && styles.chipLabelActive]}
                 numberOfLines={1}
@@ -172,7 +172,7 @@ export default function MyBranch() {
               <View style={styles.heroBadgeRow}>
                 <Text style={styles.heroEyebrow}>{active.regionName?.toUpperCase()}</Text>
                 {active.branchType === 'Main' ? (
-                  <Badge label="Main" variant="gold" size="sm" />
+                  <Badge label={t('branches:main')} variant="gold" size="sm" />
                 ) : null}
               </View>
               <Text style={styles.heroTitle}>{active.branchName}</Text>
@@ -183,7 +183,7 @@ export default function MyBranch() {
 
             {(active.address || active.phone || active.email) ? (
               <Card padding="md" style={styles.section}>
-                <Text style={styles.sectionEyebrow}>CONTACT</Text>
+                <Text style={styles.sectionEyebrow}>{t('branches:contact')}</Text>
                 {active.address ? (
                   <ContactRow
                     icon={MapPin}
@@ -224,7 +224,7 @@ export default function MyBranch() {
                   <View style={styles.sectionIconTile}>
                     <Calendar color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
-                  <Text style={styles.sectionHeaderText}>Services</Text>
+                  <Text style={styles.sectionHeaderText}>{t('branches:services')}</Text>
                 </View>
                 {active.serviceSchedule.map((svc, idx) => (
                   <View key={`${svc.day}-${idx}`} style={styles.serviceRow}>
@@ -242,7 +242,7 @@ export default function MyBranch() {
                   <View style={styles.sectionIconTile}>
                     <Map color={c.primary} size={16} strokeWidth={1.5} />
                   </View>
-                  <Text style={styles.sectionHeaderText}>Leadership</Text>
+                  <Text style={styles.sectionHeaderText}>{t('branches:leadership')}</Text>
                 </View>
                 {mainPastor ? (
                   <View style={styles.leaderCard}>
@@ -253,7 +253,7 @@ export default function MyBranch() {
                       lastName={mainPastor.memberLastName}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.leaderRole}>MAIN PASTOR</Text>
+                      <Text style={styles.leaderRole}>{t('branches:mainPastor')}</Text>
                       <Text style={styles.leaderName}>
                         {mainPastor.memberFirstName} {mainPastor.memberLastName}
                       </Text>
@@ -269,7 +269,7 @@ export default function MyBranch() {
                       lastName={minister.memberLastName}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.leaderRole}>MINISTER</Text>
+                      <Text style={styles.leaderRole}>{t('branches:minister')}</Text>
                       <Text style={styles.leaderName}>
                         {minister.memberFirstName} {minister.memberLastName}
                       </Text>
@@ -297,7 +297,8 @@ interface SelfCheckInBranch {
   selfCheckInLateAfterMinutes: number;
 }
 
-function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
+function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const qc = useQueryClient();
@@ -349,13 +350,13 @@ function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
         <View style={styles.sectionIconTile}>
           <ScanLine color={c.primary} size={16} strokeWidth={1.5} />
         </View>
-        <Text style={styles.sectionHeaderText}>Self check-in</Text>
+        <Text style={styles.sectionHeaderText}>{t('branches:selfCheckIn')}</Text>
       </View>
 
       <Card padding="md" style={{ gap: spacing.md }}>
         <View style={styles.settingRow}>
           <View style={{ flex: 1, paddingRight: spacing.sm }}>
-            <Text style={styles.settingTitle}>Enabled for this branch</Text>
+            <Text style={styles.settingTitle}>{t('branches:enabledForThisBranch')}</Text>
             <Text style={styles.settingMeta}>
               When off, members won&apos;t see the &ldquo;I&apos;m here&rdquo; button.
               Attendance is only recorded by a desk volunteer.
@@ -370,24 +371,24 @@ function SelfCheckInSettingsCard({ branch }: { branch: SelfCheckInBranch }) {
         </View>
 
         <MinuteField
-          label="Opens (minutes before start)"
+          label={t('branches:opensMinutesBeforeStart')}
           value={openBefore}
           onChangeText={setOpenBefore}
           disabled={!enabled}
         />
         <MinuteField
-          label="Closes (minutes after start)"
+          label={t('branches:closesMinutesAfterStart')}
           value={closeAfter}
           onChangeText={setCloseAfter}
           disabled={!enabled}
-          hint="Anyone tapping after this is told the desk needs to record them."
+          hint={t('branches:anyoneTappingAfterThisIsTold')}
         />
         <MinuteField
-          label="Marked Late after (minutes)"
+          label={t('branches:markedLateAfterMinutes')}
           value={lateAfter}
           onChangeText={setLateAfter}
           disabled={!enabled}
-          hint="Check-ins past this point stamp as Late instead of Present."
+          hint={t('branches:checkInsPastThisPointStamp')}
         />
 
         <Button
@@ -457,7 +458,8 @@ function ContactRow({
   );
 }
 
-function EmptyState() {
+function EmptyState() {  const { t } = useTranslation(['branches', 'common']);
+
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
@@ -465,11 +467,8 @@ function EmptyState() {
       <View style={styles.emptyIconTile}>
         <Map color={c.primary} size={22} strokeWidth={1.5} />
       </View>
-      <Text style={styles.emptyTitle}>No home branch set</Text>
-      <Text style={styles.emptyMeta}>
-        Set your home branch from your profile, or ask an admin to set one for
-        you.
-      </Text>
+      <Text style={styles.emptyTitle}>{t('branches:noHomeBranchSet')}</Text>
+      <Text style={styles.emptyMeta}>{t('branches:setYourHomeBranchFromYour')}</Text>
     </Card>
   );
 }
