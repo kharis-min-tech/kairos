@@ -175,10 +175,29 @@
         "form_submitted": "Formulaire {{subject}} envoyé",
         "membership_graduated": "{{subject}} a terminé la classe d'adhésion",
         "fellowship_met": "{{subject}} s'est réuni"
+      },
+      "warning": {
+        "branches_behind_one": "{{count}} antenne n'a pas enregistré de présence depuis 14 jours",
+        "branches_behind_other": "{{count}} antennes n'ont pas enregistré de présence depuis 14 jours",
+        "branch_without_pastor_one": "{{count}} antenne n'a pas de pasteur principal",
+        "branch_without_pastor_other": "{{count}} antennes n'ont pas de pasteur principal"
       }
     },
     "darkMode": "Mode sombre",
-    "lightMode": "Mode clair"
+    "lightMode": "Mode clair",
+    "goodDayName": "Bonjour {{name}} !",
+    "dashboard": "Tableau de bord",
+    "allBranches": "Toutes les antennes",
+    "groupsILead": "Les groupes que je dirige",
+    "churchPulse": "Pouls de l'église",
+    "branchPulse": "Pouls de l'antenne",
+    "inCongregation": "{{count}} dans l'assemblée",
+    "justNow": "À l'instant",
+    "minutesAgo_one": "il y a {{count}} min",
+    "minutesAgo_other": "il y a {{count}} min",
+    "hoursAgo_one": "il y a {{count}} heure",
+    "hoursAgo_other": "il y a {{count}} heures",
+    "yesterday": "Hier"
   },
   "nav": {
     "sections": {

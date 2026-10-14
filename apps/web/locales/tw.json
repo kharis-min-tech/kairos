@@ -175,10 +175,29 @@
         "form_submitted": "Wɔde {{subject}} fɔm abrɛ",
         "membership_graduated": "{{subject}} awie ɔmanfoɔyɛ adesuakuo no",
         "fellowship_met": "{{subject}} ahyia"
+      },
+      "warning": {
+        "branches_behind_one": "Asɔre baa {{count}} nkyerɛɛ mmaeɛ nna 14 ni",
+        "branches_behind_other": "Asɔre baa {{count}} nkyerɛɛ mmaeɛ nna 14 ni",
+        "branch_without_pastor_one": "Asɔre baa {{count}} nni Ɔsɔfopanin",
+        "branch_without_pastor_other": "Asɔre baa {{count}} nni Ɔsɔfopanin"
       }
     },
     "darkMode": "Esum mu",
-    "lightMode": "Hann mu"
+    "lightMode": "Hann mu",
+    "goodDayName": "Maakye, {{name}}!",
+    "dashboard": "Dashbɔd",
+    "allBranches": "Asɔre baa ahorow nyinaa",
+    "groupsILead": "Akuo a medi anim",
+    "churchPulse": "Asɔre no Tebea",
+    "branchPulse": "Asɔre Baa no Tebea",
+    "inCongregation": "{{count}} wɔ asafo no mu",
+    "justNow": "Seesei ara",
+    "minutesAgo_one": "simma {{count}} a atwam",
+    "minutesAgo_other": "simma {{count}} a atwam",
+    "hoursAgo_one": "dɔnhwere {{count}} a atwam",
+    "hoursAgo_other": "nnɔnhwerɛ {{count}} a atwam",
+    "yesterday": "Nnɛra"
   },
   "nav": {
     "sections": {

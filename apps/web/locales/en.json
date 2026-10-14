@@ -175,10 +175,29 @@
         "form_submitted": "{{subject}} form submitted",
         "membership_graduated": "{{subject}} completed the membership class",
         "fellowship_met": "{{subject}} met"
+      },
+      "warning": {
+        "branches_behind_one": "{{count}} branch hasn't recorded attendance in 14 days",
+        "branches_behind_other": "{{count}} branches haven't recorded attendance in 14 days",
+        "branch_without_pastor_one": "{{count}} branch has no Main Pastor assigned",
+        "branch_without_pastor_other": "{{count}} branches have no Main Pastor assigned"
       }
     },
     "darkMode": "Dark mode",
-    "lightMode": "Light mode"
+    "lightMode": "Light mode",
+    "goodDayName": "Good day, {{name}}!",
+    "dashboard": "Dashboard",
+    "allBranches": "All branches",
+    "groupsILead": "Groups I lead",
+    "churchPulse": "Church pulse",
+    "branchPulse": "Branch pulse",
+    "inCongregation": "{{count}} in congregation",
+    "justNow": "Just now",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "yesterday": "Yesterday"
   },
   "nav": {
     "sections": {

@@ -10,6 +10,7 @@ import type {
   HomeTaskItem,
 } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
+import { dateLocale } from '@/lib/date-locale';
 
 /**
  * The control-centre blocks, web edition. Same four blocks as the mobile home
@@ -124,10 +125,11 @@ function useHomeLabel() {
 }
 
 export function PulseBlock({ pulse }: { pulse: HomePulse }) {
+  const { t } = useTranslation(['common']);
   const label = useHomeLabel();
   return (
     <section>
-      <SectionLabel>{pulse.scope === 'church' ? 'Church pulse' : 'Branch pulse'}</SectionLabel>
+      <SectionLabel>{pulse.scope === 'church' ? t('common:churchPulse') : t('common:branchPulse')}</SectionLabel>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {pulse.metrics.map((metric) => (
           <div
@@ -155,7 +157,9 @@ export function PulseBlock({ pulse }: { pulse: HomePulse }) {
               <span aria-hidden className="text-[#9a6b04] dark:text-[#f8b537]">
                 &#9888;
               </span>
-              <span className="flex-1">{warning.text}</span>
+              <span className="flex-1">
+                {label('warning', warning.kind, warning.text, { count: warning.count ?? 0 })}
+              </span>
               <span aria-hidden className="text-muted-foreground">
                 &rarr;
               </span>
@@ -279,6 +283,7 @@ export function GroupsBlock({
   label: string;
   groups: HomeGroupSummary[];
 }) {
+  const { t } = useTranslation(['common']);
   if (groups.length === 0) return null;
 
   return (
@@ -296,7 +301,7 @@ export function GroupsBlock({
                 <p className="truncate text-sm font-medium text-foreground">{group.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {group.kind === 'branch'
-                    ? `${group.headcount.toLocaleString()} in congregation`
+                    ? t('common:inCongregation', { count: group.headcount })
                     : `${group.headcount} member${group.headcount === 1 ? '' : 's'}`}
                   {group.lastPresent !== null && group.lastTotal !== null
                     ? ` · last ${group.lastPresent}/${group.lastTotal}`
@@ -365,22 +370,27 @@ export function hrefForActivity(item: HomeActivityItem): string {
 }
 
 /** "2 hours ago", "Yesterday", "Tue" — recency is the point, not the clock. */
-function whenLabel(iso: string): string {
-  const then = new Date(iso);
-  const minutes = Math.round((Date.now() - then.getTime()) / 60000);
-  if (minutes < 60) return minutes <= 1 ? 'Just now' : `${minutes} min ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
-  const days = Math.round(hours / 24);
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return then.toLocaleDateString('en-GB', { weekday: 'long' });
-  return then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+function useWhenLabel() {
+  const { t, i18n } = useTranslation(['common']);
+  const locale = dateLocale(i18n.language);
+  return (iso: string): string => {
+    const then = new Date(iso);
+    const minutes = Math.round((Date.now() - then.getTime()) / 60000);
+    if (minutes < 60) return minutes <= 1 ? t('common:justNow') : t('common:minutesAgo', { count: minutes });
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return t('common:hoursAgo', { count: hours });
+    const days = Math.round(hours / 24);
+    if (days === 1) return t('common:yesterday');
+    if (days < 7) return then.toLocaleDateString(locale, { weekday: 'long' });
+    return then.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  };
 }
 
 /** What has already happened, newest first. Empty at personal altitude. */
 export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {
   const { t } = useTranslation(['common']);
   const label = useHomeLabel();
+  const whenLabel = useWhenLabel();
 
   return (
     <section>

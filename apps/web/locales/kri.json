@@ -175,10 +175,29 @@
         "form_submitted": "Dɛn sɛn di {{subject}} fɔm",
         "membership_graduated": "{{subject}} dɔn du di mɛmbaship klas",
         "fellowship_met": "{{subject}} dɔn mit"
+      },
+      "warning": {
+        "branches_behind_one": "{{count}} branch nɔ rɛkɔd atɛndans fɔ 14 de",
+        "branches_behind_other": "{{count}} branch dɛn nɔ rɛkɔd atɛndans fɔ 14 de",
+        "branch_without_pastor_one": "{{count}} branch nɔ gɛt Men Pastɔ",
+        "branch_without_pastor_other": "{{count}} branch dɛn nɔ gɛt Men Pastɔ"
       }
     },
     "darkMode": "Dak mod",
-    "lightMode": "Layt mod"
+    "lightMode": "Layt mod",
+    "goodDayName": "Gud de, {{name}}!",
+    "dashboard": "Dashbɔd",
+    "allBranches": "Ol di branch dɛn",
+    "groupsILead": "Di grup dɛn we a de lid",
+    "churchPulse": "Aw di chɔch de du",
+    "branchPulse": "Aw di branch de du",
+    "inCongregation": "{{count}} na di kɔngrigeshɔn",
+    "justNow": "Jɔs naw",
+    "minutesAgo_one": "{{count}} minit dɔn pas",
+    "minutesAgo_other": "{{count}} minit dɔn pas",
+    "hoursAgo_one": "{{count}} awa dɔn pas",
+    "hoursAgo_other": "{{count}} awa dɔn pas",
+    "yesterday": "Yɛstade"
   },
   "nav": {
     "sections": {

@@ -18,6 +18,7 @@ import {
   StreakBlock,
 } from '@/components/dashboard/home-blocks';
 import { useTranslation } from 'react-i18next';
+import { dateLocale } from '@/lib/date-locale';
 
 /**
  * The control centre.
@@ -164,7 +165,7 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
   const leadership = useMyLeadership();
   const { data: branches } = useBranches();
 
-  const today = new Date().toLocaleDateString('en-GB', {
+  const today = new Date().toLocaleDateString(dateLocale(i18n.language), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -214,7 +215,7 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
       <div>
         <p className="text-xs text-muted-foreground">{today}</p>
         <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
-          {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
+          {user?.firstName ? t('common:goodDayName', { name: user.firstName }) : t('common:dashboard')}
         </h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <span className="inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#5D3FD3] dark:text-[#a488ff]">
@@ -276,7 +277,7 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
     <>
       <NeedsYouBlock items={data.needsYou} />
       <GroupsBlock
-        label={altitude === 'church' ? 'All branches' : 'Groups I lead'}
+        label={altitude === 'church' ? t('common:allBranches') : t('common:groupsILead')}
         groups={data.groups}
       />
       {data.streakWeeks ? <StreakBlock weeks={data.streakWeeks} /> : null}

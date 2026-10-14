@@ -1699,7 +1699,14 @@ export type HomeWarningKind =
 
 export interface HomePulseWarning {
   kind: HomeWarningKind;
+  /**
+   * English sentence, kept for older clients. Prefer `kind` + `count`: the
+   * server cannot know the reader's language, so the web composes the
+   * sentence from the catalogue and only falls back to this.
+   */
   text: string;
+  /** How many things the warning is about, for pluralisation. */
+  count?: number;
   refs: HomeRefs;
 }
 

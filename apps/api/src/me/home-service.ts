@@ -374,6 +374,7 @@ async function buildPulse(
     if (branchesBehind > 0) {
       warnings.push({
         kind: 'branches_behind',
+        count: branchesBehind,
         text:
           branchesBehind === 1
             ? `1 branch hasn't recorded attendance in ${BRANCH_BEHIND_DAYS} days`
@@ -384,6 +385,7 @@ async function buildPulse(
     if (branchesWithoutPastor > 0) {
       warnings.push({
         kind: 'branch_without_pastor',
+        count: branchesWithoutPastor,
         text:
           branchesWithoutPastor === 1
             ? '1 branch has no Main Pastor assigned'
