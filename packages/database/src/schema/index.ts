@@ -116,6 +116,19 @@ export {
   type NewOAuthSession,
 } from './oauth-sessions';
 export {
+  oauthClients,
+  oauthGrants,
+  oauthAuthorizationCodes,
+  oauthRefreshTokens,
+  oauthClientsRelations,
+  oauthGrantsRelations,
+  type OAuthClient,
+  type NewOAuthClient,
+  type OAuthGrant,
+  type OAuthAuthorizationCode,
+  type OAuthRefreshToken,
+} from './oauth-server';
+export {
   oauthVerificationTokens,
   type OAuthVerificationToken,
   type NewOAuthVerificationToken,

@@ -4,6 +4,7 @@ import { errorHandler } from './middleware/error-handler';
 import { loggingMiddleware } from './middleware/logging';
 import { consentGateMiddleware } from './middleware/consent-gate';
 import { authRouter } from './auth/router';
+import { oauthServerRouter } from './oauth-server/router';
 import { branchesRouter } from './branches/router';
 import { membersRouter } from './members/router';
 import { fellowshipsRouter } from './fellowships/router';
@@ -62,6 +63,8 @@ export function createApp() {
 
   // Module routers
   app.route('/api/auth', authRouter);
+  // Kairos as an OAuth2 / OIDC authorization server (Better-Auth Phase 2).
+  app.route('/api/oauth', oauthServerRouter);
   app.route('/api/branches', branchesRouter);
   app.route('/api/members', membersRouter);
   app.route('/api/fellowships', fellowshipsRouter);
