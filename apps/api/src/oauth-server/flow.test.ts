@@ -699,3 +699,17 @@ describe('secret rotation and admin controls', () => {
     expect(actions).toEqual(expect.arrayContaining(['oauth_client_created', 'oauth_authorized', 'oauth_token_issued']));
   });
 });
+
+describe('signing key configuration', () => {
+  it('explains a malformed OAUTH_SIGNING_KEY instead of surfacing a bare JSON error', async () => {
+    const { getSigningKey } = await import('./keys');
+    const prev = process.env['OAUTH_SIGNING_KEY'];
+    process.env['OAUTH_SIGNING_KEY'] = '\n> @kairos/api@0.0.1 oauth:key\n{"kty":"EC"}';
+    try {
+      await expect(getSigningKey()).rejects.toThrow(/not valid JSON.*generate-oauth-key\.mjs/);
+    } finally {
+      if (prev === undefined) delete process.env['OAUTH_SIGNING_KEY'];
+      else process.env['OAUTH_SIGNING_KEY'] = prev;
+    }
+  });
+});
