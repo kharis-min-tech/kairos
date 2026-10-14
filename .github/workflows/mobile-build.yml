@@ -1,9 +1,22 @@
 name: Mobile build
 
-# Manual. Queues an EAS build and returns; EAS does the work and emails or
-# shows the result. Run it from the Actions tab and choose a platform and profile.
+# Queues an EAS build and returns; EAS does the work and emails or shows the
+# result. Runs from the Actions tab (choose a platform and profile) and is
+# called by Deploy staging after a merge that changed the app. With `submit`
+# on, EAS uploads the finished iOS build to TestFlight by itself.
 
 on:
+  workflow_call:
+    inputs:
+      platform:
+        type: string
+        required: true
+      profile:
+        type: string
+        required: true
+      submit:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       platform:
@@ -16,6 +29,10 @@ on:
         type: choice
         options: [preview, preview-ios, production]
         default: preview
+      submit:
+        description: Upload the finished iOS build to TestFlight
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -50,4 +67,5 @@ jobs:
           npx eas-cli@latest build
           --platform ${{ inputs.platform }}
           --profile ${{ inputs.profile }}
+          ${{ inputs.submit && '--auto-submit' || '' }}
           --non-interactive --no-wait
