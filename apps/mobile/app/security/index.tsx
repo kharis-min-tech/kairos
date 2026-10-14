@@ -9,6 +9,7 @@ import {
   Mail,
   History,
   Link2,
+  AppWindow,
   Fingerprint,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
@@ -67,6 +68,12 @@ export default function SecurityHub() {
             title="Connected accounts"
             meta="Link or disconnect Google, Microsoft, and Apple sign-in."
             onPress={() => router.push('/security/connections' as never)}
+          />
+          <NavLink
+            icon={AppWindow}
+            title="Apps with access"
+            meta="Apps you've let sign you in with Kairos. Remove any you no longer use."
+            onPress={() => router.push('/security/apps' as never)}
           />
           <NavLink
             icon={History}

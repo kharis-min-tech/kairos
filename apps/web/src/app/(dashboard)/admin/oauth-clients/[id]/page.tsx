@@ -354,7 +354,8 @@ export default function OAuthClientDetailPage() {
 /** A compact, human line for an audit row's metadata. Never prints arbitrary nested data. */
 function summarise(metadata: Record<string, unknown>): string {
   return Object.entries(metadata)
-    .filter(([, v]) => typeof v === 'string' || typeof v === 'number' || (Array.isArray(v) && v.every((x) => typeof x === 'string')))
+    // clientId is redundant on the app's own page.
+    .filter(([k, v]) => k !== 'clientId' && typeof v === 'string' || typeof v === 'number' || (Array.isArray(v) && v.every((x) => typeof x === 'string')))
     .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`)
     .join(', ');
 }
