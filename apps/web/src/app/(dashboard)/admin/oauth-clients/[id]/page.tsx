@@ -1,5 +1,9 @@
 'use client';
 
+// Cloudflare Pages (next-on-pages) refuses any dynamic route that is not on the
+// edge runtime, which fails the whole deploy rather than just this page.
+export const runtime = 'edge';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
