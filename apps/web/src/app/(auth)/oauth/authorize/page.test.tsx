@@ -8,6 +8,7 @@ const replace = vi.fn();
 const decide = vi.fn();
 let searchParamsString = '';
 let accessToken: string | null = 'at';
+let storedUser: { email: string } | null = { email: 'grace@kharis.org' };
 let contextResult: { data?: unknown; isLoading?: boolean; isError?: boolean; error?: Error } = {};
 
 vi.mock('next/navigation', () => ({
@@ -15,9 +16,10 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(searchParamsString),
 }));
 
-vi.mock('@/lib/auth-store', () => ({
+vi.mock('@/lib/auth-store', async (orig) => ({
+  ...(await orig<typeof import('@/lib/auth-store')>()),
   useAuthStore: (selector: (s: unknown) => unknown) =>
-    selector({ accessToken, user: { email: 'grace@kharis.org' }, logout: vi.fn() }),
+    selector({ accessToken, user: storedUser, logout: vi.fn() }),
 }));
 
 vi.mock('@/hooks/use-oauth-server', () => ({
@@ -65,6 +67,7 @@ beforeEach(() => {
   decide.mockReset();
   hrefAssign.mockReset();
   accessToken = 'at';
+  storedUser = { email: 'grace@kharis.org' };
   searchParamsString = 'client_id=kc_1&redirect_uri=https%3A%2F%2Fanalytics.example.org%2Fcb&scope=openid+email&state=s1&code_challenge=x&code_challenge_method=S256';
   contextResult = { data: okContext };
   Object.defineProperty(window, 'location', {
@@ -90,6 +93,15 @@ describe('OAuth consent page', () => {
     expect(screen.getByText('analytics.example.org')).toBeDefined();
     expect(screen.getByText('grace@kharis.org')).toBeDefined();
     expect(screen.getByRole('link', { name: /Privacy policy/i }).getAttribute('href')).toBe('https://analytics.example.org/privacy');
+  });
+
+  it('shows the email from the access token when the store has no user yet', () => {
+    const payload = Buffer.from(JSON.stringify({ email: 'ada@kharis.org' })).toString('base64url');
+    accessToken = `h.${payload}.s`;
+    storedUser = null;
+    render(<OAuthAuthorizePage />, { wrapper });
+    expect(screen.getByText('ada@kharis.org')).toBeDefined();
+    expect(screen.queryByText('your account')).toBeNull();
   });
 
   it('continues to the app with approve=true', async () => {

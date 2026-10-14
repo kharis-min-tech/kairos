@@ -114,3 +114,27 @@ export function decodeScopeFromAccessToken(accessToken: string): RoleScope | nul
     return null;
   }
 }
+
+/**
+ * The signed-in email, read off the access token. The store's `user` is not
+ * persisted (the dashboard layout fills it from the profile), so pages outside
+ * the dashboard, like the OAuth consent screen, have no `user` after a fresh
+ * load. The token has carried the email since login.
+ */
+export function decodeEmailFromAccessToken(accessToken: string | null): string | null {
+  if (!accessToken) return null;
+  try {
+    const parts = accessToken.split('.');
+    if (parts.length !== 3) return null;
+    const base64 = parts[1]!.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const json =
+      typeof atob === 'function'
+        ? atob(padded)
+        : Buffer.from(padded, 'base64').toString('utf-8');
+    const payload = JSON.parse(json) as { email?: unknown };
+    return typeof payload.email === 'string' ? payload.email : null;
+  } catch {
+    return null;
+  }
+}

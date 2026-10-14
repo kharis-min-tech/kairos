@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import type { OAuthAuthorizeParams } from '@kairos/types';
-import { useAuthStore } from '@/lib/auth-store';
+import { decodeEmailFromAccessToken, useAuthStore } from '@/lib/auth-store';
 import { useAuthorizeContext, useAuthorizeDecision } from '@/hooks/use-oauth-server';
 import { KharisCardHeader } from '../../kharis-logo';
 
@@ -59,6 +59,9 @@ function AuthorizeContent() {
   const searchParams = useSearchParams();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
+  // `user` is only filled by the dashboard layout, so after a direct load of
+  // this page it is empty; the token carries the email.
+  const email = user?.email ?? decodeEmailFromAccessToken(accessToken);
   const logout = useAuthStore((s) => s.logout);
 
   const params = useMemo<OAuthAuthorizeParams | null>(() => {
@@ -265,7 +268,7 @@ function AuthorizeContent() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground">
-            Signed in as <span className="font-medium text-foreground">{user?.email ?? 'your account'}</span>.{' '}
+            Signed in as <span className="font-medium text-foreground">{email ?? 'your account'}</span>.{' '}
             <button type="button" onClick={switchAccount} className="font-semibold text-[#5D3FD3] hover:opacity-80">
               Not you?
             </button>
