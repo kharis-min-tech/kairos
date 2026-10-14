@@ -197,7 +197,19 @@
     "minutesAgo_other": "{{count}} minit dɔn pas",
     "hoursAgo_one": "{{count}} awa dɔn pas",
     "hoursAgo_other": "{{count}} awa dɔn pas",
-    "yesterday": "Yɛstade"
+    "yesterday": "Yɛstade",
+    "role": {
+      "pastor": "Pastɔ",
+      "administrator": "Administretɔ",
+      "branchSystemAdmin": "Branch Sistɛm Admin",
+      "branchDataAdmin": "Branch Data Admin",
+      "branch": "Branch",
+      "fellowshipLeader": "Fɛloship Lida",
+      "departmentLead": "Dipatmɛnt Lid",
+      "fellowshipAndDepartmentLead": "Fɛloship ɛn Dipatmɛnt Lid",
+      "leader": "Lida",
+      "member": "Mɛmba"
+    }
   },
   "nav": {
     "sections": {

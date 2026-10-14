@@ -197,7 +197,19 @@
     "minutesAgo_other": "simma {{count}} a atwam",
     "hoursAgo_one": "dɔnhwere {{count}} a atwam",
     "hoursAgo_other": "nnɔnhwerɛ {{count}} a atwam",
-    "yesterday": "Nnɛra"
+    "yesterday": "Nnɛra",
+    "role": {
+      "pastor": "Ɔsɔfoɔ",
+      "administrator": "Sohwɛfoɔ",
+      "branchSystemAdmin": "Asɔre Baa Sistem Sohwɛfoɔ",
+      "branchDataAdmin": "Asɔre Baa Nsɛm Sohwɛfoɔ",
+      "branch": "Asɔre baa",
+      "fellowshipLeader": "Fekuo Panin",
+      "departmentLead": "Adwumakuo Panin",
+      "fellowshipAndDepartmentLead": "Fekuo ne Adwumakuo Panin",
+      "leader": "Ɔkannifoɔ",
+      "member": "Ɔmanfoɔ"
+    }
   },
   "nav": {
     "sections": {

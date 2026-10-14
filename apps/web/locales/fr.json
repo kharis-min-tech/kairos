@@ -197,7 +197,19 @@
     "minutesAgo_other": "il y a {{count}} min",
     "hoursAgo_one": "il y a {{count}} heure",
     "hoursAgo_other": "il y a {{count}} heures",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "role": {
+      "pastor": "Pasteur",
+      "administrator": "Administrateur",
+      "branchSystemAdmin": "Administrateur système d'antenne",
+      "branchDataAdmin": "Administrateur des données d'antenne",
+      "branch": "Antenne",
+      "fellowshipLeader": "Responsable de cellule",
+      "departmentLead": "Responsable de département",
+      "fellowshipAndDepartmentLead": "Responsable de cellule et de département",
+      "leader": "Responsable",
+      "member": "Membre"
+    }
   },
   "nav": {
     "sections": {

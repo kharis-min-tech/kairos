@@ -197,7 +197,19 @@
     "minutesAgo_other": "{{count}} min ago",
     "hoursAgo_one": "{{count}} hour ago",
     "hoursAgo_other": "{{count}} hours ago",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "role": {
+      "pastor": "Pastor",
+      "administrator": "Administrator",
+      "branchSystemAdmin": "Branch System Admin",
+      "branchDataAdmin": "Branch Data Admin",
+      "branch": "Branch",
+      "fellowshipLeader": "Fellowship Leader",
+      "departmentLead": "Department Lead",
+      "fellowshipAndDepartmentLead": "Fellowship & Department Lead",
+      "leader": "Leader",
+      "member": "Member"
+    }
   },
   "nav": {
     "sections": {

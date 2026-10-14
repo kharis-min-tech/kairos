@@ -61,51 +61,51 @@ interface RoleLabelInputs {
  * picked a specific branch, so the label reflects that choice rather than
  * their full authority.
  */
-function deriveRoleLabel(i: RoleLabelInputs): string {
+/**
+ * Which role to show, as a catalogue key plus the branch or group it is
+ * scoped to. It used to return a finished English string ("Pastor, Kharis
+ * Accra"), which no translation could reach.
+ */
+function deriveRoleLabel(i: RoleLabelInputs): { key: string; name?: string } {
   // Pastor is an identity on branch_leadership; branch-admin authority is a
   // grant. A pastor usually holds both, and the lens they think in is pastor.
   if (i.isBranchMainPastor) {
-    const branch = i.scopeBranchName ?? i.homeBranchName;
-    return branch ? `Pastor, ${branch}` : 'Pastor';
+    return { key: 'pastor', name: i.scopeBranchName ?? i.homeBranchName };
   }
   if (i.scope?.kind === 'branch') {
-    const suffix = i.scopeBranchName ? `, ${i.scopeBranchName}` : '';
+    const name = i.scopeBranchName;
     if (i.isSystemAdmin) {
-      return i.isBranchSystemAdmin
-        ? `Branch System Admin${suffix}`
-        : `Administrator${suffix}`;
+      return { key: i.isBranchSystemAdmin ? 'branchSystemAdmin' : 'administrator', name };
     }
-    if (i.isBranchDataAdmin) return `Branch Data Admin${suffix}`;
-    if (i.canWriteBranch) return `Pastor${suffix}`;
-    return `Branch${suffix}`;
+    if (i.isBranchDataAdmin) return { key: 'branchDataAdmin', name };
+    if (i.canWriteBranch) return { key: 'pastor', name };
+    return { key: 'branch', name };
   }
   if (i.scope?.kind === 'fellowship') {
-    return i.leadFellowshipName
-      ? `Fellowship Leader, ${i.leadFellowshipName}`
-      : 'Fellowship Leader';
+    return { key: 'fellowshipLeader', name: i.leadFellowshipName };
   }
   if (i.scope?.kind === 'department') {
-    return i.leadDepartmentName
-      ? `Department Lead, ${i.leadDepartmentName}`
-      : 'Department Lead';
+    return { key: 'departmentLead', name: i.leadDepartmentName };
   }
-  if (i.isSystemAdmin) return 'Administrator';
+  if (i.isSystemAdmin) return { key: 'administrator' };
   if (i.isBranchSystemAdmin) {
-    return i.homeBranchInBsa && i.homeBranchName
-      ? `Branch System Admin, ${i.homeBranchName}`
-      : 'Branch System Admin';
+    return {
+      key: 'branchSystemAdmin',
+      name: i.homeBranchInBsa ? i.homeBranchName : undefined,
+    };
   }
   if (i.isBranchDataAdmin) {
-    return i.homeBranchInBda && i.homeBranchName
-      ? `Branch Data Admin, ${i.homeBranchName}`
-      : 'Branch Data Admin';
+    return {
+      key: 'branchDataAdmin',
+      name: i.homeBranchInBda ? i.homeBranchName : undefined,
+    };
   }
-  if (i.canWriteBranch) return 'Pastor';
-  if (i.leadFellowshipName && i.leadDepartmentName) return 'Fellowship & Department Lead';
-  if (i.leadFellowshipName) return `Fellowship Leader, ${i.leadFellowshipName}`;
-  if (i.leadDepartmentName) return `Department Lead, ${i.leadDepartmentName}`;
-  if (i.canLead) return 'Leader';
-  return 'Member';
+  if (i.canWriteBranch) return { key: 'pastor' };
+  if (i.leadFellowshipName && i.leadDepartmentName) return { key: 'fellowshipAndDepartmentLead' };
+  if (i.leadFellowshipName) return { key: 'fellowshipLeader', name: i.leadFellowshipName };
+  if (i.leadDepartmentName) return { key: 'departmentLead', name: i.leadDepartmentName };
+  if (i.canLead) return { key: 'leader' };
+  return { key: 'member' };
 }
 
 // ── Recent activity ────────────────────────────────────────
@@ -219,7 +219,9 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
         </h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <span className="inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#5D3FD3] dark:text-[#a488ff]">
-            {roleLabel}
+            {roleLabel.name
+              ? `${t(`common:role.${roleLabel.key}`)}, ${roleLabel.name}`
+              : t(`common:role.${roleLabel.key}`)}
           </span>
           <BranchScopePicker
             adminBranchIds={[...new Set([...bsaIds, ...bdaIds])]}

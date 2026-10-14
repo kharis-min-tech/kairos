@@ -2,11 +2,12 @@
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from './kharis-logo';
-import { pickAuthVerse } from '@kairos/core';
+import { AUTH_VERSES, pickAuthVerse } from '@kairos/core';
 import { HandDrawn } from '@/components/motion/hand-drawn';
 import { Reveal } from '@/components/motion/reveal';
 import { AuthAmbient } from './auth-ambient';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
 
 /** Verse entrance: words rise one by one, 85ms apart, after a 400ms beat. */
 const WORD_STAGGER_MS = 85;
@@ -54,7 +55,13 @@ function words(text: string, start: number): { nodes: React.ReactNode[]; next: n
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const { t, i18n } = useTranslation(['common']);
-  const verse = pickAuthVerse();
+  // Picked after mount, not during render. This layout is a client component
+  // now, so a Math.random() pick runs on the server and again on the client
+  // and the two disagree — React then throws a hydration error and rebuilds
+  // the tree. The first verse renders on the server and the real pick lands
+  // on mount.
+  const [verse, setVerse] = useState(AUTH_VERSES[0]!);
+  useEffect(() => setVerse(pickAuthVerse()), []);
 
   // Word-by-word entrance. A highlighted word is one beat and gets its
   // underline drawn once every word has landed.
