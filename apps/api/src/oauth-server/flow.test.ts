@@ -33,7 +33,8 @@ vi.mock('../db', async () => {
       first_name varchar(100) NOT NULL,
       last_name varchar(100) NOT NULL,
       home_branch_id uuid NOT NULL,
-      is_active boolean NOT NULL DEFAULT true
+      is_active boolean NOT NULL DEFAULT true,
+      approval_status varchar(20) NOT NULL DEFAULT 'approved'
     );
     CREATE TABLE audit_log (
       id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,6 +48,8 @@ vi.mock('../db', async () => {
     INSERT INTO members (id, email, email_verified, first_name, last_name, home_branch_id) VALUES
       ('11111111-1111-1111-1111-111111111111', 'admin@kharis.org', true, 'Ada', 'Admin', '33333333-3333-3333-3333-333333333333'),
       ('22222222-2222-2222-2222-222222222222', 'grace@kharis.org', true, 'Grace', 'Okafor', '33333333-3333-3333-3333-333333333333');
+    INSERT INTO members (id, email, email_verified, first_name, last_name, home_branch_id, approval_status) VALUES
+      ('44444444-4444-4444-4444-444444444444', 'pending@kharis.org', true, 'Pat', 'Pending', '33333333-3333-3333-3333-333333333333', 'pending');
   `);
   const { readFileSync } = await import('node:fs');
   const { resolve } = await import('node:path');
@@ -346,6 +349,40 @@ describe('authorization code flow', () => {
     const { challenge } = await pkcePair();
     const res = await call('GET', `/authorize/context?${new URLSearchParams(authorizeQuery(client, challenge))}`, { token: await firstPartyToken(MEMBER_ID, 'member') });
     expect(res.body.data).toMatchObject({ status: 'error', error: 'invalid_client', redirectTo: null });
+  });
+});
+
+describe('who may authorise', () => {
+  it('refuses a signed-in member who is still awaiting approval', async () => {
+    const client = await registerClient();
+    const { challenge } = await pkcePair();
+    const res = await call('POST', '/authorize/decision', {
+      token: await firstPartyToken('44444444-4444-4444-4444-444444444444', 'member'),
+      json: { ...authorizeQuery(client, challenge), approve: true },
+    });
+    expect(res.body.data.status).toBe('error');
+    expect(res.body.data.error).toBe('access_denied');
+  });
+
+  it('stops serving a member who is deactivated after authorising', async () => {
+    const client = await registerClient();
+    const { verifier, challenge } = await pkcePair();
+    const { code } = await authorizeAs(MEMBER_ID, client, challenge);
+    const tok = await call('POST', '/token', {
+      basic: basicOf(client),
+      form: { grant_type: 'authorization_code', code, redirect_uri: REDIRECT, code_verifier: verifier },
+    });
+    const { db } = await import('../db');
+    const { members } = await import('@kairos/database');
+    const { eq } = await import('drizzle-orm');
+    await db.update(members).set({ isActive: false }).where(eq(members.id, MEMBER_ID));
+    expect((await call('GET', '/userinfo', { token: tok.body.access_token })).status).toBe(401);
+    expect((await call('POST', '/token', {
+      basic: basicOf(client),
+      form: { grant_type: 'refresh_token', refresh_token: tok.body.refresh_token },
+    })).body.error).toBe('invalid_grant');
+    // Restore for the tests that follow.
+    await db.update(members).set({ isActive: true }).where(eq(members.id, MEMBER_ID));
   });
 });
 

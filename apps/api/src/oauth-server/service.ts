@@ -185,10 +185,12 @@ export async function decideAuthorization(
     };
   }
 
+  // Signed in is not the same as approved: a member still awaiting approval
+  // must not be able to hand their identity to another application.
   const [member] = await db
     .select({ id: members.id })
     .from(members)
-    .where(and(eq(members.id, memberId), eq(members.isActive, true)))
+    .where(and(eq(members.id, memberId), eq(members.isActive, true), eq(members.approvalStatus, 'approved')))
     .limit(1);
   if (!member) throw new AuthorizeError('access_denied', 'This account cannot authorise applications.', true);
 
@@ -289,6 +291,11 @@ export interface TokenOutcome {
   grantType: 'authorization_code' | 'refresh_token';
 }
 
+/** A member who may act through OAuth: active AND approved. */
+function isUsable(member: { isActive: boolean; approvalStatus: string } | null): boolean {
+  return !!member && member.isActive && member.approvalStatus === 'approved';
+}
+
 async function loadMember(db: Database, memberId: string) {
   const [member] = await db
     .select({
@@ -299,6 +306,7 @@ async function loadMember(db: Database, memberId: string) {
       lastName: members.lastName,
       homeBranchId: members.homeBranchId,
       isActive: members.isActive,
+      approvalStatus: members.approvalStatus,
     })
     .from(members)
     .where(eq(members.id, memberId))
@@ -373,7 +381,7 @@ export async function exchangeAuthorizationCode(
   }
 
   const member = await loadMember(db, row.grant.memberId);
-  if (!member || !member.isActive) throw invalid();
+  if (!member || !isUsable(member)) throw invalid();
 
   const scopes = row.code.scopes;
   const [accessToken, refreshToken] = await Promise.all([
@@ -444,7 +452,7 @@ export async function exchangeRefreshToken(
   }
 
   const member = await loadMember(db, row.grant.memberId);
-  if (!member || !member.isActive) throw invalid();
+  if (!member || !isUsable(member)) throw invalid();
 
   // Atomic rotation: only one concurrent refresh may win.
   const claimed = await db
@@ -520,7 +528,7 @@ export async function getUserInfo(
   if (!grant) throw new OAuthError('invalid_token', 'The access token has been revoked.', 401);
 
   const member = await loadMember(db, verified.memberId);
-  if (!member || !member.isActive) {
+  if (!member || !isUsable(member)) {
     throw new OAuthError('invalid_token', 'The account is no longer active.', 401);
   }
 
