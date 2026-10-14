@@ -22,6 +22,12 @@ import json
 import re
 import sys
 
+
+def _ns_list(ns):
+    """The namespace list for useTranslation, without a duplicate 'common'."""
+    return f"['{ns}']" if ns == 'common' else f"['{ns}', 'common']"
+
+
 PROPS = ('label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle'
          '|heading|helper|hint|emptyText|emptyLabel|confirmLabel|cancelLabel|submitLabel')
 FIELDS = ('title|message|label|subtitle|placeholder|confirmLabel|cancelLabel'
@@ -168,7 +174,9 @@ def main():
             body = src[start:end]
             if ("t('" in body or 't(`' in body) and 'useTranslation(' not in body:
                 src = (src[:start]
-                       + f"  const {{ t }} = useTranslation(['{ns}', 'common']);\n"
+                       # 'common' is the fallback namespace, so listing it
+                       # twice for a file that already lives in it is noise.
+                       + f"  const {{ t }} = useTranslation({_ns_list(ns)});\n"
                        + src[start:])
         open(path, 'w').write(src)
 

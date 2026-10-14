@@ -121,7 +121,7 @@ function BranchScopePicker({
 }: {
   adminBranchIds: string[];
   allBranches: Array<{ id: string; branchName: string }>;
-}) {  const { t } = useTranslation(['common', 'common']);
+}) {  const { t } = useTranslation(['common']);
 
   const scope = useAuthStore((s) => s.scope);
   const setScope = useAuthStore((s) => s.setScope);
@@ -151,7 +151,7 @@ function BranchScopePicker({
 
 // ── Page ───────────────────────────────────────────────────
 
-export default function DashboardPage() {  const { t } = useTranslation(['common', 'common']);
+export default function DashboardPage() {  const { t, i18n } = useTranslation(['common']);
 
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -169,7 +169,10 @@ export default function DashboardPage() {  const { t } = useTranslation(['common
     day: 'numeric',
     month: 'long',
   });
-  const verse = resolveVerse('en');
+  // Follow the reader's language. resolveVerse carries a real Bible version
+  // per language and reports when it had to fall back, so the card can say so
+  // rather than presenting English as though it were the reader's language.
+  const verse = resolveVerse(i18n.language);
 
   const bsaIds = leadership.data?.branchSystemAdminBranchIds ?? [];
   const bdaIds = leadership.data?.branchDataAdminBranchIds ?? [];
@@ -314,6 +317,7 @@ export default function DashboardPage() {  const { t } = useTranslation(['common
         </p>
         <p className="text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">
           — {verse.ref} ({verse.version})
+          {verse.fellBackToEnglish ? ` · ${t('common:verseInEnglish')}` : ''}
         </p>
       </div>
     </div>

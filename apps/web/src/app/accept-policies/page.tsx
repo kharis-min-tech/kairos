@@ -40,7 +40,7 @@ const STANDALONE_HREF: Record<ConsentType, string> = {
   [ConsentType.AdminConfidentiality]: '/legal/confidentiality',
 };
 
-export default function AcceptPoliciesPage() {  const { t } = useTranslation(['common', 'common']);
+export default function AcceptPoliciesPage() {  const { t } = useTranslation(['common']);
 
   const router = useRouter();
   const queryClient = useQueryClient();

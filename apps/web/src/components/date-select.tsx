@@ -85,7 +85,7 @@ export function DateSelect({
   disabled = false,
   id,
   className,
-}: DateSelectProps) {  const { t } = useTranslation(['common', 'common']);
+}: DateSelectProps) {  const { t } = useTranslation(['common']);
 
   const effectiveMinDate = minDate ?? (minYear ? `${minYear}-01-01` : undefined);
   const effectiveMaxDate = maxDate ?? (maxYear ? `${maxYear}-12-31` : undefined);

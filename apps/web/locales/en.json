@@ -132,7 +132,8 @@
     "clear": "Clear",
     "uploading": "Uploading…",
     "noImage": "No image",
-    "startingCamera": "Starting camera…"
+    "startingCamera": "Starting camera…",
+    "verseInEnglish": "Shown in English"
   },
   "nav": {
     "sections": {

@@ -79,7 +79,7 @@ export function ImageUpload({
   variant = 'card',
   triggerLabel,
   className = '',
-}: ImageUploadProps) {  const { t } = useTranslation(['common', 'common']);
+}: ImageUploadProps) {  const { t } = useTranslation(['common']);
 
   const mint = useMintUploadUrl();
   const fileInputRef = useRef<HTMLInputElement>(null);

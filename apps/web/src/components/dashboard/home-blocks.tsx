@@ -205,7 +205,7 @@ export function AgendaBlock({
  * Things waiting on the caller. Web had no equivalent — approvals were a stat
  * card you had to notice and concerns lived on their own page.
  */
-export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {  const { t } = useTranslation(['common', 'common']);
+export function NeedsYouBlock({ items }: { items: HomeTaskItem[] }) {  const { t } = useTranslation(['common']);
 
   if (items.length === 0) return null;
   const total = items.reduce((sum, i) => sum + i.count, 0);
@@ -296,7 +296,7 @@ export function GroupsBlock({
 }
 
 /** Replaces an empty agenda for a brand-new member. */
-export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[] }) {  const { t } = useTranslation(['common', 'common']);
+export function GettingStartedBlock({ items }: { items: HomeGettingStartedItem[] }) {  const { t } = useTranslation(['common']);
 
   if (items.length === 0) return null;
 
@@ -355,7 +355,7 @@ function whenLabel(iso: string): string {
 }
 
 /** What has already happened, newest first. Empty at personal altitude. */
-export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {  const { t } = useTranslation(['common', 'common']);
+export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) {  const { t } = useTranslation(['common']);
 
   return (
     <section>
@@ -393,7 +393,7 @@ export function RecentActivityBlock({ items }: { items: HomeActivityItem[] }) { 
 }
 
 /** The only number a plain member gets, and it's about them. */
-export function StreakBlock({ weeks }: { weeks: number }) {  const { t } = useTranslation(['common', 'common']);
+export function StreakBlock({ weeks }: { weeks: number }) {  const { t } = useTranslation(['common']);
 
   return (
     <section>

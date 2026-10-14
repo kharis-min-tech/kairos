@@ -23,7 +23,7 @@ export function QrScannerModal({
   onScan: (payload: string) => void;
   title: string;
   description?: string;
-}) {  const { t } = useTranslation(['common', 'common']);
+}) {  const { t } = useTranslation(['common']);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);

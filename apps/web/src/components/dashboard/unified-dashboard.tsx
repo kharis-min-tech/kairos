@@ -113,7 +113,7 @@ export function UnifiedDashboard({
   onProgramChange,
   programs = [],
   isRefreshing,
-}: UnifiedDashboardProps) {  const { t } = useTranslation(['common', 'common']);
+}: UnifiedDashboardProps) {  const { t } = useTranslation(['common']);
 
   const router = useRouter();
   const [selectedSouls, setSelectedSouls] = useState<DashboardSoul[]>([]);
