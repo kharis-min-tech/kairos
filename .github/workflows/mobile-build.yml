@@ -1,0 +1,53 @@
+name: Mobile build
+
+# Manual. Queues an EAS build and returns; EAS does the work and emails or
+# shows the result. Run it from the Actions tab and choose a platform and profile.
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform
+        type: choice
+        options: [android, ios, all]
+        default: android
+      profile:
+        description: EAS build profile (use preview-ios for iOS TestFlight)
+        type: choice
+        options: [preview, preview-ios, production]
+        default: preview
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Queue EAS build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      # The App ID has Sign in with Apple enabled, which Apple will not let EAS
+      # switch off once an app record exists. Leave the capabilities as set.
+      EXPO_NO_CAPABILITY_SYNC: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # app.config.ts imports workspace packages, so they must be built first.
+      - name: Build workspace packages
+        run: npx turbo build --filter=@kairos/mobile^...
+
+      - name: Queue the build
+        working-directory: apps/mobile
+        run: >
+          npx eas-cli@latest build
+          --platform ${{ inputs.platform }}
+          --profile ${{ inputs.profile }}
+          --non-interactive --no-wait

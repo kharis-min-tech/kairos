@@ -4,10 +4,12 @@ name: CI
 # build, lint, typecheck and test the whole monorepo, and prove the web app
 # builds for Cloudflare Pages. Deploy workflows depend on this one.
 
+# Pushes to `staging` are gated by deploy-staging.yml, which calls this
+# workflow, so listing `staging` here as well would run the gate twice.
 on:
   pull_request:
   push:
-    branches: [staging, main]
+    branches: [main]
   workflow_call:
 
 concurrency:

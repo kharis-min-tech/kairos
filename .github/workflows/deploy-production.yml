@@ -1,0 +1,97 @@
+name: Deploy production
+
+# Manual, from `main`, and held for approval: the `production` environment
+# requires a reviewer before the deploy job starts. Migration, Worker and web
+# go out together, in that order, so the web never runs ahead of the API.
+#
+# Prerequisite (one-off): in the Cloudflare Pages project, disable automatic
+# production deployments and create a deploy hook for the `main` branch.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Only from main
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "Production deploys run from main only (this run is on ${GITHUB_REF})." >&2
+            exit 1
+          fi
+
+  ci:
+    needs: guard
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Migrate, deploy the Worker, deploy the web
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PAGES_PROJECT: kairos
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build the Worker's dependencies
+        run: npx turbo build --filter=@kairos/api^...
+
+      - name: Migrations (preview)
+        run: npm run db:bootstrap --workspace=@kairos/database -- --dry-run
+
+      - name: Migrations (apply)
+        run: npm run db:bootstrap --workspace=@kairos/database
+
+      - name: Deploy the Worker
+        working-directory: apps/api
+        run: npx wrangler deploy
+
+      # Cloudflare builds `main` itself, with the environment variables set in
+      # the Pages project. Trigger it, then wait, so a failed web build fails
+      # this run instead of passing silently.
+      - name: Deploy the web (Pages deploy hook)
+        env:
+          PAGES_DEPLOY_HOOK_URL: ${{ secrets.PAGES_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          response=$(curl -fsS -X POST "$PAGES_DEPLOY_HOOK_URL")
+          id=$(echo "$response" | jq -r '.result.id')
+          if [ -z "$id" ] || [ "$id" = "null" ]; then
+            echo "The deploy hook did not return a deployment id." >&2
+            exit 1
+          fi
+          echo "Pages deployment: $id"
+          for i in $(seq 1 90); do
+            status=$(curl -fsS \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PAGES_PROJECT/deployments/$id" \
+              | jq -r '.result.latest_stage | "\(.name):\(.status)"')
+            echo "[$i] $status"
+            case "$status" in
+              deploy:success) exit 0 ;;
+              *:failure|*:canceled) echo "Pages build failed." >&2; exit 1 ;;
+            esac
+            sleep 20
+          done
+          echo "Timed out waiting for the Pages build." >&2
+          exit 1
