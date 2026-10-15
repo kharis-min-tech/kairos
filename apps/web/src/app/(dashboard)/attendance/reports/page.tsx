@@ -267,10 +267,10 @@ export default function AttendanceReportsPage() {  const { t } = useTranslation(
           <CardHeader>
             <CardTitle className="text-base">{t('reports:attendanceByBranch')}</CardTitle>
             <CardDescription>
-              Distinct members who attended at least one service in the last
-              4 weeks. Rate = distinct attendees ÷ <span className="font-medium">{t('reports:engagedMembers')}</span> (attended in the last {engagedWindow} months) —
-              the honest denominator; the roll count is shown alongside for
-              context.
+              {t('reports:attendanceByBranchCaption', {
+                denominator: t('reports:engagedMembers'),
+                months: engagedWindow,
+              })}
             </CardDescription>
           </CardHeader>
           <CardContent>

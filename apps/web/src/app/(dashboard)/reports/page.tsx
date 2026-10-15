@@ -29,6 +29,7 @@ import {
   Line,
 } from 'recharts';
 import { useTranslation } from 'react-i18next';
+import { keySlug } from '@/lib/localise-options';
 
 const DEFAULT_STATUS_COLORS: Record<string, string> = {
   New: '#5D3FD3',
@@ -165,6 +166,11 @@ function MemberTopFellowships({ memberData }: { memberData: MemberDashboardStats
 }
 
 function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common']);
+  // Recharts draws axis ticks as SVG <text> and tooltips into a portal, so a
+  // status that is fine everywhere else in the page still reads English in
+  // the chart unless a formatter translates it on the way in.
+  const soulStatusLabel = (status: string) =>
+    t(`souls:statusShort_${keySlug(status)}`, { defaultValue: status });
 
   const user = useAuthStore((s) => s.user);
   const memberId = user?.id;
@@ -218,7 +224,7 @@ function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common'])
         </button>
         {showColorPicker && (
           <button onClick={() => setStatusColors(DEFAULT_STATUS_COLORS)} className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Default (all purple)
+            {t('reports:defaultAllPurple')}
           </button>
         )}
         {showColorPicker && (
@@ -233,7 +239,7 @@ function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common'])
               {Object.keys(statusColors).map((status) => (
                 <div key={status} className="flex items-center gap-2">
                   <input type="color" value={statusColors[status]} onChange={(e) => setStatusColors(prev => ({ ...prev, [status]: e.target.value }))} className="h-7 w-7 rounded border border-border cursor-pointer" />
-                  <span className="text-xs text-foreground">{status}</span>
+                  <span className="text-xs text-foreground">{soulStatusLabel(status)}</span>
                 </div>
               ))}
             </div>
@@ -256,7 +262,9 @@ function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common'])
               </div>
             </div>
             <p className="mt-1 text-3xl font-bold tracking-tight text-primary">{converted.length}</p>
-            {converted.length > 0 && <p className="mt-1 text-xs text-emerald-600">↗ {conversionRate}% conversion</p>}
+            {converted.length > 0 && <p className="mt-1 text-xs text-emerald-600">
+              ↗ {t('reports:percentConversion', { rate: conversionRate })}
+            </p>}
           </CardContent>
         </Card>
         <Card className="cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all" onClick={() => setEvidenceFilter(evidenceFilter === 'active' ? null : 'active')}>
@@ -354,8 +362,8 @@ function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common'])
                 <BarChart data={myFunnelData} barSize={28} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="status" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={100} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                  <YAxis type="category" dataKey="status" tickFormatter={soulStatusLabel} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={100} axisLine={false} tickLine={false} />
+                  <Tooltip labelFormatter={(label) => soulStatusLabel(String(label))} formatter={(v) => [v as number, t('reports:soulsCountLabel')]} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                     {myFunnelData.map((entry) => (
                       <Cell key={entry.status} fill={statusColors[entry.status] ?? '#5D3FD3'} />
@@ -440,6 +448,11 @@ function MemberSoulsTab() {  const { t } = useTranslation(['reports', 'common'])
 // behaviour of /reports prior to Phase 6.
 
 function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  const { t } = useTranslation(['reports', 'common']);
+  // Recharts draws axis ticks as SVG <text> and tooltips into a portal, so a
+  // status that is fine everywhere else in the page still reads English in
+  // the chart unless a formatter translates it on the way in.
+  const soulStatusLabel = (status: string) =>
+    t(`souls:statusShort_${keySlug(status)}`, { defaultValue: status });
 
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [statusColors, setStatusColorsRaw] = useState<Record<string, string>>(() => {
@@ -598,7 +611,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
           title={t('reports:soulsReached')}
           value={totalSouls}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" /></svg>}
-          trend={effectiveOutreachAnalytics ? { direction: effectiveOutreachAnalytics.overview.conversionRate > 0 ? 'up' : 'flat', label: `${effectiveOutreachAnalytics.overview.conversionRate}% conversion` } : undefined}
+          trend={effectiveOutreachAnalytics ? { direction: effectiveOutreachAnalytics.overview.conversionRate > 0 ? 'up' : 'flat', label: t('reports:percentConversion', { rate: effectiveOutreachAnalytics.overview.conversionRate }) } : undefined}
         />
         <ReportStatCard
           title={t('reports:growthMonths')}
@@ -672,7 +685,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} unit="%" axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(v) => [`${v}%`, 'Rate']} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                    <Tooltip formatter={(v) => [`${v}%`, t('reports:rateSeries')]} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                     <Area type="monotone" dataKey="rate" stroke="#5D3FD3" strokeWidth={2} fill="url(#attendanceGrad)" dot={{ fill: '#5D3FD3', r: 3 }} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -735,7 +748,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} domain={[0, 100]} unit="%" axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(v) => [`${v}%`, 'Rate']} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                    <Tooltip formatter={(v) => [`${v}%`, t('reports:rateSeries')]} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                     <Area type="monotone" dataKey="rate" stroke="#5D3FD3" strokeWidth={2} fill="url(#myAttendanceGrad)" dot={{ fill: '#5D3FD3', r: 3 }} />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -811,7 +824,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
-                    <Line type="monotone" dataKey="total" stroke="#a78bfa" strokeWidth={1.5} dot={{ fill: '#a78bfa', r: 3.5, strokeWidth: 2, stroke: '#7c3aed' }} />
+                    <Line type="monotone" dataKey="total" name={t('reports:totalSeries')} stroke="#a78bfa" strokeWidth={1.5} dot={{ fill: '#a78bfa', r: 3.5, strokeWidth: 2, stroke: '#7c3aed' }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -833,7 +846,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                       <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
                       <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
-                      <Bar dataKey="newSignups" name="New Members" fill="#7c3aed" radius={[4, 4, 0, 0]} opacity={0.85} />
+                      <Bar dataKey="newSignups" name={t('reports:newMembers')} fill="#7c3aed" radius={[4, 4, 0, 0]} opacity={0.85} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -887,7 +900,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                 onClick={() => setStatusColors(DEFAULT_STATUS_COLORS)}
                 className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Default (all purple)
+                {t('reports:defaultAllPurple')}
               </button>
             )}
             {showColorPicker && (
@@ -910,7 +923,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                         onChange={(e) => setStatusColors(prev => ({ ...prev, [status]: e.target.value }))}
                         className="h-7 w-7 rounded border border-border cursor-pointer"
                       />
-                      <span className="text-xs text-foreground">{status}</span>
+                      <span className="text-xs text-foreground">{soulStatusLabel(status)}</span>
                     </div>
                   ))}
                 </div>
@@ -974,8 +987,8 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
                     <BarChart data={funnelData} barSize={32} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} allowDecimals={false} axisLine={false} tickLine={false} />
-                      <YAxis type="category" dataKey="status" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={100} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
+                      <YAxis type="category" dataKey="status" tickFormatter={soulStatusLabel} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={100} axisLine={false} tickLine={false} />
+                      <Tooltip labelFormatter={(label) => soulStatusLabel(String(label))} formatter={(v) => [v as number, t('reports:soulsCountLabel')]} contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                         {funnelData.map((entry) => (
                           <Cell key={entry.status} fill={statusColors[entry.status] ?? '#5D3FD3'} />
@@ -1181,7 +1194,7 @@ function FellowshipReportPanel({ fellowshipId, fellowshipName }: { fellowshipId:
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
-                <Bar dataKey="count" name="Meetings" fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
+                <Bar dataKey="count" name={t('reports:meetingsSeries')} fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -1421,7 +1434,7 @@ function DepartmentReportPanel({ branchDeptId, departmentName }: { branchDeptId:
                 <XAxis dataKey="week" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => v.slice(5)} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: '#1a1c1c', border: '1px solid #333', borderRadius: '0.5rem', color: '#fff' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
-                <Bar dataKey="attendees" name="Attendees" fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
+                <Bar dataKey="attendees" name={t('reports:attendeesSeries')} fill="#5D3FD3" radius={[4, 4, 0, 0]} opacity={0.9} />
               </BarChart>
             </ResponsiveContainer>
           )}

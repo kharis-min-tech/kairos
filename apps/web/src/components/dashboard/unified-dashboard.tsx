@@ -467,6 +467,7 @@ export function UnifiedDashboard({
                 <Tooltip cursor={{ fill: axisColor, fillOpacity: 0.06 }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
                 <Bar 
                   dataKey="count" 
+                  name={t('common:soulsSeries')}
                   fill={COLORS.PURPLE}
                   radius={[4, 4, 0, 0]}
                   maxBarSize={36}
@@ -580,6 +581,7 @@ export function UnifiedDashboard({
                 <Tooltip cursor={{ fill: axisColor, fillOpacity: 0.06 }} contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 4 }} />
                 <Bar 
                   dataKey="count" 
+                  name={t('common:soulsSeries')}
                   fill={COLORS.PURPLE}
                   radius={[0, 4, 4, 0]}
                   maxBarSize={28}
