@@ -389,7 +389,7 @@ function OutfitSheet({
     } catch (e) {
       alert.info(
         'Upload failed',
-        e instanceof Error ? e.message : 'Please try again.',
+        e instanceof Error ? e.message : t('departments:pleaseTryAgain'),
       );
     } finally {
       setUploading(false);
@@ -420,7 +420,7 @@ function OutfitSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   return (
@@ -546,7 +546,7 @@ function AssignSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not assign', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not assign', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   return (

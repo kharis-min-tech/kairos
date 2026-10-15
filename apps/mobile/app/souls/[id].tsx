@@ -141,7 +141,7 @@ export default function SoulDetail() {  const { t } = useTranslation(['souls', '
       onError: (err) =>
         alert.info(
           'Update failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('souls:pleaseTryAgain'),
         ),
     });
   }
@@ -162,7 +162,7 @@ export default function SoulDetail() {  const { t } = useTranslation(['souls', '
       onError: (err) =>
         alert.info(
           'Convert failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('souls:pleaseTryAgain'),
         ),
     });
   }

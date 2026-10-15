@@ -12,12 +12,15 @@ export const STATUS_META: Record<
   FormSubmissionStatus,
   { label: string; className: string }
 > = {
+  // i18n-ignore(4): see the note on STATUS_OPTIONS below.
   new: { label: 'New', className: 'bg-[#5D3FD3]/10 text-[#5D3FD3] border border-[#5D3FD3]/30' },
   reviewed: { label: 'Reviewed', className: 'bg-[#f8b537]/10 text-[#9a6b04] dark:text-[#f8b537] border border-[#f8b537]/30' },
   converted: { label: 'Converted', className: 'bg-[#16A34A]/10 text-[#16A34A] border border-[#16A34A]/30' },
   dismissed: { label: 'Dismissed', className: 'bg-slate-400/10 text-slate-500 border border-slate-400/30' },
 };
 
+// i18n-ignore(7): the English source; `forms:submissionStatus_<value>` holds
+// the display text and `localiseOptions` swaps it in at the render site.
 export const STATUS_OPTIONS: { value: FormSubmissionStatus; label: string }[] = [
   { value: 'new', label: 'New' },
   { value: 'reviewed', label: 'Reviewed' },

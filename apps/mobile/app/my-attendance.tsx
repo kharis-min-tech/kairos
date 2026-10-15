@@ -134,10 +134,13 @@ export default function MyAttendance() {  const { t } = useTranslation(['common'
               end={{ x: 1, y: 1 }}
               style={styles.heroCard}
             >
-              <Text style={styles.heroEyebrow}>YOUR RATE · LAST {s.windowWeeks} WEEKS</Text>
+              <Text style={styles.heroEyebrow}>{t('attendance:yourRateLastWeeks', { count: s.windowWeeks })}</Text>
               <Text style={styles.heroBig}>{formatPct(s.rate)}</Text>
               <Text style={styles.heroSub}>
-                {s.attendedCount} of {s.servicesInWindow} services
+                {t('attendance:attendedOfServices', {
+                  attended: s.attendedCount,
+                  services: s.servicesInWindow,
+                })}
               </Text>
               <View style={styles.streakRow}>
                 <View style={styles.streakIconTile}>

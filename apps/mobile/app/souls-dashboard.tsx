@@ -122,7 +122,7 @@ export default function SoulsDashboard() {  const { t } = useTranslation(['souls
                 <View style={{ flex: 1 }}>
                   <Text style={styles.headlineNum}>{total}</Text>
                   <Text style={styles.headlineLabel}>
-                    total soul{total === 1 ? '' : 's'} in the pipeline
+                    {t('souls:totalInPipeline', { count: total })}
                   </Text>
                 </View>
               </View>

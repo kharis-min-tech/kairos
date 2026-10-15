@@ -83,7 +83,7 @@ export default function OAuthCallbackScreen() {
         setError(
           err instanceof Error
             ? err.message
-            : 'Signed in but could not load your profile.',
+            : t('auth:signedInButCouldNotLoad'),
         );
       }
     })();

@@ -524,8 +524,10 @@ function SummaryTile({
         <View style={{ flex: 1 }}>
           <Text style={styles.headlineNumber}>{rate}</Text>
           <Text style={styles.headlineSub}>
-            {summary.rate.distinctAttendees.toLocaleString()} of{' '}
-            {summary.rate.activeMembers.toLocaleString()} members
+            {t('reports:ofActiveMembers', {
+              attendees: summary.rate.distinctAttendees.toLocaleString(),
+              members: summary.rate.activeMembers.toLocaleString(),
+            })}
           </Text>
         </View>
         <View style={styles.miniStats}>
@@ -599,7 +601,9 @@ function TrendsCard({
                 <View style={{ flex: 1 }}>
                   <Text style={styles.headlineNumber}>{latest.attendees.toLocaleString()}</Text>
                   <Text style={styles.headlineSub}>
-                    check-ins · {latest.distinctAttendees.toLocaleString()} distinct members
+                    {t('reports:checkInsDistinctMembers', {
+                      members: latest.distinctAttendees.toLocaleString(),
+                    })}
                   </Text>
                 </View>
                 {priorAvg > 0 ? (
@@ -833,8 +837,11 @@ function FrequencyBucketsCard({
   return (
     <Card padding="md" style={{ gap: spacing.sm }}>
       <Text style={styles.subMeta}>
-        {data.engagedMembers.toLocaleString()} engaged members ·{' '}
-        {data.servicesConsidered} services in the last {data.windowMonths} months
+        {t('reports:engagedMembersWindow', {
+          members: data.engagedMembers.toLocaleString(),
+          services: data.servicesConsidered,
+          months: data.windowMonths,
+        })}
       </Text>
       {BUCKET_ORDER.map((key) => {
         const b = bucketByKey.get(key);

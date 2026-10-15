@@ -22,7 +22,7 @@ import {
 } from '@/hooks/use-new-believers';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { formatShortDate } from '@kairos/core';
-import { STAGES, SESSION_STAGE_VALUES, getNextStage } from './stage-config';
+import { STAGES, SESSION_STAGE_VALUES, getNextStage, stageLabel } from './stage-config';
 import type { EnrollmentDetail } from './types';
 import {
   NB_REMOVAL_REASONS,
@@ -257,7 +257,7 @@ export function EnrollmentDetailDrawer({
                       className="flex items-center justify-between text-sm"
                     >
                       <div>
-                        <p className="font-medium">{a.topic ?? 'Session'}</p>
+                        <p className="font-medium">{a.topic ?? t('newBelievers:sessionGeneric')}</p>
                         <p className="text-xs text-muted-foreground">
                           {formatShortDate(a.sessionDate)}
                         </p>
@@ -300,7 +300,7 @@ export function EnrollmentDetailDrawer({
                     disabled={updateEnrollment.isPending}
                     className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
                   >
-                    Advance to {nextStage.label}
+                    {t('newBelievers:advanceToStage', { stage: stageLabel(t, nextStage) })}
                   </Button>
                 )}
               </div>

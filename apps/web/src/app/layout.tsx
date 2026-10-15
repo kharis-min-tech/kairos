@@ -6,18 +6,24 @@ import { Providers } from '@/components/providers';
 import { Toaster } from 'sonner';
 import { cookies } from 'next/headers';
 import { LANGUAGE_COOKIE, asLanguage } from '@/lib/language';
+import { serverTranslator } from '@/lib/server-translate';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
-export const metadata: Metadata = {
-  title: 'Kairos: Church Administration',
-  description: 'Multi-branch church administration platform',
-  icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
-  },
-};
+// The tab title is as user-facing as the page, and it is declared in a server
+// component, so it goes through the server-side lookup rather than the hook.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await serverTranslator();
+  return {
+    title: t('common:metaTitle', 'Kairos: Church Administration'),
+    description: t('common:metaDescription', 'Multi-branch church administration platform'),
+    icons: {
+      icon: '/logo.png',
+      apple: '/logo.png',
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

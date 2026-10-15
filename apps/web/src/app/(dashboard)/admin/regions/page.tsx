@@ -87,7 +87,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
   async function handleDelete(region: Region) {
     const ok = await confirm({
       title: t('admin:deleteV1V2', { v1: region.regionName, v2: region.country }),
-      description: 'This region has no branches attached, so it can be safely removed. This cannot be undone.',
+      description: t('admin:thisRegionHasNoBranchesAttached'),
       confirmLabel: t('admin:delete'),
       variant: 'destructive',
     });
@@ -96,7 +96,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
       await deleteRegion.mutateAsync(region.id);
       toast.success(t('admin:regionDeleted'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete region.');
+      toast.error(err instanceof Error ? err.message : t('admin:failedToDeleteRegion'));
     }
   }
 
@@ -193,7 +193,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
             const branchCount = region.branchCount ?? 0;
             const locked = branchCount > 0;
             const lockedTitle = locked
-              ? `${branchCount} branch${branchCount === 1 ? '' : 'es'} attached, so move them first`
+              ? t('admin:branchesAttachedMoveFirst', { count: branchCount })
               : undefined;
             return (
               <Card key={region.id} className="transition-all hover:shadow-md hover:-translate-y-0.5">
@@ -201,7 +201,7 @@ export default function RegionsPage() {  const { t } = useTranslation(['admin', 
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base leading-snug">{region.regionName}</CardTitle>
                     <span className="flex-shrink-0 rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-[#a78bfa]">
-                      {branchCount} branch{branchCount === 1 ? '' : 'es'}
+                      {t('admin:branchCount', { count: branchCount })}
                     </span>
                   </div>
                   <CardDescription>{region.country}</CardDescription>

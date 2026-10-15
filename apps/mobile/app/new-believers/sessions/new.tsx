@@ -29,7 +29,10 @@ import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
+// i18n-ignore(7): the English source; `newBelievers:stageOption_<value>`
+// holds the display text, swapped in at the render site.
 const STAGE_OPTIONS = [
   { value: 'session-1', label: 'Session 1 · Foundations of Faith' },
   { value: 'session-2', label: 'Session 2 · Who is a Christian' },
@@ -79,7 +82,9 @@ export default function CreateSession() {  const { t } = useTranslation(['newBel
     ? `${teacherName.firstName} ${teacherName.lastName}`
     : '';
 
-  const stageLabel = STAGE_OPTIONS.find((s) => s.value === stage)?.label ?? stage;
+  const stageLabel =
+    localiseOptions(t, 'newBelievers:stageOption_', STAGE_OPTIONS).find((s) => s.value === stage)
+      ?.label ?? stage;
 
   const create = useMutation({
     mutationFn: async () =>
@@ -98,7 +103,7 @@ export default function CreateSession() {  const { t } = useTranslation(['newBel
       router.replace(`/new-believers/sessions/${created.id}` as never);
     },
     onError: (e) =>
-      alert.info('Could not create session', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not create session', e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain')),
   });
 
   function validate() {
@@ -226,7 +231,7 @@ export default function CreateSession() {  const { t } = useTranslation(['newBel
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>{t('newBelievers:sessionStage')}</Text>
-            {STAGE_OPTIONS.map((opt) => {
+            {localiseOptions(t, 'newBelievers:stageOption_', STAGE_OPTIONS).map((opt) => {
               const active = opt.value === stage;
               return (
                 <Pressable

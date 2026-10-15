@@ -2,9 +2,10 @@
 
 import { Search } from 'lucide-react';
 import { Button, Input } from '@kairos/ui';
-import { STAGES } from './stage-config';
+import { STAGES, stageLabel } from './stage-config';
 import type { NewBelieverStageValue } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 export type EnrollmentSortOption = 'date-added' | 'name' | 'last-activity';
 
@@ -25,6 +26,8 @@ interface PipelineToolbarProps {
   onDeselectAll?: () => void;
 }
 
+// i18n-ignore(5): the English source; `newBelievers:sortBy_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const SORT_OPTIONS: { value: EnrollmentSortOption; label: string }[] = [
   { value: 'date-added', label: 'Date Added' },
   { value: 'name', label: 'Name' },
@@ -101,7 +104,7 @@ export function PipelineToolbar({
                 }`}
               >
                 <span className={`inline-block h-1.5 w-1.5 rounded-full flex-shrink-0 ${s.dotColor}`} aria-hidden />
-                {s.label}
+                {stageLabel(t, s)}
                 <span className={`${isActive ? 'opacity-60' : 'opacity-50'}`}>({count})</span>
               </button>
             );
@@ -111,7 +114,7 @@ export function PipelineToolbar({
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('newBelievers:sort')}</span>
           <div role="tablist" aria-label={t('newBelievers:sortEnrollmentsBy')} className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
-            {SORT_OPTIONS.map(({ value, label }) => {
+            {localiseOptions(t, 'newBelievers:sortBy_', SORT_OPTIONS).map(({ value, label }) => {
               const isActive = sortBy === value;
               return (
                 <button

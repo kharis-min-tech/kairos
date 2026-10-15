@@ -60,7 +60,7 @@ export default function BranchesPage() {  const { t } = useTranslation(['branche
         </div>
         {isAdmin && (
           <Link href="/admin/branches/new">
-            <Button size="sm">+ New Branch</Button>
+            <Button size="sm">+ {t('branches:newBranch')}</Button>
           </Link>
         )}
       </div>
@@ -121,7 +121,7 @@ export default function BranchesPage() {  const { t } = useTranslation(['branche
                           e.preventDefault();
                           const ok = await confirm({
                             title: t('branches:deactivateV1', { v1: branch.branchName }),
-                            description: 'The branch will be hidden from active lists. You can reactivate it later.',
+                            description: t('branches:theBranchWillBeHiddenFrom2'),
                             confirmLabel: t('branches:deactivate'),
                             variant: 'destructive',
                           });

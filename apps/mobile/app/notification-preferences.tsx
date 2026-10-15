@@ -31,9 +31,12 @@ import {
 } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions, localiseMeta } from '@/lib/localise-options';
 
 type SelectValue = 'off' | 'immediate' | 'digest_daily';
 
+// i18n-ignore(5): the English source; `settings:notifyCadence_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const OPTIONS: { value: SelectValue; label: string }[] = [
   { value: 'immediate', label: 'Now' },
   { value: 'digest_daily', label: 'Daily' },
@@ -133,7 +136,9 @@ export default function NotificationPreferences() {  const { t } = useTranslatio
                 >
                   <View style={styles.prefTitleLine}>
                     <Text style={styles.prefLabel}>
-                      {NOTIFICATION_CATEGORY_LABEL[category]}
+                      {t(`settings:notifyCategory_${category}`, {
+                        defaultValue: NOTIFICATION_CATEGORY_LABEL[category],
+                      })}
                     </Text>
                     {isSecurity ? (
                       <View style={styles.lockedBadge}>
@@ -143,11 +148,13 @@ export default function NotificationPreferences() {  const { t } = useTranslatio
                     ) : null}
                   </View>
                   <Text style={styles.prefDesc}>
-                    {NOTIFICATION_CATEGORY_DESCRIPTION[category]}
+                    {t(`settings:notifyCategoryDesc_${category}`, {
+                      defaultValue: NOTIFICATION_CATEGORY_DESCRIPTION[category],
+                    })}
                   </Text>
 
                   <View style={styles.segmentedControl}>
-                    {OPTIONS.map((opt) => {
+                    {localiseOptions(t, 'settings:notifyCadence_', OPTIONS).map((opt) => {
                       const selected = selectValue === opt.value;
                       const disabled = isSecurity || update.isPending;
                       return (

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, CustomSelect } from '@kairos/ui';
-import { STAGES, MAX_BULK_SELECT } from './stage-config';
+import { STAGES, MAX_BULK_SELECT, stageLabel } from './stage-config';
 import type { NewBelieverStageValue } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
 
@@ -51,7 +51,7 @@ export function BulkActionBar({
         <CustomSelect
           value={targetStage}
           onValueChange={(v) => onTargetStageChange(v as NewBelieverStageValue | '')}
-          options={STAGES.map((s) => ({ value: s.value, label: s.label }))}
+          options={STAGES.map((s) => ({ value: s.value, label: stageLabel(t, s) }))}
           placeholder={t('newBelievers:advanceTo')}
           className="w-44"
         />

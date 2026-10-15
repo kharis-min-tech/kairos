@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -29,16 +31,17 @@ import {
 import { stageTopic } from '../../_components/stage-config';
 import { useTranslation } from 'react-i18next';
 
-const createSessionFormSchema = z.object({
+const makeCreateSessionFormSchema = (t: (key: string) => string) =>
+  z.object({
   sessionStage: z.enum(['session-1', 'session-2', 'session-3', 'session-4']),
-  sessionDate: z.string().min(1, 'Choose a session date'),
-  sessionTime: z.string().regex(/^\d{2}:\d{2}$/, 'Choose a session time'),
-  location: z.string().trim().min(1, 'Enter a location').max(300, 'Location is too long'),
-  teacherId: z.string().min(1, 'Choose a teacher'),
-  feedback: z.string().max(2000, 'Notes are too long').optional(),
+  sessionDate: z.string().min(1, t('newBelievers:vChooseASessionDate')),
+  sessionTime: z.string().regex(/^\d{2}:\d{2}$/, t('newBelievers:vChooseASessionTime')),
+  location: z.string().trim().min(1, t('newBelievers:vEnterALocation')).max(300, t('newBelievers:vLocationIsTooLong')),
+  teacherId: z.string().min(1, t('newBelievers:vChooseATeacher')),
+  feedback: z.string().max(2000, t('newBelievers:vNotesAreTooLong')).optional(),
 });
 
-type CreateSessionFormValues = z.infer<typeof createSessionFormSchema>;
+type CreateSessionFormValues = z.infer<ReturnType<typeof makeCreateSessionFormSchema>>;
 
 function defaultValues(): CreateSessionFormValues {
   return {
@@ -62,6 +65,7 @@ export function CreateSessionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {  const { t } = useTranslation(['newBelievers', 'common']);
+  const createSessionFormSchema = useMemo(() => makeCreateSessionFormSchema(t), [t]);
 
   const createSession = useCreateSession();
   const form = useForm<CreateSessionFormValues>({

@@ -98,7 +98,7 @@ export default function MembershipScreen() {  const { t } = useTranslation(['mem
       alert.info('You are on the list', 'A membership admin will place you in a cohort.');
     },
     onError: (e: unknown) =>
-      alert.info('Could not join', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not join', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   const withdrawInterest = useMutation({
@@ -108,7 +108,7 @@ export default function MembershipScreen() {  const { t } = useTranslation(['mem
       alert.info('Removed', 'You are no longer on the list.');
     },
     onError: (e: unknown) =>
-      alert.info('Could not update', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not update', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   return (
@@ -218,7 +218,10 @@ export default function MembershipScreen() {  const { t } = useTranslation(['mem
                 <View style={styles.metaRow}>
                   <Users color={c.inkFaded} size={14} strokeWidth={1.5} />
                   <Text style={styles.metaText}>
-                    {co.enrolledCount} enrolled · {co.graduatedCount} graduated
+                    {t('membership:enrolledGraduated', {
+                      enrolled: co.enrolledCount,
+                      graduated: co.graduatedCount,
+                    })}
                   </Text>
                 </View>
                 <View style={styles.metaRow}>

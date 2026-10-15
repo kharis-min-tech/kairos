@@ -26,9 +26,12 @@ import { formatShortDate } from '@kairos/core';
 import type { MeApprovalItem } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions, localiseMeta } from '@/lib/localise-options';
 
 type FilterKind = 'all' | 'member_signup' | 'fellowship_join' | 'department_join';
 
+// i18n-ignore(8): the English source; `approvals:kind_<value>` holds the display
+// text and `localiseMeta` swaps it in at the render site.
 const KIND_META: Record<
   MeApprovalItem['kind'],
   { label: string; icon: typeof UserPlus; variant: 'primary' | 'gold' | 'info' }
@@ -38,6 +41,8 @@ const KIND_META: Record<
   department_join: { label: 'Department request', icon: Building2, variant: 'info' },
 };
 
+// i18n-ignore(6): the English source; `approvals:filter_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const FILTERS: { key: FilterKind; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'member_signup', label: 'Signups' },
@@ -102,7 +107,7 @@ export default function Approvals() {  const { t } = useTranslation(['common', '
         style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
-        {FILTERS.map((f) => (
+        {localiseOptions(t, 'approvals:filter_', FILTERS, (f) => f.key).map((f) => (
           <Pressable
             key={f.key}
             onPress={() => setFilter(f.key)}
@@ -158,7 +163,8 @@ function ApprovalRow({
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
-  const meta = KIND_META[item.kind];
+  const { t } = useTranslation(['approvals', 'common']);
+  const meta = localiseMeta(t, 'approvals:kind_', KIND_META, item.kind);
   const Icon = meta.icon;
   const contextLabel =
     item.kind === 'member_signup'

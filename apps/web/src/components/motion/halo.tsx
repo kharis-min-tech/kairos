@@ -29,6 +29,7 @@ export function Halo({
   baseClass?: string;
   className?: string;
 }) {
+
   const ref = useRef<HTMLSpanElement>(null);
   const spin = useRef<HTMLSpanElement>(null);
 

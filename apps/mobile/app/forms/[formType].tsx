@@ -59,8 +59,11 @@ import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { MemberPickerSheet, type PickedMember } from '@/components/member-picker-sheet';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 const CONSENT_POLICY_VERSION = '2026-06-v1';
+// i18n-ignore(4): the English source; `forms:yesNo_<value>` holds the
+// display text and `localiseOptions` swaps it in at the render site.
 const YES_NO = [
   { value: 'Yes', label: 'Yes' },
   { value: 'No', label: 'No' },
@@ -300,7 +303,7 @@ function DeclarativeForm({
       });
       setSubmitted(true);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setSubmitError(err instanceof Error ? err.message : t('forms:somethingWentWrongPleaseTryAgain'));
     }
   }
 
@@ -610,6 +613,7 @@ function FieldRenderer({
   errorKey: string;
   error: string | undefined;
 }) {
+  const { t } = useTranslation(['forms', 'common']);
   const styles = useThemedStyles(makeStyles);
   if (field.type === 'checkbox') {
     return (
@@ -680,7 +684,7 @@ function FieldRenderer({
         <FieldLabel label={field.label} required={field.required} />
         {field.helpText ? <Text style={styles.helpText}>{field.helpText}</Text> : null}
         <View style={styles.radioRow}>
-          {YES_NO.map((opt) => {
+          {localiseOptions(t, 'forms:yesNo_', YES_NO).map((opt) => {
             const selected = answered && value === (opt.value === 'Yes');
             return (
               <Pressable

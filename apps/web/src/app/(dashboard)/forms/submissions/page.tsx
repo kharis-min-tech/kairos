@@ -27,6 +27,7 @@ import { ReviewDrawer } from './_components/review-drawer';
 import { FORM_DEFINITIONS, FORM_TYPES, localiseFormDefinition } from '@kairos/types';
 import type { FormSubmission, FormType, FormSubmissionStatus } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 export default function SubmissionsPage() {  const { t } = useTranslation(['forms', 'common']);
 
@@ -135,7 +136,10 @@ export default function SubmissionsPage() {  const { t } = useTranslation(['form
               value={status}
               onValueChange={(v) => setStatus(v as FormSubmissionStatus | '')}
               placeholder={t('forms:allStatuses')}
-              options={[{ value: '', label: t('forms:allStatuses') }, ...STATUS_OPTIONS]}
+              options={[
+                  { value: '', label: t('forms:allStatuses') },
+                  ...localiseOptions(t, 'forms:submissionStatus_', STATUS_OPTIONS),
+                ]}
             />
           </div>
           <div className="space-y-1.5">
@@ -208,7 +212,9 @@ export default function SubmissionsPage() {  const { t } = useTranslation(['form
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusMeta.className}>{statusMeta.label}</Badge>
+                      <Badge className={statusMeta.className}>
+                        {t(`forms:submissionStatus_${s.status}`, { defaultValue: statusMeta.label })}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatShortDate(s.createdAt)}

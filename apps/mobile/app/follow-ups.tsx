@@ -35,6 +35,7 @@ import type { FollowupQueueRow, MeActivityItem, MeFollowupItem } from '@kairos/t
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions, localiseMeta } from '@/lib/localise-options';
 
 type FilterKind =
   | 'all'
@@ -43,6 +44,8 @@ type FilterKind =
   | 'department_followup'
   | 'mentor_enrollment';
 
+// i18n-ignore(9): the English source; `concerns:kind_<value>` holds the display
+// text and `localiseMeta` swaps it in at the render site.
 const KIND_META: Record<
   MeFollowupItem['kind'],
   { label: string; icon: typeof Handshake; variant: 'primary' | 'gold' | 'info' | 'success' }
@@ -53,6 +56,8 @@ const KIND_META: Record<
   mentor_enrollment: { label: 'Mentee', icon: Sparkles, variant: 'success' },
 };
 
+// i18n-ignore(7): the English source; `concerns:filter_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const FILTERS: { key: FilterKind; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'soul', label: 'Souls' },
@@ -265,7 +270,7 @@ export default function FollowUps() {  const { t } = useTranslation(['concerns',
             style={styles.chipsScroll}
             contentContainerStyle={styles.chipsRow}
           >
-            {FILTERS.map((f) => (
+            {localiseOptions(t, 'concerns:filter_', FILTERS, (f) => f.key).map((f) => (
               <Pressable
                 key={f.key}
                 onPress={() => setFilter(f.key)}
@@ -430,7 +435,8 @@ function FollowupRow({
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
-  const meta = KIND_META[item.kind];
+  const { t } = useTranslation(['concerns', 'common']);
+  const meta = localiseMeta(t, 'concerns:kind_', KIND_META, item.kind);
   const Icon = meta.icon;
   const contextLabel =
     item.kind === 'soul'

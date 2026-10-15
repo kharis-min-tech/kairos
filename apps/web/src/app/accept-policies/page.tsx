@@ -104,7 +104,7 @@ export default function AcceptPoliciesPage() {
       }
       router.replace('/dashboard');
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not record acceptance.');
+      setSubmitError(err instanceof Error ? err.message : t('common:couldNotRecordAcceptance'));
     } finally {
       setSubmitting(false);
     }

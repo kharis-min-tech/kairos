@@ -50,7 +50,7 @@ export default function ExportSettings() {  const { t } = useTranslation(['setti
         alert.info('Saved', `Export saved to app storage:\n${file.uri}`);
       }
     } catch (e) {
-      alert.info('Export failed', e instanceof Error ? e.message : 'Please try again.');
+      alert.info('Export failed', e instanceof Error ? e.message : t('settings:pleaseTryAgain'));
     } finally {
       setBusy(false);
     }

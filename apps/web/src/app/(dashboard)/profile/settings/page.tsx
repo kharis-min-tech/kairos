@@ -67,7 +67,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
         toast.success(t('settings:yourDataBeenDownloadedJson'));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not export your data. Try again shortly.');
+      toast.error(err instanceof Error ? err.message : t('settings:couldNotExportYourDataTry'));
     } finally {
       setExporting(null);
     }
@@ -97,7 +97,7 @@ export default function SettingsPage() {  const { t } = useTranslation(['setting
       logout();
       router.replace('/login?deleted=1');
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Delete failed. Please try again.');
+      setDeleteError(err instanceof Error ? err.message : t('settings:deleteFailedPleaseTryAgain'));
     }
   }
 

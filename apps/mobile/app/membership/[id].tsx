@@ -208,7 +208,7 @@ function Roster({
       alert.info('Recorded', 'The final test mark is saved.');
     },
     onError: (e: unknown) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   const withdraw = useMutation({
@@ -221,14 +221,14 @@ function Roster({
       alert.info('Updated', 'The enrolment has been closed.');
     },
     onError: (e: unknown) =>
-      alert.info('Could not withdraw', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not withdraw', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   async function confirmWithdraw(r: MembershipEnrollmentWithMember) {
     const ok = await alert.confirm({
       title: t('membership:withdrawV1', { v1: r.memberFirstName }),
       message:
-        'They come off this cohort and can be admitted to a later one. Their marks are kept. Use "deferred to next" if they intend to return.',
+        t('membership:theyComeOffThisCohortAnd'),
       confirmLabel: t('membership:withdraw'),
       destructive: true,
     });
@@ -420,7 +420,7 @@ function Register({
       alert.info('Register saved', `${res.saved} record(s) written.`);
     },
     onError: (e: unknown) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   function patch(id: string, next: Partial<{ attended: boolean; homework: string; quiz: string }>) {
@@ -546,7 +546,7 @@ function Graduation({
       );
     },
     onError: (e: unknown) =>
-      alert.info('Could not graduate', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not graduate', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   const induct = useMutation({
@@ -562,7 +562,7 @@ function Graduation({
       alert.info('Induction recorded', 'Attendance marked for the ceremony.');
     },
     onError: (e: unknown) =>
-      alert.info('Could not record', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not record', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   if (active.length === 0) {
@@ -580,7 +580,7 @@ function Graduation({
       <Card style={styles.card}>
         <View style={styles.metaRow}>
           <GraduationCap color={c.primary} size={16} strokeWidth={1.6} />
-          <Text style={styles.cardTitle}>{active.length} still enrolled</Text>
+          <Text style={styles.cardTitle}>{t('membership:stillEnrolledCount', { count: active.length })}</Text>
         </View>
         <Text style={styles.metaText}>{t('membership:graduatingChecksAllSixRequirementsPer')}</Text>
       </Card>

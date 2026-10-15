@@ -311,9 +311,11 @@ function TemplateRow({
             <Badge label={WEEKDAYS[template.weekday] ?? '?'} variant="primary" size="sm" />
           </View>
           <Text style={styles.templateMeta}>
-            {template.slotCount} role{template.slotCount === 1 ? '' : 's'} ·{' '}
-            {template.positionCount} position{template.positionCount === 1 ? '' : 's'} ·{' '}
-            {template.poolCount} in pool
+            {t('rota:templateSummary', {
+              roles: template.slotCount,
+              positions: template.positionCount,
+              pool: template.poolCount,
+            })}
           </Text>
           <Text style={styles.templateMetaFaded}>{last}</Text>
         </View>
@@ -432,8 +434,11 @@ function GenerateSheet({
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>{t('rota:generateRota')}</Text>
             <Text style={styles.sheetMeta}>
-              {template.name} · {template.slotCount} role
-              {template.slotCount === 1 ? '' : 's'} · {template.poolCount} in pool
+              {t('rota:templateNameSummary', {
+                name: template.name,
+                roles: template.slotCount,
+                pool: template.poolCount,
+              })}
             </Text>
             <Text style={styles.sheetHint}>{t('rota:autoAssignsMembersFromThePool')}</Text>
 

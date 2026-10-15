@@ -12,6 +12,7 @@ import type {
 import { useDebounced } from '@/hooks/use-debounced';
 import { RosterRow, type MarkState } from './roster-row';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 interface VisitorMark {
   key: string;
@@ -22,6 +23,8 @@ interface VisitorMark {
   arrivalTime?: string;
 }
 
+// i18n-ignore(5): the English source; `attendance:checkInStatus_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const STATUS_OPTIONS = [
   { value: ServiceAttendanceStatus.Present, label: 'Present' },
   { value: ServiceAttendanceStatus.Late, label: 'Late' },
@@ -101,7 +104,7 @@ export function CheckInPanel({ serviceId }: { serviceId: string }) {  const { t 
       const res = await record.mutateAsync({ entries });
       setSaved(res.recorded);
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Could not save attendance.');
+      setSaveError(e instanceof Error ? e.message : t('attendance:couldNotSaveAttendance'));
     }
   }
 
@@ -273,7 +276,7 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {  const { t
               id="visitor-status"
               value={status}
               onValueChange={(v) => setStatus(v as Status)}
-              options={STATUS_OPTIONS}
+              options={localiseOptions(t, 'attendance:checkInStatus_', STATUS_OPTIONS)}
             />
           </div>
         </div>

@@ -49,6 +49,7 @@ import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 type Tab = 'overdue' | 'all';
 
@@ -317,6 +318,8 @@ type InterestChoice = 'interested' | 'not_interested' | 'undecided';
 type VisitKindChoice = 'in_person' | 'virtual';
 type VisitOutcomeChoice = 'present' | 'not_present' | 'rescheduled';
 
+// i18n-ignore(6): the English source; `members:contactMethod_<value>` holds
+// the display text and `localiseOptions` swaps it in at the render site.
 const CONTACT_METHOD_OPTIONS: { value: FollowupMethod; label: string }[] = [
   { value: 'phone_call', label: 'Phone Call' },
   { value: 'text_message', label: 'Text' },
@@ -468,7 +471,7 @@ function CreateSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   function handleSave() {
@@ -527,7 +530,7 @@ function CreateSheet({
             <View style={{ gap: 4 }}>
               <Text style={styles.fieldLabel}>Methods (pick one or more)</Text>
               <View style={styles.chipRow}>
-                {CONTACT_METHOD_OPTIONS.map(({ value, label }) => {
+                {localiseOptions(t, 'members:contactMethod_', CONTACT_METHOD_OPTIONS).map(({ value, label }) => {
                   const active = methods.has(value);
                   return (
                     <Pressable

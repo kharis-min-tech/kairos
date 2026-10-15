@@ -67,7 +67,7 @@ export default function SelfCheckInPage() {  const { t } = useTranslation(['atte
       const r = await checkIn.mutateAsync(serviceId);
       setResult(r);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Check-in failed. Please try again.');
+      setError(e instanceof Error ? e.message : t('attendance:checkInFailedPleaseTryAgain'));
     }
   }
 
@@ -84,7 +84,7 @@ export default function SelfCheckInPage() {  const { t } = useTranslation(['atte
       const r = await checkInQr.mutateAsync(parsed);
       setResult(r);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Check-in failed. Please try again.');
+      setError(e instanceof Error ? e.message : t('attendance:checkInFailedPleaseTryAgain'));
     }
   }
 
@@ -187,7 +187,7 @@ export default function SelfCheckInPage() {  const { t } = useTranslation(['atte
               candidate={s}
               action={
                 <span className="text-sm text-muted-foreground">
-                  Opens in {s.minutesUntilOpen} min
+                  {t('attendance:opensInMinutes', { count: s.minutesUntilOpen })}
                 </span>
               }
               badge={<StateBadge kind="opens-soon" />}
@@ -225,7 +225,8 @@ function ServiceCard({
   candidate: SelfCheckInCandidate;
   action: React.ReactNode;
   badge: React.ReactNode;
-}) {
+}) {  const { t } = useTranslation(['attendance', 'common']);
+
   return (
     <Card>
       <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">

@@ -110,11 +110,15 @@ export default function LoginScreen() {
   // Last in the entrance order: after the card, the SSO buttons and every row.
   const footerEntrance = useEntrance(6 + armedUsers.length);
 
+  // 'Face ID' and 'Touch ID' are Apple's own names and stay as they are; the
+  // generic ones read as English words and get translated.
+  const capLabel = cap ? t(`auth:biometric_${cap.label}`, { defaultValue: cap.label }) : '';
+
   async function handleBiometricSignIn(user: ArmedUser) {
     if (!cap?.available || bioBusy) return;
     setBioBusy(user.id);
     setError(null);
-    const ok = await signInWithBiometric(user.id, cap.label);
+    const ok = await signInWithBiometric(user.id, capLabel);
     setBioBusy(null);
     if (ok) {
       router.replace('/(tabs)');
@@ -146,7 +150,7 @@ export default function LoginScreen() {
     if (await biometric.hasDeclined(user.id)) return;
 
     const accepted = await alert.confirm({
-      title: t('auth:signV1NextTime', { v1: cap.label }),
+      title: t('auth:signV1NextTime', { v1: capLabel }),
       message: t('auth:login.biometricBody'),
       confirmLabel: t('auth:login.enable'),
       cancelLabel: t('auth:login.notNow'),
@@ -385,7 +389,7 @@ export default function LoginScreen() {
                     name={user.displayName}
                     busy={bioBusy === user.id}
                     disabled={!!bioBusy}
-                    accessibilityLabel={t('auth:signV1V2', { v1: user.displayName, v2: cap!.label })}
+                    accessibilityLabel={t('auth:signV1V2', { v1: user.displayName, v2: capLabel })}
                     onAuthenticate={() => void handleBiometricSignIn(user)}
                     entranceIndex={6 + i}
                   />

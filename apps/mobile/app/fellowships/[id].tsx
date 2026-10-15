@@ -205,7 +205,7 @@ export default function FellowshipDetail() {  const { t } = useTranslation(['fel
       onError: (err) => {
         alert.info(
           'Remove failed',
-          err instanceof Error ? err.message : 'Please try again in a moment.',
+          err instanceof Error ? err.message : t('fellowships:pleaseTryAgainInAMoment'),
         );
       },
     });
@@ -539,7 +539,7 @@ export default function FellowshipDetail() {  const { t } = useTranslation(['fel
               onError: (err) => {
                 alert.info(
                   'Add failed',
-                  err instanceof Error ? err.message : 'Please try again in a moment.',
+                  err instanceof Error ? err.message : t('fellowships:pleaseTryAgainInAMoment'),
                 );
               },
             });

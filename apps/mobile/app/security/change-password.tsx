@@ -79,7 +79,7 @@ export default function ChangePassword() {  const { t } = useTranslation(['secur
       });
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not change password. Please try again.',
+        err instanceof Error ? err.message : t('security:couldNotChangePasswordPleaseTry'),
       );
     }
   }

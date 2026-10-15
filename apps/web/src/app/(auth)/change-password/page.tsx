@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,26 +12,28 @@ import { PasswordStrength } from '@/components/password-strength';
 import { KharisCardHeader } from '../kharis-logo';
 import { useTranslation } from 'react-i18next';
 
-const changePasswordSchema = z
+const makeChangePasswordSchema = (t: (key: string) => string) =>
+  z
   .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
+    currentPassword: z.string().min(1, t('auth:vCurrentPasswordIsRequired')),
     newPassword: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[a-z]/, 'Must contain a lowercase letter')
-      .regex(/[0-9]/, 'Must contain a number')
-      .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+      .min(8, t('auth:vPasswordMustBeAtLeastCharacters'))
+      .regex(/[A-Z]/, t('auth:vMustContainAnUppercaseLetter'))
+      .regex(/[a-z]/, t('auth:vMustContainALowercaseLetter'))
+      .regex(/[0-9]/, t('auth:vMustContainANumber'))
+      .regex(/[^A-Za-z0-9]/, t('auth:vMustContainASpecialCharacter')),
+    confirmPassword: z.string().min(1, t('auth:vPleaseConfirmYourPassword')),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: t('auth:vPasswordsDoNotMatch'),
     path: ['confirmPassword'],
   });
 
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+type ChangePasswordFormData = z.infer<ReturnType<typeof makeChangePasswordSchema>>;
 
 export default function ChangePasswordPage() {  const { t } = useTranslation(['auth', 'common']);
+  const changePasswordSchema = useMemo(() => makeChangePasswordSchema(t), [t]);
 
   const router = useRouter();
   const user = useAuthStore((s) => s.user);

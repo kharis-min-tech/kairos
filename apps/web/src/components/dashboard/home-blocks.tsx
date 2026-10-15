@@ -119,8 +119,10 @@ function useHomeLabel() {
   const { t } = useTranslation(['common']);
   return (prefix: string, id: string, fallback: string, vars?: Record<string, unknown>) => {
     const key = `common:home.${prefix}.${id}`;
-    const out = t(key, { ...vars, defaultValue: '' });
-    return out || fallback;
+    // The English goes in as `defaultValue`: with `returnEmptyString: false`,
+    // asking for an empty default hands back the key path, not an empty
+    // string, so `|| fallback` would never fire and the key would render.
+    return t(key, { ...vars, defaultValue: fallback });
   };
 }
 

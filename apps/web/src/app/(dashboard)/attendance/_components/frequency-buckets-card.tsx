@@ -86,7 +86,7 @@ function BucketBars({
   // The API composes these in English. Translate by the stable `key` and keep
   // the server's wording as the fallback so a new bucket still renders.
   const localise = (prefix: string, key: string, fallback: string) =>
-    t(`attendance:bucket_${prefix}_${key}`, { defaultValue: '' }) || fallback;
+    t(`attendance:bucket_${prefix}_${key}`, { defaultValue: fallback });
   const max = Math.max(1, ...buckets.map((b) => b.members));
   return (
     <ul className="space-y-2.5">

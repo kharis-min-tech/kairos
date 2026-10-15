@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { DateSelect } from '@/components/date-select';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,20 +15,21 @@ import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { KharisCardHeader } from '../kharis-logo';
 import { useTranslation } from 'react-i18next';
 
-const signupSchema = z.object({
+const makeSignupSchema = (t: (key: string) => string) =>
+  z.object({
   // Step 1
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().min(1, t('auth:vFirstNameIsRequired')),
+  lastName: z.string().min(1, t('auth:vLastNameIsRequired')),
   middleName: z.string().optional(),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['Male', 'Female']).optional(),
-  email: z.string().email('Please enter a valid email'),
-  phone: z.string().min(1, 'Phone number is required'),
+  email: z.string().email(t('auth:vPleaseEnterAValidEmail')),
+  phone: z.string().min(1, t('auth:vPhoneNumberIsRequired')),
   // Step 2
   address: z.string().optional(),
   city: z.string().optional(),
   postalCode: z.string().optional(),
-  homeBranchId: z.string().min(1, 'Please select a branch'),
+  homeBranchId: z.string().min(1, t('auth:vPleaseSelectABranch')),
   secondaryBranchId: z.string().optional(),
   secondaryAddress: z.string().optional(),
   secondaryCity: z.string().optional(),
@@ -38,20 +39,20 @@ const signupSchema = z.object({
   emergencyContactPhone: z.string().optional(),
   // Step 3
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number')
-    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+    .min(8, t('auth:vPasswordMustBeAtLeastCharacters'))
+    .regex(/[A-Z]/, t('auth:vPasswordMustContainAtLeastOne'))
+    .regex(/[0-9]/, t('auth:vPasswordMustContainAtLeastOne2'))
+    .regex(/[^A-Za-z0-9]/, t('auth:vPasswordMustContainAtLeastOne3')),
   confirmPassword: z.string(),
   acceptedPolicies: z.boolean().refine((v) => v === true, {
-    message: 'You must accept the Terms & Conditions and Privacy Notice to continue',
+    message: t('auth:vYouMustAcceptTheTermsConditions'),
   }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
+  message: t('auth:vPasswordsDoNotMatch'),
   path: ['confirmPassword'],
 });
 
-type SignupFormData = z.infer<typeof signupSchema>;
+type SignupFormData = z.infer<ReturnType<typeof makeSignupSchema>>;
 
 const STEPS = ['Personal Info', 'Contact & Branch', 'Create Password'] as const;
 
@@ -105,6 +106,7 @@ function StepIndicator({ currentStep }: { currentStep: number }) {
 }
 
 export default function SignupPage() {  const { t } = useTranslation(['auth', 'common']);
+  const signupSchema = useMemo(() => makeSignupSchema(t), [t]);
 
   const router = useRouter();
   const signupMutation = useSignup();

@@ -441,6 +441,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-full flex-col bg-white/80 backdrop-blur-[20px] dark:bg-[#0f0f12]/80">
       {/* Brand */}
       <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5">
+        {/* i18n-ignore: the organisation's registered name. */}
         <img src="/logo.png" alt="Kharis Church" className="h-9 w-9 object-contain" />
         <div>
           <p className="text-base font-bold leading-tight text-foreground">{t('common:kairos')}</p>

@@ -203,7 +203,7 @@ export default function ProgramDetailPage() {  const { t } = useTranslation(['ou
 
     const ok = await confirm({
       title: t('outreach:markV1Completed', { v1: program.programName }),
-      description: 'The program will be archived. You can still view its souls and history.',
+      description: t('outreach:theProgramWillBeArchivedYou'),
       confirmLabel: t('outreach:markComplete'),
     });
     if (!ok) return;
@@ -236,7 +236,7 @@ export default function ProgramDetailPage() {  const { t } = useTranslation(['ou
       });
       toast({
         title: t('outreach:successfullyRegistered'),
-        description: 'You have been registered for this program',
+        description: t('outreach:youHaveBeenRegisteredForThis'),
       });
       await fetchProgram();
     } catch (error: unknown) {

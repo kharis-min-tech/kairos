@@ -19,6 +19,7 @@ import tw from '../../locales/tw.json';
  * `status: 'draft'` marks a language whose catalogue has not been read by a
  * native speaker. The picker says so rather than presenting it as finished.
  */
+// i18n-ignore(6): each language is named in its own language, by design.
 export const LANGUAGES = [
   { code: 'en', label: 'English', english: 'English', status: 'complete' },
   { code: 'fr', label: 'Français', english: 'French', status: 'complete' },

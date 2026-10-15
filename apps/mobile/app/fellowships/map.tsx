@@ -572,7 +572,10 @@ function NearestCard({
             <Text style={styles.nearestEyebrow}>{t('fellowships:nearestFellowship')}</Text>
             <Text style={styles.nearestName}>{fellowship.fellowshipName}</Text>
             <Text style={styles.selectedMeta}>
-              {fellowship.branchName} · {distanceKm.toFixed(1)} km away
+              {t('fellowships:branchKmAway', {
+                branch: fellowship.branchName,
+                distance: distanceKm.toFixed(1),
+              })}
             </Text>
           </View>
           <Pressable onPress={onClose} hitSlop={8}>

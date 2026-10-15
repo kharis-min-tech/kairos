@@ -79,7 +79,7 @@ export default function Profile() {  const { t } = useTranslation(['settings', '
       await updateUser({ photoUrl: deliveryUrl });
       alert.info('Photo updated', 'Your new profile photo is live.');
     } catch (e) {
-      alert.info('Upload failed', e instanceof Error ? e.message : 'Please try again.');
+      alert.info('Upload failed', e instanceof Error ? e.message : t('settings:pleaseTryAgain'));
     } finally {
       setUploading(false);
     }

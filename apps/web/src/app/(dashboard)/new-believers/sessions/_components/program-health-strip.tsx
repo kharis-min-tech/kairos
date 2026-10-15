@@ -346,7 +346,7 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {  const { t } = useTrans
           <div className="flex items-baseline justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:attendanceTrend')}</h3>
             <span className="text-sm font-medium text-foreground">
-              {toPercent(data.summary.avgAttendanceRate)} avg
+              {t('newBelievers:avgRate', { rate: toPercent(data.summary.avgAttendanceRate) })}
             </span>
           </div>
           {data.attendanceTrend.length === 0 ? (
@@ -404,7 +404,7 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {  const { t } = useTrans
           <div className="flex items-baseline justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:stageFunnel')}</h3>
             <span className="text-sm font-medium text-foreground">
-              {data.summary.activeEnrollments} active
+              {t('newBelievers:activeEnrollmentsCount', { count: data.summary.activeEnrollments })}
             </span>
           </div>
           <div className="h-44 w-full">

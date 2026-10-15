@@ -108,7 +108,7 @@ export default function DepartmentDetail() {  const { t } = useTranslation(['dep
       onError: (err) => {
         alert.info(
           'Remove failed',
-          err instanceof Error ? err.message : 'Please try again in a moment.',
+          err instanceof Error ? err.message : t('departments:pleaseTryAgainInAMoment'),
         );
       },
     });
@@ -364,7 +364,7 @@ export default function DepartmentDetail() {  const { t } = useTranslation(['dep
               onError: (err) => {
                 alert.info(
                   'Add failed',
-                  err instanceof Error ? err.message : 'Please try again in a moment.',
+                  err instanceof Error ? err.message : t('departments:pleaseTryAgainInAMoment'),
                 );
               },
             });

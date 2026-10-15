@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,8 +12,9 @@ import { DateSelect } from '@/components/date-select';
 import { useAuthStore } from '@/lib/auth-store';
 import { useTranslation } from 'react-i18next';
 
-const schema = z.object({
-  branchName: z.string().min(1, 'Branch name is required'),
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+  branchName: z.string().min(1, t('branches:vBranchNameIsRequired')),
   regionId: z.string().uuid('Select a region'),
   branchType: z.nativeEnum(BranchType).default(BranchType.Main),
   address: z.string().optional(),
@@ -26,9 +27,10 @@ const schema = z.object({
   establishedDate: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function NewBranchPage() {  const { t } = useTranslation(['branches', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
 
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);

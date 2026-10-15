@@ -30,7 +30,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-export default function ProfilePage() {  const { t } = useTranslation(['settings', 'common']);
+export default function ProfilePage() {  const { t } = useTranslation(['settings', 'common', 'auth']);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -198,7 +198,7 @@ export default function ProfilePage() {  const { t } = useTranslation(['settings
         router.replace('/pending-approval');
       } catch (err) {
         setSaveError(
-          err instanceof Error ? err.message : 'Failed to save. Please try again.',
+          err instanceof Error ? err.message : t('settings:failedToSavePleaseTryAgain'),
         );
       }
       return;
@@ -467,15 +467,13 @@ export default function ProfilePage() {  const { t } = useTranslation(['settings
                     className="mt-0.5 h-4 w-4 rounded border-muted-foreground/30 accent-[#5D3FD3]"
                   />
                   <span>
-                    I accept the{' '}
+                    {t('auth:iAcceptThe')}{' '}
                     <Link
                       href="/legal/terms"
                       target="_blank"
                       className="font-semibold text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
-                    >
-                      Terms &amp; Conditions
-                    </Link>{' '}
-                    and{' '}
+                    >{t('auth:termsAndConditions')}</Link>{' '}
+                    {t('auth:andLower')}{' '}
                     <Link
                       href="/legal/privacy"
                       target="_blank"

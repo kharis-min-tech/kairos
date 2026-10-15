@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -15,11 +15,12 @@ import { OAUTH_PROVIDER_LABEL, OAuthProviderIcon } from '@/components/oauth-prov
 import { KharisCardHeader } from '../kharis-logo';
 import { useTranslation } from 'react-i18next';
 
-const confirmSchema = z.object({
-  password: z.string().min(1, 'Password is required'),
+const makeConfirmSchema = (t: (key: string) => string) =>
+  z.object({
+  password: z.string().min(1, t('auth:vPasswordIsRequired')),
 });
 
-type ConfirmFormData = z.infer<typeof confirmSchema>;
+type ConfirmFormData = z.infer<ReturnType<typeof makeConfirmSchema>>;
 
 function providerLabel(provider: string | null): string {
   if (!provider) return 'your provider';
@@ -27,6 +28,7 @@ function providerLabel(provider: string | null): string {
 }
 
 function ConfirmLinkContent() {  const { t } = useTranslation(['auth', 'common']);
+  const confirmSchema = useMemo(() => makeConfirmSchema(t), [t]);
 
   const router = useRouter();
   const searchParams = useSearchParams();

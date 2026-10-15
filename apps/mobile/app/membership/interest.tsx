@@ -95,7 +95,7 @@ export default function MembershipInterestScreen() {  const { t } = useTranslati
       );
     },
     onError: (e: unknown) =>
-      alert.info('Could not admit', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not admit', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   if (!isAdmin) return null;

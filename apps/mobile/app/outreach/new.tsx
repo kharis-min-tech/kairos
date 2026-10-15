@@ -110,7 +110,7 @@ export default function NewOutreachProgram() {  const { t } = useTranslation(['o
       });
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not create program. Please try again.',
+        err instanceof Error ? err.message : t('outreach:couldNotCreateProgramPleaseTry'),
       );
     }
   }

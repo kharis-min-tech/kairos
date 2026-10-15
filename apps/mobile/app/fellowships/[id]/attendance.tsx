@@ -145,8 +145,11 @@ export default function FellowshipAttendance() {  const { t } = useTranslation([
             <Card padding="md" style={{ gap: 4 }}>
               <Text style={styles.eyebrow}>{t('fellowships:sundayServices')}</Text>
               <Text style={styles.summaryLine}>
-                {report.data.services.distinctAttendees} distinct attendees across{' '}
-                {report.data.services.totalServices} services · {weeks}w window
+                {t('fellowships:distinctAttendeesAcrossServices', {
+                  attendees: report.data.services.distinctAttendees,
+                  services: report.data.services.totalServices,
+                  weeks,
+                })}
               </Text>
               {report.data.services.trend.length > 0 ? (
                 <View style={styles.trendRow}>
@@ -174,14 +177,18 @@ export default function FellowshipAttendance() {  const { t } = useTranslation([
             <Card padding="md" style={{ gap: 6 }}>
               <Text style={styles.eyebrow}>{t('fellowships:fellowshipMeetings')}</Text>
               <Text style={styles.summaryLine}>
-                {report.data.meetings.distinctAttendees} distinct attendees across{' '}
-                {report.data.meetings.totalMeetings} meetings
+                {t('fellowships:distinctAttendeesAcrossMeetings', {
+                  attendees: report.data.meetings.distinctAttendees,
+                  meetings: report.data.meetings.totalMeetings,
+                })}
               </Text>
               {report.data.meetings.lastMeeting ? (
                 <Text style={styles.metaFaded}>
-                  Last meeting {report.data.meetings.lastMeeting.date}:{' '}
-                  {report.data.meetings.lastMeeting.attended}/
-                  {report.data.meetings.lastMeeting.total} present
+                  {t('fellowships:lastMeetingPresent', {
+                    date: report.data.meetings.lastMeeting.date,
+                    attended: report.data.meetings.lastMeeting.attended,
+                    total: report.data.meetings.lastMeeting.total,
+                  })}
                 </Text>
               ) : (
                 <Text style={styles.metaFaded}>{t('fellowships:noMeetingsLoggedInThisWindow')}</Text>

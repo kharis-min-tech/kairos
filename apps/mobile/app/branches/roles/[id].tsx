@@ -95,7 +95,7 @@ export default function BranchRoles() {  const { t } = useTranslation(['branches
       onError: (err) =>
         alert.info(
           'Revoke failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('branches:pleaseTryAgain'),
         ),
     });
   }
@@ -231,7 +231,7 @@ export default function BranchRoles() {  const { t } = useTranslation(['branches
               onError: (err) =>
                 alert.info(
                   'Assign failed',
-                  err instanceof Error ? err.message : 'Please try again.',
+                  err instanceof Error ? err.message : t('branches:pleaseTryAgain'),
                 ),
             });
           }}

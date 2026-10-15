@@ -417,7 +417,7 @@ export function StreakBlock({ weeks, onPress }: { weeks: number; onPress: () => 
         <Card padding="md" style={styles.streakCard}>
           <View style={styles.rowBody}>
             <Text style={styles.streakValue}>
-              {weeks} week{weeks === 1 ? '' : 's'} running
+              {t('common:weeksRunning', { count: weeks })}
             </Text>
             <Text style={styles.rowSubtitle}>{t('common:myAttendance')}</Text>
           </View>

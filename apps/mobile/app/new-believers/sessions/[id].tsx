@@ -139,7 +139,7 @@ export default function NewBelieverSessionDetail() {  const { t } = useTranslati
       alert.info('Saved', `${res?.recorded ?? 0} attendance record${(res?.recorded ?? 0) === 1 ? '' : 's'} recorded.`);
     },
     onError: (e) =>
-      alert.info('Save failed', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Save failed', e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain')),
   });
 
   const dirty = Object.keys(pending).length > 0;

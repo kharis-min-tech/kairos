@@ -43,6 +43,7 @@ interface StageDef {
   topic?: string;
 }
 
+// i18n-ignore(8): the English source for `stageLabel` / `stageTopic` below.
 const STAGES: StageDef[] = [
   { value: 'session-1', label: 'Session 1', topic: 'Foundations of Faith' },
   { value: 'session-2', label: 'Session 2', topic: 'Who is a Christian' },
@@ -139,7 +140,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
     onError: (e) =>
       alert.info(
         'Could not save',
-        e instanceof Error ? e.message : 'Please try again.',
+        e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain'),
       ),
   });
 
@@ -192,7 +193,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
         undefined,
       );
     } catch (e) {
-      alert.info('Save failed', e instanceof Error ? e.message : 'Please try again.');
+      alert.info('Save failed', e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain'));
     }
   }
 
@@ -213,7 +214,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
       await update.mutateAsync({ stage: nextStage.value });
       alert.info(`Advanced to ${nextStage.label}`, undefined);
     } catch (e) {
-      alert.info('Failed to advance', e instanceof Error ? e.message : 'Please try again.');
+      alert.info('Failed to advance', e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain'));
     }
   }
 
@@ -231,7 +232,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
     } catch (e) {
       alert.info(
         `Failed to update ${kind}`,
-        e instanceof Error ? e.message : 'Please try again.',
+        e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain'),
       );
     }
   }
@@ -243,7 +244,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
       await update.mutateAsync({ stage: v });
       alert.info('Stage updated', undefined);
     } catch (e) {
-      alert.info('Failed to update stage', e instanceof Error ? e.message : 'Please try again.');
+      alert.info('Failed to update stage', e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain'));
     }
   }
 
@@ -251,7 +252,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
     const ok = await alert.confirm({
       title: t('newBelievers:deactivateEnrollment'),
       message:
-        'This member will be removed from the active pipeline. You can re-enrol them later.',
+        t('newBelievers:thisMemberWillBeRemovedFrom'),
       confirmLabel: t('newBelievers:deactivate'),
       destructive: true,
     });
@@ -260,7 +261,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
       await update.mutateAsync({ isActive: false });
       router.back();
     } catch (e) {
-      alert.info('Failed to deactivate', e instanceof Error ? e.message : 'Please try again.');
+      alert.info('Failed to deactivate', e instanceof Error ? e.message : t('newBelievers:pleaseTryAgain'));
     }
   }
 
@@ -662,7 +663,7 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
           subtitle={
             pickerOpen === 'teacher'
               ? 'Search members in this branch. Teachers can\'t be currently enrolled as students.'
-              : 'Search members in this branch. Mentors follow up with the student one-to-one.'
+              : t('newBelievers:searchMembersInThisBranchMentors')
           }
           selectedMemberId={
             pickerOpen === 'teacher'

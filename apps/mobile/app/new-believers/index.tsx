@@ -198,7 +198,10 @@ function EnrollmentCard({
       <View style={styles.progressBlock}>
         <View style={styles.progressLabelRow}>
           <Text style={styles.progressLabel}>
-            {completed} of {TOTAL_SESSIONS} sessions
+            {t('newBelievers:completedOfSessions', {
+              completed,
+              total: TOTAL_SESSIONS,
+            })}
           </Text>
           <Text style={styles.progressPercent}>
             {Math.round(progressValue * 100)}%

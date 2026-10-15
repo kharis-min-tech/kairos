@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,12 +14,13 @@ import { Halo } from '@/components/motion/halo';
 import { KharisCardHeader } from '../kharis-logo';
 import { useTranslation } from 'react-i18next';
 
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
+const makeLoginSchema = (t: (key: string) => string) =>
+  z.object({
+  email: z.string().email(t('auth:vPleaseEnterAValidEmail')),
+  password: z.string().min(1, t('auth:vPasswordIsRequired')),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<ReturnType<typeof makeLoginSchema>>;
 
 const OAUTH_ERROR_COPY: Record<string, string> = {
   state_mismatch: 'Sign-in session expired. Please try again.',
@@ -29,6 +30,7 @@ const OAUTH_ERROR_COPY: Record<string, string> = {
 };
 
 function LoginContent() {  const { t } = useTranslation(['auth', 'common']);
+  const loginSchema = useMemo(() => makeLoginSchema(t), [t]);
 
   const router = useRouter();
   const searchParams = useSearchParams();

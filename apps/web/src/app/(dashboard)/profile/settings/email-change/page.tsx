@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Mail, ShieldCheck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -10,14 +10,16 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '
 import { useRequestEmailChange } from '@/hooks/use-email-change';
 import { useTranslation } from 'react-i18next';
 
-const schema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newEmail: z.string().email('Invalid email address'),
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+  currentPassword: z.string().min(1, t('settings:vCurrentPasswordIsRequired')),
+  newEmail: z.string().email(t('settings:vInvalidEmailAddress')),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function EmailChangePage() {  const { t } = useTranslation(['settings', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
 
   const [success, setSuccess] = useState(false);
   const mutation = useRequestEmailChange();

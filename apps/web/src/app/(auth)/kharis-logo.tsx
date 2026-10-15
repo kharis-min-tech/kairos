@@ -28,6 +28,7 @@ export function KharisDove({
   className?: string;
   draw?: boolean;
 }) {
+  // i18n-ignore(9): the organisation's registered name.
   return (
     <svg
       viewBox={DOVE_VIEWBOX}

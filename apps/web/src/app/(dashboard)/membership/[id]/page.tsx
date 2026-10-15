@@ -232,7 +232,7 @@ function RosterTab({ roster }: { roster: MembershipEnrollmentWithMember[] }) {  
                             },
                             onError: (err: unknown) =>
                               toast.error(
-                                err instanceof Error ? err.message : 'Could not save.',
+                                err instanceof Error ? err.message : t('membership:couldNotSave'),
                               ),
                           },
                         )
@@ -474,7 +474,7 @@ function SessionEditor({
           onDone();
         },
         onError: (e: unknown) =>
-          toast.error(e instanceof Error ? e.message : 'Could not save the session.'),
+          toast.error(e instanceof Error ? e.message : t('membership:couldNotSaveTheSession')),
       },
     );
   }
@@ -573,7 +573,7 @@ function SessionRegister({
       {
         onSuccess: (res) => toast.success(t('membership:savedRecords', { count: res.saved })),
         onError: (e: unknown) =>
-          toast.error(e instanceof Error ? e.message : 'Could not save the register.'),
+          toast.error(e instanceof Error ? e.message : t('membership:couldNotSaveTheRegister')),
       },
     );
   }
@@ -750,7 +750,7 @@ function GraduationTab({
                       onSuccess: (r) =>
                         toast.success(t('membership:inductionRecordedFor', { count: r.updated })),
                       onError: (e: unknown) =>
-                        toast.error(e instanceof Error ? e.message : 'Could not record.'),
+                        toast.error(e instanceof Error ? e.message : t('membership:couldNotRecord')),
                     },
                   )
                 }
@@ -778,7 +778,7 @@ function GraduationTab({
                         },
                         onError: (e: unknown) =>
                           toast.error(
-                            e instanceof Error ? e.message : 'Could not graduate.',
+                            e instanceof Error ? e.message : t('membership:couldNotGraduate'),
                           ),
                       },
                     )
@@ -840,7 +840,7 @@ function GraduationTab({
                           },
                           onError: (e: unknown) =>
                             toast.error(
-                              e instanceof Error ? e.message : 'Could not graduate.',
+                              e instanceof Error ? e.message : t('membership:couldNotGraduate'),
                             ),
                         },
                       )

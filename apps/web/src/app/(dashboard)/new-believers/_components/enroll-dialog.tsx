@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,14 +19,15 @@ import {
 import { useCreateEnrollment } from '@/hooks/use-new-believers';
 import { useTranslation } from 'react-i18next';
 
-const enrollFormSchema = z.object({
-  memberId: z.string().min(1, 'Member is required'),
+const makeEnrollFormSchema = (t: (key: string) => string) =>
+  z.object({
+  memberId: z.string().min(1, t('newBelievers:vMemberIsRequired')),
   teacherId: z.string().optional(),
   mentorId: z.string().optional(),
   notes: z.string().max(1000).optional(),
 });
 
-type EnrollFormValues = z.infer<typeof enrollFormSchema>;
+type EnrollFormValues = z.infer<ReturnType<typeof makeEnrollFormSchema>>;
 
 interface MemberOption {
   id: string;
@@ -58,6 +59,7 @@ export function EnrollDialog({
   mentorPool,
   allBranchMembers,
 }: EnrollDialogProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+  const enrollFormSchema = useMemo(() => makeEnrollFormSchema(t), [t]);
 
   const createEnrollment = useCreateEnrollment();
   const { handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EnrollFormValues>({

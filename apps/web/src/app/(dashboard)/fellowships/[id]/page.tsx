@@ -165,7 +165,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
               onClick={async () => {
                 const ok = await confirm({
                   title: t('fellowships:deactivateV1', { v1: fellowship.fellowshipName }),
-                  description: 'The fellowship will be hidden from the directory. Members will lose access to its meetings and history.',
+                  description: t('fellowships:theFellowshipWillBeHiddenFrom'),
                   confirmLabel: t('fellowships:deactivate'),
                   variant: 'destructive',
                 });
@@ -419,7 +419,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                             e.stopPropagation();
                             const ok = await confirm({
                               title: t('fellowships:removeV1Fellowship', { v1: member.memberFirstName }),
-                              description: 'They will no longer appear in this fellowship’s roster. You can re-add them later.',
+                              description: t('fellowships:theyWillNoLongerAppearIn'),
                               confirmLabel: t('fellowships:remove'),
                               variant: 'destructive',
                             });
@@ -732,7 +732,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
         <div className="space-y-4">
           {selectedRequestIds.size > 0 && (
             <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg bg-card px-4 py-2.5 shadow-ambient">
-              <span className="text-sm font-medium">{selectedRequestIds.size} selected</span>
+              <span className="text-sm font-medium">{t('common:selectedCount', { count: selectedRequestIds.size })}</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => {

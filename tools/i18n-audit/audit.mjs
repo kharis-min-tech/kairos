@@ -69,6 +69,25 @@ const PROSE_TAGS = 'p|li|h1|h2|h3|h4|td|th|strong|em|figcaption|blockquote|label
 const CUSTOM_CHILDREN = /<([A-Z]\w+)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
 const TITLE_PROP = /\btitle="([^"]{4,160})"/g;
 
+/**
+ * Remove every balanced `{...}` group, nesting included.
+ *
+ * The first version of this used `/\{[^{}]*\}/g`, which stops at the first
+ * inner brace, so a line like `{total === 0 ? '—' : `${pct}%`}` left code
+ * debris behind and the debris read as prose. Those phantom findings made up
+ * most of the report, and a report that is mostly noise gets ignored.
+ */
+function stripBraces(text) {
+  let out = '';
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === '{') depth++;
+    else if (ch === '}') depth = Math.max(0, depth - 1);
+    else if (depth === 0) out += ch;
+  }
+  return out;
+}
+
 // Returns the offending strings, so `I18N_AUDIT_DUMP=1` can print exactly
 // what is still English instead of only how many there are.
 function findHardcoded(file) {
@@ -84,14 +103,21 @@ function findHardcoded(file) {
     push(m.index, m[0]);
   }
 
+  // The same display props written as object-literal fields -- the shape used
+  // for tab strips, filter chips and select options, where an array of
+  // `{ value, label }` is mapped into JSX. The rota swap tabs, the fellowship
+  // type filter and the new-believer stage board all kept English this way
+  // while the JSX that rendered them read as fully keyed.
+  for (const m of src.matchAll(/\b(?:label|title|heading|subtitle|description|placeholder|text|caption|topic)\s*:\s*'([A-Z][^']{2,120})'/g)) {
+    if (/[A-Za-z]{3}/.test(m[1])) push(m.index, m[1]);
+  }
+
   const re = new RegExp(`<(${PROSE_TAGS})\\b[^>]*>([\\s\\S]*?)</\\1>`, 'g');
   for (const m of src.matchAll(re)) {
-    const text = m[2]
-      .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, ' ') // {/* jsx comment */}
+    const text = stripBraces(m[2])
       .replace(/\/\*[\s\S]*?\*\//g, ' ')            // /* block comment */
       .replace(/(^|\s)\/\/[^\n]*/g, ' ')             // // line comment
       .replace(/<[^>]+>/g, ' ')      // inline elements
-      .replace(/\{[^{}]*\}/g, ' ')   // interpolations, including t(...) calls
       .replace(/&[a-z]+;/g, ' ')     // HTML entities
       .replace(/\s+/g, ' ')
       .trim();
@@ -106,8 +132,7 @@ function findHardcoded(file) {
     // nested inside -- which turned a useful signal into several hundred
     // phantom hits across both apps.
     if (/[<>]/.test(m[3])) continue;
-    const text = m[3]
-      .replace(/\{[^{}]*\}/g, ' ')
+    const text = stripBraces(m[3])
       .replace(/&[a-z]+;/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -138,8 +163,31 @@ function findHardcoded(file) {
       push(m.index, m[2]);
     }
   }
+  // Prose sitting next to a JSX expression inside a tag the prose list does
+  // not cover -- `<span>{pagination.total} Fellowships</span>`. Stripping
+  // `{...}` leaves one bare word, which the prose rule above needs two of, so
+  // the fellowships header counted its groups in English in every language.
+  for (const m of src.matchAll(/\}\s*([A-Za-z][A-Za-z'’\- ]{2,60}?)\s*(?=<\/)/g)) {
+    const text = m[1].trim();
+    if (/^(?:px|rem|em|vh|vw)$/.test(text)) continue;
+    if (/[A-Za-z]{3}/.test(text)) push(m.index, text);
+  }
+
+  // `i18n-ignore(n)` in a comment -- `//`, `/* */`, `{/* */}` or `<!-- -->` --
+  // suppresses findings on the next n lines (1 by default).
+  // The convention was already being written in comments next to values that
+  // are payload contract rather than copy -- a rota status the API compares
+  // on, say -- but nothing honoured it, so those lines stayed on the report
+  // for ever and the real findings had to be picked out around them.
+  const ignored = new Set();
+  for (const m of src.matchAll(/(?:\/\/|\/\*|\{\/\*|<!--)\s*i18n-ignore(?:\((\d+)\))?/g)) {
+    const from = at(m.index);
+    const span = Number(m[1] ?? 1);
+    for (let i = 1; i <= span; i++) ignored.add(from + i);
+  }
+
   void n;
-  return hits;
+  return hits.filter((h) => !ignored.has(h.line));
 }
 
 const hardcoded = (file) => findHardcoded(file).length;
@@ -221,6 +269,13 @@ for (const app of APPS) {
       // a dotted key whose head is a real namespace means the ns: was forgotten
       else if (Object.keys(base).includes(key.split('.')[0])) malformed.push(`${relative(ROOT, f)}  t('${key}')`);
     }
+    // A key held in a variable and translated elsewhere, the `labelKey` shape
+    // used by tab and queue lists. Three of these on the follow-ups page had
+    // no catalogue entry and rendered as 'queueFirstTimers' on screen, because
+    // the scanner only ever looked inside a literal t(...) call.
+    for (const m of src.matchAll(/\b(?:labelKey|titleKey|metaKey|descriptionKey|key)\s*:\s*['"`]([a-zA-Z]+:[^'"`]+)['"`]/g)) {
+      referenced.add(m[1]);
+    }
   }
   line(`${malformed.length ? 'FAIL' : 'ok  '} malformed keys (ns. instead of ns:): ${malformed.length}`);
   malformed.slice(0, 5).forEach((m) => line(`       ${m}`));
@@ -238,7 +293,7 @@ for (const app of APPS) {
       return !PLURAL_SUFFIXES.some((sfx) => valueAt(base[ns], `${rest}_${sfx}`) !== undefined);
     });
   line(`${absent.length ? 'FAIL' : 'ok  '} referenced but absent from '${app.base}': ${absent.length}`);
-  absent.slice(0, 8).forEach((k) => line(`       ${k}`));
+  absent.slice(0, process.env.I18N_AUDIT_FULL ? 9999 : 8).forEach((k) => line(`       ${k}`));
   if (absent.length) hardFailures++;
 
   // 4. coverage

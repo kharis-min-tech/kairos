@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -12,26 +12,28 @@ import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
 import { useTranslation } from 'react-i18next';
 
-const schema = z
+const makeSchema = (t: (key: string) => string) =>
+  z
   .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
+    currentPassword: z.string().min(1, t('security:vCurrentPasswordIsRequired')),
     newPassword: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[a-z]/, 'Must contain a lowercase letter')
-      .regex(/[0-9]/, 'Must contain a number')
-      .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+      .min(8, t('security:vPasswordMustBeAtLeastCharacters'))
+      .regex(/[A-Z]/, t('security:vMustContainAnUppercaseLetter'))
+      .regex(/[a-z]/, t('security:vMustContainALowercaseLetter'))
+      .regex(/[0-9]/, t('security:vMustContainANumber'))
+      .regex(/[^A-Za-z0-9]/, t('security:vMustContainASpecialCharacter')),
+    confirmPassword: z.string().min(1, t('security:vPleaseConfirmYourPassword')),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: t('security:vPasswordsDoNotMatch'),
     path: ['confirmPassword'],
   });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function ChangePasswordSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
 
   const router = useRouter();
   const [success, setSuccess] = useState(false);

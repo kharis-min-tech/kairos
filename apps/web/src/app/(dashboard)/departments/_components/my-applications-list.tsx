@@ -50,7 +50,7 @@ export function MyApplicationsList({ items }: Props) {  const { t } = useTransla
   const handleWithdraw = async (branchDeptId: string, requestId: string, departmentName: string) => {
     const ok = await confirm({
       title: t('departments:withdrawApplicationV1', { v1: departmentName }),
-      description: 'Your application will be cancelled. You can apply again later.',
+      description: t('departments:yourApplicationWillBeCancelledYou'),
       confirmLabel: t('departments:withdraw'),
       variant: 'destructive',
     });
@@ -60,7 +60,7 @@ export function MyApplicationsList({ items }: Props) {  const { t } = useTransla
       {
         onSuccess: () => toast.success(t('departments:applicationWithdrawn')),
         onError: (err) =>
-          toast.error(err instanceof Error ? err.message : 'Failed to withdraw.'),
+          toast.error(err instanceof Error ? err.message : t('departments:failedWithdraw')),
       },
     );
   };

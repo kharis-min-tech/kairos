@@ -84,7 +84,7 @@ export default function EditMember() {  const { t } = useTranslation(['members',
       await update.mutateAsync(payload as UpdateMemberRequest);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not save. Please try again.',
+        err instanceof Error ? err.message : t('members:couldNotSavePleaseTryAgain'),
       );
     }
   }

@@ -46,7 +46,10 @@ import type {
   RotaTemplateWithSummary,
 } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
+// i18n-ignore(9): the English source; `common:weekdayNum_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const WEEKDAYS = [
   { value: '0', label: 'Sunday' },
   { value: '1', label: 'Monday' },
@@ -415,13 +418,13 @@ function ScheduleRow({
                         : 'font-medium text-zinc-700 dark:text-zinc-300'
                   }
                 >
-                  {filled}/{total} filled
+                  {t('departments:filledOfTotal', { filled, total })}
                 </span>
                 {open > 0 && (
                   <>
                     <span className="text-muted-foreground">•</span>
                     <span className="text-destructive">
-                      {open} open
+                      {t('departments:openCount', { count: open })}
                     </span>
                   </>
                 )}
@@ -455,7 +458,7 @@ function ScheduleRow({
 
         {/* Status */}
         <Badge className={`${STATUS_TONE[instance.status] ?? ''} flex-shrink-0 rounded-sm`}>
-          {instance.status}
+          {t(`departments:rotaStatus_${instance.status}`, { defaultValue: instance.status })}
         </Badge>
       </button>
       {expanded && (
@@ -634,7 +637,7 @@ function InstanceDetail({
               onClick={async () => {
                 const ok = await confirm({
                   title: t('departments:rePickAllAssignmentsForThis'),
-                  description: 'Existing picks will be replaced with a fresh fair-rotation pass.',
+                  description: t('departments:existingPicksWillBeReplacedWith'),
                   confirmLabel: t('departments:regenerate'),
                   variant: 'destructive',
                 });
@@ -693,7 +696,9 @@ function InstanceDetail({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge className={`${STATUS_TONE[a.status] ?? ''} rounded-sm`}>{a.status}</Badge>
+                <Badge className={`${STATUS_TONE[a.status] ?? ''} rounded-sm`}>
+                  {t(`departments:rotaStatus_${a.status}`, { defaultValue: a.status })}
+                </Badge>
                 {canManage && (
                   <CustomSelect
                     value={a.memberId ?? ''}
@@ -702,6 +707,7 @@ function InstanceDetail({
                         branchDeptId,
                         instanceId,
                         assignmentId: a.id,
+                        // i18n-ignore: the rota status the API stores and compares on.
                         data: { memberId: v || null, status: v ? 'Assigned' : 'Open' },
                       })
                     }
@@ -712,7 +718,7 @@ function InstanceDetail({
                   <Button
                     variant="outline"
                     onClick={() => {
-                      const reason = prompt('Reason for swap (optional)') ?? '';
+                      const reason = prompt(t('departments:swapReasonPrompt')) ?? '';
                       createSwap.mutate(
                         {
                           branchDeptId,
@@ -904,7 +910,7 @@ function CreateTemplateForm({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">{t('departments:weekday')}</Label>
-            <CustomSelect value={weekday} onValueChange={setWeekday} options={WEEKDAYS} />
+            <CustomSelect value={weekday} onValueChange={setWeekday} options={localiseOptions(t, 'common:weekdayNum_', WEEKDAYS)} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Default start time (optional)</Label>
@@ -943,7 +949,9 @@ function TemplateCard({
 
   const deactivate = useDeactivateRotaTemplate();
   const { confirm, dialog: confirmDialog } = useConfirm();
-  const weekdayLabel = WEEKDAYS.find((w) => w.value === String(template.weekday))?.label ?? '';
+  const weekdayLabel = localiseOptions(t, 'common:weekdayNum_', WEEKDAYS).find(
+    (w) => w.value === String(template.weekday),
+  )?.label ?? '';
   const time = formatTimeShort(template.defaultStartTime);
   const isDraft = template.lastGeneratedAt === null;
   const lastGen = template.lastGeneratedAt
@@ -989,7 +997,7 @@ function TemplateCard({
                 e.stopPropagation();
                 const ok = await confirm({
                   title: t('departments:archiveTemplateV1', { v1: template.name }),
-                  description: 'No new services will be generated from this template. Existing rotas keep working.',
+                  description: t('departments:noNewServicesWillBeGenerated'),
                   confirmLabel: t('departments:archive'),
                   variant: 'destructive',
                 });
@@ -1093,7 +1101,7 @@ function SlotsManager({
                   onClick={async () => {
                     const ok = await confirm({
                       title: t('departments:deleteSlotV1', { v1: s.roleName }),
-                      description: 'The role definition is removed. Existing assignments are not changed.',
+                      description: t('departments:theRoleDefinitionIsRemovedExisting'),
                       confirmLabel: t('departments:delete'),
                       variant: 'destructive',
                     });
@@ -1225,7 +1233,7 @@ function PoolManager({
                   onClick={async () => {
                     const ok = await confirm({
                       title: t('departments:removeV1Pool', { v1: p.memberFirstName }),
-                      description: 'They will no longer be auto-scheduled for this template.',
+                      description: t('departments:theyWillNoLongerBeAuto'),
                       confirmLabel: t('departments:remove'),
                       variant: 'destructive',
                     });
@@ -1298,11 +1306,11 @@ function SwapsSection({
 
   const pendingCount = pendingForCount?.length ?? 0;
 
-  const tabs: { v: typeof statusFilter; l: string; count?: number }[] = [
-    { v: 'pending', l: 'Pending', count: pendingCount },
-    { v: 'approved', l: 'Approved' },
-    { v: 'rejected', l: 'Rejected' },
-    { v: 'cancelled', l: 'Cancelled' },
+  const tabs: { v: typeof statusFilter; label: string; count?: number }[] = [
+    { v: 'pending', label: t('departments:swapStatus_pending'), count: pendingCount },
+    { v: 'approved', label: t('departments:swapStatus_approved') },
+    { v: 'rejected', label: t('departments:swapStatus_rejected') },
+    { v: 'cancelled', label: t('departments:swapStatus_cancelled') },
   ];
 
   return (
@@ -1312,7 +1320,7 @@ function SwapsSection({
           <h3 className="text-base font-semibold">{t('departments:swapRequests2')}</h3>
           {pendingCount > 0 && (
             <span className="rounded-full bg-[#f8b537]/20 px-2.5 py-0.5 text-xs font-semibold text-[#a06b00] dark:text-[#f8b537]">
-              {pendingCount} awaiting review
+              {t('departments:awaitingReviewCount', { count: pendingCount })}
             </span>
           )}
         </div>
@@ -1330,7 +1338,7 @@ function SwapsSection({
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {tab.l}
+            {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${

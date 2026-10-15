@@ -95,7 +95,7 @@ export default function Regions() {  const { t } = useTranslation(['admin', 'com
       onError: (err) =>
         alert.info(
           'Delete failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('admin:pleaseTryAgain'),
         ),
     });
   }
@@ -232,7 +232,7 @@ export default function Regions() {  const { t } = useTranslation(['admin', 'com
           } catch (err) {
             alert.info(
               'Save failed',
-              err instanceof Error ? err.message : 'Please try again.',
+              err instanceof Error ? err.message : t('admin:pleaseTryAgain'),
             );
           }
         }}

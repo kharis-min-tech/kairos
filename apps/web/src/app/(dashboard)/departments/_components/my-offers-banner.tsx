@@ -44,7 +44,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
       {
         onSuccess: () => toast.success(t('departments:offerAcceptedWelcomeTeam')),
         onError: (err) =>
-          toast.error(err instanceof Error ? err.message : 'Failed to accept offer.'),
+          toast.error(err instanceof Error ? err.message : t('departments:failedToAcceptOffer')),
       },
     );
   };
@@ -52,7 +52,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
   const handleDecline = async (branchDeptId: string, requestId: string, departmentName: string) => {
     const ok = await confirm({
       title: t('departments:declineOfferV1', { v1: departmentName }),
-      description: 'You won’t be added to this department. You can apply again later if you change your mind.',
+      description: t('departments:youWonTBeAddedTo'),
       confirmLabel: t('departments:decline'),
       variant: 'destructive',
     });
@@ -62,7 +62,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
       {
         onSuccess: () => toast.success(t('departments:offerDeclined')),
         onError: (err) =>
-          toast.error(err instanceof Error ? err.message : 'Failed to decline offer.'),
+          toast.error(err instanceof Error ? err.message : t('departments:failedDeclineOffer')),
       },
     );
   };

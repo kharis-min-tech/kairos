@@ -46,7 +46,10 @@ import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
+// i18n-ignore(9): the English source; `common:weekdayShort_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const WEEKDAYS = [
   { value: 0, label: 'Sun' },
   { value: 1, label: 'Mon' },
@@ -184,7 +187,7 @@ export default function RotaTemplateDetail() {  const { t } = useTranslation(['r
     const ok = await alert.confirm({
       title: t('rota:archiveTemplate'),
       message:
-        'Existing instances stay put but no new ones can be generated. You can leave it in place if you might use it again.',
+        t('rota:existingInstancesStayPutButNo'),
       confirmLabel: t('rota:archive'),
       destructive: true,
     });
@@ -258,7 +261,7 @@ export default function RotaTemplateDetail() {  const { t } = useTranslation(['r
               </Text>
               <View style={styles.metaChipRow}>
                 <Badge
-                  label={WEEKDAYS[template.weekday]?.label ?? '?'}
+                  label={localiseOptions(t, 'common:weekdayShort_', WEEKDAYS)[template.weekday]?.label ?? '?'}
                   variant="primary"
                   size="sm"
                 />
@@ -483,7 +486,7 @@ function EditTemplateSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('rota:pleaseTryAgain')),
   });
 
   return (
@@ -495,7 +498,7 @@ function EditTemplateSheet({
       <View style={{ gap: 4 }}>
         <Text style={styles.label}>{t('rota:serviceDay')}</Text>
         <View style={styles.weekdayRow}>
-          {WEEKDAYS.map((d) => {
+          {localiseOptions(t, 'common:weekdayShort_', WEEKDAYS).map((d) => {
             const active = d.value === weekday;
             return (
               <Pressable
@@ -600,7 +603,7 @@ function SlotSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('rota:pleaseTryAgain')),
   });
 
   return (

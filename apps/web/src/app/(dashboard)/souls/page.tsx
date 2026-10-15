@@ -49,6 +49,8 @@ type RAGLabel = 'Critical' | 'Monitor' | 'On Track';
 
 // RAG Status: Red/Amber/Green based on follow-up timing
 function getRAGStatus(status: string, daysSinceLastFollowUp: number | null | undefined) {
+    // i18n-ignore(5): `label` is the RAGLabel the filter compares on; the
+    // visible text comes from `souls:critical` / `monitor` / `onTrack`.
     const CRITICAL = { label: 'Critical' as RAGLabel, bgColor: 'bg-rose-500/10 dark:bg-rose-500/15', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500', dotColor: 'bg-rose-500' };
     const MONITOR  = { label: 'Monitor'  as RAGLabel, bgColor: 'bg-[#f8b537]/15 dark:bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]', dotColor: 'bg-[#f8b537]' };
     const ON_TRACK = { label: 'On Track' as RAGLabel, bgColor: 'bg-emerald-100 dark:bg-emerald-950/50', textColor: 'text-emerald-700 dark:text-emerald-300', borderColor: 'border-l-emerald-500', dotColor: 'bg-emerald-500' };
@@ -383,7 +385,7 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
       console.error('Failed to fetch members:', error);
       toast({
         title: t('souls:failedToLoadMembers'),
-        description: 'Could not fetch member list',
+        description: t('souls:couldNotFetchMemberList'),
         variant: 'destructive',
       });
     } finally {
@@ -418,7 +420,7 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
     if (!api || selectedSouls.size === 0 || !bulkAssignMemberId) {
       toast({
         title: t('souls:invalidSelection'),
-        description: 'Please select souls and a member to assign to',
+        description: t('souls:pleaseSelectSoulsAndAMember'),
         variant: 'destructive',
       });
       return;
@@ -657,8 +659,9 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
           {/* RAG segmented control */}
           <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
             {([
-              // `label` is the filter value compared against RAGLabel and the
-              // ragFilter state, so it stays in English. `display` is the text.
+              // i18n-ignore(6): `label` is the filter value compared against
+              // RAGLabel and the ragFilter state, so it stays in English.
+              // `display` is the text that gets translated.
               { label: 'All' as const,      display: t('souls:allSouls'), dotColor: null },
               { label: 'Critical' as const, display: t('souls:critical'), dotColor: 'bg-rose-500' },
               { label: 'Monitor' as const,  display: t('souls:monitor'),  dotColor: 'bg-amber-500' },

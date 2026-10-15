@@ -230,7 +230,7 @@ export default function CheckIn() {
                   <View style={styles.windowPill}>
                     <Clock color="#ffffff" size={12} strokeWidth={1.5} />
                     <Text style={styles.windowLabel}>
-                      Opens in {nextOpening.minutesUntilOpen} min
+                      {t('attendance:opensInMinutes', { count: nextOpening.minutesUntilOpen })}
                     </Text>
                   </View>
                 ) : (
@@ -290,7 +290,7 @@ export default function CheckIn() {
           {canCheckIn
             ? openRows.length > 1
               ? 'You have two services open, so you\'ll be asked which one.'
-              : 'Tap once to mark yourself present.'
+              : t('attendance:tapOnceToMarkYourselfPresent')
             : nextOpening
               ? `Opens in ${nextOpening.minutesUntilOpen} minute${nextOpening.minutesUntilOpen === 1 ? '' : 's'}.`
               : closedRows.length > 0

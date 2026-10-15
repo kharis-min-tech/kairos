@@ -2,7 +2,7 @@
 
 export const runtime = 'edge';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -16,6 +16,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { AddressAutofillGroup, Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { FellowshipType } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
   [FellowshipType.KGroups]: 'K-Groups',
@@ -26,6 +27,8 @@ const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
 };
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// i18n-ignore(7): the English source; `fellowships:recurrence_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const FREQUENCIES = [
   { value: 'Every week', label: 'Every week' },
   { value: 'Every two weeks', label: 'Every two weeks' },
@@ -43,10 +46,11 @@ for (let h = 5; h <= 22; h++) {
   }
 }
 
-const schema = z.object({
-  fellowshipName: z.string().min(1, 'Fellowship name is required').max(150),
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+  fellowshipName: z.string().min(1, t('fellowships:vFellowshipNameIsRequired')).max(150),
   branchId: z.string().uuid('Select a branch'),
-  fellowshipType: z.string().min(1, 'Select a fellowship type'),
+  fellowshipType: z.string().min(1, t('fellowships:vSelectAFellowshipType')),
   description: z.string().optional(),
   leaderId: z.string().optional(),
   coLeaderId: z.string().optional(),
@@ -60,7 +64,7 @@ const schema = z.object({
   longitude: z.number().nullable().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 function parseMeetingSchedule(schedule: string | null) {
   if (!schedule) return { meetingFrequency: '', meetingDay: '', meetingTime: '' };
@@ -74,6 +78,7 @@ function parseMeetingSchedule(schedule: string | null) {
 }
 
 export default function EditFellowshipPage() {  const { t } = useTranslation(['fellowships', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
 
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -322,7 +327,7 @@ export default function EditFellowshipPage() {  const { t } = useTranslation(['f
                     value={watch('meetingFrequency') ?? ''}
                     onValueChange={(v) => setValue('meetingFrequency', v as FormValues['meetingFrequency'])}
                     placeholder="—"
-                    options={FREQUENCIES.map((f) => ({ value: f.value, label: f.label }))}
+                    options={localiseOptions(t, 'fellowships:recurrence_', FREQUENCIES)}
                   />
                 </div>
                 <div className="space-y-1">
@@ -332,7 +337,7 @@ export default function EditFellowshipPage() {  const { t } = useTranslation(['f
                     value={watch('meetingDay') ?? ''}
                     onValueChange={(v) => setValue('meetingDay', v as FormValues['meetingDay'])}
                     placeholder="—"
-                    options={DAYS.map((d) => ({ value: d, label: d }))}
+                    options={DAYS.map((d) => ({ value: d, label: t(`common:weekday_${d}`, { defaultValue: d }) }))}
                   />
                 </div>
                 <div className="space-y-1">

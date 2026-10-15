@@ -145,7 +145,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   onClick={async () => {
                     const ok = await confirm({
                       title: t('members:approveV1V2', { v1: member.firstName, v2: member.lastName }),
-                      description: 'They will be able to sign in once approved.',
+                      description: t('members:theyWillBeAbleToSign'),
                       confirmLabel: t('members:approve'),
                     });
                     if (!ok) return;
@@ -166,7 +166,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   onClick={async () => {
                     const ok = await confirm({
                       title: t('members:deactivateV1V2', { v1: member.firstName, v2: member.lastName }),
-                      description: 'They will be removed from the active directory. You can reactivate them later.',
+                      description: t('members:theyWillBeRemovedFromThe'),
                       confirmLabel: t('members:deactivate'),
                       variant: 'destructive',
                     });
@@ -185,7 +185,7 @@ export default function MemberDetailPage() {  const { t } = useTranslation(['mem
                   onClick={async () => {
                     const ok = await confirm({
                       title: t('members:reactivateV1V2', { v1: member.firstName, v2: member.lastName }),
-                      description: 'They will appear back in the active directory.',
+                      description: t('members:theyWillAppearBackInThe'),
                       confirmLabel: t('members:reactivate'),
                     });
                     if (!ok) return;

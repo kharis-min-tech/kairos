@@ -45,6 +45,7 @@ import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions, localiseMeta } from '@/lib/localise-options';
 
 type Stage = 'open' | 'terminal' | 'all';
 
@@ -54,6 +55,8 @@ const STAGE_LABELS: Record<Stage, string> = {
   all: 'All',
 };
 
+// i18n-ignore(15): the English source; `departments:recruitStatus_<value>` holds the display
+// text and `localiseMeta` swaps it in at the render site.
 const STATUS_META: Record<
   string,
   { label: string; variant: 'neutral' | 'gold' | 'success' | 'danger' | 'primary' }
@@ -214,7 +217,7 @@ export default function DepartmentRecruitment() {  const { t } = useTranslation(
         {orderKeys.map((k) => {
           const rows = grouped[k];
           if (!rows || rows.length === 0) return null;
-          const meta = STATUS_META[k];
+          const meta = localiseMeta(t, 'departments:recruitStatus_', STATUS_META, k);
           return (
             <View key={k} style={styles.stageBlock}>
               <View style={styles.stageHeader}>
@@ -597,7 +600,7 @@ function ScheduleInterviewSheet({
     onError: (e) =>
       alert.info(
         'Could not schedule',
-        e instanceof Error ? e.message : 'Please try again.',
+        e instanceof Error ? e.message : t('departments:pleaseTryAgain'),
       ),
   });
 
@@ -647,7 +650,7 @@ function ScheduleInterviewSheet({
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Location {format === 'virtual' ? '(meeting link)' : '(room / address)'}</Text>
+        <Text style={styles.fieldLabel}>Location {format === 'virtual' ? t('departments:meetingLink') : t('departments:roomAddress')}</Text>
         <Input value={location} onChangeText={setLocation} placeholder={t('departments:optional')} />
       </View>
       <MemberPickerRow
@@ -699,7 +702,7 @@ function RecordInterviewSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   return (
@@ -789,7 +792,7 @@ function ExtendOfferSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not send offer', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not send offer', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   return (
@@ -868,7 +871,7 @@ function ProbationSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   return (
@@ -952,7 +955,7 @@ function RejectSheet({
     },
     onSuccess: onDone,
     onError: (e) =>
-      alert.info('Could not reject', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not reject', e instanceof Error ? e.message : t('departments:pleaseTryAgain')),
   });
 
   return (

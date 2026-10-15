@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,13 +10,15 @@ import { useForgotPassword } from '@/hooks/use-auth';
 import { KharisCardHeader } from '../kharis-logo';
 import { useTranslation } from 'react-i18next';
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
+const makeForgotPasswordSchema = (t: (key: string) => string) =>
+  z.object({
+  email: z.string().email(t('auth:vPleaseEnterAValidEmail')),
 });
 
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+type ForgotPasswordFormData = z.infer<ReturnType<typeof makeForgotPasswordSchema>>;
 
 export default function ForgotPasswordPage() {  const { t } = useTranslation(['auth', 'common']);
+  const forgotPasswordSchema = useMemo(() => makeForgotPasswordSchema(t), [t]);
 
   const forgotMutation = useForgotPassword();
   const [submitted, setSubmitted] = useState(false);

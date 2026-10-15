@@ -147,14 +147,15 @@ export default function AttendanceComparison() {  const { t } = useTranslation([
                     { color: trendUp ? c.successText : c.danger },
                   ]}
                 >
-                  {trendUp ? '+' : ''}
-                  {delta}% vs. {RANGE_LABELS[range].toLowerCase()} avg
+                  {t('attendance:vsRangeAverage', {
+                    delta: `${trendUp ? '+' : ''}${delta}`,
+                    range: RANGE_LABELS[range].toLowerCase(),
+                  })}
                 </Text>
               </View>
             ) : null}
             <Text style={styles.heroMeta}>
-              {missing.data?.length ?? 0} member
-              {missing.data?.length === 1 ? '' : 's'} not seen recently
+              {t('attendance:membersNotSeenRecently', { count: missing.data?.length ?? 0 })}
             </Text>
           </Card>
         )}

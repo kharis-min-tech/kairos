@@ -32,6 +32,7 @@ import type {
 import { useConfirm } from '@/components/confirm-dialog';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 function todayIso(): string {
   const today = new Date();
@@ -219,7 +220,7 @@ export function FellowshipFollowupsTab({
                   setShowForm(false);
                 },
                 onError: (error) => {
-                  toast.error(error instanceof Error ? error.message : 'Failed to log followup.');
+                  toast.error(error instanceof Error ? error.message : t('fellowships:failedToLogFollowup'));
                 },
               },
             )
@@ -282,7 +283,7 @@ export function FellowshipFollowupsTab({
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                   <div className="flex flex-wrap gap-3">
                     {followup.durationMinutes !== null && followup.durationMinutes !== undefined && (
-                      <span>{followup.durationMinutes} min</span>
+                      <span>{t('common:durationMinutes', { count: followup.durationMinutes })}</span>
                     )}
                     {followup.nextFollowUpDate && (
                       <span>
@@ -305,7 +306,7 @@ export function FellowshipFollowupsTab({
                     onClick={async () => {
                       const ok = await confirm({
                         title: t('fellowships:deleteThisFollowup'),
-                        description: 'The contact record will be permanently removed.',
+                        description: t('fellowships:theContactRecordWillBePermanently'),
                         confirmLabel: t('fellowships:delete'),
                         variant: 'destructive',
                       });
@@ -381,6 +382,8 @@ type InterestChoice = 'interested' | 'not_interested' | 'undecided';
 type VisitKindChoice = 'in_person' | 'virtual';
 type VisitOutcomeChoice = 'present' | 'not_present' | 'rescheduled';
 
+// i18n-ignore(6): the English source; `members:contactMethod_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const CONTACT_METHOD_OPTIONS: { value: FollowupMethod; label: string }[] = [
   { value: 'phone_call', label: 'Phone Call' },
   { value: 'text_message', label: 'Text' },
@@ -605,7 +608,7 @@ function FollowupForm({
                 error={errors['methods']}
               >
                 <PillRow>
-                  {CONTACT_METHOD_OPTIONS.map(({ value, label }) => (
+                  {localiseOptions(t, 'members:contactMethod_', CONTACT_METHOD_OPTIONS).map(({ value, label }) => (
                     <Pill
                       key={value}
                       active={methods.has(value)}

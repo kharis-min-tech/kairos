@@ -217,7 +217,7 @@ function SessionEditor({
       onClose();
     },
     onError: (e: unknown) =>
-      alert.info('Could not save', e instanceof Error ? e.message : 'Please try again.'),
+      alert.info('Could not save', e instanceof Error ? e.message : t('membership:pleaseTryAgain')),
   });
 
   function submit() {

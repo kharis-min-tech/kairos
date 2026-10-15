@@ -68,7 +68,7 @@ export default function EditFellowship() {  const { t } = useTranslation(['fello
       await update.mutateAsync(payload);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not save. Please try again.',
+        err instanceof Error ? err.message : t('fellowships:couldNotSavePleaseTryAgain'),
       );
     }
   }
@@ -89,7 +89,7 @@ export default function EditFellowship() {  const { t } = useTranslation(['fello
       setDeleting(false);
       alert.info(
         'Delete failed',
-        err instanceof Error ? err.message : 'Please try again in a moment.',
+        err instanceof Error ? err.message : t('fellowships:pleaseTryAgainInAMoment'),
       );
     }
   }

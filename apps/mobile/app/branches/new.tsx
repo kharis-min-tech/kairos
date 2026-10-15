@@ -39,7 +39,7 @@ export default function NewBranch() {  const { t } = useTranslation(['branches',
       await create.mutateAsync(payload as CreateBranchRequest);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not create branch. Please try again.',
+        err instanceof Error ? err.message : t('branches:couldNotCreateBranchPleaseTry'),
       );
     }
   }

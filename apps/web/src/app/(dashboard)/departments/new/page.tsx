@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -23,7 +23,8 @@ import {
 } from '@kairos/ui';
 import { useTranslation } from 'react-i18next';
 
-const schema = z
+const makeSchema = (t: (key: string) => string) =>
+  z
   .object({
     departmentId: z.string().uuid('Select a ministry'),
     branchId: z.string().uuid('Select a branch'),
@@ -32,13 +33,14 @@ const schema = z
     description: z.string().optional(),
   })
   .refine((d) => !d.deputyMemberId || d.deputyMemberId !== d.leadMemberId, {
-    message: 'Deputy must differ from lead',
+    message: t('departments:vDeputyMustDifferFromLead'),
     path: ['deputyMemberId'],
   });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function NewDepartmentPage() {  const { t } = useTranslation(['departments', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
 
   const router = useRouter();
   const user = useAuthStore((s) => s.user);

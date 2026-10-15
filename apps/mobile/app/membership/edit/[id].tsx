@@ -74,7 +74,7 @@ export default function EditCohort() {  const { t } = useTranslation(['membershi
       await update.mutateAsync(payload);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not save the cohort. Please try again.',
+        err instanceof Error ? err.message : t('membership:couldNotSaveTheCohortPlease'),
       );
     }
   }
@@ -83,7 +83,7 @@ export default function EditCohort() {  const { t } = useTranslation(['membershi
     const ok = await alert.confirm({
       title: t('membership:archiveThisCohort'),
       message:
-        'It is marked cancelled and hidden from the list. Enrolments, marks and graduations are all preserved, and anyone already graduated stays a confirmed Member.',
+        t('membership:itIsMarkedCancelledAndHidden'),
       confirmLabel: t('membership:archive'),
       destructive: true,
     });
@@ -95,7 +95,7 @@ export default function EditCohort() {  const { t } = useTranslation(['membershi
       setArchiving(false);
       alert.info(
         'Could not archive',
-        err instanceof Error ? err.message : 'Please try again in a moment.',
+        err instanceof Error ? err.message : t('membership:pleaseTryAgainInAMoment'),
       );
     }
   }

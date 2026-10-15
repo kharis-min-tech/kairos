@@ -153,7 +153,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
       onError: (err) =>
         alert.info(
           'Deactivate failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('members:pleaseTryAgain'),
         ),
     });
   }
@@ -170,7 +170,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
       onError: (err) =>
         alert.info(
           'Reject failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('members:pleaseTryAgain'),
         ),
     });
   }
@@ -181,7 +181,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
       onError: (err) =>
         alert.info(
           'Save failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('members:pleaseTryAgain'),
         ),
     });
   }
@@ -219,7 +219,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
       onError: (err) =>
         alert.info(
           'Revoke failed',
-          err instanceof Error ? err.message : 'Please try again.',
+          err instanceof Error ? err.message : t('members:pleaseTryAgain'),
         ),
     });
   }
@@ -620,7 +620,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
                         onError: (err) =>
                           alert.info(
                             'Approve failed',
-                            err instanceof Error ? err.message : 'Please try again.',
+                            err instanceof Error ? err.message : t('members:pleaseTryAgain'),
                           ),
                       })
                     }
@@ -688,7 +688,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
                       onError: (err) =>
                         alert.info(
                           'Reactivate failed',
-                          err instanceof Error ? err.message : 'Please try again.',
+                          err instanceof Error ? err.message : t('members:pleaseTryAgain'),
                         ),
                     })
                   }
@@ -723,7 +723,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
               onError: (err) =>
                 alert.info(
                   'Assign failed',
-                  err instanceof Error ? err.message : 'Please try again.',
+                  err instanceof Error ? err.message : t('members:pleaseTryAgain'),
                 ),
             },
           );

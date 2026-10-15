@@ -118,7 +118,7 @@ function AttendeeCohortPanel() {  const { t } = useTranslation(['forms', 'common
     <div className="space-y-4 pt-4">
       {selected.size > 0 ? (
         <div className="flex items-center justify-between rounded-lg bg-[#5D3FD3]/5 px-4 py-3">
-          <span className="text-sm font-medium text-foreground">{selected.size} selected</span>
+          <span className="text-sm font-medium text-foreground">{t('common:selectedCount', { count: selected.size })}</span>
           <Button onClick={() => setConfirmOpen(true)} className="bg-[#5D3FD3] hover:bg-[#451ebb]">{t('forms:archiveSelected')}</Button>
         </div>
       ) : null}
@@ -226,7 +226,7 @@ function VisitorCohortPanel() {  const { t } = useTranslation(['forms', 'common'
     <div className="space-y-4 pt-4">
       {selected.size > 0 ? (
         <div className="flex items-center justify-between rounded-lg bg-[#5D3FD3]/5 px-4 py-3">
-          <span className="text-sm font-medium text-foreground">{selected.size} selected</span>
+          <span className="text-sm font-medium text-foreground">{t('common:selectedCount', { count: selected.size })}</span>
           <Button onClick={() => setConfirmOpen(true)} className="bg-[#5D3FD3] hover:bg-[#451ebb]">{t('forms:archiveSelected')}</Button>
         </div>
       ) : null}

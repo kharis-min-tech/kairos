@@ -56,7 +56,7 @@ export default function NewMember() {  const { t } = useTranslation(['members', 
       await create.mutateAsync(payload as CreateMemberRequest);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not create member. Please try again.',
+        err instanceof Error ? err.message : t('members:couldNotCreateMemberPleaseTry'),
       );
     }
   }
@@ -70,7 +70,7 @@ export default function NewMember() {  const { t } = useTranslation(['members', 
     } catch (err) {
       alert.info(
         'Share failed',
-        err instanceof Error ? err.message : 'Please try again.',
+        err instanceof Error ? err.message : t('members:pleaseTryAgain'),
       );
     }
   }
@@ -89,7 +89,9 @@ export default function NewMember() {  const { t } = useTranslation(['members', 
             <Check color={c.success} size={48} strokeWidth={2} />
           </View>
           <Text style={styles.successTitle}>
-            {created.member.firstName} {created.member.lastName} is set up
+            {t('members:nameIsSetUp', {
+              name: `${created.member.firstName} ${created.member.lastName}`,
+            })}
           </Text>
           <Text style={styles.successMeta}>
             Share the temporary password below so they can sign in. They&apos;ll be prompted

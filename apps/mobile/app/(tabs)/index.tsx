@@ -236,7 +236,7 @@ export default function Home() {
             message={
               home.error instanceof Error
                 ? home.error.message
-                : 'Please check your connection and try again.'
+                : t('common:pleaseCheckYourConnectionAndTry')
             }
             onRetry={() => home.refetch()}
           />

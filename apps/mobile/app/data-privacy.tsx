@@ -87,13 +87,14 @@ export default function DataPrivacy() {  const { t } = useTranslation(['security
     } catch (err) {
       alert.info(
         'Export failed',
-        err instanceof Error ? err.message : 'Could not export your data. Try again shortly.',
+        err instanceof Error ? err.message : t('security:couldNotExportYourDataTry'),
       );
     } finally {
       setExporting(false);
     }
   }
 
+  // i18n-ignore(4): HTML-escaping regexes, not copy.
   function renderExportHtml(data: Record<string, unknown>, stamp: string): string {
     // Minimal, printable HTML with each top-level key as an <h2>, values as
     // <pre> JSON. Not trying to mirror the web's polished layout — this is a
@@ -157,7 +158,7 @@ ${sections}
       await clearSession();
       router.replace('/(auth)/login');
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Delete failed. Please try again.');
+      setDeleteError(err instanceof Error ? err.message : t('security:deleteFailedPleaseTryAgain'));
     }
   }
 

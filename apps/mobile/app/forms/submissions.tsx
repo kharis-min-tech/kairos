@@ -28,6 +28,7 @@ import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions, localiseMeta } from '@/lib/localise-options';
 
 const FORM_LABEL: Record<string, string> = {
   altar_call: 'Altar call',
@@ -45,6 +46,8 @@ const STATUS_TONE: Record<string, 'primary' | 'gold' | 'success' | 'neutral'> = 
   dismissed: 'neutral',
 };
 
+// i18n-ignore(10): the English source; `forms:typeFilter_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const FORM_FILTERS: { key: FormType | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'altar_call' as FormType, label: 'Altar' },
@@ -55,6 +58,8 @@ const FORM_FILTERS: { key: FormType | 'all'; label: string }[] = [
   { key: 'first_time_visitor' as FormType, label: 'First-timer' },
 ];
 
+// i18n-ignore(8): the English source; `forms:statusFilter_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const STATUS_FILTERS: { key: 'all' | 'new' | 'reviewed' | 'converted' | 'dismissed'; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'new', label: 'New' },
@@ -111,7 +116,7 @@ export default function FormsSubmissions() {  const { t } = useTranslation(['for
           style={styles.chipsScroll}
           contentContainerStyle={styles.chipsRow}
         >
-          {FORM_FILTERS.map((f) => {
+          {localiseOptions(t, 'forms:typeFilter_', FORM_FILTERS, (f) => f.key).map((f) => {
             const active = formType === f.key;
             return (
               <Pressable
@@ -132,7 +137,7 @@ export default function FormsSubmissions() {  const { t } = useTranslation(['for
           style={styles.chipsScroll}
           contentContainerStyle={styles.chipsRow}
         >
-          {STATUS_FILTERS.map((f) => {
+          {localiseOptions(t, 'forms:statusFilter_', STATUS_FILTERS, (f) => f.key).map((f) => {
             const active = status === f.key;
             return (
               <Pressable

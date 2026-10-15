@@ -67,6 +67,7 @@ interface BranchLocation {
   fellowshipDetails: BranchFellowshipInfo[];
 }
 
+// i18n-ignore(60): sample map markers, replaced by live branch data.
 const BRANCH_LOCATIONS: BranchLocation[] = [
   {
     name: 'Kharis London Central',
@@ -937,7 +938,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                 <div>
                   <p className="text-sm text-muted-foreground">{t('fellowships:nearestFellowship')}</p>
                   <p className="font-bold text-xl mt-1">{nearestBranch.branch.name}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{nearestBranch.distanceKm.toFixed(1)} km away</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t('fellowships:kmAway', { distance: nearestBranch.distanceKm.toFixed(1) })}</p>
                 </div>
                 <button
                   onClick={() => {

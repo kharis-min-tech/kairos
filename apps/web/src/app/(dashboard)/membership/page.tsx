@@ -230,7 +230,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
               withdraw.mutate(undefined, {
                 onSuccess: () => toast.success(t('membership:takenOffList')),
                 onError: (e: unknown) =>
-                  toast.error(e instanceof Error ? e.message : 'Could not update the list.'),
+                  toast.error(e instanceof Error ? e.message : t('membership:couldNotUpdateTheList')),
               })
             }
           >
@@ -265,7 +265,7 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
             express.mutate(undefined, {
               onSuccess: () => toast.success(t('membership:youListNextClass')),
               onError: (e: unknown) =>
-                toast.error(e instanceof Error ? e.message : 'Could not join the list.'),
+                toast.error(e instanceof Error ? e.message : t('membership:couldNotJoinTheList')),
             })
           }
         >

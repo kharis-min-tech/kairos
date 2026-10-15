@@ -102,7 +102,7 @@ export default function OutreachProgramsPage() {  const { t } = useTranslation([
 
       toast({
         title: t('outreach:registrationSuccessful'),
-        description: 'You have been registered for this outreach program',
+        description: t('outreach:youHaveBeenRegisteredForThis2'),
       });
 
       // Refresh programs list to update registration status

@@ -6,6 +6,7 @@ import { Button, CustomSelect, Textarea, Label, Card, CardContent, CardHeader, C
 import type { MemberHealthRecord, UpsertHealthRecordRequest } from '@kairos/types';
 import { useMemberHealthRecord, useUpsertMemberHealthRecord } from '@/hooks/use-members';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 interface SafeguardingSectionProps {
   memberId: string;
@@ -18,6 +19,8 @@ interface SafeguardingSectionProps {
 // ── tri-state consent <-> CustomSelect string mapping ──────
 type ConsentValue = 'unset' | 'granted' | 'declined';
 
+// i18n-ignore(5): the English source; `members:photoConsent_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const CONSENT_OPTIONS = [
   { value: 'unset', label: 'Not recorded' },
   { value: 'granted', label: 'Granted' },
@@ -36,10 +39,12 @@ function selectToConsent(v: ConsentValue): boolean | null {
   return null;
 }
 
-function consentLabel(v: boolean | null | undefined): string {
-  if (v === true) return 'Granted';
-  if (v === false) return 'Declined';
-  return 'Not recorded';
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
+function consentLabel(t: Translate, v: boolean | null | undefined): string {
+  if (v === true) return t('members:photoConsent_granted');
+  if (v === false) return t('members:photoConsent_declined');
+  return t('members:photoConsent_unset');
 }
 
 function consentCls(v: boolean | null | undefined): string {
@@ -169,11 +174,12 @@ function TextField({ label, value }: { label: string; value: string | null }) {
 }
 
 function ConsentRow({ label, value }: { label: string; value: boolean | null }) {
+  const { t } = useTranslation(['members', 'common']);
   return (
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground">{label}</span>
       <span className={`rounded px-2 py-0.5 text-xs font-medium ${consentCls(value)}`}>
-        {consentLabel(value)}
+        {consentLabel(t, value)}
       </span>
     </div>
   );
@@ -282,6 +288,7 @@ function ConsentSelect({
   value: ConsentValue;
   onChange: (v: ConsentValue) => void;
 }) {
+  const { t } = useTranslation(['members', 'common']);
   const id = label.replace(/[^a-z]/gi, '-').toLowerCase();
   return (
     <div className="flex items-center justify-between gap-4">
@@ -292,7 +299,7 @@ function ConsentSelect({
           size="sm"
           value={value}
           onValueChange={(v) => onChange(v as ConsentValue)}
-          options={CONSENT_OPTIONS}
+          options={localiseOptions(t, 'members:photoConsent_', CONSENT_OPTIONS)}
         />
       </div>
     </div>

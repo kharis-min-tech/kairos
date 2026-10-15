@@ -16,6 +16,7 @@ import tw from '../locales/tw.json';
  * native speaker. The picker says so, rather than presenting it as finished.
  * Move a language to 'complete' once someone who speaks it has been through it.
  */
+// i18n-ignore(6): each language is named in its own language, by design.
 export const LANGUAGES = [
   { code: 'en', label: 'English', english: 'English', status: 'complete' },
   { code: 'fr', label: 'Français', english: 'French', status: 'complete' },

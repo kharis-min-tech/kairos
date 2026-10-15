@@ -13,6 +13,7 @@ import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'luc
 import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate, formatShortDateTime } from '@kairos/core';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 interface FollowUpRecord {
   id: string;
@@ -26,6 +27,9 @@ interface FollowUpRecord {
   memberName: string;
 }
 
+// i18n-ignore(10): the English source; `souls:status_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site. `value` is the
+// status the API stores and the board compares on, so it stays English.
 const STATUS_OPTIONS = [
   { value: 'New', label: 'New' },
   { value: 'Following Up', label: 'Following Up' },
@@ -35,6 +39,9 @@ const STATUS_OPTIONS = [
   { value: 'Converted', label: 'Converted - use conversion action', disabled: true },
 ];
 
+// i18n-ignore(8): the English source; `souls:contactMethod_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site. `value` is the
+// status the API stores and the board compares on, so it stays English.
 const CONTACT_METHODS = [
   'Phone Call',
   'Text Message',
@@ -44,6 +51,9 @@ const CONTACT_METHODS = [
   'Other',
 ];
 
+// i18n-ignore(7): the English source; `souls:contactStatus_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site. `value` is the
+// status the API stores and the board compares on, so it stays English.
 const CONTACT_STATUSES = [
   'Successful',
   'No Answer',
@@ -52,6 +62,9 @@ const CONTACT_STATUSES = [
   'Declined',
 ];
 
+// i18n-ignore(7): the English source; `souls:urgency_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site. `value` is the
+// status the API stores and the board compares on, so it stays English.
 const URGENCY_LEVELS = [
   { value: 'GREEN', label: 'GREEN - On Track', color: 'text-emerald-600 dark:text-emerald-400' },
   { value: 'AMBER', label: 'AMBER - Monitor', color: 'text-[#9a6b04] dark:text-[#f8b537]' },
@@ -125,7 +138,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
     if (newStatus === 'Converted') {
       toast({
         title: t('souls:useTheConversionAction'),
-        description: 'Converted souls need to be converted through the member creation flow.',
+        description: t('souls:convertedSoulsNeedToBeConverted'),
         variant: 'destructive',
       });
       return;
@@ -173,7 +186,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
 
       toast({
         title: t('souls:followUpLogged'),
-        description: 'Follow-up has been recorded successfully',
+        description: t('souls:followUpHasBeenRecordedSuccessfully'),
       });
 
       // Reset form
@@ -208,7 +221,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
 
     const ok = await confirm({
       title: t('souls:convertV1V2Attendee', { v1: currentSoul.firstName, v2: currentSoul.lastName }),
-      description: 'A profile is created and linked to this soul record. They start as an attendee. Once they complete the 4-week membership class, you can mark them as a confirmed Member from their profile.',
+      description: t('souls:aProfileIsCreatedAndLinked'),
       confirmLabel: t('souls:convert'),
     });
     if (!ok) return;
@@ -360,7 +373,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                 value={currentSoul.status}
                 onValueChange={handleStatusChange}
                 disabled={loading || currentSoul.status === 'Converted'}
-                options={STATUS_OPTIONS}
+                options={localiseOptions(t, 'souls:status_', STATUS_OPTIONS)}
               />
               <p className="text-xs text-muted-foreground mt-1">{t('souls:useOutcomesLikeInterestedNotInterested')}</p>
             </div>
@@ -403,7 +416,10 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     value={followUpForm.contactMethod}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, contactMethod: v }))}
                     placeholder={t('souls:selectMethod')}
-                    options={CONTACT_METHODS.map((m) => ({ value: m, label: m }))}
+                    options={CONTACT_METHODS.map((m) => ({
+                      value: m,
+                      label: t(`souls:contactMethod_${m}`, { defaultValue: m }),
+                    }))}
                   />
                   {followUpForm.contactMethod === 'Other' && (
                     <Input
@@ -427,7 +443,10 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     value={followUpForm.contactStatus}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, contactStatus: v }))}
                     placeholder={t('souls:selectStatus')}
-                    options={CONTACT_STATUSES.map((s) => ({ value: s, label: s }))}
+                    options={CONTACT_STATUSES.map((cs) => ({
+                      value: cs,
+                      label: t(`souls:contactStatus_${cs}`, { defaultValue: cs }),
+                    }))}
                   />
                 </div>
 
@@ -438,7 +457,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     value={followUpForm.urgencyLevel}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, urgencyLevel: v }))}
                     placeholder={t('souls:selectUrgencyOptional')}
-                    options={URGENCY_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
+                    options={localiseOptions(t, 'souls:urgency_', URGENCY_LEVELS)}
                   />
                   <p className="text-xs text-muted-foreground">{t('souls:usePrioritizeHomeVisitsEscalationsE')}</p>
                 </div>
@@ -450,7 +469,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     value={followUpForm.updateStatus}
                     onValueChange={(v) => setFollowUpForm((prev) => ({ ...prev, updateStatus: v }))}
                     placeholder={`Keep current status (${currentSoul.status})`}
-                    options={STATUS_OPTIONS}
+                    options={localiseOptions(t, 'souls:status_', STATUS_OPTIONS)}
                   />
                   <p className="text-xs text-muted-foreground">{t('souls:optionallyUpdateTheSoulSStage')}</p>
                 </div>
@@ -553,7 +572,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                       </div>
                       {followUp.durationMinutes && (
                         <span className="text-sm text-muted-foreground">
-                          {followUp.durationMinutes} min
+                          {t('common:durationMinutes', { count: followUp.durationMinutes })}
                         </span>
                       )}
                     </div>

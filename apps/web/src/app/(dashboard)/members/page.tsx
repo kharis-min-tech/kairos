@@ -151,7 +151,7 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
         <div className="flex flex-wrap items-center gap-2">
           {(isAdmin || isPastor) && (
             <Link href="/members/new">
-              <Button size="sm">+ Add Member</Button>
+              <Button size="sm">+ {t('members:addMember')}</Button>
             </Link>
           )}
           {(isAdmin || isPastor) && (
@@ -323,7 +323,7 @@ export default function MembersPage() {  const { t } = useTranslation(['members'
                                 e.preventDefault();
                                 const ok = await confirm({
                                   title: t('members:deactivateV1V2', { v1: member.firstName, v2: member.lastName }),
-                                  description: 'They will be removed from the active directory. You can reactivate them later from their profile.',
+                                  description: t('members:theyWillBeRemovedFromThe2'),
                                   confirmLabel: t('members:deactivate'),
                                   variant: 'destructive',
                                 });

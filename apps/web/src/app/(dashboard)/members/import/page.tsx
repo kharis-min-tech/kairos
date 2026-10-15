@@ -42,7 +42,7 @@ export default function MembersImportPage() {  const { t } = useTranslation(['me
       const res = await api.members.importCsv(file);
       setResult(res.data ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed. Please check your CSV format.');
+      setError(err instanceof Error ? err.message : t('members:importFailedPleaseCheckYourCsv'));
     } finally {
       setIsLoading(false);
     }

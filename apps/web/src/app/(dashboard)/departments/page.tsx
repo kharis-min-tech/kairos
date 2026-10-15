@@ -263,7 +263,7 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
                       </CardTitle>
                       {dept.pendingJoinRequestCount && dept.pendingJoinRequestCount > 0 ? (
                         <span className="flex-shrink-0 rounded-full bg-[#f8b537]/20 px-2.5 py-0.5 text-xs font-medium text-[#7a5a00] dark:text-[#f8b537]">
-                          {dept.pendingJoinRequestCount} pending
+                          {t('departments:pendingCount', { count: dept.pendingJoinRequestCount })}
                         </span>
                       ) : null}
                     </div>
@@ -293,7 +293,7 @@ function DepartmentsContent() {  const { t } = useTranslation(['departments', 'c
                             e.preventDefault();
                             const ok = await confirm({
                               title: t('departments:deactivateV1V2', { v1: dept.departmentName, v2: dept.branchName }),
-                              description: 'The department will be hidden from the directory and members will lose access.',
+                              description: t('departments:theDepartmentWillBeHiddenFrom'),
                               confirmLabel: t('departments:deactivate'),
                               variant: 'destructive',
                             });

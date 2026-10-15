@@ -64,7 +64,7 @@ export default function MissingMembersFullList() {  const { t } = useTranslation
                 style={[styles.chip, active && styles.chipActive]}
               >
                 <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {n} services
+                  {t('reports:servicesCount', { count: n })}
                 </Text>
               </Pressable>
             );

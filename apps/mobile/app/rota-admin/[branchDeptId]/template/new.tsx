@@ -26,7 +26,10 @@ import {
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
+// i18n-ignore(9): the English source; `common:weekdayShort_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const WEEKDAYS = [
   { value: 0, label: 'Sun' },
   { value: 1, label: 'Mon' },
@@ -115,7 +118,7 @@ export default function NewRotaTemplate() {  const { t } = useTranslation(['rota
             <View style={{ gap: 4 }}>
               <Text style={styles.label}>{t('rota:serviceDay')}</Text>
               <View style={styles.weekdayRow}>
-                {WEEKDAYS.map((d) => {
+                {localiseOptions(t, 'common:weekdayShort_', WEEKDAYS).map((d) => {
                   const active = d.value === weekday;
                   return (
                     <Pressable

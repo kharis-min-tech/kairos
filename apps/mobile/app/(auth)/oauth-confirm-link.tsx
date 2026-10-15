@@ -141,7 +141,7 @@ export default function OAuthConfirmLinkScreen() {
             <View style={styles.providerRow}>
               <OAuthProviderIcon provider={provider} size={20} tint={c.ink} />
               <Text style={styles.providerText}>
-                Linking {providerLabel} sign-in
+                {t('auth:linkingProviderSignIn', { provider: providerLabel })}
               </Text>
             </View>
 

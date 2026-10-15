@@ -395,6 +395,7 @@ export function buildDataExportHtml(payload: ExportPayload, t: Translate, lang =
       <div class="brand">Kharis Church</div>
       <h1>${esc(title)}</h1>
       <p class="cover-meta">${t('dataExport:exportedOn')} ${esc(exportedAtDisplay)}</p>
+      <!-- i18n-ignore: a literal email address. -->
       <p class="cover-note">
         ${t('dataExport:coverNote')}
         <a href="mailto:privacy@kharis.org">privacy@kharis.org</a>.
@@ -447,6 +448,7 @@ export function buildDataExportHtml(payload: ExportPayload, t: Translate, lang =
     </section>
 
     <footer>
+      <!-- i18n-ignore: a literal email address. -->
       <p>
         ${t('dataExport:footerNote')}
         <a href="mailto:privacy@kharis.org">privacy@kharis.org</a>.

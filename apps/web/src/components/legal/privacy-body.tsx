@@ -221,6 +221,7 @@ export function PrivacyBody() {  const { t, i18n } = useTranslation(['legalPriva
       </Section>
 
       <Section title={t('legalPrivacy:contactUs')}>
+        {/* i18n-ignore: the organisation's registered name. */}
         <p>
           Kharis Church:{' '}
           <a

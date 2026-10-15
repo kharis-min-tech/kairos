@@ -63,7 +63,7 @@ export default function DeleteAccountSettings() {  const { t } = useTranslation(
     const ok = await alert.confirm({
       title: t('settings:deleteAccount'),
       message:
-        'This will permanently delete your account. This cannot be undone.',
+        t('settings:thisWillPermanentlyDeleteYourAccount'),
       confirmLabel: t('settings:delete2'),
       destructive: true,
     });

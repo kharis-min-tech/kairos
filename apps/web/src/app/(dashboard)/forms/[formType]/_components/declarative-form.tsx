@@ -36,6 +36,7 @@ import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 // ── Value model ─────────────────────────────────────────────
 //
@@ -49,6 +50,9 @@ import { useTranslation } from 'react-i18next';
 // disagree about what a given set of answers submits. They had already drifted
 // apart twice before they moved there.
 
+// i18n-ignore(5): the English source; `forms:yesNo_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site. 'Yes'/'No' is
+// what the form submits.
 const YES_NO = [
   { value: 'Yes', label: 'Yes' },
   { value: 'No', label: 'No' },
@@ -325,7 +329,7 @@ export function DeclarativeForm({
             <RadioRow
               name={field.label}
               value={typeof value === 'boolean' ? (value ? 'Yes' : 'No') : ''}
-              options={YES_NO}
+              options={localiseOptions(t, 'forms:yesNo_', YES_NO)}
               onChange={(v) => onChange(v === 'Yes')}
             />
           );

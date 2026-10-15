@@ -140,6 +140,7 @@ function QueueList({
   emptyText: string;
   showInviter?: boolean;
 }) {
+  const { t } = useTranslation(['concerns', 'common']);
   if (isLoading) return <Skeleton />;
   if (rows.length === 0) return <Empty text={emptyText} />;
 

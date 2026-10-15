@@ -43,7 +43,7 @@ export default function NewFellowship() {  const { t } = useTranslation(['fellow
       setServerError(
         err instanceof Error
           ? err.message
-          : 'Could not create fellowship. Please try again.',
+          : t('fellowships:couldNotCreateFellowshipPleaseTry'),
       );
     }
   }

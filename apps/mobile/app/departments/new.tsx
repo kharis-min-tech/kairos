@@ -45,7 +45,7 @@ export default function NewDepartment() {  const { t } = useTranslation(['depart
       setServerError(
         err instanceof Error
           ? err.message
-          : 'Could not create department. Please try again.',
+          : t('departments:couldNotCreateDepartmentPleaseTry'),
       );
     }
   }

@@ -35,6 +35,28 @@ FIELDS = ('title|message|label|subtitle|placeholder|confirmLabel|cancelLabel'
           '|confirmText|cancelText|tooltip|caption')
 
 SKIP = re.compile(r'^(?:[A-Z]{1,4}|\d+|[^A-Za-z]*|https?:.*|[a-z]+://.*)$')
+
+# A single token with no spaces is an identifier, not a sentence: an API
+# status, a scope kind, an <input type>. A Tailwind class list is several
+# tokens but every one of them is a utility class. Both have been translated
+# by accident, and a translated value silently breaks the comparison it feeds.
+VALUEISH = re.compile(
+    r'^[a-z0-9_-]+$'                       # in_person, welfare, password
+    r'|^[A-Z][a-z]*(?:_[A-Za-z]+)*$'        # Open, Assigned, Not_Present
+    r'|(?:^|\s)(?:bg|text|border|hover|dark|ring|from|to|via|w|h|p[xytblr]?|m[xytblr]?|flex|grid|rounded|gap|opacity|shadow)[-:]'
+    r'|^#[0-9a-fA-F]{3,8}$'
+)
+
+
+def is_prose(text):
+    """True when a string reads as something written for a person."""
+    if VALUEISH.search(text):
+        return False
+    words = re.findall(r"[A-Za-z][A-Za-z'’-]*", text)
+    if len(words) >= 2:
+        return True
+    # A single word still counts if it is a real word shown on its own.
+    return len(words) == 1 and len(words[0]) >= 5 and text.strip() == words[0]
 CODEISH = re.compile(r'[;()\[\]=]|=>|&&|\|\||\breturn\b|\bconst\b|\.\w+\(')
 JSX_TEXT = r'(?<![=!<>|&-])>\s*([A-Za-z][^<>{}]{1,300}?)\s*<'
 
@@ -119,6 +141,13 @@ def component_ranges(src):
 
 def main():
     path, ns = sys.argv[1], sys.argv[2]
+    # Optional third argument: a JSON file of the namespace's existing
+    # catalogue. Without it a generated key can land on one that already
+    # holds different English, which rewords the screen rather than
+    # translating it -- a "Retry" button once started reading "Try again".
+    taken = {}
+    if len(sys.argv) > 3 and sys.argv[3]:
+        taken = json.load(open(sys.argv[3]))
     src = open(path).read()
     ranges = component_ranges(src)
 
@@ -127,6 +156,18 @@ def main():
 
     used, out, edits = set(), {}, []
 
+    def claim(start, end):
+        """Refuse a second rewrite of a span an earlier rule already took.
+
+        `description: 'Sentence.'` matches both the display-prop rule and the
+        error-fallback rule. Both edits were applied, and the second one ate
+        the tail of the first, leaving a syntax error in the file.
+        """
+        for a, b, _ in edits:
+            if start < b and a < end:
+                return False
+        return True
+
     def remember(text):
         t = clean(text)
         if len(t) < 2 or SKIP.match(t) or not re.search(r'[A-Za-z]{2}', t):
@@ -134,17 +175,40 @@ def main():
         for k, v in out.items():
             if v == t:
                 return k
-        k = key_for(t, used)
+        for k, v in taken.items():
+            if v == t:
+                return k
+        k = key_for(t, used | {k for k, v in taken.items() if v != t})
         if k:
             out[k] = t
         return k
 
-    def collect(pattern, build, group=2, flags=0, guard=False):
+    # A line (or the line above it) carrying `i18n-ignore` is left alone.
+    # Some display props are load-bearing values -- the souls board compares
+    # its RAG filter against the chip's own `label` -- and the only thing that
+    # knows is the person who wrote it.
+    # `i18n-ignore` covers that line and the next one; `i18n-ignore(6)` covers
+    # the next six, which is what a short block of option objects needs.
+    ignored_lines = set()
+    for i, line in enumerate(src.split('\n')):
+        hit = re.search(r'i18n-ignore(?:\((\d+)\))?', line)
+        if hit:
+            span = int(hit.group(1) or 1)
+            ignored_lines.update(range(i + 1, i + 2 + span))
+
+    def line_of(pos):
+        return src.count('\n', 0, pos) + 1
+
+    def collect(pattern, build, group=2, flags=0, guard=False, prose=False):
         for m in re.finditer(pattern, src, flags):
-            if not inside(m.start()):
+            if not inside(m.start()) or line_of(m.start()) in ignored_lines:
                 continue
             body = m.group(group)
             if guard and CODEISH.search(body):
+                continue
+            if prose and not is_prose(clean(body)):
+                continue
+            if not claim(m.start(), m.end()):
                 continue
             k = remember(body)
             if k:
@@ -162,23 +226,35 @@ def main():
 
     # Toasts and native confirms.
     collect(r"(toast\.(?:success|error|info|warning|message)\(\s*)'([^'\\\n]{4,200})'",
-            lambda m, k: f"{m.group(1)}t('{ns}:{k}')", group=2)
+            lambda m, k: f"{m.group(1)}t('{ns}:{k}')", group=2, prose=True)
     collect(r"(window\.confirm\(\s*)'([^'\\\n]{4,300})'",
-            lambda m, k: f"{m.group(1)}t('{ns}:{k}')", group=2)
+            lambda m, k: f"{m.group(1)}t('{ns}:{k}')", group=2, prose=True)
 
     # Both arms of a ternary. The audit only looked for a capitalised first
     # letter, which missed every lowercase fragment -- "in a row, attended".
+    #
+    # A ternary is the most dangerous position in the file, because the two
+    # arms are just as often a value as a label: an <input type>, an API
+    # status, a scope kind, a Tailwind class. `PROSE` insists on something
+    # that reads like English prose -- two words, or one word of 5+ letters
+    # with a space or punctuation around it -- and `VALUEISH` vetoes anything
+    # that smells like an identifier or a class list.
     for m in re.finditer(r"\?\s*'([^'\\\n]{3,200})'\s*:\s*'([^'\\\n]{3,200})'", src):
         if not inside(m.start()):
             continue
-        ka, kb = remember(m.group(1)), remember(m.group(2))
+        a, b = clean(m.group(1)), clean(m.group(2))
+        if not (is_prose(a) and is_prose(b)):
+            continue
+        if not claim(m.start(), m.end()):
+            continue
+        ka, kb = remember(a), remember(b)
         if ka and kb:
             edits.append((m.start(), m.end(), f"? t('{ns}:{ka}') : t('{ns}:{kb}')"))
 
     # `err instanceof Error ? err.message : 'Could not load X.'` -- the branch
     # a reader actually hits when the server is down.
     collect(r"(:\s*)'([A-Z][^'\\\n]{6,200}[.!?])'(\s*[,)\n])",
-            lambda m, k: f"{m.group(1)}t('{ns}:{k}'){m.group(3)}", group=2)
+            lambda m, k: f"{m.group(1)}t('{ns}:{k}'){m.group(3)}", group=2, prose=True)
 
     if edits:
         for start, end, text in sorted(edits, key=lambda e: -e[0]):

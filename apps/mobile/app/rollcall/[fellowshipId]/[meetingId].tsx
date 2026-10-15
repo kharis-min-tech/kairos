@@ -304,7 +304,7 @@ export default function RollcallMeeting() {  const { t } = useTranslation(['atte
         } catch {
           alert.info(
             'Save failed',
-            err instanceof Error ? err.message : 'Please try again in a moment.',
+            err instanceof Error ? err.message : t('attendance:pleaseTryAgainInAMoment'),
           );
         }
       },

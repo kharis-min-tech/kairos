@@ -199,6 +199,7 @@ function HeatmapTable({
               <td className="px-2 py-1.5 text-right text-sm tabular-nums text-muted-foreground">
                 {Math.round(m.attendancePct * 100)}%
               </td>
+              {/* i18n-ignore(2): Tailwind classes, not copy. */}
               <td
                 className={`px-2 py-1.5 text-right text-sm tabular-nums ${
                   m.missedStreak >= 3 ? 'font-semibold text-destructive' : 'text-muted-foreground'

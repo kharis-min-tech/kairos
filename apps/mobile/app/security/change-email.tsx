@@ -77,7 +77,7 @@ export default function ChangeEmail() {  const { t } = useTranslation(['security
       setServerError(
         err instanceof Error
           ? err.message
-          : 'Could not request the email change. Please try again.',
+          : t('security:couldNotRequestTheEmailChange'),
       );
     }
   }

@@ -69,7 +69,7 @@ export default function EditDepartment() {  const { t } = useTranslation(['depar
       await update.mutateAsync(payload as UpdatePayload);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not save. Please try again.',
+        err instanceof Error ? err.message : t('departments:couldNotSavePleaseTryAgain'),
       );
     }
   }
@@ -90,7 +90,7 @@ export default function EditDepartment() {  const { t } = useTranslation(['depar
       setDeleting(false);
       alert.info(
         'Deactivate failed',
-        err instanceof Error ? err.message : 'Please try again in a moment.',
+        err instanceof Error ? err.message : t('departments:pleaseTryAgainInAMoment'),
       );
     }
   }

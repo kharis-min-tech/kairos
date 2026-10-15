@@ -295,7 +295,7 @@ export default function MembersDirectory() {  const { t } = useTranslation(['mem
           ) : members.hasNextPage ? (
             <View style={{ height: spacing.md }} />
           ) : rows.length > 0 ? (
-            <Text style={styles.endOfList}>End of list · {total} members</Text>
+            <Text style={styles.endOfList}>{t('members:endOfListCount', { count: total })}</Text>
           ) : null
         }
       />

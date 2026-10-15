@@ -271,7 +271,7 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
                       onSuccess: () => toast.success(t('departments:offerAcceptedProbationStarted')),
                       onError: (e: unknown) =>
                         toast.error(
-                          e instanceof Error ? e.message : 'Failed to accept offer.',
+                          e instanceof Error ? e.message : t('departments:failedToAcceptOffer'),
                         ),
                     },
                   )
@@ -412,7 +412,7 @@ export default function DepartmentDetailPage() {  const { t } = useTranslation([
           {isAdminOrPastor && (
             <div className="flex items-center gap-3">
               <Button size="sm" onClick={() => setShowAddMember((v) => !v)}>
-                {showAddMember ? 'Cancel' : '+ Add Member'}
+                {showAddMember ? t('common:cancel') : `+ ${t('members:addMember')}`}
               </Button>
               {showAddMember && (
                 <div className="flex flex-1 items-center gap-2">

@@ -192,7 +192,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
   async function handleDeactivate() {
     const ok = await confirm({
       title: t('newBelievers:deactivateEnrollment'),
-      description: 'This member will be removed from the active pipeline. You can re-enrol them later if needed.',
+      description: t('newBelievers:thisMemberWillBeRemovedFrom'),
       confirmLabel: t('newBelievers:deactivate'),
       variant: 'destructive',
     });
@@ -513,7 +513,7 @@ export default function EnrollmentDetailPage() {  const { t } = useTranslation([
                       className="flex items-center justify-between rounded-lg border p-3 text-sm"
                     >
                       <div>
-                        <p className="font-medium">{a.topic ?? t('newBelievers:session')}</p>
+                        <p className="font-medium">{a.topic ?? t('newBelievers:sessionGeneric')}</p>
                         <p className="text-xs text-muted-foreground">
                           {formatShortDate(a.sessionDate)}
                         </p>

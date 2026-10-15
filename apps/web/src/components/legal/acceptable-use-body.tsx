@@ -162,6 +162,7 @@ export function AcceptableUseBody() {  const { t, i18n } = useTranslation(['lega
       </Section>
 
       <Section title={t('legalAcceptableUse:contact')}>
+        {/* i18n-ignore: the organisation's registered name. */}
         <p>
           Kharis Church:{' '}
           <a

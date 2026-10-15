@@ -107,7 +107,7 @@ export default function MemberApprovalPage() {  const { t } = useTranslation(['m
                       onClick={async () => {
                         const ok = await confirm({
                           title: t('members:rejectV1V2', { v1: member.firstName, v2: member.lastName }),
-                          description: 'Their registration request will be marked as rejected.',
+                          description: t('members:theirRegistrationRequestWillBeMarked'),
                           confirmLabel: t('members:reject'),
                           variant: 'destructive',
                         });

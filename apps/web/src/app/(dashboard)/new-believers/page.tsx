@@ -559,7 +559,7 @@ function NewBelieversContent() {  const { t } = useTranslation(['newBelievers', 
             ))}
             {alerts.length > 5 && (
               <span className="text-xs font-medium text-[#f8b537]">
-                +{alerts.length - 5} more
+                {t('newBelievers:plusMore', { count: alerts.length - 5 })}
               </span>
             )}
           </div>

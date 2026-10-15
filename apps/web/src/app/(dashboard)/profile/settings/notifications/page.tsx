@@ -15,6 +15,7 @@ import {
   useUpdateNotificationPreference,
 } from '@/hooks/use-notification-preferences';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 type SelectValue = 'off' | 'immediate' | 'digest_daily';
 
@@ -28,6 +29,8 @@ function fromSelect(value: SelectValue): { enabled: boolean; cadence: Notificati
   return { enabled: true, cadence: value };
 }
 
+// i18n-ignore(5): the English source; `settings:notifyCadence_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const SELECT_OPTIONS = [
   { value: 'immediate', label: 'Immediate' },
   { value: 'digest_daily', label: 'Daily digest' },
@@ -84,7 +87,9 @@ export default function NotificationsSettingsPage() {  const { t } = useTranslat
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">
-                      {NOTIFICATION_CATEGORY_LABEL[category]}
+                      {t(`settings:notifyCategory_${category}`, {
+                        defaultValue: NOTIFICATION_CATEGORY_LABEL[category],
+                      })}
                     </p>
                     {isSecurity && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
@@ -92,7 +97,9 @@ export default function NotificationsSettingsPage() {  const { t } = useTranslat
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {NOTIFICATION_CATEGORY_DESCRIPTION[category]}
+                    {t(`settings:notifyCategoryDesc_${category}`, {
+                      defaultValue: NOTIFICATION_CATEGORY_DESCRIPTION[category],
+                    })}
                   </p>
                 </div>
                 <div className="w-40 shrink-0">
@@ -106,7 +113,7 @@ export default function NotificationsSettingsPage() {  const { t } = useTranslat
                         cadence: next.cadence,
                       });
                     }}
-                    options={SELECT_OPTIONS}
+                    options={localiseOptions(t, 'settings:notifyCadence_', SELECT_OPTIONS)}
                     disabled={isSecurity || updateMutation.isPending}
                   />
                 </div>

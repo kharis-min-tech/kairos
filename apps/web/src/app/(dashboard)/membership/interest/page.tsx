@@ -107,7 +107,7 @@ export default function MembershipInterestPage() {  const { t } = useTranslation
           );
         },
         onError: (e: unknown) =>
-          toast.error(e instanceof Error ? e.message : 'Could not admit them.'),
+          toast.error(e instanceof Error ? e.message : t('membership:couldNotAdmitThem')),
       },
     );
   }

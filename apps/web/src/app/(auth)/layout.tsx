@@ -99,9 +99,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="hidden w-[480px] shrink-0 flex-col justify-between p-10 xl:flex">
           <div className="flex items-center gap-3">
             <KharisLogoIcon size={40} draw />
-            <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
-              Kairos
-            </span>
+            <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">Kairos</span>
           </div>
 
           <div className="space-y-8">
@@ -158,9 +156,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <Reveal className="w-full max-w-md space-y-6" delay={250} duration={1300}>
             <div className="flex items-center justify-center gap-2 xl:hidden">
               <KharisLogoIcon size={32} draw />
-              <span className="text-lg font-bold uppercase tracking-widest text-primary">
-                Kairos
-              </span>
+              <span className="text-lg font-bold uppercase tracking-widest text-primary">Kairos</span>
             </div>
             {children}
           </Reveal>

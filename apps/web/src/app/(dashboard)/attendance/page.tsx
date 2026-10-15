@@ -10,7 +10,10 @@ import { formatShortDate } from '@kairos/core';
 import { ServiceType } from '@kairos/types';
 import type { ServiceListParams } from '@kairos/types';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
+// i18n-ignore(6): the English source; `attendance:serviceTypeFilter_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const TYPE_OPTIONS = [
   { value: '', label: 'All types' },
   { value: ServiceType.Sunday, label: 'Sunday' },
@@ -67,7 +70,7 @@ export default function AttendanceServicesPage() {  const { t } = useTranslation
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-40">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('attendance:type')}</label>
-          <CustomSelect value={type} onValueChange={setType} options={TYPE_OPTIONS} />
+          <CustomSelect value={type} onValueChange={setType} options={localiseOptions(t, 'attendance:serviceTypeFilter_', TYPE_OPTIONS)} />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('attendance:from')}</label>

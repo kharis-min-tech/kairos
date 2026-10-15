@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,17 +12,19 @@ import { PasswordStrength } from '@/components/password-strength';
 import { KharisCardHeader } from '../kharis-logo';
 import { useTranslation } from 'react-i18next';
 
-const resetPasswordSchema = z.object({
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+const makeResetPasswordSchema = (t: (key: string) => string) =>
+  z.object({
+  newPassword: z.string().min(8, t('auth:vPasswordMustBeAtLeastCharacters')),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
+  message: t('auth:vPasswordsDoNotMatch'),
   path: ['confirmPassword'],
 });
 
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormData = z.infer<ReturnType<typeof makeResetPasswordSchema>>;
 
 function ResetPasswordContent() {  const { t } = useTranslation(['auth', 'common']);
+  const resetPasswordSchema = useMemo(() => makeResetPasswordSchema(t), [t]);
 
   const router = useRouter();
   const searchParams = useSearchParams();

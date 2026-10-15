@@ -134,7 +134,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
                   const ok = await confirm({
                     title: t('membership:archiveV1', { v1: cohort.data!.name }),
                     description:
-                      'This hides it from every active list. The row stays in the database.',
+                      t('membership:thisHidesItFromEveryActive'),
                     variant: 'destructive',
                     confirmLabel: t('membership:archive'),
                   });
@@ -145,7 +145,7 @@ export default function EditCohortPage() {  const { t } = useTranslation(['membe
                       router.push('/membership');
                     },
                     onError: (e: unknown) =>
-                      toast.error(e instanceof Error ? e.message : 'Could not archive.'),
+                      toast.error(e instanceof Error ? e.message : t('membership:couldNotArchive')),
                   });
                 }}
               >

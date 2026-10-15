@@ -2,7 +2,7 @@
 
 export const runtime = 'edge';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
@@ -21,8 +21,9 @@ import { BranchType } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
 import { useTranslation } from 'react-i18next';
 
-const schema = z.object({
-  branchName: z.string().min(1, 'Branch name is required'),
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+  branchName: z.string().min(1, t('branches:vBranchNameIsRequired')),
   regionId: z.string().uuid('Select a region'),
   branchType: z.nativeEnum(BranchType),
   address: z.string().optional(),
@@ -35,9 +36,10 @@ const schema = z.object({
   establishedDate: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 export default function BranchDetailPage() {  const { t } = useTranslation(['branches', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
 
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -256,7 +258,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                   onClick={async () => {
                     const ok = await confirm({
                       title: `Deactivate ${branch?.branchName ?? 'this branch'}?`,
-                      description: 'The branch will be hidden from active lists. All associated members and data stay in place but are tagged inactive.',
+                      description: t('branches:theBranchWillBeHiddenFrom'),
                       confirmLabel: t('branches:deactivate'),
                       variant: 'destructive',
                     });
@@ -431,7 +433,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
                       onClick={async () => {
                         const ok = await confirm({
                           title: t('branches:removeV1V2V3', { v1: leader.memberFirstName, v2: leader.memberLastName, v3: leader.role }),
-                          description: 'You can reassign them later if needed.',
+                          description: t('branches:youCanReassignThemLaterIf'),
                           confirmLabel: t('branches:remove'),
                           variant: 'destructive',
                         });
@@ -459,7 +461,7 @@ export default function BranchDetailPage() {  const { t } = useTranslation(['bra
           <CardHeader>
             <CardTitle>{t('branches:members')}</CardTitle>
             <CardDescription>
-              {membersData?.meta?.total ?? 0} member{(membersData?.meta?.total ?? 0) !== 1 ? 's' : ''} in this branch
+              {t('branches:membersInThisBranch', { count: membersData?.meta?.total ?? 0 })}
             </CardDescription>
           </CardHeader>
           <CardContent>

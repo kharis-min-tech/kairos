@@ -69,7 +69,7 @@ export default function EditBranch() {  const { t } = useTranslation(['branches'
       await update.mutateAsync(payload as UpdateBranchRequest);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not save. Please try again.',
+        err instanceof Error ? err.message : t('branches:couldNotSavePleaseTryAgain'),
       );
     }
   }
@@ -89,7 +89,7 @@ export default function EditBranch() {  const { t } = useTranslation(['branches'
       setDeleting(false);
       alert.info(
         'Deactivate failed',
-        err instanceof Error ? err.message : 'Please try again in a moment.',
+        err instanceof Error ? err.message : t('branches:pleaseTryAgainInAMoment'),
       );
     }
   }

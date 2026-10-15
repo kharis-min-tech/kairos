@@ -111,6 +111,7 @@ export default function RotaInstanceDetail() {  const { t } = useTranslation(['r
         assignmentId,
         {
           memberId,
+          // i18n-ignore: the rota status the API stores and compares on.
           status: memberId ? 'Assigned' : 'Open',
         },
       );
@@ -131,7 +132,7 @@ export default function RotaInstanceDetail() {  const { t } = useTranslation(['r
       const ok = await alert.confirm({
         title: t('rota:regenerateThisInstance'),
         message:
-          'Assignments will be recomputed from the pool by rotation. Manual tweaks on this instance will be lost.',
+          t('rota:assignmentsWillBeRecomputedFromThe'),
         confirmLabel: t('rota:regenerate'),
         destructive: true,
       });
@@ -230,8 +231,10 @@ export default function RotaInstanceDetail() {  const { t } = useTranslation(['r
                   <View style={styles.metaLine}>
                     <Calendar color={c.inkMuted} size={12} strokeWidth={1.5} />
                     <Text style={styles.metaText}>
-                      {assignments.filter((a) => a.memberId).length}/{assignments.length}{' '}
-                      slots filled
+                      {t('rota:slotsFilled', {
+                        filled: assignments.filter((a) => a.memberId).length,
+                        total: assignments.length,
+                      })}
                     </Text>
                   </View>
                 </View>
@@ -250,6 +253,7 @@ export default function RotaInstanceDetail() {  const { t } = useTranslation(['r
                     size="sm"
                     loading={publish.isPending}
                     onPress={() =>
+                      // i18n-ignore: the rota status the API stores and compares on.
                       publish.mutate(status === 'Published' ? 'Draft' : 'Published')
                     }
                   />

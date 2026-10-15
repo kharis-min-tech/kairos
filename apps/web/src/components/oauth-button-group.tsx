@@ -25,6 +25,7 @@ interface OAuthButtonGroupProps {
 }
 
 const PROVIDERS: { id: OAuthProviderId; label: string; variant: 'light' | 'dark' }[] = [
+  // i18n-ignore(3): identity provider brand names.
   { id: 'google', label: 'Google', variant: 'light' },
   { id: 'microsoft', label: 'Microsoft', variant: 'light' },
   { id: 'apple', label: 'Apple', variant: 'dark' },

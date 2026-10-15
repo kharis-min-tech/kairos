@@ -155,7 +155,9 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {definition.title}
-            <Badge className={statusMeta.className}>{statusMeta.label}</Badge>
+            <Badge className={statusMeta.className}>
+                        {t(`forms:submissionStatus_${submission.status}`, { defaultValue: statusMeta.label })}
+                      </Badge>
           </DialogTitle>
           <DialogDescription>
             Submitted {formatShortDate(submission.createdAt)}

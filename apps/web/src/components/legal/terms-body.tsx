@@ -108,6 +108,7 @@ export function TermsBody() {  const { t, i18n } = useTranslation(['legalTerms',
       </Section>
 
       <Section title={t('legalTerms:contact')}>
+        {/* i18n-ignore: the organisation's registered name. */}
         <p>
           Kharis Church:{' '}
           <a

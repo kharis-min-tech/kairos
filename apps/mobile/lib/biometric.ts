@@ -85,6 +85,8 @@ export async function getCapability(): Promise<BiometricCapability> {
     const hasIris = types.includes(LocalAuthentication.AuthenticationType.IRIS);
     const distinctCount = (hasFace ? 1 : 0) + (hasFinger ? 1 : 0) + (hasIris ? 1 : 0);
 
+    // i18n-ignore(5): the stable key for `auth:biometric_<label>`, which the
+    // login screen looks up; 'Face ID' is Apple's own name and never changes.
     let label = 'Biometrics';
     if (distinctCount === 1) {
       if (hasFace) label = 'Face ID';
@@ -99,6 +101,7 @@ export async function getCapability(): Promise<BiometricCapability> {
       available: hasHardware && isEnrolled,
     };
   } catch {
+    // i18n-ignore: same stable key as above.
     return { hasHardware: false, isEnrolled: false, label: 'Biometrics', available: false };
   }
 }

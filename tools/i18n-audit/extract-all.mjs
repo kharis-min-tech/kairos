@@ -13,7 +13,15 @@
  * written, and `audit.mjs` reports exactly which keys are waiting.
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+  existsSync,
+  mkdtempSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, extname, relative } from 'node:path';
 
 const ROOT = new URL('../../', import.meta.url).pathname.replace(/\/$/, '');
@@ -105,6 +113,15 @@ function isTranslatable(file) {
 const skipped = [];
 const collisions = [];
 
+// The extractor needs to know which keys the namespace already uses, and for
+// what, so it never generates one that reads as another string's translation.
+const takenDir = mkdtempSync(join(tmpdir(), 'i18n-taken-'));
+function writeTaken(ns) {
+  const p = join(takenDir, `${ns}.json`);
+  writeFileSync(p, JSON.stringify(base[ns] ?? {}));
+  return p;
+}
+
 for (const file of files) {
   if (!isTranslatable(file)) {
     skipped.push(relative(ROOT, file));
@@ -114,7 +131,12 @@ for (const file of files) {
   let result;
   try {
     result = JSON.parse(
-      execFileSync('python3', [join(ROOT, 'tools/i18n-audit/extract.py'), file, ns]).toString(),
+      execFileSync('python3', [
+        join(ROOT, 'tools/i18n-audit/extract.py'),
+        file,
+        ns,
+        writeTaken(ns),
+      ]).toString(),
     );
   } catch (err) {
     console.log(`  ! ${relative(ROOT, file)}: ${String(err).slice(0, 80)}`);

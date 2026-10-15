@@ -112,7 +112,7 @@ export default function RollcallFellowship() {  const { t } = useTranslation(['a
         onError: (err) => {
           alert.info(
             'Could not start meeting',
-            err instanceof Error ? err.message : 'Please try again in a moment.',
+            err instanceof Error ? err.message : t('attendance:pleaseTryAgainInAMoment'),
           );
         },
         onSettled: () => setCreating(false),

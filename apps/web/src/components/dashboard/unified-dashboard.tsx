@@ -450,12 +450,12 @@ export function UnifiedDashboard({
             <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">{t('common:soulsByStatus')}<InfoTooltip title={t('common:soulStatus')}>
                 <p className="font-semibold text-foreground mb-2">{t('common:soulStatusDefinitions')}</p>
                 <ul className="ml-4 text-xs space-y-1">
-                  <li>• <span className="font-semibold">{t('common:new')}</span>{t('common:recentlyContactedInitialStage')}</li>
-                  <li>• <span className="font-semibold">{t('common:followingUp')}</span>{t('common:activeEngagementInProgress')}</li>
-                  <li>• <span className="font-semibold">{t('common:interested')}</span>{t('common:showingInterestInJoining')}</li>
-                  <li>• <span className="font-semibold">{t('common:converted')}</span>{t('common:successfullyJoinedTheChurch')}</li>
-                  <li>• <span className="font-semibold">{t('common:notInterested')}</span>{t('common:declinedToJoin')}</li>
-                  <li>• <span className="font-semibold">{t('common:lostContact')}</span>{t('common:unableToReach')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:new') })}</span>{' '}{t('common:recentlyContactedInitialStage')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:followingUp') })}</span>{' '}{t('common:activeEngagementInProgress')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:interested') })}</span>{' '}{t('common:showingInterestInJoining')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:converted') })}</span>{' '}{t('common:successfullyJoinedTheChurch')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:notInterested') })}</span>{' '}{t('common:declinedToJoin')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:lostContact') })}</span>{' '}{t('common:unableToReach')}</li>
                 </ul>
               </InfoTooltip>
             </h3>
@@ -564,10 +564,10 @@ export function UnifiedDashboard({
                 <p className="font-semibold text-foreground mb-2">{t('common:conversionFunnel2')}</p>
                 <p className="text-xs mb-2">{t('common:showsTheProgressionOfSoulsThrough')}</p>
                 <ul className="ml-4 text-xs space-y-1">
-                  <li>• <span className="font-semibold">{t('common:new')}</span>{t('common:initialContacts')}</li>
-                  <li>• <span className="font-semibold">{t('common:followingUp')}</span>{t('common:activeEngagement')}</li>
-                  <li>• <span className="font-semibold">{t('common:interested')}</span>{t('common:showingCommitment')}</li>
-                  <li>• <span className="font-semibold">{t('common:converted')}</span>{t('common:successfullyJoined')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:new') })}</span>{' '}{t('common:initialContacts')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:followingUp') })}</span>{' '}{t('common:activeEngagement')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:interested') })}</span>{' '}{t('common:showingCommitment')}</li>
+                  <li>• <span className="font-semibold">{t('common:labelColon', { label: t('common:converted') })}</span>{' '}{t('common:successfullyJoined')}</li>
                 </ul>
                 <p className="text-xs mt-2 text-muted-foreground">{t('common:higherNumbersAtEachStageIndicate')}</p>
               </InfoTooltip>
@@ -818,7 +818,7 @@ export function UnifiedDashboard({
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-border/15">
           <DialogHeader>
             <DialogTitle className="text-2xl text-foreground">{dialogTitle}</DialogTitle>
-            <p className="text-muted-foreground mt-2">Total: {selectedSouls.length} souls</p>
+            <p className="text-muted-foreground mt-2">{t('common:totalSoulsCount', { count: selectedSouls.length })}</p>
           </DialogHeader>
           <div className="space-y-3 mt-4">
             {selectedSouls.length === 0 ? (
@@ -899,7 +899,7 @@ export function UnifiedDashboard({
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-border/15">
           <DialogHeader>
             <DialogTitle className="text-2xl text-foreground">{dialogTitle}</DialogTitle>
-            <p className="text-muted-foreground mt-2">Total: {selectedFollowUps.length} follow-ups</p>
+            <p className="text-muted-foreground mt-2">{t('common:totalFollowUpsCount', { count: selectedFollowUps.length })}</p>
           </DialogHeader>
           <div className="space-y-3 mt-4">
             {selectedFollowUps.length === 0 ? (

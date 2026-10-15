@@ -208,7 +208,7 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {  cons
           <div>
             <CardTitle className="text-base">{t('departments:outfitGallery')}</CardTitle>
             <CardDescription>
-              {outfits.length} {t('departments:outfitWord', { count: outfits.length })} available
+              {t('departments:outfitsAvailableCount', { count: outfits.length })}
             </CardDescription>
           </div>
           {canManage && (
@@ -296,7 +296,7 @@ function OutfitCard({
   const handleArchive = async () => {
     const ok = await confirm({
       title: t('departments:archiveV1', { v1: outfit.name }),
-      description: 'The outfit will no longer be available for new uniform schedules.',
+      description: t('departments:theOutfitWillNoLongerBe'),
       confirmLabel: t('departments:archive'),
       variant: 'destructive',
     });
@@ -360,7 +360,7 @@ function AssignmentCard({
   const handleRemove = async () => {
     const ok = await confirm({
       title: t('departments:removeUniformAssignmentV1', { v1: formatDateLong(assignment.serviceDate) }),
-      description: 'The assignment will be cleared from the schedule. You can add it again later.',
+      description: t('departments:theAssignmentWillBeClearedFrom'),
       confirmLabel: t('departments:remove'),
       variant: 'destructive',
     });

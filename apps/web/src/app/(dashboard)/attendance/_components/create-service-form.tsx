@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,12 +23,14 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useFormMemberSearch } from '@/hooks/use-forms';
 import { useBranches } from '@/hooks/use-branches';
 import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
-const serviceSchema = z
+const makeServiceSchema = (t: (key: string) => string) =>
+  z
   .object({
     serviceBranchId: z.string().optional(),
-    serviceDate: z.string().min(1, 'Pick a service date'),
-    serviceTime: z.string().min(1, 'Pick a service time'),
+    serviceDate: z.string().min(1, t('attendance:vPickAServiceDate')),
+    serviceTime: z.string().min(1, t('attendance:vPickAServiceTime')),
     serviceType: z.enum([ServiceType.Sunday, ServiceType.Midweek, ServiceType.Special]),
     serviceTitle: z.string().optional(),
     topic: z.string().optional(),
@@ -37,11 +39,13 @@ const serviceSchema = z
   })
   .refine(
     (v) => v.serviceType !== ServiceType.Special || (v.serviceTitle?.trim().length ?? 0) > 0,
-    { path: ['serviceTitle'], message: 'A special service needs a title' },
+    { path: ['serviceTitle'], message: t('attendance:vASpecialServiceNeedsATitle') },
   );
 
-export type ServiceFormValues = z.infer<typeof serviceSchema>;
+export type ServiceFormValues = z.infer<ReturnType<typeof makeServiceSchema>>;
 
+// i18n-ignore(5): the English source; `attendance:serviceTypeLong_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const TYPE_OPTIONS = [
   { value: ServiceType.Sunday, label: 'Sunday Service' },
   { value: ServiceType.Midweek, label: 'Midweek Service' },
@@ -57,6 +61,7 @@ interface CreateServiceFormProps {
 }
 
 export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: CreateServiceFormProps) {  const { t } = useTranslation(['attendance', 'common']);
+  const serviceSchema = useMemo(() => makeServiceSchema(t), [t]);
 
   const user = useAuthStore((s) => s.user);
   const [preacherName, setPreacherName] = useState('');
@@ -196,7 +201,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                   id="serviceType"
                   value={field.value}
                   onValueChange={field.onChange}
-                  options={TYPE_OPTIONS}
+                  options={localiseOptions(t, 'attendance:serviceTypeLong_', TYPE_OPTIONS)}
                 />
               )}
             />

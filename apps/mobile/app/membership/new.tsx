@@ -53,7 +53,7 @@ export default function NewCohort() {  const { t } = useTranslation(['membership
       await create.mutateAsync(payload);
     } catch (err) {
       setServerError(
-        err instanceof Error ? err.message : 'Could not create the cohort. Please try again.',
+        err instanceof Error ? err.message : t('membership:couldNotCreateTheCohortPlease'),
       );
     }
   }
