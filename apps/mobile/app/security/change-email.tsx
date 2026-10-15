@@ -136,9 +136,7 @@ export default function ChangeEmail() {  const { t } = useTranslation(['security
               <Mail color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.introText}>
-              We&apos;ll send a confirmation link to the new address. Both the old and
-              new addresses get notified, and the old one carries an undo link valid for
-              24 hours in case someone else initiated this.
+              {t('security:changeEmailIntro')}
             </Text>
           </View>
 

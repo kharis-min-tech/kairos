@@ -106,10 +106,7 @@ export default function ChangePassword() {  const { t } = useTranslation(['secur
             <View style={styles.introIcon}>
               <KeyRound color={c.primary} size={22} strokeWidth={1.5} />
             </View>
-            <Text style={styles.introText}>
-              You&apos;ll stay signed in on this device after the change. Other devices
-              will need to sign in again on their next request.
-            </Text>
+            <Text style={styles.introText}>{t('security:youllStaySignedInOnThis')}</Text>
           </View>
 
           <Card padding="md" style={{ gap: spacing.md }}>

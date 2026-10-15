@@ -225,8 +225,8 @@ export default function MembersDirectory() {  const { t } = useTranslation(['mem
             {members.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load members:{' '}
-                  {members.error instanceof Error ? members.error.message : 'Unknown error'}
+                  {t('members:couldntLoadMembers')}{' '}
+                  {members.error instanceof Error ? members.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}

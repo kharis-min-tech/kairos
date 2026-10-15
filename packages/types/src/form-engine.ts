@@ -1080,7 +1080,12 @@ function localiseField(t: FormTranslate, prefix: string, field: FormFieldDef): F
   if (field.options) {
     out.options = field.options.map((o) => ({
       value: o.value,
-      label: t(`forms:def.${p}.option.${o.value}`, { defaultValue: o.label }),
+      // i18next cannot resolve a key containing a space, so the option value
+      // is slugged on the way into the key. "Unusual Favour" was the one such
+      // option, and it read English in every language.
+      label: t(`forms:def.${p}.option.${o.value.replace(/\s+/g, '_')}`, {
+        defaultValue: o.label,
+      }),
     }));
   }
   return out;

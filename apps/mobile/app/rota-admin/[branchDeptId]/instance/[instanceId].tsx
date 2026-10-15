@@ -405,11 +405,8 @@ function PoolPickerSheet({
       <Pressable style={styles.backdrop} onPress={submitting ? undefined : onCancel}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Assign to {slotRoleName}</Text>
-          <Text style={styles.sheetHint}>
-            Pick from this template&apos;s pool. Preferred-role first, then
-            others.
-          </Text>
+          <Text style={styles.sheetTitle}>{t('rota:assignToRole', { role: slotRoleName })}</Text>
+          <Text style={styles.sheetHint}>{t('rota:pickFromThisTemplatesPoolPreferred')}</Text>
 
           {loading ? (
             <ActivityIndicator
@@ -450,7 +447,7 @@ function PoolPickerSheet({
                           <Text style={styles.poolPreferred}>{t('rota:preferredRole')}</Text>
                         ) : m.preferredRoleName ? (
                           <Text style={styles.poolOtherRole}>
-                            Prefers {m.preferredRoleName}
+                            {t('departments:prefersRole', { role: m.preferredRoleName })}
                           </Text>
                         ) : null}
                       </View>

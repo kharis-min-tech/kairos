@@ -115,8 +115,8 @@ export default function RecentActivity() {  const { t } = useTranslation(['secur
         {activity.isError ? (
           <Card padding="md">
             <Text style={styles.errorLine}>
-              Couldn&apos;t load activity:{' '}
-              {activity.error instanceof Error ? activity.error.message : 'Unknown error'}
+              {t('common:couldntLoadActivity')}{' '}
+              {activity.error instanceof Error ? activity.error.message : t('common:unknownError')}
             </Text>
           </Card>
         ) : null}

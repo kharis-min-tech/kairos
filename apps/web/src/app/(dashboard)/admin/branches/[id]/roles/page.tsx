@@ -225,7 +225,7 @@ export default function BranchRolesPage() {  const { t } = useTranslation(['bran
           <DialogHeader>
             <DialogTitle>{t('branches:assignBranchSystemAdmin')}</DialogTitle>
             <DialogDescription>
-              Select a member of {branch.branchName} to grant Branch System Admin authority.
+              {t('branches:selectMemberToGrantBsa', { branch: branch.branchName })}
             </DialogDescription>
           </DialogHeader>
 

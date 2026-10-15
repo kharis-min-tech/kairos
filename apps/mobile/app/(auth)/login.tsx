@@ -13,6 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { keySlug } from '@/lib/localise-options';
 import i18n from '@/lib/i18n';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react-native';
@@ -112,7 +113,7 @@ export default function LoginScreen() {
 
   // 'Face ID' and 'Touch ID' are Apple's own names and stay as they are; the
   // generic ones read as English words and get translated.
-  const capLabel = cap ? t(`auth:biometric_${cap.label}`, { defaultValue: cap.label }) : '';
+  const capLabel = cap ? t(`auth:biometric_${keySlug(cap.label)}`, { defaultValue: cap.label }) : '';
 
   async function handleBiometricSignIn(user: ArmedUser) {
     if (!cap?.available || bioBusy) return;
@@ -406,7 +407,7 @@ export default function LoginScreen() {
               style={styles.signupRow}
               hitSlop={8}
             >
-              <Text style={styles.signupPrompt}>Don&apos;t have an account? </Text>
+              <Text style={styles.signupPrompt}>{t('auth:dontHaveAnAccount')}</Text>
               <Text style={styles.signupLink}>{t('auth:shared.createAccount')}</Text>
             </Pressable>
           </Animated.View>

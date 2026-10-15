@@ -674,7 +674,7 @@ export default function FellowshipDetailPage() {  const { t } = useTranslation([
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">{t('fellowships:attendanceTrend')}</CardTitle>
-                    <CardDescription>Attendance rate (%) per meeting</CardDescription>
+                    <CardDescription>{t('fellowships:attendanceRatePerMeeting')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-56">

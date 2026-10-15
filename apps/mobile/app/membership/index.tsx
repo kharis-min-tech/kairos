@@ -209,9 +209,11 @@ export default function MembershipScreen() {  const { t } = useTranslation(['mem
                 <View style={styles.metaRow}>
                   <CalendarDays color={c.inkFaded} size={14} strokeWidth={1.5} />
                   <Text style={styles.metaText}>
-                    Starts {formatShortDate(co.startDate)}
+                    {t('membership:startsOnDate', { date: formatShortDate(co.startDate) })}
                     {co.graduationDate
-                      ? ` · induction ${formatShortDate(co.graduationDate)}`
+                      ? ` · ${t('membership:inductionOnDate', {
+                          date: formatShortDate(co.graduationDate),
+                        })}`
                       : ''}
                   </Text>
                 </View>
@@ -227,7 +229,7 @@ export default function MembershipScreen() {  const { t } = useTranslation(['mem
                 <View style={styles.metaRow}>
                   <GraduationCap color={c.inkFaded} size={14} strokeWidth={1.5} />
                   <Text style={styles.metaText}>
-                    {co.sessionCount} of 4 sessions scheduled
+                    {t('membership:ofFourSessionsScheduledCount', { count: co.sessionCount })}
                   </Text>
                 </View>
               </Card>
@@ -276,7 +278,7 @@ function MyMembership({
           <Text style={styles.confirmedTitle}>{t('membership:youAreAConfirmedMember')}</Text>
         </View>
         <Text style={styles.metaText}>
-          Membership class completed on {formatShortDate(mine.confirmedAt)}.
+          {t('membership:classCompletedOn', { date: formatShortDate(mine.confirmedAt) })}
         </Text>
       </Card>
     );
@@ -316,8 +318,10 @@ function MyMembership({
           <Text style={styles.confirmedTitle}>{t('membership:youAreOnTheList')}</Text>
         </View>
         <Text style={styles.metaText}>
-          Added {formatShortDate(interest.expressedAt)}. A membership admin will place you
-          in a cohort. Your place holds until {formatShortDate(interest.expiresAt)}.
+          {t('membership:addedAwaitingCohort', {
+            added: formatShortDate(interest.expressedAt),
+            expires: formatShortDate(interest.expiresAt),
+          })}
         </Text>
         <Button
           label={leaving ? t('membership:removing') : t('membership:takeMeOffList')}
@@ -394,7 +398,10 @@ function ChampionBranchView({
               {row.memberFirstName} {row.memberLastName}
             </Text>
             <Text style={styles.metaText}>
-              Waiting {row.waitingDays}d · added {formatShortDate(row.expressedAt)}
+              {t('membership:waitingDaysAdded', {
+                days: row.waitingDays,
+                date: formatShortDate(row.expressedAt),
+              })}
             </Text>
           </View>
         ))

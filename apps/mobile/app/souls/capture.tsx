@@ -233,7 +233,7 @@ export default function CaptureSoul() {  const { t } = useTranslation(['souls', 
           </Card>
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.section}>Location (optional)</Text>
+            <Text style={styles.section}>{t('souls:locationOptional')}</Text>
             <Input
               label={t('souls:address')}
               value={address}

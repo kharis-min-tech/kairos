@@ -126,8 +126,10 @@ function ConsentCard({
       </View>
       <Text style={styles.rowHint}>{CONSENT_TYPE_DESCRIPTION[status.consentType]}</Text>
       <Text style={styles.rowMeta}>
-        Current version: {status.currentVersion}
-        {status.acceptedVersion ? ` · accepted: ${status.acceptedVersion}` : ''}
+        {t('security:currentVersionIs', { version: status.currentVersion })}
+        {status.acceptedVersion
+          ? ` · ${t('security:acceptedVersion', { version: status.acceptedVersion })}`
+          : ''}
         {status.grantedAt
           ? ` · ${new Date(status.grantedAt).toLocaleDateString()}`
           : ''}

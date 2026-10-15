@@ -367,10 +367,7 @@ export default function RollcallMeeting() {  const { t } = useTranslation(['atte
                 <CloudOff color={c.goldDark} size={16} strokeWidth={1.5} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.offlineTitle}>{t('attendance:savedLocallyWillSync')}</Text>
-                  <Text style={styles.offlineMeta}>
-                    Your attendance is safe on this device. We&apos;ll upload it as
-                    soon as we can reach the server.
-                  </Text>
+                  <Text style={styles.offlineMeta}>{t('attendance:yourAttendanceIsSafeOnThis')}</Text>
                 </View>
                 <Pressable
                   onPress={syncing ? undefined : handleRetrySync}

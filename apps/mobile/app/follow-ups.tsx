@@ -333,10 +333,7 @@ export default function FollowUps() {  const { t } = useTranslation(['concerns',
             ) : (
               <View style={styles.empty}>
                 <Text style={styles.emptyTitle}>{t('concerns:nothingHereYet')}</Text>
-                <Text style={styles.emptyMeta}>
-                  Follow-ups you record (fellowship, department, mentor, and
-                  souls captured) will show up here.
-                </Text>
+                <Text style={styles.emptyMeta}>{t('concerns:followUpsYouRecordFellowshipDepartment')}</Text>
               </View>
             )
           }

@@ -109,8 +109,8 @@ export default function NotificationPreferences() {  const { t } = useTranslatio
         {prefs.isError ? (
           <Card padding="md">
             <Text style={styles.errorLine}>
-              Couldn&apos;t load preferences:{' '}
-              {prefs.error instanceof Error ? prefs.error.message : 'Unknown error'}
+              {t('settings:couldntLoadPreferences')}{' '}
+              {prefs.error instanceof Error ? prefs.error.message : t('common:unknownError')}
             </Text>
           </Card>
         ) : null}

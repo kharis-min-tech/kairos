@@ -388,7 +388,7 @@ export function HomeError({ message, onRetry }: { message: string; onRetry: () =
       <Card padding="md" style={styles.errorCard}>
         <View style={styles.errorHeader}>
           <TriangleAlert color={c.danger} size={18} strokeWidth={1.5} />
-          <Text style={styles.errorTitle}>We couldn&apos;t load your dashboard</Text>
+          <Text style={styles.errorTitle}>{t('common:weCouldntLoadYourDashboard')}</Text>
         </View>
         <Text style={styles.rowSubtitle}>{message}</Text>
         <Pressable

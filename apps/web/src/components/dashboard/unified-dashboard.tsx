@@ -620,6 +620,17 @@ export function UnifiedDashboard({
             <p className="text-sm text-muted-foreground mb-4">{t('common:howWellSoulsAreProgressingThrough')}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {Object.entries(analytics.assimilationRates).map(([stage, rate]) => {
+                // The API sends "New → Following Up" as the key. It is the
+                // pair of English status names, which the catalogue already
+                // holds, so each half is translated and the arrow rebuilt.
+                const stageLabel = stage
+                  .split(' → ')
+                  .map((part) =>
+                    t(`common:${part.charAt(0).toLowerCase()}${part.slice(1).replace(/ (\w)/g, (_, c) => c.toUpperCase())}`, {
+                      defaultValue: part,
+                    }),
+                  )
+                  .join(' → ');
                 const tone =
                   rate >= ASSIMILATION_THRESHOLDS.green
                     ? 'success'
@@ -641,7 +652,7 @@ export function UnifiedDashboard({
                 return (
                   <div key={stage} className="rounded border border-border/15 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {stage}
+                      {stageLabel}
                     </p>
                     <p className={`mt-2 text-3xl font-semibold tracking-tight ${toneClasses}`}>
                       {rate.toFixed(1)}%

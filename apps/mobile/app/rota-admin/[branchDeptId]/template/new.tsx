@@ -147,7 +147,7 @@ export default function NewRotaTemplate() {  const { t } = useTranslation(['rota
             />
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Notes (optional)</Text>
+              <Text style={styles.label}>{t('rota:notesOptional')}</Text>
               <Input
                 value={notes}
                 onChangeText={setNotes}

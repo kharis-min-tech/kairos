@@ -104,9 +104,7 @@ export default function MyFormSubmissions() {  const { t } = useTranslation(['co
       >
         <View style={styles.introBlock}>
           <Text style={styles.introTitle}>{t('common:yourFormHistory')}</Text>
-          <Text style={styles.introMeta}>
-            Every form you&apos;ve filed, most recent first.
-          </Text>
+          <Text style={styles.introMeta}>{t('common:everyFormYouveFiledMostRecent')}</Text>
         </View>
 
         {submissions.isLoading ? (
@@ -116,10 +114,10 @@ export default function MyFormSubmissions() {  const { t } = useTranslation(['co
         {submissions.isError ? (
           <Card padding="md">
             <Text style={styles.errorLine}>
-              Couldn&apos;t load your submissions:{' '}
+              {t('forms:couldntLoadYourSubmissions')}{' '}
               {submissions.error instanceof Error
                 ? submissions.error.message
-                : 'Unknown error'}
+                : t('common:unknownError')}
             </Text>
           </Card>
         ) : null}
@@ -131,8 +129,7 @@ export default function MyFormSubmissions() {  const { t } = useTranslation(['co
             </View>
             <Text style={styles.emptyTitle}>{t('common:nothingHereYet')}</Text>
             <Text style={styles.emptyMeta}>
-              When you fill out a form (welcome, baptism, testimony, etc.) it&apos;ll show up
-              here for you to reference.
+              {t('forms:submissionsEmptyHint')}
             </Text>
           </Card>
         ) : null}

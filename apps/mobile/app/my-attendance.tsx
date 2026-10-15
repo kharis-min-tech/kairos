@@ -118,10 +118,10 @@ export default function MyAttendance() {  const { t } = useTranslation(['common'
         {snapshot.isError ? (
           <Card padding="md">
             <Text style={styles.errorLine}>
-              Couldn&apos;t load your attendance:{' '}
+              {t('attendance:couldntLoadYourAttendance2')}{' '}
               {snapshot.error instanceof Error
                 ? snapshot.error.message
-                : 'Unknown error'}
+                : t('common:unknownError')}
             </Text>
           </Card>
         ) : null}

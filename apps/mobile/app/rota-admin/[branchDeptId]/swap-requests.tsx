@@ -222,7 +222,9 @@ function SwapCard({
             <Badge label={badge.label} variant={badge.variant} size="sm" />
           </View>
           <Text style={styles.meta}>
-            Requested by {row.requesterFirstName} {row.requesterLastName}
+            {t('rota:requestedByName', {
+              name: `${row.requesterFirstName} ${row.requesterLastName ?? ''}`.trim(),
+            })}
           </Text>
         </View>
       </View>
@@ -323,11 +325,13 @@ function ReviewSheet({
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>{label}</Text>
             <Text style={styles.metaFaded}>
-              {data.row.roleName} · {data.row.serviceDate} · requested by{' '}
-              {data.row.requesterFirstName} {data.row.requesterLastName}
+              {data.row.roleName} · {data.row.serviceDate} ·{' '}
+              {t('rota:requestedByName', {
+                name: `${data.row.requesterFirstName} ${data.row.requesterLastName ?? ''}`.trim(),
+              })}
             </Text>
             <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Review notes (optional)</Text>
+              <Text style={styles.label}>{t('rota:reviewNotesOptional')}</Text>
               <Input
                 value={notes}
                 onChangeText={setNotes}

@@ -156,7 +156,7 @@ export default function CreateService() {  const { t } = useTranslation(['attend
 
             {serviceType === 'Special' ? (
               <>
-                <Text style={styles.fieldLabel}>Title (required for Special)</Text>
+                <Text style={styles.fieldLabel}>{t('attendance:titleRequiredForSpecial')}</Text>
                 <Input
                   value={serviceTitle}
                   onChangeText={setServiceTitle}
@@ -167,7 +167,7 @@ export default function CreateService() {  const { t } = useTranslation(['attend
               </>
             ) : null}
 
-            <Text style={styles.fieldLabel}>Topic (optional)</Text>
+            <Text style={styles.fieldLabel}>{t('attendance:topicOptional')}</Text>
             <Input
               value={topic}
               onChangeText={setTopic}
@@ -175,7 +175,7 @@ export default function CreateService() {  const { t } = useTranslation(['attend
               autoCapitalize="sentences"
             />
 
-            <Text style={styles.fieldLabel}>Preacher (optional)</Text>
+            <Text style={styles.fieldLabel}>{t('attendance:preacherOptional')}</Text>
             <Pressable
               style={styles.pickerField}
               onPress={() => setPreacherPickerOpen(true)}
@@ -203,7 +203,7 @@ export default function CreateService() {  const { t } = useTranslation(['attend
               )}
             </Pressable>
 
-            <Text style={styles.fieldLabel}>Expected attendance (optional)</Text>
+            <Text style={styles.fieldLabel}>{t('attendance:expectedAttendanceOptional')}</Text>
             <Input
               value={expectedAttendance}
               onChangeText={setExpectedAttendance}

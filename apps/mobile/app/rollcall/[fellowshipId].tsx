@@ -203,10 +203,7 @@ export default function RollcallFellowship() {  const { t } = useTranslation(['a
               <Calendar color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>{t('attendance:noMeetingsYet')}</Text>
-            <Text style={styles.emptyMeta}>
-              Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take
-              the register.
-            </Text>
+            <Text style={styles.emptyMeta}>{t('attendance:tapStartTodaysMeetingAboveTo')}</Text>
           </Card>
         ) : null}
       </ScrollView>

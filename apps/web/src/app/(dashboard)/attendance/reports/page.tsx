@@ -157,10 +157,7 @@ export default function AttendanceReportsPage() {  const { t } = useTranslation(
         <CardHeader>
           <CardTitle className="text-base">{t('reports:weeklyAttendance')}</CardTitle>
           <CardDescription>
-            Total check-ins per week (attendees × services attended) with a
-            distinct-members overlay showing how many unique humans that was.
-            A big gap = the same regulars showing up to multiple services;
-            the lines together = one-service-per-week attendance.
+            {t('reports:weeklyAttendanceCaption')}
           </CardDescription>
         </CardHeader>
         <CardContent>

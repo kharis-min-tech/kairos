@@ -198,9 +198,7 @@ export default function DepartmentUniforms() {  const { t } = useTranslation(['d
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : activeOutfits.length === 0 ? (
           <Card padding="md">
-            <Text style={styles.emptyLine}>
-              No outfits yet. Tap + to add one. You&apos;ll need a hosted image URL.
-            </Text>
+            <Text style={styles.emptyLine}>{t('departments:noOutfitsYetTapToAdd')}</Text>
           </Card>
         ) : (
           activeOutfits.map((o) => (
@@ -488,7 +486,7 @@ function OutfitSheet({
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Notes (optional)</Text>
+        <Text style={styles.label}>{t('departments:notesOptional')}</Text>
         <Input
           value={notes}
           onChangeText={setNotes}
@@ -598,7 +596,7 @@ function AssignSheet({
             </View>
           </View>
           <View style={{ gap: 4 }}>
-            <Text style={styles.label}>Notes (optional)</Text>
+            <Text style={styles.label}>{t('departments:notesOptional')}</Text>
             <Input
               value={notes}
               onChangeText={setNotes}

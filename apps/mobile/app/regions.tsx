@@ -143,8 +143,8 @@ export default function Regions() {  const { t } = useTranslation(['admin', 'com
             {regions.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load regions:{' '}
-                  {regions.error instanceof Error ? regions.error.message : 'Unknown error'}
+                  {t('admin:couldntLoadRegions')}{' '}
+                  {regions.error instanceof Error ? regions.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}
@@ -207,10 +207,7 @@ export default function Regions() {  const { t } = useTranslation(['admin', 'com
         }}
         ListFooterComponent={
           (regions.data ?? []).length > 0 ? (
-            <Text style={styles.footnote}>
-              Long-press a region to delete. Regions with attached branches can&apos;t be
-              deleted until every branch is reassigned or removed.
-            </Text>
+            <Text style={styles.footnote}>{t('admin:longPressARegionToDelete')}</Text>
           ) : null
         }
       />

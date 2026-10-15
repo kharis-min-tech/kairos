@@ -73,10 +73,7 @@ export default function ExportSettings() {  const { t } = useTranslation(['setti
             <Text style={styles.title}>{t('settings:downloadEverythingWeHoldOnYou')}</Text>
           </View>
           <Text style={styles.body}>
-            This produces a JSON file with your profile, attendance history,
-            follow-ups, department + fellowship memberships, form submissions
-            you&apos;ve made, and consent records. Give us a moment to prepare
-            it. On a slow connection it can take up to 20 seconds.
+            {t('settings:exportBody')}
           </Text>
           <Button
             label={busy ? t('settings:preparing') : t('settings:prepareExport')}
@@ -87,10 +84,7 @@ export default function ExportSettings() {  const { t } = useTranslation(['setti
           />
         </Card>
 
-        <Text style={styles.footnote}>
-          Nothing is sent to third parties. The file is generated on demand and
-          shared through your device&apos;s share sheet.
-        </Text>
+        <Text style={styles.footnote}>{t('settings:nothingIsSentToThirdParties')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

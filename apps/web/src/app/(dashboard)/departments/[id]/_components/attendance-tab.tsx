@@ -57,12 +57,17 @@ function Body({ report }: { report: DepartmentAttendanceReport }) {  const { t }
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {report.department.name} · {report.windowWeeks}-week service attendance
+            {t('departments:weekServiceAttendanceFor', {
+              name: report.department.name,
+              weeks: report.windowWeeks,
+            })}
           </CardTitle>
           <CardDescription>
-            Of {report.activeMembers} active member{report.activeMembers === 1 ? '' : 's'},{' '}
-            {report.distinctAttendees} attended at least one of the{' '}
-            {report.totalServices} services in the window.
+            {t('departments:ofActiveMembersAttended', {
+              count: report.activeMembers,
+              attendees: report.distinctAttendees,
+              services: report.totalServices,
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-6">

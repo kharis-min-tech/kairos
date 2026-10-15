@@ -228,10 +228,7 @@ export default function MembersAdmin() {  const { t } = useTranslation(['members
             <>
               <Card padding="md" style={styles.tipCard}>
                 <ShieldAlert color={c.gold} size={14} strokeWidth={1.5} />
-                <Text style={styles.tipText}>
-                  These children have no active guardian on file. Assign one from
-                  the child&apos;s profile.
-                </Text>
+                <Text style={styles.tipText}>{t('members:theseChildrenHaveNoActiveGuardian')}</Text>
               </Card>
               {(unguarded.data ?? []).map((m) => (
                 <Pressable
@@ -278,13 +275,21 @@ export default function MembersAdmin() {  const { t } = useTranslation(['members
                       {m.firstName} {m.lastName}
                     </Text>
                     <Text style={styles.meta}>
-                      {m.dateOfBirth ? `DOB ${m.dateOfBirth} · ` : ''}
-                      Added {new Date(m.createdAt).toLocaleDateString()}
+                      {m.dateOfBirth
+                        ? `${t('members:dobShort', { date: m.dateOfBirth })} · `
+                        : ''}
+                      {t('members:addedOn', {
+                        date: new Date(m.createdAt).toLocaleDateString(),
+                      })}
                     </Text>
                     {m.lastReviewedAt ? (
                       <Text style={styles.metaFaded}>
-                        Last review {new Date(m.lastReviewedAt).toLocaleDateString()}
-                        {m.lastReviewerName ? ` by ${m.lastReviewerName}` : ''}
+                        {t('members:lastReviewOn', {
+                          date: new Date(m.lastReviewedAt).toLocaleDateString(),
+                        })}
+                        {m.lastReviewerName
+                          ? ` ${t('members:byName', { name: m.lastReviewerName })}`
+                          : ''}
                         {m.lastDecision ? ` · ${m.lastDecision}` : ''}
                       </Text>
                     ) : null}

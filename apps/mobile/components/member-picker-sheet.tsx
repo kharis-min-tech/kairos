@@ -225,7 +225,7 @@ export function MemberPickerSheet({
                 <PenLine color={c.inkMuted} size={16} strokeWidth={1.5} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name} numberOfLines={1}>
-                    Use “{typed}” as a name only
+                    {t('members:useTypedAsNameOnly', { typed })}
                   </Text>
                   <Text style={styles.meta}>{t('members:theyArenTInTheDirectory')}</Text>
                 </View>

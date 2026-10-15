@@ -115,7 +115,7 @@ export default function EditMember() {  const { t } = useTranslation(['members',
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Couldn&apos;t load this member</Text>
+          <Text style={styles.errorTitle}>{t('members:couldntLoadThisMember')}</Text>
           <Text style={styles.errorMeta}>
             {member.error instanceof Error
               ? member.error.message
@@ -155,7 +155,7 @@ export default function EditMember() {  const { t } = useTranslation(['members',
           <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          Edit {m.firstName}
+          {t('members:editName', { name: m.firstName })}
         </Text>
         <View style={{ width: 24 }} />
       </View>

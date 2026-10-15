@@ -237,7 +237,7 @@ export default function SoulDetail() {  const { t } = useTranslation(['souls', '
                 {s.firstName} {s.lastName}
               </Text>
               <Text style={styles.heroMeta}>
-                Captured {formatShortDate(s.createdAt)}
+                {t('souls:capturedOn', { date: formatShortDate(s.createdAt) })}
               </Text>
             </LinearGradient>
 
@@ -348,9 +348,9 @@ export default function SoulDetail() {  const { t } = useTranslation(['souls', '
               )}
               {typeof s.daysSinceLastFollowUp === 'number' ? (
                 <Text style={styles.helpText}>
-                  Last follow-up: {s.daysSinceLastFollowUp === 0
-                    ? 'today'
-                    : `${s.daysSinceLastFollowUp} day${s.daysSinceLastFollowUp === 1 ? '' : 's'} ago`}
+                  {s.daysSinceLastFollowUp === 0
+                    ? t('souls:lastContactToday')
+                    : t('souls:lastContactDaysAgo', { count: s.daysSinceLastFollowUp })}
                 </Text>
               ) : null}
             </Card>

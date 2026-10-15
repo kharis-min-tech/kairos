@@ -78,10 +78,7 @@ export function AttendanceHeatmapCard({
             <CardTitle className="flex items-center gap-2 text-base">
               <Grid3x3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:attendanceHeatmap')}</CardTitle>
             <CardDescription>
-              Row per engaged member × column per service (last 13 weeks, oldest
-              on the left). Green / blue / amber cells = attended (in-person,
-              virtual, late); dashed red = absent. Sort by streak to prioritise
-              pastoral care; by attendance to spot regulars vs fringe.
+              {t('attendance:heatmapCaption')}
             </CardDescription>
           </div>
           <div className="w-44">

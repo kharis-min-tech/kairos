@@ -220,8 +220,8 @@ export default function DepartmentsDirectory() {  const { t } = useTranslation([
             {list.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load departments:{' '}
-                  {list.error instanceof Error ? list.error.message : 'Unknown error'}
+                  {t('departments:couldntLoadDepartments')}{' '}
+                  {list.error instanceof Error ? list.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}

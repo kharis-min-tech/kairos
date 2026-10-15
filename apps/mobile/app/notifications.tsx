@@ -43,11 +43,11 @@ export default function Notifications() {  const { t } = useTranslation(['settin
 
       <Card padding="md" style={styles.metaCard}>
         <Text style={styles.metaEyebrow}>{t('settings:whatThisWillShow')}</Text>
-        <Text style={styles.metaLine}>· Approvals waiting on you</Text>
-        <Text style={styles.metaLine}>· Rota reminders and swap requests</Text>
-        <Text style={styles.metaLine}>· New Believer session completions</Text>
-        <Text style={styles.metaLine}>· Pastoral announcements</Text>
-        <Text style={styles.metaLine}>· Giving receipts</Text>
+        <Text style={styles.metaLine}>{t('settings:approvalsWaitingOnYou')}</Text>
+        <Text style={styles.metaLine}>{t('settings:rotaRemindersAndSwapRequests')}</Text>
+        <Text style={styles.metaLine}>{t('settings:newBelieverSessionCompletions')}</Text>
+        <Text style={styles.metaLine}>{t('settings:pastoralAnnouncements')}</Text>
+        <Text style={styles.metaLine}>{t('settings:givingReceipts')}</Text>
       </Card>
     </SafeAreaView>
   );

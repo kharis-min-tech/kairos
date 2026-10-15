@@ -120,7 +120,7 @@ export default function EditFellowship() {  const { t } = useTranslation(['fello
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Couldn&apos;t load this fellowship</Text>
+          <Text style={styles.errorTitle}>{t('fellowships:couldntLoadThisFellowship')}</Text>
           <Text style={styles.errorMeta}>
             {fellowship.error instanceof Error
               ? fellowship.error.message

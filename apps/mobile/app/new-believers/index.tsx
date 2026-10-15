@@ -189,7 +189,7 @@ function EnrollmentCard({
             {firstName} {lastName}
           </Text>
           <Text style={styles.enrollmentMeta}>
-            Enrolled {formatShortDate(enrolledAt)}
+            {t('newBelievers:enrolledOn', { date: formatShortDate(enrolledAt) })}
           </Text>
         </View>
         <Badge label={stage} variant="primary" size="sm" />

@@ -121,7 +121,7 @@ export default function EditDepartment() {  const { t } = useTranslation(['depar
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Couldn&apos;t load this department</Text>
+          <Text style={styles.errorTitle}>{t('departments:couldntLoadThisDepartment')}</Text>
           <Text style={styles.errorMeta}>
             {department.error instanceof Error
               ? department.error.message
@@ -174,10 +174,7 @@ export default function EditDepartment() {  const { t } = useTranslation(['depar
                 {deleting || remove.isPending ? t('departments:deactivating') : t('departments:deactivateDepartment2')}
               </Text>
             </Pressable>
-            <Text style={styles.footnote}>
-              Hides the department from the directory. The team&apos;s history is
-              preserved.
-            </Text>
+            <Text style={styles.footnote}>{t('departments:hidesTheDepartmentFromTheDirectory')}</Text>
           </View>
         }
       />

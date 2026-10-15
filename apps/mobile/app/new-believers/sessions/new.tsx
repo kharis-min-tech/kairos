@@ -184,9 +184,10 @@ export default function CreateSession() {  const { t } = useTranslation(['newBel
             <View style={styles.dupBanner}>
               <Text style={styles.dupTitle}>{t('newBelievers:sessionAlreadyExists')}</Text>
               <Text style={styles.dupBody}>
-                A {stageLabel} session on {sessionDate} is already on the books for
-                this branch. Creating another will result in a duplicate. Pick a
-                different stage or date if you didn&apos;t mean to.
+                {t('newBelievers:duplicateSessionWarning', {
+                  stage: stageLabel,
+                  date: sessionDate,
+                })}
               </Text>
             </View>
           ) : null}

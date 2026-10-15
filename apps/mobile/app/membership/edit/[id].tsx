@@ -124,7 +124,7 @@ export default function EditCohort() {  const { t } = useTranslation(['membershi
       <SafeAreaView style={styles.safe} edges={['top']}>
         {header}
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Couldn&apos;t load this cohort</Text>
+          <Text style={styles.errorTitle}>{t('membership:couldntLoadThisCohort')}</Text>
           <Text style={styles.errorMeta}>
             {cohort.error instanceof Error
               ? cohort.error.message

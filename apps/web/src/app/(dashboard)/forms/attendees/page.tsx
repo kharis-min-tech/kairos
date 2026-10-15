@@ -341,7 +341,7 @@ function ConfirmArchiveDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Archive {count} {cohortLabel}(s)?</DialogTitle>
+          <DialogTitle>{t('forms:archiveCountLabel', { count, label: cohortLabel })}</DialogTitle>
           <DialogDescription>{t('forms:archivedShellsAreRemovedFromThe')}</DialogDescription>
         </DialogHeader>
         {error ? (

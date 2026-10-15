@@ -293,7 +293,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Couldn&apos;t load member</Text>
+          <Text style={styles.errorTitle}>{t('members:couldntLoadMember')}</Text>
           <Text style={styles.errorMeta}>
             {member.error instanceof Error ? member.error.message : 'Please try again.'}
           </Text>
@@ -662,8 +662,9 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
               <View style={styles.confirmedRow}>
                 <BadgeCheck color={c.gold} size={14} strokeWidth={1.5} />
                 <Text style={styles.confirmedLabel}>
-                  Membership class completed{' '}
-                  {formatDate(m.membershipClassCompletedAt)}
+                  {t('members:membershipClassCompletedOn', {
+                    date: formatDate(m.membershipClassCompletedAt),
+                  })}
                 </Text>
               </View>
             ) : null}
@@ -702,10 +703,7 @@ export default function MemberProfile() {  const { t } = useTranslation(['member
               )
             ) : null}
 
-            <Text style={styles.manageFootnote}>
-              Actions require admin or branch-admin access. The API will refuse if you
-              don&apos;t.
-            </Text>
+            <Text style={styles.manageFootnote}>{t('members:actionsRequireAdminOrBranchAdmin')}</Text>
           </Card>
         </View>
         ) : null}

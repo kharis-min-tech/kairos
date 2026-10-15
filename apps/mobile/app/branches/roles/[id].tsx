@@ -132,10 +132,7 @@ export default function BranchRoles() {  const { t } = useTranslation(['branches
         {branch.data ? (
           <View style={styles.introBlock}>
             <Text style={styles.introTitle}>{branch.data.branchName}</Text>
-            <Text style={styles.introMeta}>
-              Branch System Admins can invite members, edit branch settings, assign
-              other roles, and manage this branch&apos;s data end-to-end.
-            </Text>
+            <Text style={styles.introMeta}>{t('branches:branchSystemAdminsCanInviteMembers')}</Text>
           </View>
         ) : null}
 
@@ -146,10 +143,10 @@ export default function BranchRoles() {  const { t } = useTranslation(['branches
         {assignments.isError ? (
           <Card padding="md">
             <Text style={styles.errorLine}>
-              Couldn&apos;t load role assignments:{' '}
+              {t('branches:couldntLoadRoleAssignments')}{' '}
               {assignments.error instanceof Error
                 ? assignments.error.message
-                : 'Unknown error'}
+                : t('common:unknownError')}
             </Text>
           </Card>
         ) : null}
@@ -199,7 +196,7 @@ export default function BranchRoles() {  const { t } = useTranslation(['branches
                       {a.member.email}
                     </Text>
                     <Text style={styles.assignedLabel}>
-                      Since {formatShortDate(a.assignedDate)}
+                      {t('branches:sinceDate', { date: formatShortDate(a.assignedDate) })}
                     </Text>
                   </View>
                   <Badge label={a.roleName} variant="primary" size="sm" />
@@ -211,9 +208,7 @@ export default function BranchRoles() {  const { t } = useTranslation(['branches
         </View>
 
         <Text style={styles.footnote}>
-          Only existing Branch System Admins (and platform admins) can assign or revoke
-          this role. The API enforces a last-active-admin lockout guard: the final BSA
-          for a branch can&apos;t be revoked until another is promoted.
+          {t('branches:bsaLockoutNote')}
         </Text>
       </ScrollView>
 

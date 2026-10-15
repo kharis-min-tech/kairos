@@ -201,7 +201,7 @@ export default function MembershipInterestScreen() {  const { t } = useTranslati
                   <View style={styles.metaRow}>
                     <Clock color={c.inkFaded} size={14} strokeWidth={1.5} />
                     <Text style={styles.metaText}>
-                      Waiting {row.waitingDays} {t('membership:dayWord', { count: row.waitingDays })}
+                      {t('membership:waitingCount', { count: row.waitingDays })}
                     </Text>
                   </View>
 
@@ -219,11 +219,11 @@ export default function MembershipInterestScreen() {  const { t } = useTranslati
                     )}
                     {row.status === 'waiting' ? (
                       <Text style={styles.metaText}>
-                        Lapses {formatShortDate(row.expiresAt)}
+                        {t('membership:lapsesOn', { date: formatShortDate(row.expiresAt) })}
                       </Text>
                     ) : row.status === 'admitted' && row.admittedAt ? (
                       <Text style={styles.metaText}>
-                        Admitted {formatShortDate(row.admittedAt)}
+                        {t('membership:admittedOn', { date: formatShortDate(row.admittedAt) })}
                       </Text>
                     ) : null}
                   </View>
@@ -237,7 +237,7 @@ export default function MembershipInterestScreen() {  const { t } = useTranslati
       {selectable && selected.length > 0 ? (
         <View style={styles.actionBar}>
           <Text style={styles.actionCount}>
-            {selected.length} selected · admit into
+            {t('membership:selectedAdmitInto', { count: selected.length })}
           </Text>
           <View style={styles.cohortPicker}>
             {openCohorts.map((co) => (

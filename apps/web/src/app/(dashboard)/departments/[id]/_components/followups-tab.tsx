@@ -724,7 +724,7 @@ function FollowupForm({
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="dept-fu-departure">
-                    Departure time (optional)
+                    {t('departments:departureTimeOptional')}
                   </Label>
                   <TimeSelect
                     value={departureTime}
@@ -821,7 +821,7 @@ function FollowupForm({
           )}
 
           <div className="space-y-1">
-            <Label htmlFor="dept-fu-next">Next follow-up (optional)</Label>
+            <Label htmlFor="dept-fu-next">{t('departments:nextFollowUpOptional')}</Label>
             <DateSelect
               id="dept-fu-next"
               value={nextFollowUpDate}

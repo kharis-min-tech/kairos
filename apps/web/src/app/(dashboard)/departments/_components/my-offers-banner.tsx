@@ -80,7 +80,7 @@ export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslatio
             <CardHeader className="pb-3">
               <div className="space-y-1">
                 <CardTitle className="text-base">
-                  You&rsquo;ve been offered a spot in {req.departmentName}
+                  {t('departments:offeredASpotIn', { name: req.departmentName })}
                 </CardTitle>
                 <CardDescription>
                   {req.branchName}

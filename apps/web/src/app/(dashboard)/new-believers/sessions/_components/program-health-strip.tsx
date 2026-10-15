@@ -217,7 +217,9 @@ function TrendTile({ avgAttendanceRate, windowSize, chartData }: TrendTileProps)
           <span className="text-2xl font-semibold tracking-tight text-foreground">
             {toPercent(avgAttendanceRate)}
           </span>
-          <span className="text-xs text-muted-foreground">avg · last {windowSize}</span>
+          <span className="text-xs text-muted-foreground">
+            {t('newBelievers:avgLastWindow', { count: windowSize })}
+          </span>
         </div>
         <div className="mt-3 h-12 w-full">
           <ResponsiveContainer width="100%" height="100%">

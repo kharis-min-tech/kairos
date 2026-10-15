@@ -913,7 +913,7 @@ function CreateTemplateForm({
             <CustomSelect value={weekday} onValueChange={setWeekday} options={localiseOptions(t, 'common:weekdayNum_', WEEKDAYS)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Default start time (optional)</Label>
+            <Label className="text-xs">{t('departments:defaultStartTimeOptional')}</Label>
             <TimeSelect value={startTime} onValueChange={setStartTime} />
           </div>
           <div className="space-y-1 md:col-span-2">

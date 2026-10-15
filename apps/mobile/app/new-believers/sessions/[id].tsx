@@ -204,14 +204,16 @@ export default function NewBelieverSessionDetail() {  const { t } = useTranslati
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>{t('newBelievers:attendance')}</Text>
                 <Text style={styles.sectionMeta}>
-                  {roster.length} enrolled at this stage · tap to cycle
+                  {t('newBelievers:enrolledAtStageTapToCycle', { count: roster.length })}
                 </Text>
               </View>
 
               {roster.length === 0 ? (
                 <Card padding="md">
                   <Text style={styles.emptyText}>
-                    No active enrollments at {session.data.sessionStage} in this branch.
+                    {t('newBelievers:noActiveEnrollmentsAtStage', {
+                      stage: session.data.sessionStage,
+                    })}
                   </Text>
                 </Card>
               ) : (

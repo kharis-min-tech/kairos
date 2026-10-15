@@ -210,7 +210,9 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
           {/* Title — always shown, required when Special */}
           <div className="space-y-2">
             <Label htmlFor="serviceTitle">
-              Service title{serviceType === ServiceType.Special ? '' : ' (optional)'}
+              {serviceType === ServiceType.Special
+                ? t('attendance:serviceTitle')
+                : t('attendance:serviceTitleOptional')}
             </Label>
             <Input id="serviceTitle" {...register('serviceTitle')} placeholder={t('attendance:eGWatchnight')} />
             <p className="text-xs text-muted-foreground">{t('attendance:nameTheSpecialServiceEG')}</p>
@@ -221,13 +223,13 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
           {/* Topic */}
           <div className="space-y-2">
-            <Label htmlFor="topic">Topic (optional)</Label>
+            <Label htmlFor="topic">{t('attendance:topicOptional')}</Label>
             <Textarea id="topic" {...register('topic')} placeholder={t('attendance:sermonTopicOrTheme')} rows={2} />
           </div>
 
           {/* Preacher typeahead */}
           <div className="space-y-2">
-            <Label htmlFor="preacher-search">Preacher (optional)</Label>
+            <Label htmlFor="preacher-search">{t('attendance:preacherOptional')}</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -288,7 +290,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
           {/* Expected attendance */}
           <div className="space-y-2">
-            <Label htmlFor="expectedAttendance">Expected attendance (optional)</Label>
+            <Label htmlFor="expectedAttendance">{t('attendance:expectedAttendanceOptional')}</Label>
             <Controller
               control={control}
               name="expectedAttendance"

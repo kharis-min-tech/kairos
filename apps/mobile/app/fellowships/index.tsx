@@ -226,8 +226,8 @@ export default function FellowshipsDirectory() {  const { t } = useTranslation([
             {list.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load fellowships:{' '}
-                  {list.error instanceof Error ? list.error.message : 'Unknown error'}
+                  {t('fellowships:couldntLoadFellowships')}{' '}
+                  {list.error instanceof Error ? list.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}

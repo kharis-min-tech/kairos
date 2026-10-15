@@ -197,7 +197,7 @@ export default function AttendanceComparison() {  const { t } = useTranslation([
                       {m.firstName} {m.lastName}
                     </Text>
                     <Text style={styles.missingMeta}>
-                      Away {m.missedStreak} service{m.missedStreak === 1 ? '' : 's'}
+                      {t('attendance:awayServicesCount', { count: m.missedStreak })}
                     </Text>
                   </View>
                 </View>

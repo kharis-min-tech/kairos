@@ -267,7 +267,7 @@ function VisitorAdd({ onAdd }: { onAdd: (v: VisitorMark) => void }) {  const { t
             <Input id="visitor-last" value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="visitor-phone">Phone (optional)</Label>
+            <Label htmlFor="visitor-phone">{t('attendance:phoneOptional')}</Label>
             <Input id="visitor-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <div className="space-y-1.5">

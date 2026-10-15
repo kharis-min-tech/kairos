@@ -210,7 +210,7 @@ function AttendeeRow({
             <Text style={styles.rowMeta}>{t('attendance:firstTimeVisitor')}</Text>
           ) : row.arrivalTime ? (
             <Text style={styles.rowMeta}>
-              Arrived{' '}
+              {t('attendance:arrivedPrefix')}{' '}
               {new Date(row.arrivalTime).toLocaleTimeString('en-GB', {
                 hour: '2-digit',
                 minute: '2-digit',

@@ -586,7 +586,7 @@ function BranchReportsPanel({ isLeadership }: { isLeadership: boolean }) {  cons
           title={t('reports:newMembers')}
           value={totalNewMembers}
           icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" /></svg>}
-          trend={totalNewMembers > 0 ? { direction: 'up', label: `+${totalNewMembers} last ${growthMonths}mo` } : { direction: 'flat', label: t('reports:vsLastPeriod') }}
+          trend={totalNewMembers > 0 ? { direction: 'up', label: t('reports:plusInLastMonths', { count: totalNewMembers, months: growthMonths }) } : { direction: 'flat', label: t('reports:vsLastPeriod') }}
         />
         <ReportStatCard
           title={t('reports:avgAttendance')}
@@ -1062,7 +1062,7 @@ function MyFellowshipReports({ fellowships }: { fellowships: MeLeadershipFellows
     return (
       <Card>
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          You don&apos;t currently lead any fellowships.
+          {t('reports:youLeadNoFellowships')}
         </CardContent>
       </Card>
     );
@@ -1234,7 +1234,7 @@ function MyDepartmentReports({ departments }: { departments: MeLeadershipDepartm
     return (
       <Card>
         <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          You don&apos;t currently lead any departments.
+          {t('reports:youLeadNoDepartments')}
         </CardContent>
       </Card>
     );
@@ -1516,7 +1516,7 @@ export default function ReportsPage() {  const { t } = useTranslation(['reports'
   // — pull it out so the JSX stays readable.
   const header = (
     <div>
-      <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← Overview</Link>
+      <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-primary">← {t('nav:items.overview')}</Link>
       <h1 className="mt-1 text-2xl font-bold tracking-tight">{t('reports:reportsAnalytics')}</h1>
       <p className="mt-0.5 text-sm text-muted-foreground">{t('reports:trackChurchGrowthAttendanceTrendsAnd')}</p>
     </div>

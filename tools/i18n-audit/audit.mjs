@@ -66,7 +66,6 @@ const PROSE_TAGS = 'p|li|h1|h2|h3|h4|td|th|strong|em|figcaption|blockquote|label
 // as text in a <p>, and the tag list alone never sees it. Five numbered
 // subheadings sat untranslated inside <SubHeading>…</SubHeading> on the privacy
 // notice while the file reported clean.
-const CUSTOM_CHILDREN = /<([A-Z]\w+)(\s[^>]*)?>([\s\S]*?)<\/\1>/g;
 const TITLE_PROP = /\btitle="([^"]{4,160})"/g;
 
 /**
@@ -95,7 +94,7 @@ function findHardcoded(file) {
   const hits = [];
   const at = (idx) => src.slice(0, idx).split('\n').length;
   const n = { valueOf: () => hits.length };
-  const push = (idx, text) => hits.push({ line: at(idx), text: String(text).replace(/\s+/g, ' ').trim().slice(0, 120) });
+  const push = (idx, text) => hits.push({ line: at(idx), text: String(text).replace(/\s+/g, ' ').trim().slice(0, 400) });
   // display props
   // `text` was missing from this list, which is how the homepage's hero
   // strapline stayed English in every language without the audit noticing.
@@ -112,9 +111,12 @@ function findHardcoded(file) {
     if (/[A-Za-z]{3}/.test(m[1])) push(m.index, m[1]);
   }
 
-  const re = new RegExp(`<(${PROSE_TAGS})\\b[^>]*>([\\s\\S]*?)</\\1>`, 'g');
+  const re = new RegExp(`<(${PROSE_TAGS})\\b([^>]*)>`, 'g');
   for (const m of src.matchAll(re)) {
-    const text = stripBraces(m[2])
+    if (m[2].trimEnd().endsWith('/')) continue; // self-closing
+    const close = src.indexOf(`</${m[1]}>`, m.index + m[0].length);
+    if (close < 0) continue;
+    const text = stripBraces(src.slice(m.index + m[0].length, close))
       .replace(/\/\*[\s\S]*?\*\//g, ' ')            // /* block comment */
       .replace(/(^|\s)\/\/[^\n]*/g, ' ')             // // line comment
       .replace(/<[^>]+>/g, ' ')      // inline elements
@@ -126,13 +128,21 @@ function findHardcoded(file) {
     push(m.index, text);
   }
 
-  for (const m of src.matchAll(CUSTOM_CHILDREN)) {
+  // Each opening tag is examined on its own rather than letting one match
+  // consume the block. A single `matchAll` lets the outermost component eat
+  // everything inside it: `<Card>` swallowed a whole file, and the untranslated
+  // `<CardDescription>` four lines in was never looked at.
+  for (const m of src.matchAll(/<([A-Z]\w+)([^>]*)>/g)) {
+    if (m[2].trimEnd().endsWith('/')) continue; // self-closing
+    const close = src.indexOf(`</${m[1]}>`, m.index + m[0].length);
+    if (close < 0) continue;
+    const body = src.slice(m.index + m[0].length, close);
     // Only when the children are bare text. A component wrapping further
     // elements is a layout wrapper, and counting it double-counts whatever is
     // nested inside -- which turned a useful signal into several hundred
     // phantom hits across both apps.
-    if (/[<>]/.test(m[3])) continue;
-    const text = stripBraces(m[3])
+    if (/[<>]/.test(body)) continue;
+    const text = stripBraces(body)
       .replace(/&[a-z]+;/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
@@ -191,6 +201,15 @@ function findHardcoded(file) {
 }
 
 const hardcoded = (file) => findHardcoded(file).length;
+
+/** `{ a: { b: 1 } }` -> `{ 'a.b': 1 }`, so nested namespaces compare by path. */
+function flatten(obj, prefix = '', out = {}) {
+  for (const [k, v] of Object.entries(obj)) {
+    if (v && typeof v === 'object') flatten(v, `${prefix}${k}.`, out);
+    else out[`${prefix}${k}`] = v;
+  }
+  return out;
+}
 
 let hardFailures = 0;
 const line = (s = '') => console.log(s);
@@ -277,6 +296,15 @@ for (const app of APPS) {
       referenced.add(m[1]);
     }
   }
+  // i18next will not resolve a key containing a space. `status_New` works and
+  // `status_Following Up` right beside it silently falls back, so a key built
+  // from a two-word value reads English in every language with nothing failing
+  // to say so. Eleven keys were in that state across the two apps.
+  const spaced = Object.keys(basePaths.length ? flatten(base) : {}).filter((k) => /\s/.test(k));
+  line(`${spaced.length ? 'FAIL' : 'ok  '} keys containing a space (i18next cannot resolve these): ${spaced.length}`);
+  spaced.slice(0, process.env.I18N_AUDIT_FULL ? 9999 : 8).forEach((k) => line(`       ${k}`));
+  if (spaced.length) hardFailures++;
+
   line(`${malformed.length ? 'FAIL' : 'ok  '} malformed keys (ns. instead of ns:): ${malformed.length}`);
   malformed.slice(0, 5).forEach((m) => line(`       ${m}`));
   if (malformed.length) hardFailures++;
@@ -292,6 +320,25 @@ for (const app of APPS) {
       if (valueAt(base[ns], rest) !== undefined) return false;
       return !PLURAL_SUFFIXES.some((sfx) => valueAt(base[ns], `${rest}_${sfx}`) !== undefined);
     });
+  // A key built from a value at runtime -- `t(`ns:prefix_${row.status}`)` --
+  // cannot be checked name by name, but its prefix can: if the catalogue holds
+  // nothing at all under that prefix, every lookup falls back to English and
+  // the screen reads English in every language. Eleven prefixes were in that
+  // state, including every service type, approval status and souls lane.
+  const emptyPrefixes = [];
+  for (const key of referenced) {
+    if (!key.includes('${')) continue;
+    const [ns, rest] = key.split(':');
+    const prefix = rest.slice(0, rest.indexOf('${'));
+    if (!prefix || base[ns] === undefined) continue;
+    const anyUnder = Object.keys(flatten(base[ns])).some((k) => k.startsWith(prefix));
+    if (!anyUnder) emptyPrefixes.push(`${ns}:${prefix}*`);
+  }
+  const uniqueEmpty = [...new Set(emptyPrefixes)].sort();
+  line(`${uniqueEmpty.length ? 'FAIL' : 'ok  '} runtime-built keys with no entries: ${uniqueEmpty.length}`);
+  uniqueEmpty.forEach((k) => line(`       ${k}`));
+  if (uniqueEmpty.length) hardFailures++;
+
   line(`${absent.length ? 'FAIL' : 'ok  '} referenced but absent from '${app.base}': ${absent.length}`);
   absent.slice(0, process.env.I18N_AUDIT_FULL ? 9999 : 8).forEach((k) => line(`       ${k}`));
   if (absent.length) hardFailures++;

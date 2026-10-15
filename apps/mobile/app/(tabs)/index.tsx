@@ -211,7 +211,9 @@ export default function Home() {
         <View style={styles.greetingRow}>
           <View style={styles.greetingText}>
             <Text style={styles.dateLabel}>{dateHeader}</Text>
-            <Text style={styles.greeting}>Good day, {user?.firstName ?? 'friend'}</Text>
+            <Text style={styles.greeting}>
+              {t('common:goodDayName', { name: user?.firstName ?? t('common:friend') })}
+            </Text>
           </View>
           <Pressable
             onPress={() => router.push('/profile')}

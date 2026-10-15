@@ -234,7 +234,9 @@ export default function MyFellowship() {  const { t } = useTranslation(['common'
                           {m.memberFirstName} {m.memberLastName}
                         </Text>
                         {m.nbStage ? (
-                          <Text style={styles.memberMeta}>New Believer · {m.nbStage}</Text>
+                          <Text style={styles.memberMeta}>
+                            {t('newBelievers:newBelieverStage', { stage: m.nbStage })}
+                          </Text>
                         ) : null}
                       </View>
                     </Pressable>
@@ -282,7 +284,7 @@ function EmptyState() {  const { t } = useTranslation(['common', 'common']);
       <View style={styles.emptyIconTile}>
         <Users color={c.primary} size={22} strokeWidth={1.5} />
       </View>
-      <Text style={styles.emptyTitle}>You&apos;re not in a fellowship yet</Text>
+      <Text style={styles.emptyTitle}>{t('common:youreNotInAFellowshipYet')}</Text>
       <Text style={styles.emptyMeta}>{t('common:askYourPastorOrBranchAdmin')}</Text>
     </Card>
   );

@@ -262,7 +262,7 @@ export default function EditFellowshipPage() {  const { t } = useTranslation(['f
             )}
 
             <div className="space-y-2">
-              <Label>Meeting location (optional)</Label>
+              <Label>{t('fellowships:meetingLocationOptional')}</Label>
               <p className="text-xs text-muted-foreground">{t('fellowships:leaveBlankIfTheFellowshipMeets')}</p>
               <AddressAutofillGroup
                 accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}

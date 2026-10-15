@@ -717,7 +717,7 @@ function FollowupForm({
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="fellowship-fu-departure">
-                    Departure time (optional)
+                    {t('fellowships:departureTimeOptional')}
                   </Label>
                   <TimeSelect
                     value={departureTime}
@@ -814,7 +814,7 @@ function FollowupForm({
           )}
 
           <div className="space-y-1">
-            <Label htmlFor="fellowship-fu-next">Next follow-up (optional)</Label>
+            <Label htmlFor="fellowship-fu-next">{t('fellowships:nextFollowUpOptional')}</Label>
             <DateSelect
               id="fellowship-fu-next"
               value={nextFollowUpDate}

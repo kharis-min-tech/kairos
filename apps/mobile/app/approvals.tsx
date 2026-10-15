@@ -96,8 +96,7 @@ export default function Approvals() {  const { t } = useTranslation(['common', '
       <View style={styles.subHeader}>
         <Text style={styles.subTitle}>{t('common:waitingOnYou')}</Text>
         <Text style={styles.subMeta}>
-          {(inbox.data ?? []).length} item{(inbox.data ?? []).length === 1 ? '' : 's'} across your
-          fellowships, departments and branch signups.
+          {t('approvals:itemsAcrossYourGroups', { count: (inbox.data ?? []).length })}
         </Text>
       </View>
 

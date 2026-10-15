@@ -93,7 +93,7 @@ export default function CohortSessionsScreen() {  const { t } = useTranslation([
                 <Card style={styles.card}>
                   <View style={styles.cardHead}>
                     <Text style={styles.cardTitle}>
-                      Session {n}
+                      {t('membership:sessionNumber', { number: n })}
                       {existing ? `: ${existing.title}` : ''}
                     </Text>
                     <ChevronRight color={c.inkFaded} size={18} strokeWidth={1.5} />
@@ -236,7 +236,7 @@ function SessionEditor({
           <Pressable onPress={onClose} hitSlop={8}>
             <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>Session {sessionNumber}</Text>
+          <Text style={styles.headerTitle}>{t('membership:sessionNumber', { number: sessionNumber })}</Text>
           <View style={{ width: 24 }} />
         </View>
 

@@ -207,12 +207,14 @@ function ConnectedAccountsCard() {  const { t } = useTranslation(['security', 'c
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Disconnect {confirming ? OAUTH_PROVIDER_LABEL[confirming] : 'account'}?
+              {t('security:disconnectProvider', {
+                provider: confirming ? OAUTH_PROVIDER_LABEL[confirming] : t('security:thisAccount'),
+              })}
             </DialogTitle>
             <DialogDescription>
-              You&apos;ll no longer be able to sign in with{' '}
-              {confirming ? OAUTH_PROVIDER_LABEL[confirming] : 'this provider'}. Your
-              Kairos account and other sign-in methods stay unchanged.
+              {t('security:disconnectProviderBody', {
+                provider: confirming ? OAUTH_PROVIDER_LABEL[confirming] : t('security:thisProvider'),
+              })}
             </DialogDescription>
           </DialogHeader>
           {inlineError && (

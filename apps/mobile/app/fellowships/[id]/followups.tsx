@@ -278,6 +278,7 @@ function OverdueCard({
 }
 
 function FollowupCard({ row }: { row: FellowshipFollowupWithDetails }) {
+  const { t } = useTranslation(['fellowships', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -301,7 +302,9 @@ function FollowupCard({ row }: { row: FellowshipFollowupWithDetails }) {
         <View style={styles.nextRow}>
           <Clock color={c.gold} size={12} strokeWidth={1.5} />
           <Text style={styles.nextText}>
-            Next follow-up {new Date(row.nextFollowUpDate).toLocaleDateString()}
+            {t('fellowships:nextFollowUpOn', {
+              date: new Date(row.nextFollowUpDate).toLocaleDateString(),
+            })}
           </Text>
         </View>
       ) : null}
@@ -529,7 +532,7 @@ function CreateSheet({
         {type === 'contact' ? (
           <>
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Methods (pick one or more)</Text>
+              <Text style={styles.fieldLabel}>{t('fellowships:methodsPickOneOrMore')}</Text>
               <View style={styles.chipRow}>
                 {localiseOptions(t, 'members:contactMethod_', CONTACT_METHOD_OPTIONS).map(({ value, label }) => {
                   const active = methods.has(value);
@@ -684,7 +687,7 @@ function CreateSheet({
             />
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Went with (optional)</Text>
+              <Text style={styles.fieldLabel}>{t('fellowships:wentWithOptional')}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

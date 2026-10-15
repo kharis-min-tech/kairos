@@ -91,13 +91,13 @@ export default function MissingMembersFullList() {  const { t } = useTranslation
             </View>
             <Text style={styles.emptyTitle}>{t('reports:allAccountedFor')}</Text>
             <Text style={styles.emptyMeta}>
-              Everyone attended in the last {services} services.
+              {t('reports:everyoneAttendedLastServices', { count: services })}
             </Text>
           </Card>
         ) : (
           <>
             <Text style={styles.countLabel}>
-              {data.length} member{data.length === 1 ? '' : 's'} · sorted by streak
+              {t('reports:membersSortedByStreak', { count: data.length })}
             </Text>
             {data.map((m, idx) => (
               <Pressable

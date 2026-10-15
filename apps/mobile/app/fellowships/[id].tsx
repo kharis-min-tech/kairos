@@ -574,7 +574,7 @@ export default function FellowshipDetail() {  const { t } = useTranslation(['fel
                 maximumDate={new Date()}
               />
 
-              <Text style={styles.meetingLabel}>Title (optional)</Text>
+              <Text style={styles.meetingLabel}>{t('fellowships:titleOptional')}</Text>
               <TextInput
                 value={meetingTitle}
                 onChangeText={setMeetingTitle}
@@ -584,7 +584,7 @@ export default function FellowshipDetail() {  const { t } = useTranslation(['fel
                 editable={!createMeeting.isPending}
               />
 
-              <Text style={styles.meetingLabel}>Location (optional)</Text>
+              <Text style={styles.meetingLabel}>{t('fellowships:locationOptional')}</Text>
               <TextInput
                 value={meetingLocation}
                 onChangeText={setMeetingLocation}

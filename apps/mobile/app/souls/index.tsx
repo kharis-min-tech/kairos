@@ -233,8 +233,8 @@ export default function SoulsDirectory() {  const { t } = useTranslation(['souls
             {list.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load souls:{' '}
-                  {list.error instanceof Error ? list.error.message : 'Unknown error'}
+                  {t('souls:couldntLoadSouls')}{' '}
+                  {list.error instanceof Error ? list.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}
@@ -297,7 +297,9 @@ export default function SoulsDirectory() {  const { t } = useTranslation(['souls
                 </View>
                 {s.assignedMemberFirstName ? (
                   <Text style={styles.rowSubMeta}>
-                    Assigned to {s.assignedMemberFirstName} {s.assignedMemberLastName ?? ''}
+                    {t('souls:assignedToName', {
+                      name: `${s.assignedMemberFirstName} ${s.assignedMemberLastName ?? ''}`.trim(),
+                    })}
                   </Text>
                 ) : (
                   <Text style={styles.rowSubMeta}>{t('souls:unassigned')}</Text>

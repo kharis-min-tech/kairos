@@ -148,7 +148,9 @@ export default function MyRota() {  const { t } = useTranslation(['rota', 'commo
               style={styles.heroBg}
             />
             <View style={styles.heroContent}>
-              <Text style={styles.heroEyebrow}>Next duty · {relativeLabel(next.serviceDate)}</Text>
+              <Text style={styles.heroEyebrow}>
+                {t('rota:nextDutyWhen', { when: relativeLabel(next.serviceDate) })}
+              </Text>
               <Text style={styles.heroDate}>{longDate(next.serviceDate)}</Text>
               <View style={styles.heroFieldRow}>
                 <HeroField label={t('rota:role')} value={next.slotRoleName} />
@@ -260,10 +262,7 @@ function SwapRequestSheet({
               {duty.slotRoleName} · {longDate(duty.serviceDate)}
               {duty.startTime ? ` · ${duty.startTime}` : ''}
             </Text>
-            <Text style={styles.sheetHint}>
-              Your rota lead is notified and can offer this slot to another
-              member of the pool. Add a note if there&apos;s context that helps.
-            </Text>
+            <Text style={styles.sheetHint}>{t('rota:yourRotaLeadIsNotifiedAnd')}</Text>
             <TextInput
               multiline
               value={reason}

@@ -201,10 +201,7 @@ export default function FellowshipsMap() {  const { t } = useTranslation(['fello
         <Header onBack={() => router.back()} />
         <View style={styles.centered}>
           <Card padding="md">
-            <Text style={styles.errorText}>
-              Map is unavailable. The Mapbox token isn&apos;t configured. Ask an
-              admin to set the Mapbox public token.
-            </Text>
+            <Text style={styles.errorText}>{t('fellowships:mapIsUnavailableTheMapboxToken')}</Text>
           </Card>
         </View>
       </SafeAreaView>

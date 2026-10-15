@@ -137,8 +137,8 @@ export default function BranchesDirectory() {  const { t } = useTranslation(['br
             {branches.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load branches:{' '}
-                  {branches.error instanceof Error ? branches.error.message : 'Unknown error'}
+                  {t('branches:couldntLoadBranches')}{' '}
+                  {branches.error instanceof Error ? branches.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}

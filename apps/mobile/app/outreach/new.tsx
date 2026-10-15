@@ -180,7 +180,7 @@ export default function NewOutreachProgram() {  const { t } = useTranslation(['o
           </Card>
 
           <Card padding="md" style={{ gap: spacing.md }}>
-            <Text style={styles.sectionEyebrow}>ADDRESS &amp; BRANCH</Text>
+            <Text style={styles.sectionEyebrow}>{t('outreach:addressBranch')}</Text>
 
             <FieldLabel label={t('outreach:address')} />
             <Input value={address} onChangeText={setAddress} autoCapitalize="words" />

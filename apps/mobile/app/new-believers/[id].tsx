@@ -302,7 +302,9 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
                   <Text style={styles.title}>
                     {data.memberFirstName} {data.memberLastName}
                   </Text>
-                  <Text style={styles.meta}>Enrolled {formatShortDate(data.enrolledAt)}</Text>
+                  <Text style={styles.meta}>
+                    {t('newBelievers:enrolledOn', { date: formatShortDate(data.enrolledAt) })}
+                  </Text>
                 </View>
                 <Badge label={stageDef?.label ?? data.stage} variant="primary" size="sm" />
               </View>
@@ -349,8 +351,9 @@ export default function EnrollmentDetail() {  const { t } = useTranslation(['new
               >
                 <Text style={styles.attendanceHintTitle}>{t('newBelievers:attendanceNeededFirst')}</Text>
                 <Text style={styles.attendanceHintBody}>
-                  Before marking {stageDef?.label ?? data.stage} complete, take
-                  attendance in the session. Tap here to open Sessions.
+                  {t('newBelievers:takeAttendanceBeforeComplete', {
+                    stage: stageDef?.label ?? data.stage,
+                  })}
                 </Text>
               </Pressable>
             ) : null}

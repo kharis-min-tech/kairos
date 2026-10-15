@@ -158,9 +158,13 @@ export default function CohortDetailScreen() {  const { t } = useTranslation(['m
             <View style={styles.metaRow}>
               <CalendarDays color={c.inkFaded} size={14} strokeWidth={1.5} />
               <Text style={styles.metaText}>
-                Starts {formatShortDate(cohort.data.startDate)}
+                {t('membership:startsOnDate', {
+                  date: formatShortDate(cohort.data.startDate),
+                })}
                 {cohort.data.graduationDate
-                  ? ` · induction ${formatShortDate(cohort.data.graduationDate)}`
+                  ? ` · ${t('membership:inductionOnDate', {
+                      date: formatShortDate(cohort.data.graduationDate),
+                    })}`
                   : ''}
               </Text>
             </View>
@@ -351,7 +355,7 @@ function Sessions({
       {sessions.map((s) => (
         <Card key={s.id} style={styles.card}>
           <Text style={styles.cardTitle}>
-            Session {s.sessionNumber}: {s.title}
+            {t('membership:sessionNumberTitle', { number: s.sessionNumber, title: s.title })}
           </Text>
           <Text style={styles.metaText}>
             {s.sessionDate ? formatShortDate(s.sessionDate) : 'Date to be confirmed'}
@@ -359,7 +363,9 @@ function Sessions({
           </Text>
           {s.teacherFirstName ? (
             <Text style={styles.metaText}>
-              Taught by {s.teacherFirstName} {s.teacherLastName}
+              {t('membership:taughtByName', {
+                name: `${s.teacherFirstName} ${s.teacherLastName ?? ''}`.trim(),
+              })}
             </Text>
           ) : null}
 

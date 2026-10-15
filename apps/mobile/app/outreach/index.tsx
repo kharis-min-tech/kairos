@@ -195,8 +195,8 @@ export default function OutreachDirectory() {  const { t } = useTranslation(['ou
             {list.isError ? (
               <Card padding="md">
                 <Text style={styles.errorLine}>
-                  Couldn&apos;t load programs:{' '}
-                  {list.error instanceof Error ? list.error.message : 'Unknown error'}
+                  {t('outreach:couldntLoadPrograms')}{' '}
+                  {list.error instanceof Error ? list.error.message : t('common:unknownError')}
                 </Text>
               </Card>
             ) : null}

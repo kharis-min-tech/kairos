@@ -277,6 +277,7 @@ function OverdueCard({
 }
 
 function FollowupCard({ row }: { row: DepartmentFollowupWithDetails }) {
+  const { t } = useTranslation(['departments', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
@@ -300,7 +301,9 @@ function FollowupCard({ row }: { row: DepartmentFollowupWithDetails }) {
         <View style={styles.nextRow}>
           <Clock color={c.gold} size={12} strokeWidth={1.5} />
           <Text style={styles.nextText}>
-            Next follow-up {new Date(row.nextFollowUpDate).toLocaleDateString()}
+            {t('departments:nextFollowUpOn', {
+              date: new Date(row.nextFollowUpDate).toLocaleDateString(),
+            })}
           </Text>
         </View>
       ) : null}
@@ -528,7 +531,7 @@ function CreateSheet({
         {type === 'contact' ? (
           <>
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Methods (pick one or more)</Text>
+              <Text style={styles.fieldLabel}>{t('departments:methodsPickOneOrMore')}</Text>
               <View style={styles.chipRow}>
                 {localiseOptions(t, 'members:contactMethod_', CONTACT_METHOD_OPTIONS).map(({ value, label }) => {
                   const active = methods.has(value);
@@ -683,7 +686,7 @@ function CreateSheet({
             />
 
             <View style={{ gap: 4 }}>
-              <Text style={styles.fieldLabel}>Went with (optional)</Text>
+              <Text style={styles.fieldLabel}>{t('departments:wentWithOptional')}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

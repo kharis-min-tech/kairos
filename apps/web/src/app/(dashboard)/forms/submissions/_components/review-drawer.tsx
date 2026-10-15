@@ -160,7 +160,7 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
                       </Badge>
           </DialogTitle>
           <DialogDescription>
-            Submitted {formatShortDate(submission.createdAt)}
+            {t('forms:submittedOn', { date: formatShortDate(submission.createdAt) })}
             {submission.branchName ? ` · ${submission.branchName} branch` : ''}
             {anonymous ? ' · (anonymous)' : ''}
           </DialogDescription>

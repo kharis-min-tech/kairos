@@ -400,9 +400,7 @@ function DeclarativeForm({
           <Card padding="md" style={{ gap: spacing.sm }}>
             <Text style={styles.consentTitle}>{t('forms:privacyNotice')}</Text>
             <Text style={styles.consentBody}>
-              Kharis Church uses the information you provide to contact you and administer
-              church-related activities. It&apos;s stored securely until no longer required.
-              To learn more or opt out, read the Privacy Policy at kharis.org.
+              {t('forms:consentPrivacyBody')}
             </Text>
             <CheckboxRow
               value={consentAck}

@@ -86,10 +86,7 @@ export default function RollcallLanding() {  const { t } = useTranslation(['atte
               <ClipboardList color={c.primary} size={22} strokeWidth={1.5} />
             </View>
             <Text style={styles.emptyTitle}>{t('attendance:noFellowshipsToLead')}</Text>
-            <Text style={styles.emptyMeta}>
-              Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders
-              and members alike can record attendance for their group.
-            </Text>
+            <Text style={styles.emptyMeta}>{t('attendance:fellowshipAttendanceBecomesAvailableOnceYoure')}</Text>
           </Card>
         ) : null}
 

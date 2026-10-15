@@ -96,10 +96,8 @@ export default function PrivacyConsent() {  const { t } = useTranslation(['secur
         }
       >
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Legal &amp; consent</Text>
-          <Text style={styles.introMeta}>
-            Track which policies you&apos;ve accepted and when.
-          </Text>
+          <Text style={styles.introTitle}>{t('security:legalConsent')}</Text>
+          <Text style={styles.introMeta}>{t('security:trackWhichPoliciesYouveAcceptedAnd')}</Text>
         </View>
 
         <Card padding="md">
@@ -114,8 +112,8 @@ export default function PrivacyConsent() {  const { t } = useTranslation(['secur
 
           {consent.isError ? (
             <Text style={styles.errorLine}>
-              Couldn&apos;t load consent:{' '}
-              {consent.error instanceof Error ? consent.error.message : 'Unknown error'}
+              {t('security:couldntLoadConsent')}{' '}
+              {consent.error instanceof Error ? consent.error.message : t('common:unknownError')}
             </Text>
           ) : null}
 
@@ -174,7 +172,9 @@ export default function PrivacyConsent() {  const { t } = useTranslation(['secur
                   </View>
                   {status.needsAccept && status.required ? (
                     <Text style={styles.needsAcceptLine}>
-                      Action needed: version {status.currentVersion} is now current.
+                      {t('security:actionNeededVersionCurrent', {
+                        version: status.currentVersion,
+                      })}
                     </Text>
                   ) : null}
                 </View>
@@ -200,8 +200,7 @@ export default function PrivacyConsent() {  const { t } = useTranslation(['secur
         </Card>
 
         <Text style={styles.footnote}>
-          Required policies can only be updated by re-accepting the newest version. If a required
-          policy shows &quot;Action needed&quot; you&apos;ll be prompted the next time you sign in.
+          {t('security:requiredPoliciesNote')}
         </Text>
       </ScrollView>
     </SafeAreaView>

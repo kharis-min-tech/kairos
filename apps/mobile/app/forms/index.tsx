@@ -65,7 +65,7 @@ export default function FormsLanding() {  const { t } = useTranslation(['forms',
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Forms &amp; data capture</Text>
+          <Text style={styles.introTitle}>{t('forms:formsDataCapture')}</Text>
           <Text style={styles.introMeta}>{t('forms:captureAltarCallResponsesBaptismAnd')}</Text>
         </View>
 

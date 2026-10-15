@@ -25,6 +25,7 @@ import { alert } from '@/lib/alert';
 import { useAuthStore } from '@/store/auth';
 import * as biometric from '@/lib/biometric';
 import { useTranslation } from 'react-i18next';
+import { keySlug } from '@/lib/localise-options';
 
 export default function SecurityHub() {  const { t } = useTranslation(['security', 'common']);
 
@@ -168,7 +169,11 @@ function BiometricToggle() {  const { t } = useTranslation(['security', 'common'
         <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={styles.linkTitle}>Sign in with {cap.label}</Text>
+        <Text style={styles.linkTitle}>
+          {t('security:signInWithProvider', {
+            provider: t(`auth:biometric_${keySlug(cap.label)}`, { defaultValue: cap.label }),
+          })}
+        </Text>
         {!cap.isEnrolled ? (
           <Text style={styles.linkMeta}>{t('security:setItUpInYourDevice')}</Text>
         ) : !enabled ? (

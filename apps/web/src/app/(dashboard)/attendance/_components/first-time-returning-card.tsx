@@ -49,9 +49,7 @@ export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }:
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-[#f8b537]" aria-hidden />{t('attendance:firstTimeVsReturning')}</CardTitle>
         <CardDescription>
-          Per week: how many attendees were first-time (their earliest-ever
-          attendance on this branch fell in the week) vs returning. Rising
-          gold = new people reached; rising purple = the regulars showing up.
+          {t('attendance:firstTimeVsReturningCaption')}
         </CardDescription>
       </CardHeader>
       <CardContent>

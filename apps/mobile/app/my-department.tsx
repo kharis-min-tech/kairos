@@ -178,7 +178,8 @@ export default function MyDepartment() {  const { t } = useTranslation(['departm
                   />
                 </View>
                 <Text style={styles.membershipMeta}>
-                  Joined {new Date(myMembership.joinDate).toLocaleDateString(undefined, {
+                  {t('departments:joinedPrefix')}{' '}
+                  {new Date(myMembership.joinDate).toLocaleDateString(undefined, {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -188,7 +189,7 @@ export default function MyDepartment() {  const { t } = useTranslation(['departm
                   <View style={styles.probationRow}>
                     <Calendar color={c.gold} size={14} strokeWidth={1.5} />
                     <Text style={styles.probationText}>
-                      Probation ends{' '}
+                      {t('departments:probationEndsPrefix')}{' '}
                       {new Date(myMembership.probationEndDate).toLocaleDateString(undefined, {
                         day: 'numeric',
                         month: 'short',

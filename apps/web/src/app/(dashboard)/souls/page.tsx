@@ -30,6 +30,7 @@ import {
   SOUL_PIPELINE_LANES,
 } from './_components/drag-rules';
 import { useTranslation } from 'react-i18next';
+import { keySlug } from '@/lib/localise-options';
 
 interface SoulCardData {
   id: string;
@@ -156,7 +157,7 @@ function SoulCard({
                       : 'bg-slate-500/15 text-slate-600 dark:text-slate-400'
                 }`}
               >
-                {disposition}
+                {t(`souls:status_${keySlug(disposition)}`, { defaultValue: disposition })}
               </span>
             )}
           </div>
@@ -263,7 +264,9 @@ function KanbanColumn({
       <Card className="bg-muted">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">{status}</CardTitle>
+            <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
+              {t(`souls:lane_${keySlug(status)}`, { defaultValue: status })}
+            </CardTitle>
             <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">{count}</span>
           </div>
         </CardHeader>
@@ -758,7 +761,7 @@ export default function SoulsKanbanPage() {  const { t } = useTranslation(['soul
       {showBulkAssign && (
         <Card className="bg-primary/5">
           <CardHeader>
-            <CardTitle>Bulk Assign {selectedSouls.size} Soul{selectedSouls.size !== 1 ? 's' : ''}</CardTitle>
+            <CardTitle>{t('souls:bulkAssignCount', { count: selectedSouls.size })}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

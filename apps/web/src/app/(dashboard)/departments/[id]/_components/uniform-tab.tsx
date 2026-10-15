@@ -134,7 +134,7 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {  cons
       {todaysAssignments.length > 0 && (
         <Card className="border-[#f8b537]/40 bg-[#f8b537]/5">
           <CardHeader>
-            <CardTitle className="text-base">Today&apos;s uniform</CardTitle>
+            <CardTitle className="text-base">{t('departments:todaysUniform')}</CardTitle>
             <CardDescription>{formatDateLong(today)}</CardDescription>
           </CardHeader>
           <CardContent>

@@ -213,12 +213,16 @@ export default function FellowshipAttendance() {  const { t } = useTranslation([
                         {m.firstName} {m.lastName}
                       </Text>
                       <Text style={styles.rowMeta}>
-                        Services {m.serviceAttendedCount} ·{' '}
-                        {Math.round(m.serviceRate * 100)}%
+                        {t('fellowships:servicesCountRate', {
+                          count: m.serviceAttendedCount,
+                          rate: Math.round(m.serviceRate * 100),
+                        })}
                       </Text>
                       <Text style={styles.rowMeta}>
-                        Meetings {m.meetingAttendedCount} ·{' '}
-                        {Math.round(m.meetingRate * 100)}%
+                        {t('fellowships:meetingsCountRate', {
+                          count: m.meetingAttendedCount,
+                          rate: Math.round(m.meetingRate * 100),
+                        })}
                       </Text>
                     </View>
                   </Card>

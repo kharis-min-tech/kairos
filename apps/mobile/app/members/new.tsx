@@ -93,10 +93,7 @@ export default function NewMember() {  const { t } = useTranslation(['members', 
               name: `${created.member.firstName} ${created.member.lastName}`,
             })}
           </Text>
-          <Text style={styles.successMeta}>
-            Share the temporary password below so they can sign in. They&apos;ll be prompted
-            to change it on first login.
-          </Text>
+          <Text style={styles.successMeta}>{t('members:shareTheTemporaryPasswordBelowSo')}</Text>
 
           <Card padding="md" style={styles.credsCard}>
             <View style={styles.credRow}>

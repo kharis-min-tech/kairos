@@ -1072,7 +1072,9 @@ function ScheduleInterviewDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Schedule interview: {request.memberFirstName} {request.memberLastName}
+            {t('departments:scheduleInterviewFor', {
+              name: `${request.memberFirstName} ${request.memberLastName}`,
+            })}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1111,7 +1113,7 @@ function ScheduleInterviewDialog({
             />
           </div>
           <div>
-            <Label className="text-xs">Interviewer 2 (optional)</Label>
+            <Label className="text-xs">{t('departments:interviewer2Optional')}</Label>
             <CustomSelect
               value={interviewerTwoId}
               onValueChange={setInterviewerTwoId}
@@ -1168,7 +1170,9 @@ function RecordInterviewDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Record interview: {request.memberFirstName} {request.memberLastName}
+            {t('departments:recordInterviewFor', {
+              name: `${request.memberFirstName} ${request.memberLastName}`,
+            })}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1243,20 +1247,22 @@ function ExtendOfferDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Extend offer: {request.memberFirstName} {request.memberLastName}
+            {t('departments:extendOfferTo', {
+              name: `${request.memberFirstName} ${request.memberLastName}`,
+            })}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label className="text-xs">Offer expires (optional)</Label>
+            <Label className="text-xs">{t('departments:offerExpiresOptional')}</Label>
             <DateSelect value={expiry} onChange={setExpiry} minDate={todayIso()} />
           </div>
           <div>
-            <Label className="text-xs">Probation length (days)</Label>
+            <Label className="text-xs">{t('departments:probationLengthDays')}</Label>
             <NumberStepper value={days} onValueChange={setDays} min={1} max={365} />
           </div>
           <div>
-            <Label className="text-xs">Message (optional)</Label>
+            <Label className="text-xs">{t('departments:messageOptional')}</Label>
             <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} />
           </div>
         </div>
@@ -1311,7 +1317,7 @@ function RejectDialog({
           </DialogTitle>
         </DialogHeader>
         <div>
-          <Label className="text-xs">Notes (optional)</Label>
+          <Label className="text-xs">{t('departments:notesOptional')}</Label>
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         </div>
         <DialogFooter>
@@ -1362,7 +1368,9 @@ function EvaluateProbationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Evaluate probation: {request.memberFirstName} {request.memberLastName}
+            {t('departments:evaluateProbationFor', {
+              name: `${request.memberFirstName} ${request.memberLastName}`,
+            })}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
@@ -1378,7 +1386,7 @@ function EvaluateProbationDialog({
             />
           </div>
           <div>
-            <Label className="text-xs">Notes (optional)</Label>
+            <Label className="text-xs">{t('departments:notesOptional')}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
           </div>
         </div>

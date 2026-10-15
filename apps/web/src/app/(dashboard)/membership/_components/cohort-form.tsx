@@ -161,7 +161,7 @@ export function CohortForm({
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="cohort-description">Description (optional)</Label>
+            <Label htmlFor="cohort-description">{t('membership:descriptionOptional')}</Label>
             <Textarea
               id="cohort-description"
               value={description}

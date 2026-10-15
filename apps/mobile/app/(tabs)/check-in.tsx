@@ -362,9 +362,7 @@ export default function CheckIn() {
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>{t('checkIn:whichService')}</Text>
-            <Text style={styles.sheetHint}>
-              Two check-in windows are open right now. Pick the one you&apos;re at.
-            </Text>
+            <Text style={styles.sheetHint}>{t('checkIn:twoCheckInWindowsAreOpen')}</Text>
             {openRows.map((r) => (
               <Pressable
                 key={r.serviceId}

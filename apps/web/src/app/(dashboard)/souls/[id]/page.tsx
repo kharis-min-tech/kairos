@@ -13,7 +13,7 @@ import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'luc
 import { useConfirm } from '@/components/confirm-dialog';
 import { formatShortDate, formatShortDateTime } from '@kairos/core';
 import { useTranslation } from 'react-i18next';
-import { localiseOptions } from '@/lib/localise-options';
+import { localiseOptions, keySlug } from '@/lib/localise-options';
 
 interface FollowUpRecord {
   id: string;
@@ -418,7 +418,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     placeholder={t('souls:selectMethod')}
                     options={CONTACT_METHODS.map((m) => ({
                       value: m,
-                      label: t(`souls:contactMethod_${m}`, { defaultValue: m }),
+                      label: t(`souls:contactMethod_${keySlug(m)}`, { defaultValue: m }),
                     }))}
                   />
                   {followUpForm.contactMethod === 'Other' && (
@@ -445,13 +445,13 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                     placeholder={t('souls:selectStatus')}
                     options={CONTACT_STATUSES.map((cs) => ({
                       value: cs,
-                      label: t(`souls:contactStatus_${cs}`, { defaultValue: cs }),
+                      label: t(`souls:contactStatus_${keySlug(cs)}`, { defaultValue: cs }),
                     }))}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="urgencyLevel">Urgency Level (Post-Contact Assessment)</Label>
+                  <Label htmlFor="urgencyLevel">{t('souls:urgencyLevelPostContactAssessment')}</Label>
                   <CustomSelect
                     id="urgencyLevel"
                     value={followUpForm.urgencyLevel}
@@ -463,7 +463,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="updateStatus">Update Stage / Outcome (Optional)</Label>
+                  <Label htmlFor="updateStatus">{t('souls:updateStageOutcomeOptional')}</Label>
                   <CustomSelect
                     id="updateStatus"
                     value={followUpForm.updateStatus}
@@ -476,7 +476,7 @@ export default function SoulDetailPage() {  const { t } = useTranslation(['souls
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="durationMinutes">Duration (minutes)</Label>
+                <Label htmlFor="durationMinutes">{t('souls:durationMinutesLabel')}</Label>
                 <NumberStepper
                   value={Number(followUpForm.durationMinutes) || 0}
                   onValueChange={(v) =>

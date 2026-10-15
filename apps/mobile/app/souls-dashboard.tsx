@@ -143,9 +143,7 @@ export default function SoulsDashboard() {  const { t } = useTranslation(['souls
                   <RagLegendRow label={t('souls:green')} value={rag.GREEN} tone={c.success} />
                 </View>
               </View>
-              <Text style={styles.ragHint}>
-                RAG reflects follow-up freshness. Red = missed &gt; 14 days.
-              </Text>
+              <Text style={styles.ragHint}>{t('souls:ragReflectsFollowUpFreshnessRed')}</Text>
             </Card>
 
             {statusRows.length > 0 ? (

@@ -236,7 +236,7 @@ export default function AdminCheckin() {  const { t } = useTranslation(['admin',
           }
           ListHeaderComponent={
             <Text style={styles.queueLabel}>
-              At the desk · {roasted.length} member{roasted.length === 1 ? '' : 's'}
+              {t('attendance:atTheDeskCount', { count: roasted.length })}
             </Text>
           }
           ListEmptyComponent={

@@ -1281,7 +1281,7 @@ function MissingMembersCard({
             style={styles.missingSeeMore}
           >
             <Text style={styles.missingSeeMoreLabel}>
-              See all {data.length} →
+              {t('reports:seeAllCount', { count: data.length })} →
             </Text>
           </Pressable>
         ) : null}

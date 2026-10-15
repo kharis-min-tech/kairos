@@ -311,8 +311,7 @@ export default function RotaTemplateDetail() {  const { t } = useTranslation(['r
                       <View style={{ flex: 1, gap: 2 }}>
                         <Text style={styles.slotName}>{s.roleName}</Text>
                         <Text style={styles.slotMeta}>
-                          {s.positionsRequired} position
-                          {s.positionsRequired === 1 ? '' : 's'}
+                          {t('rota:positionsCount', { count: s.positionsRequired })}
                           {s.notes ? ` · ${s.notes}` : ''}
                         </Text>
                       </View>
@@ -370,7 +369,7 @@ export default function RotaTemplateDetail() {  const { t } = useTranslation(['r
                       </Text>
                       {row.preferredRoleName ? (
                         <Text style={styles.poolMeta}>
-                          Prefers {row.preferredRoleName}
+                          {t('departments:prefersRole', { role: row.preferredRoleName })}
                         </Text>
                       ) : null}
                     </View>
@@ -631,7 +630,7 @@ function SlotSheet({
         />
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.label}>Notes (optional)</Text>
+        <Text style={styles.label}>{t('rota:notesOptional')}</Text>
         <Input
           value={notes}
           onChangeText={setNotes}

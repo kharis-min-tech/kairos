@@ -377,7 +377,7 @@ function ApplicantCard({
 
       {row.interviewScheduledAt ? (
         <Text style={styles.stageDetail}>
-          Interview {new Date(row.interviewScheduledAt).toLocaleString([], {
+          {t('departments:interviewOn')} {new Date(row.interviewScheduledAt).toLocaleString([], {
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
@@ -400,14 +400,16 @@ function ApplicantCard({
 
       {row.offeredAt ? (
         <Text style={styles.stageDetail}>
-          Offer sent {new Date(row.offeredAt).toLocaleDateString()}
-          {row.offerResponse ? ` · Response: ${row.offerResponse}` : ' · awaiting response'}
+          {t('departments:offerSentOn', { date: new Date(row.offeredAt).toLocaleDateString() })}
+          {row.offerResponse
+            ? ` · ${t('departments:offerResponse', { response: row.offerResponse })}`
+            : ` · ${t('departments:awaitingResponse')}`}
         </Text>
       ) : null}
 
       {row.probationStartDate ? (
         <Text style={styles.stageDetail}>
-          Probation {row.probationStartDate}
+          {t('departments:probationFrom', { date: row.probationStartDate })}
           {row.probationEndDate ? ` → ${row.probationEndDate}` : ''}
         </Text>
       ) : null}
@@ -650,7 +652,10 @@ function ScheduleInterviewSheet({
         </View>
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Location {format === 'virtual' ? t('departments:meetingLink') : t('departments:roomAddress')}</Text>
+        <Text style={styles.fieldLabel}>
+          {t('departments:locationLabel')}{' '}
+          {format === 'virtual' ? t('departments:meetingLink') : t('departments:roomAddress')}
+        </Text>
         <Input value={location} onChangeText={setLocation} placeholder={t('departments:optional')} />
       </View>
       <MemberPickerRow
@@ -817,7 +822,7 @@ function ExtendOfferSheet({
     >
       <DatePicker label={t('departments:offerExpiresOptional')} value={expires} onChange={setExpires} />
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Message (optional)</Text>
+        <Text style={styles.fieldLabel}>{t('departments:messageOptional')}</Text>
         <Input
           value={message}
           onChangeText={setMessage}
@@ -829,7 +834,7 @@ function ExtendOfferSheet({
         />
       </View>
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Probation length (days)</Text>
+        <Text style={styles.fieldLabel}>{t('departments:probationLengthDays')}</Text>
         <Input
           value={probationDays}
           onChangeText={setProbationDays}
@@ -979,7 +984,7 @@ function RejectSheet({
       }
     >
       <View style={{ gap: 4 }}>
-        <Text style={styles.fieldLabel}>Reason (optional, private)</Text>
+        <Text style={styles.fieldLabel}>{t('departments:reasonOptionalPrivate')}</Text>
         <Input
           value={notes}
           onChangeText={setNotes}

@@ -120,7 +120,7 @@ export default function EditBranch() {  const { t } = useTranslation(['branches'
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.centered}>
-          <Text style={styles.errorTitle}>Couldn&apos;t load this branch</Text>
+          <Text style={styles.errorTitle}>{t('branches:couldntLoadThisBranch')}</Text>
           <Text style={styles.errorMeta}>
             {branch.error instanceof Error
               ? branch.error.message

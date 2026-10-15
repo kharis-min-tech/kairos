@@ -324,7 +324,9 @@ export function EnrollmentDetailDrawer({
           <DialogHeader>
             <DialogTitle>{t('newBelievers:sessionFeedbackRequired')}</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Record feedback before moving to {nextStage?.label ?? 'the next stage'}.
+              {t('newBelievers:recordFeedbackBeforeMovingTo', {
+                stage: stageLabel(t, nextStage, t('newBelievers:theNextStage')),
+              })}
             </DialogDescription>
           </DialogHeader>
           <div>

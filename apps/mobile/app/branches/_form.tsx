@@ -227,7 +227,7 @@ export function BranchForm({
         </Card>
 
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.sectionEyebrow}>ADDRESS &amp; CONTACT</Text>
+          <Text style={styles.sectionEyebrow}>{t('branches:addressContact')}</Text>
 
           <AddressAutofillInput
             accessToken={mapboxPublicToken}
