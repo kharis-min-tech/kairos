@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { resolveVerse } from '@kairos/core';
+import { resolveVerse, localiseReference } from '@kairos/core';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMeHome, useMyLeadership } from '@/hooks/use-me';
@@ -317,7 +317,7 @@ export default function DashboardPage() {  const { t, i18n } = useTranslation(['
           &ldquo;{verse.text}&rdquo;
         </p>
         <p className="text-sm font-bold text-[#9a6b04] dark:text-[#f8b537]">
-          — {verse.ref} ({verse.version})
+          — {localiseReference(verse.ref, i18n.language)} ({verse.version})
           {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
         </p>
       </div>

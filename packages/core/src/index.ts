@@ -14,6 +14,7 @@ export {
   formatShortDateTime,
 } from './date-format';
 
+export { localiseReference } from './bible-books';
 export { CONTINENTS, COUNTRIES_BY_CONTINENT } from './countries';
 
 export {

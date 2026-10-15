@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { resolveVerse } from '@kairos/core';
+import { resolveVerse, localiseReference } from '@kairos/core';
 import { CardField } from '@/components/motion/card-field';
 import { FloatCard } from '@/components/motion/float-card';
 import { Spotlight } from '@/components/motion/spotlight';
@@ -50,7 +50,7 @@ export function AuthAmbient() {
               {verse ? `“${verse.text}”` : ''}
             </div>
             <div className="mt-1.5 text-[11px] text-[#8a6410]">
-              {verse ? `— ${verse.ref} (${verse.version})` : ''}
+              {verse ? `— ${localiseReference(verse.ref, i18n.language)} (${verse.version})` : ''}
               {verse?.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from './kharis-logo';
-import { AUTH_VERSES, pickAuthVerse, resolveAuthVerse } from '@kairos/core';
+import { AUTH_VERSES, pickAuthVerse, resolveAuthVerse, localiseReference } from '@kairos/core';
 import { HandDrawn } from '@/components/motion/hand-drawn';
 import { Reveal } from '@/components/motion/reveal';
 import { AuthAmbient } from './auth-ambient';
@@ -142,7 +142,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="auth-verse-ref flex items-center gap-3">
               <div className="h-px w-8 bg-gray-300 dark:bg-white/20" />
               <span className="text-[11px] font-medium uppercase tracking-widest text-gray-500 dark:text-white/50">
-                {verse.reference} ({verse.version})
+                {localiseReference(verse.reference, i18n.language)} ({verse.version})
                 {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
               </span>
             </div>

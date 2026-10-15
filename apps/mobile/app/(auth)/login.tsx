@@ -33,7 +33,7 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
-import { pickAuthVerse, resolveAuthVerse } from '@kairos/core';
+import { pickAuthVerse, resolveAuthVerse, localiseReference } from '@kairos/core';
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
 import { alert } from '@/lib/alert';
@@ -54,7 +54,7 @@ import { useReduceMotion } from '@/components/motion/use-reduce-motion';
 const WELCOME_HOLD_MS = 700;
 
 export default function LoginScreen() {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t, i18n } = useTranslation(['auth', 'common']);
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
 
@@ -286,7 +286,7 @@ export default function LoginScreen() {
                 {verse.after}
               </Text>
               <Text style={styles.verseRef}>
-                {verse.reference} ({verse.version})
+                {localiseReference(verse.reference, i18n.language)} ({verse.version})
                 {verse.fellBackToEnglish ? ` \u00b7 ${t('common:shownInEnglish')}` : ''}
               </Text>
             </Animated.View>

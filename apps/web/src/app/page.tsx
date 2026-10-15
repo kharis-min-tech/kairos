@@ -37,7 +37,7 @@ import { Spotlight } from "@/components/motion/spotlight";
 import { Halo } from "@/components/motion/halo";
 import { Assemble } from "@/components/motion/assemble";
 import { useTranslation } from 'react-i18next';
-import { resolveVerse } from '@kairos/core';
+import { resolveVerse, localiseReference } from '@kairos/core';
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 // Six shipped capabilities. Donations + Notifications deliberately left off
@@ -234,7 +234,7 @@ export default function KairosLanding() {
               <div className="text-[10px] font-bold tracking-[0.16em] text-[#b07a10]">{t('marketing:dailyVerse')}</div>
               <div className="mt-1.5 text-sm italic leading-[1.45]">&ldquo;{verse.text}&rdquo;</div>
               <div className="mt-1.5 text-[11px] text-[#8a6410]">
-                — {verse.ref} ({verse.version})
+                — {localiseReference(verse.ref, i18n.language)} ({verse.version})
                 {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
               </div>
             </div>
@@ -772,7 +772,7 @@ export default function KairosLanding() {
                           &ldquo;{verse.text}&rdquo;
                         </p>
                         <p className="text-[8px] text-[#f8b537] mt-1 font-bold">
-                          — {verse.ref} ({verse.version})
+                          — {localiseReference(verse.ref, i18n.language)} ({verse.version})
                           {verse.fellBackToEnglish ? ` · ${t('common:shownInEnglish')}` : ''}
                         </p>
                       </div>
