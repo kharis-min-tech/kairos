@@ -129,15 +129,31 @@ const api = {
 };
 
 // ── Sign in ────────────────────────────────────────────────────────────────
+// Submitting before React has hydrated posts the form the browser's own way:
+// the page goes to /login?email=…&password=… and sits there until the wait
+// times out, which costs the whole clip. It only happens when the machine is
+// busy — which, during a 113-clip batch, is always — so wait for hydration
+// and start the sign-in over if the fallback GET happens anyway.
 const { email, password } = flow.account;
-await page.goto(`${base}/login`, { waitUntil: 'networkidle' });
-await page.fill('input[type="email"]', email);
-await page.fill('input[type="password"]', password);
-await page.click('button[type="submit"]');
-await page.waitForURL(/\/(dashboard|accept-policies)/, {
-  timeout: 60000,
-  waitUntil: 'domcontentloaded',
-});
+for (let attempt = 1; ; attempt++) {
+  await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+  await page.waitForSelector('input[type="email"]', { timeout: 60000 });
+  await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
+  await page.waitForTimeout(1200);
+  await page.fill('input[type="email"]', email);
+  await page.fill('input[type="password"]', password);
+  await page.click('button[type="submit"]');
+  try {
+    await page.waitForURL(/\/(dashboard|accept-policies)/, {
+      timeout: 45000,
+      waitUntil: 'domcontentloaded',
+    });
+    break;
+  } catch (err) {
+    if (attempt >= 3) throw err;
+    console.log(`  (sign-in attempt ${attempt} did not take; retrying)`);
+  }
+}
 
 // A freshly seeded database has no consent records, and the gate is enforced
 // on navigation rather than at sign-in — so the first run landed on the
