@@ -1,0 +1,19 @@
+{
+  "role": "analytics-church-health-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Chɔch Ɛlti?",
+      "caption": "Atɛndans agens di rɔl.",
+      "speech": "Chɔch ɛlt de kɔmpɛr udat de kam fɔ tru agens udat de pan di rɔl, we na wan at ɛn mɔ yuzful nɔmba dan ɛni wan wangren."
+    },
+    {
+      "n": 2,
+      "title": "Rid di Trɛnd",
+      "caption": "Di dairɛkshɔn impɔtant pas.",
+      "speech": "Wan wik wangren nɔ de tɔk mɔch. Na di trɛnd ɔva et wik de tɛl yu if sɔntin de wok."
+    }
+  ]
+}

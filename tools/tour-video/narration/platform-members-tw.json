@@ -1,0 +1,25 @@
+{
+  "role": "platform-members-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Nhwɛmu no",
+      "caption": "Obiara, wɔ nhwɛmu baako mu.",
+      "speech": "Asɔrefoɔ ne nhwɛmu no. Obiara a ɔwɔ asɔre no mu wɔ ha, ne n’asɔre baa ne sɛ wawie asɔrefoɔ adesua no anaa."
+    },
+    {
+      "n": 2,
+      "title": "Obi hwehwɛ",
+      "caption": "Fa din, email anaa telefon.",
+      "speech": "Twerɛ din, email anaa telefon nɔma wɔ hwehwɛbea hɔ. Wotumi nso yi no mu fa asɔre baa, gyinabea anaa dibea so."
+    },
+    {
+      "n": 3,
+      "title": "Bue obi nsɛm",
+      "caption": "N’abakɔsɛm nyinaa wɔ faako.",
+      "speech": "Sɛ womia nsensaneɛ a, ɛbue saa onipa no: ne nkitahodie, n’akuo, ne mmaeɛ ne nkɔdi akyi biara a ɛfa ne ho."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "platform-outreach-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Nhyehyɛeɛ",
+      "caption": "Asɛmpaka, a ɛda ne beaeɛ wɔ ho.",
+      "speech": "Asɛmpaka nhyehyɛeɛ ne asɛmpaka adwuma no: baabi, berɛ bɛn, ne adwumayɛfoɔ a wɔrekɔ."
+    },
+    {
+      "n": 2,
+      "title": "Kyerɛw ɔkra",
+      "caption": "Din ne nɔma dɔɔso.",
+      "speech": "Wɔ asɛmpaka mu, wokyerɛw nnipa a wohyia wɔn. Din ne telefon nɔma dɔɔso sɛ wode bɛfiri aseɛ; kwan no gye firi hɔ."
+    }
+  ]
+}

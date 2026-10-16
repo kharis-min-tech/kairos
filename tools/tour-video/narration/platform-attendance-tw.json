@@ -1,0 +1,19 @@
+{
+  "role": "platform-attendance-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Ɔsom",
+      "caption": "Nhyiam biara, ne ne krataa.",
+      "speech": "Mmaeɛ kyerɛ ɔsom ahodoɔ no. Biara kyerɛ dodoɔ a wɔkyerɛwee ne sɛ krataa no da so bue anaa."
+    },
+    {
+      "n": 2,
+      "title": "Kyerɛw wɔn a wɔbaeɛ",
+      "caption": "Ɛpono ano, anaa ɔmanfoɔ no ankasa.",
+      "speech": "Bue ɔsom bi na kyerɛ sɛ obi wɔ hɔ, waka akyi anaa ɔwɔ intanɛt so. Asɔrefoɔ nso tumi de QR kod kyerɛw wɔn din."
+    }
+  ]
+}

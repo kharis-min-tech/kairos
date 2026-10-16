@@ -1,0 +1,61 @@
+{
+  "role": "pastor-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Votre vue d’ensemble",
+      "caption": "Votre antenne, et ce qu’elle attend de vous.",
+      "speech": "Votre vue d’ensemble s’ouvre sur votre antenne : combien de personnes dans l’assemblée, et ce qui attend votre intervention aujourd’hui."
+    },
+    {
+      "n": 2,
+      "title": "Votre antenne",
+      "caption": "Tout ce qui se trouve dans la vôtre.",
+      "speech": "Mon antenne, c’est l’ensemble de celle que vous dirigez. Ses membres, ses groupes, ses cultes, et les personnes qui viennent d’arriver."
+    },
+    {
+      "n": 3,
+      "title": "L’annuaire",
+      "caption": "Tout le monde, avec son statut.",
+      "speech": "L’annuaire liste toute votre antenne. La ligne indique s’il s’agit d’un visiteur, d’un habitué, ou de quelqu’un ayant fait la classe d’adhésion."
+    },
+    {
+      "n": 4,
+      "title": "Suivis",
+      "caption": "Trois files, sur un calendrier serré.",
+      "speech": "Les suivis comptent trois files : les premières visites sans contact, les personnes sans groupe, et les relances en retard."
+    },
+    {
+      "n": 5,
+      "title": "Préoccupations",
+      "caption": "Bien-être et protection, séparés.",
+      "speech": "Les préoccupations regroupent bien-être et protection. Ce sont deux boîtes distinctes, lues par des personnes délibérément différentes."
+    },
+    {
+      "n": 6,
+      "title": "Votre cellule",
+      "caption": "Le groupe que vous dirigez.",
+      "speech": "Pour la cellule que vous dirigez, vous pouvez faire l’appel, consigner un suivi, et voir qui a cessé de venir."
+    },
+    {
+      "n": 7,
+      "title": "Votre département",
+      "caption": "Effectif, planning et recrutement.",
+      "speech": "Pour votre département, vous gérez l’effectif, publiez le planning, et traitez les candidatures reçues."
+    },
+    {
+      "n": 8,
+      "title": "Le parcours des âmes",
+      "caption": "Du premier contact au département.",
+      "speech": "Le parcours des âmes suit une personne touchée par l’évangélisation, du premier contact jusqu’à son entrée dans un département."
+    },
+    {
+      "n": 9,
+      "title": "Rapports",
+      "caption": "Votre antenne, en chiffres.",
+      "speech": "Les rapports traduisent votre antenne en chiffres : tendances de présence, qui manque à l’appel, et la croissance des groupes."
+    }
+  ]
+}

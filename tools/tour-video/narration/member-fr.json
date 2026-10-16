@@ -1,0 +1,55 @@
+{
+  "role": "member-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Votre vue d’ensemble",
+      "caption": "Uniquement ce qui vous appartient.",
+      "speech": "Voici votre vue d’ensemble. Tout ici est à vous : vos groupes, votre présence, et ce que l’église attend de vous cette semaine."
+    },
+    {
+      "n": 2,
+      "title": "Ce que vous voyez",
+      "caption": "Une barre courte n’est pas une fonction manquante.",
+      "speech": "Votre barre latérale est courte parce que l’essentiel de Kairos n’est pas à vous de gérer. Rien ne vous est caché par secret."
+    },
+    {
+      "n": 3,
+      "title": "Votre présence",
+      "caption": "Chaque culte où vous avez été noté.",
+      "speech": "Ma présence affiche chaque culte où vous avez été enregistré, votre série en cours, et votre présence sur les dernières semaines."
+    },
+    {
+      "n": 4,
+      "title": "Votre cellule",
+      "caption": "Le petit groupe auquel vous appartenez.",
+      "speech": "Cellules montre le groupe auquel vous appartenez, quand il se réunit et où. Si vous n’en avez pas, la carte trouvera la plus proche."
+    },
+    {
+      "n": 5,
+      "title": "Vos départements",
+      "caption": "Les équipes où vous servez.",
+      "speech": "Départements liste les équipes où vous servez, votre prochain service au planning, et la tenue prévue s’il y en a une."
+    },
+    {
+      "n": 6,
+      "title": "S’enregistrer",
+      "caption": "Scannez, et vous êtes noté présent.",
+      "speech": "En arrivant, ouvrez Enregistrement et scannez le code affiché à l’entrée. Vous êtes noté présent sans faire la queue à l’accueil."
+    },
+    {
+      "n": 7,
+      "title": "Formulaires",
+      "caption": "Baptême, témoignage, première visite.",
+      "speech": "Les formulaires servent à demander un baptême, partager un témoignage, ou inscrire quelqu’un qui vient pour la première fois."
+    },
+    {
+      "n": 8,
+      "title": "Votre profil",
+      "caption": "Vos coordonnées, et qui peut les voir.",
+      "speech": "Votre profil contient vos coordonnées et vos paramètres, y compris la langue dans laquelle Kairos vous parle."
+    }
+  ]
+}

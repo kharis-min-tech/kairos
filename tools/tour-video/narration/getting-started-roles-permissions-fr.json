@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-roles-permissions-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Qui peut faire quoi",
+      "caption": "Deux rôles système, beaucoup d’attributions.",
+      "speech": "Kairos ne stocke que deux rôles système, admin et membre. Tout le reste est une attribution rattachée à une portée précise."
+    },
+    {
+      "n": 2,
+      "title": "Le voir sur un compte",
+      "caption": "Ouvrez la personne, lisez ses attributions.",
+      "speech": "Ouvrez quelqu’un et vous voyez chaque attribution qu’il détient et où elle s’applique : la réponse honnête à pourquoi il voit une page."
+    }
+  ]
+}

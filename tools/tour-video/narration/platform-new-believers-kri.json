@@ -1,0 +1,19 @@
+{
+  "role": "platform-new-believers-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Paiplain",
+      "caption": "Fo sɛshɔn, dɛn wan dipatmɛnt.",
+      "speech": "Nyu Biliva na di disaypulship trak. Fo sɛshɔn, dɛn jɔyn wan dipatmɛnt, wit ɛvri pɔsin we yu kin si pan di bɔd."
+    },
+    {
+      "n": 2,
+      "title": "Sɛshɔn dɛn",
+      "caption": "Skɛjul, tich ɛn rɛjista.",
+      "speech": "Dɛn de skɛjul sɛshɔn pɛ branch wit ticha ɛn de. Tek di rɛjista insay di sɛshɔn, dɛn muv pipul go di nɛks stej."
+    }
+  ]
+}

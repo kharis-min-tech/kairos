@@ -1,0 +1,25 @@
+{
+  "role": "platform-members-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "L’annuaire",
+      "caption": "Tout le monde, en une liste.",
+      "speech": "Membres est l’annuaire. Toute l’église s’y trouve, avec son antenne de rattachement et si la classe d’adhésion a été faite."
+    },
+    {
+      "n": 2,
+      "title": "Trouver quelqu’un",
+      "caption": "Par nom, e-mail ou téléphone.",
+      "speech": "Tapez un nom, un e-mail ou un numéro dans la recherche. Vous pouvez aussi filtrer par antenne, par statut ou par rôle."
+    },
+    {
+      "n": 3,
+      "title": "Ouvrir un profil",
+      "caption": "Tout son historique au même endroit.",
+      "speech": "Cliquer sur une ligne ouvre la personne : ses coordonnées, ses groupes, sa présence et chaque suivi la concernant."
+    }
+  ]
+}

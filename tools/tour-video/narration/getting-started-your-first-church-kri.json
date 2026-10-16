@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-your-first-church-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Fɔ Sɛt Ɔp",
+      "caption": "Rijɔn fɔs, dɛn branch.",
+      "speech": "Fɔ sɛt ɔp de stat wit rijɔn, dɛn di branch dɛn insay dɛn, bikɔs ɛvri mɛmba ɛn ɛvri grup bilɔng to wan branch."
+    },
+    {
+      "n": 2,
+      "title": "Yu Fɔs Branch",
+      "caption": "Nem am, put am, lid am.",
+      "speech": "Gi di branch wan nem, wan siti ɛn sɛvis skɛjul, dɛn gi in pasto. Mɛmba dɛn kin kam afta dat."
+    }
+  ]
+}

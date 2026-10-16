@@ -1,0 +1,19 @@
+{
+  "role": "platform-branches-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Asɔre Baa Biara",
+      "caption": "Nhyehyɛeɛ no nyinaa.",
+      "speech": "Asɔre Mmaa kyerɛ beaeɛ biara a asɔre no wɔ, ne kurow, ne ɔmantam ne dodoɔ a wɔwɔ n’asafo mu."
+    },
+    {
+      "n": 2,
+      "title": "Emu",
+      "caption": "Nhyehyɛeɛ, akannifoɔ ne mufoɔ.",
+      "speech": "Bue asɔre baa bi na siesie ne nsɛm, fa ne sɔfoɔ ne sohwɛfoɔ ma, na hunu asɔrefoɔ, akuo ne ɔsom a ɛwɔ ne ase."
+    }
+  ]
+}

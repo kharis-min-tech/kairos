@@ -1,0 +1,19 @@
+{
+  "role": "analytics-growth-reports-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Groth",
+      "caption": "Nyu mɛmba dɛn, ɔva tɛm.",
+      "speech": "Groth ripɔt de kawnt nyu mɛmba dɛn ɔva di tɛm, usay dɛn jɔyn, ɛn aw dat tan agens di mɔnt dɛn bifo."
+    },
+    {
+      "n": 2,
+      "title": "Nyu Mɛmba dɛn",
+      "caption": "Usay dɛn kɔmɔt.",
+      "speech": "Di brek dɔŋ de sho wetin branch ɛn wetin we dɛn kam tru, so yu kin si wetin de bring pipul fɔ tru."
+    }
+  ]
+}

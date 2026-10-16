@@ -1,0 +1,61 @@
+{
+  "role": "general-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Yu Ɔvavyu",
+      "caption": "Di fɔs dɔ, ɛn na wetin yu rol kɔva nɔmɔ.",
+      "speech": "Dis na Kairos. I de opin pan yu ɔvavyu, ɛn ɔltin we yu de si ya na wetin na yu rispɔnsibiliti fɔ tru."
+    },
+    {
+      "n": 2,
+      "title": "Di Saydba",
+      "caption": "Siks grup. Yu de si di wan dɛn we fɔ yu.",
+      "speech": "Di saydba grup insay Pipul, Grup dɛn, Gadarin dɛn, Analitiks ɛn Ɔganizeshɔn. Sɛkshɔn we yu nɔ de si na wan we yu rol nɔ nid."
+    },
+    {
+      "n": 3,
+      "title": "Mɛmba dɛn",
+      "caption": "Ɔlman pan wan lis.",
+      "speech": "Mɛmba na di dairɛktri. Ɔlman insay di chɔch de ya, wit dɛn om branch ɛn if dɛn dɔn du di mɛmbaship klas."
+    },
+    {
+      "n": 4,
+      "title": "Fɛloship dɛn",
+      "caption": "Di smɔl grup dɛn, wit map.",
+      "speech": "Fɛloship dɛn na di smɔl grup dɛn. K-Groups, Kharis Express, New Breeds ɛn di ɔda dɛn, wit map fɔ fɛn di wan we nia yu."
+    },
+    {
+      "n": 5,
+      "title": "Dipatmɛnt dɛn",
+      "caption": "Ministri tim dɛn ɛn dɛn rota.",
+      "speech": "Dipatmɛnt dɛn na di ministri tim dɛn. Ɛvri wan kip in yon mɛmba lis, in sav rota ɛn di pipul we de aplay fɔ jɔyn."
+    },
+    {
+      "n": 6,
+      "title": "Atɛndans",
+      "caption": "Sɛvis, chɛk-in ɛn di rɛjista dɛn.",
+      "speech": "Atɛndans kɔva sɛvis ɛn chɛk-in. Pipul kin chɛk dɛnsɛf in wit QR kod, ɔ di dɛsk kin rɛkɔd dɛn we dɛn kam."
+    },
+    {
+      "n": 7,
+      "title": "Di Sol Paiplain",
+      "caption": "Frɔm di fɔs kɔntakt sote go na dipatmɛnt.",
+      "speech": "Di sol paiplain de fɔlo pɔsin we wi rich tru ɛvanjelizm: nyu, wi de fɔlo ɔp, i want, i kɔnvat, ɛn insay disaypulship."
+    },
+    {
+      "n": 8,
+      "title": "Ripɔt dɛn",
+      "caption": "Atɛndans, groth ɛn ɛngejmɛnt.",
+      "speech": "Ripɔt de tɔn ɔl dat to nɔmba. Atɛndans trɛnd, aw mɛmbaship de gro ɛn ɛngejmɛnt, ɔl insay wetin yu rol kɔva."
+    },
+    {
+      "n": 9,
+      "title": "Yu Langwej",
+      "caption": "Kairos ɛn dis gayd, na fo langwej.",
+      "speech": "Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi. Chenj am frɔm di saydba, ɛn di gayd go opin na di sem langwej."
+    }
+  ]
+}

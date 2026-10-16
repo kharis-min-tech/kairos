@@ -1,0 +1,25 @@
+{
+  "role": "platform-members-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Dairɛktri",
+      "caption": "Ɔlman, pan wan lis.",
+      "speech": "Mɛmba na di dairɛktri. Ɔlman insay di chɔch de ya, wit dɛn om branch ɛn if dɛn dɔn du di mɛmbaship klas."
+    },
+    {
+      "n": 2,
+      "title": "Fɔ Fɛn Sɔmbɔdi",
+      "caption": "Wit nem, imel ɔ fon.",
+      "speech": "Rayt nem, imel ɔ fon nɔmba insay di sach bɔks. Yu kin filta bay branch, bay stetɔs, ɔ bay rol bak."
+    },
+    {
+      "n": 3,
+      "title": "Fɔ Opin Prɔfayl",
+      "caption": "Ɔl dɛn istri na wan ples.",
+      "speech": "If yu klik wan layn i de opin dat pɔsin: dɛn kɔntakt, dɛn grup, dɛn atɛndans ɛn ɛvri fɔlo ɔp bɔt dɛn."
+    }
+  ]
+}

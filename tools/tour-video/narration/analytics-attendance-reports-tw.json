@@ -1,0 +1,19 @@
+{
+  "role": "analytics-attendance-reports-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Mmaeɛ amanneɛbɔ",
+      "caption": "Nnawɔtwe biara, asɔre baa biara.",
+      "speech": "Mmaeɛ amanneɛbɔ kyerɛ nkyerɛwee nnawɔtwe biara ne nnipa soronko dodoɔ, na ɛpae nnipa korɔ a wɔba pii ne nnipa pii a wɔba mu."
+    },
+    {
+      "n": 2,
+      "title": "Hwan na ɔnni hɔ",
+      "caption": "Wɔahyehyɛ no sɛdeɛ ɛkyɛreeɛ.",
+      "speech": "Wɔn a wɔnni hɔ nhwɛmu no, wɔde ɔsom dodoɔ a obi amma a ɛdi so ahyehyɛ, na ɛno ne nhwɛmu a ɔhwɛ hia ankasa."
+    }
+  ]
+}

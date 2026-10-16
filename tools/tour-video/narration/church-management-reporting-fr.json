@@ -1,0 +1,19 @@
+{
+  "role": "church-management-reporting-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Ce qui est rapporté",
+      "caption": "Présence, croissance, engagement.",
+      "speech": "Les rapports couvrent les tendances de présence, la croissance, l’engagement et l’évangélisation, selon ce que votre rôle permet de voir."
+    },
+    {
+      "n": 2,
+      "title": "Changer la période",
+      "caption": "Le dernier mois, ou l’année.",
+      "speech": "Changez la période pour l’élargir ou la réduire. Les chiffres et tous les graphiques suivent."
+    }
+  ]
+}

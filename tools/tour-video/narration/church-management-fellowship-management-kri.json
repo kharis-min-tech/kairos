@@ -1,0 +1,19 @@
+{
+  "role": "church-management-fellowship-management-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Ron wan Fɛloship",
+      "caption": "Yu grup, yu rɛjista.",
+      "speech": "If yu de lid wan fɛloship yu de manej in mɛmba dɛn, rɛkɔd ɛvri mitin, ɛn si udat dɔn kwayɛt stɔp fɔ kam."
+    },
+    {
+      "n": 2,
+      "title": "In Mitin dɛn",
+      "caption": "Wan rɔl kɔl pɛ mitin.",
+      "speech": "Ɛvri mitin gɛt in yon rɔl kɔl. Ɔva fyu wik dat de tɔn di atɛndans patan we di ripɔt dɛn de rid."
+    }
+  ]
+}

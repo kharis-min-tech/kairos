@@ -1,0 +1,19 @@
+{
+  "role": "administration-approvals-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Lis",
+      "caption": "Pipul we de wet fɔ kam insay.",
+      "speech": "Di aproval lis gɛt ɔlman we dɔn rejista bɔt dɛn nɔ aprov am yet. Sote dɛn aprov am, i nɔ kin sayn in."
+    },
+    {
+      "n": 2,
+      "title": "Aprov Sɔmbɔdi",
+      "caption": "Chɛk di branch, dɛn aprov.",
+      "speech": "Chɛk di branch we dɛn pik ɛn di infɔmeshɔn we dɛn gi, dɛn aprov. Dɛn kin sayn in frɔm dat minit."
+    }
+  ]
+}

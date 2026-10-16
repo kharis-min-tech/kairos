@@ -1,0 +1,19 @@
+{
+  "role": "platform-forms-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Fɔm dɛn",
+      "caption": "Siks, fɔ wetin pipul de aks.",
+      "speech": "Fɔm kɔva fɔs-tɛm vizit, baptizm, tɛstimoni, pikin nem-gi, pikin dedikeshɔn ɛn di Nyu Biliva klas."
+    },
+    {
+      "n": 2,
+      "title": "Ful Wan",
+      "caption": "I de rich di rayt pɔsin.",
+      "speech": "Ful wan ɛn i de lan wit udat de andul am, wit di pɔsin link to dɛn rɛkɔd if dɛn dɔn gɛt wan."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "church-management-member-lifecycle-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Firi ɔhɔhoɔ kɔsi ɔmanfoɔ",
+      "caption": "Ɛtwa ɛnan, nhwɛmu baako.",
+      "speech": "Obiara wɔ kwan korɔ no ara so baabi: ɔhɔhoɔ, ɔsanba, na ɔmanfoɔ sɛ nnawɔtwe nnan adesua no wie a."
+    },
+    {
+      "n": 2,
+      "title": "Baabi a gyinabea pue",
+      "caption": "Wɔ nsensaneɛ so, ne nsɛm no mu.",
+      "speech": "Nhwɛmu nsensaneɛ no kyerɛ gyinaberɛ a obi wɔ, enti wohunu ntɛm sɛ hwan na obiara nnii n’akyi da."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "administration-permissions-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Grant, Nɔto Jɔb Nem",
+      "caption": "Wan rol, tay to wan ples.",
+      "speech": "Pamishɔn kɔmɔt frɔm grant: wan rol we dɛn nem, tay to wan branch, wan fɛloship, wan dipatmɛnt, ɔ di ol chɔch."
+    },
+    {
+      "n": 2,
+      "title": "Gi Wan",
+      "caption": "Gi am, ɛn i wok wantɛm.",
+      "speech": "Gi wan grant ɛn dat pɔsin de si di ɛkstra sɛkshɔn dɛn wantɛm. Pul am ɛn i stɔp, bɔt dɛn istri de de."
+    }
+  ]
+}

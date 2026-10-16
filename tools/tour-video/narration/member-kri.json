@@ -1,0 +1,55 @@
+{
+  "role": "member-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Yu Ɔvavyu",
+      "caption": "Na wetin na fɔ yu nɔmɔ.",
+      "speech": "Dis na yu ɔvavyu. Ɔltin ya na fɔ yu: yu grup dɛn, yu atɛndans, ɛn wetin di chɔch nid frɔm yu dis wik."
+    },
+    {
+      "n": 2,
+      "title": "Wetin yu kin si",
+      "caption": "Shɔt saydba nɔto mistek.",
+      "speech": "Yu saydba shɔt bikɔs plɛnti pan Kairos nɔto fɔ yu fɔ ron. Natin nɔ de ayd frɔm yu bikɔs na sikrit."
+    },
+    {
+      "n": 3,
+      "title": "Yu Atɛndans",
+      "caption": "Ɛvri sɛvis usay dɛn mak yu.",
+      "speech": "Mi Atɛndans de sho ɛvri sɛvis usay dɛn rɛkɔd yu, yu strik naw, ɛn aw yu atɛndans tan di las fyu wik dɛn."
+    },
+    {
+      "n": 4,
+      "title": "Yu Fɛloship",
+      "caption": "Di smɔl grup we yu bilɔng to.",
+      "speech": "Fɛloship de sho di grup we yu bilɔng to, we tɛm dɛn de mit ɛn usay. If yu nɔ de na wan yet, di map go fɛn di wan we nia yu."
+    },
+    {
+      "n": 5,
+      "title": "Yu Dipatmɛnt dɛn",
+      "caption": "Di tim dɛn usay yu de sav.",
+      "speech": "Dipatmɛnt de lis di tim dɛn usay yu de sav, we tɛm yu de na di rota nɛks, ɛn di yunifɔm fɔ dat sɛvis if i de."
+    },
+    {
+      "n": 6,
+      "title": "Fɔ Chɛk In",
+      "caption": "Skan, ɛn dɛn mak yu se yu de.",
+      "speech": "We yu kam, opin Chɛk in ɛn skan di kod pan di skrin na di dɔ. Dat mak yu se yu de witawt fɔ layn ɔp na di dɛsk."
+    },
+    {
+      "n": 7,
+      "title": "Fɔm dɛn",
+      "caption": "Baptizm, tɛstimoni, fɔs vizit.",
+      "speech": "Fɔm na usay yu aks fɔ baptizm, shɛr tɛstimoni, ɔ rejista pɔsin we de kam fɔ di fɔs tɛm. Wan lida go tek am frɔm de."
+    },
+    {
+      "n": 8,
+      "title": "Yu Prɔfayl",
+      "caption": "Yu infɔmeshɔn, ɛn udat kin si am.",
+      "speech": "Yu prɔfayl kip yu kɔntakt infɔmeshɔn ɛn yu sɛtin dɛn, wit di langwej we Kairos de tɔk to yu."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "platform-profile-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wo nsɛm",
+      "caption": "Wo nkitahodie nsɛm.",
+      "speech": "Wo nsɛm kora wo nkitahodie, w’asɔre baa, ne dibea a wɔde ama wo wɔ asɔre no mu."
+    },
+    {
+      "n": 2,
+      "title": "Wo nhyehyɛeɛ",
+      "caption": "Ahobammɔ, amanneɛbɔ, kasa.",
+      "speech": "Nhyehyɛeɛ fa wo password ne akwan a wonam so hyɛ mu, amanneɛbɔ a wonya, ne kasa a Kairos de kasa kyerɛ wo."
+    }
+  ]
+}

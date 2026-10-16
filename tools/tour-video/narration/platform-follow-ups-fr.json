@@ -1,0 +1,19 @@
+{
+  "role": "platform-follow-ups-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Les files",
+      "caption": "Premières visites, sans groupe, en retard.",
+      "speech": "Les suivis comptent trois files : les premières visites sans contact, les personnes sans aucun groupe, et les relances en retard."
+    },
+    {
+      "n": 2,
+      "title": "En consigner un",
+      "caption": "Qui, comment, et la suite.",
+      "speech": "Consigner un suivi enregistre qui a pris contact, comment, ce qui s’est passé, et la suite. Il peut aussi être signalé comme préoccupation."
+    }
+  ]
+}

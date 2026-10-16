@@ -1,0 +1,19 @@
+{
+  "role": "platform-outreach-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Program dɛn",
+      "caption": "Ɛvanjelizm, wit de ɛn ples.",
+      "speech": "Awtrich program dɛn na di ɛvanjelizm ivɛnt dɛn: usay, we tɛm, ɛn wetin wɔka dɛn de go awt."
+    },
+    {
+      "n": 2,
+      "title": "Kach wan Sol",
+      "caption": "Nem ɛn nɔmba inɔf.",
+      "speech": "Durin awtrich yu de kach di pipul we yu mit. Nem ɛn fon nɔmba inɔf fɔ stat; di paiplain go tek am frɔm de."
+    }
+  ]
+}

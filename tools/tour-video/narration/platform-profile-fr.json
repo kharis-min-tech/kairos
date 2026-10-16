@@ -1,0 +1,19 @@
+{
+  "role": "platform-profile-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Vos coordonnées",
+      "caption": "Vos informations de contact.",
+      "speech": "Votre profil contient vos coordonnées, votre antenne de rattachement, et les rôles qui vous ont été confiés dans l’église."
+    },
+    {
+      "n": 2,
+      "title": "Vos paramètres",
+      "caption": "Sécurité, notifications, langue.",
+      "speech": "Les paramètres couvrent votre mot de passe et vos méthodes de connexion, vos notifications, et la langue de Kairos."
+    }
+  ]
+}

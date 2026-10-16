@@ -1,0 +1,19 @@
+{
+  "role": "church-management-member-lifecycle-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Du visiteur au membre",
+      "caption": "Quatre étapes, une seule liste.",
+      "speech": "Chacun se situe sur le même parcours : visiteur, habitué, puis membre une fois la classe de quatre semaines terminée."
+    },
+    {
+      "n": 2,
+      "title": "Où le statut s’affiche",
+      "caption": "Sur la ligne, et sur le profil.",
+      "speech": "La ligne de l’annuaire indique l’étape, ce qui permet de voir d’un coup d’œil qui n’a jamais été relancé."
+    }
+  ]
+}

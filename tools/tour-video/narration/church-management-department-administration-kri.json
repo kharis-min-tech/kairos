@@ -1,0 +1,19 @@
+{
+  "role": "church-management-department-administration-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Mɛmba Lis ɛn Rota",
+      "caption": "Udat de sav, ɛn we tɛm.",
+      "speech": "Wan dipatmɛnt de kip lis fɔ udat de sav pan am ɛn rota fɔ udat de sav we tɛm, put awt fyu wik bifo."
+    },
+    {
+      "n": 2,
+      "title": "Rikrutmɛnt",
+      "caption": "Aplay, intavyu, trayal.",
+      "speech": "Rikrutmɛnt de ron frɔm apliksheɔn tru intavyu ɛn ɔfa go na trayal tɛm, wit ɛvri kandidet we yu kin si na dɛn stej."
+    }
+  ]
+}

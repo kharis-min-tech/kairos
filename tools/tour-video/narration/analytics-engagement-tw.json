@@ -1,0 +1,19 @@
+{
+  "role": "analytics-engagement-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Hwan na ɔde ne ho hyɛ mu",
+      "caption": "Ɛboro sɛ wobɛba kɛkɛ.",
+      "speech": "Nkitahodie kan nneɛma pii sene mmaeɛ: sɛ obi wɔ kuo mu, ɔsom wɔ kuo bi mu, na yɛredi n’akyi."
+    },
+    {
+      "n": 2,
+      "title": "Nkitahodie nhwɛbea",
+      "caption": "Baabi a nnipa gyae.",
+      "speech": "Nkyekyɛmu no kyerɛ baabi a nnipa twe wɔn ho, na ɛtaa ba ansa na wɔagyae ba, ɛnyɛ akyire."
+    }
+  ]
+}

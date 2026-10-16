@@ -1,0 +1,19 @@
+{
+  "role": "platform-membership-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Adesua no",
+      "caption": "Nnawɔtwe nnan, ne deɛ ɛde ba.",
+      "speech": "Asɔrefoɔ Mufoɔ ne nnawɔtwe nnan adesua no. Sɛ wowie a, ɛno na ɛma obi yɛ Ɔmanfoɔ ankasa."
+    },
+    {
+      "n": 2,
+      "title": "Akuo",
+      "caption": "Nkyerɛwee, nkyerɛwee ne awieeɛ.",
+      "speech": "Kuo yɛ nkyerɛwee baako. Wohyehyɛ n’adesua ɛnan, wokyerɛw mmaeɛ ne nsɔhwɛ a ɛtwa toɔ, na woma wɔn a wodii nkonim wie."
+    }
+  ]
+}

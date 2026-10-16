@@ -1,0 +1,25 @@
+{
+  "role": "platform-dashboard-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Chɔch Pɔls",
+      "caption": "Di fo nɔmba dɛn we impɔtant.",
+      "speech": "Chɔch Pɔls de na di tɔp pan di dashbɔd: branch dɛn, ɔl di kɔngrigeshɔn, kɔnfam mɛmba dɛn ɛn fɛloship dɛn."
+    },
+    {
+      "n": 2,
+      "title": "I Nid Yu",
+      "caption": "Di tin dɛn we de wet pan yu.",
+      "speech": "Dis sɛkshɔn de lis wetin de wet fɔ tru: aproval fɔ gi, branch we nɔ gɛt pasto, ɛni tin we stɔk. Klik fɔ go de."
+    },
+    {
+      "n": 3,
+      "title": "Rɛsɛnt Aktiviti",
+      "caption": "Udat jɔyn, ɛn we tɛm.",
+      "speech": "Bilo, rɛsɛnt aktiviti de sho udat rejista ɛn we tɛm, so yu kin si di wik witawt opin ɛni ɔda tin."
+    }
+  ]
+}

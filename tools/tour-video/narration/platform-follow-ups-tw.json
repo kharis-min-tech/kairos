@@ -1,0 +1,19 @@
+{
+  "role": "platform-follow-ups-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Nhwɛmu no",
+      "caption": "Ahɔhoɔ foforɔ, wɔn a wɔnni kuo mu, ne berɛ a atwam.",
+      "speech": "Nkɔdi Akyi wɔ nhwɛmu mmiɛnsa: ahɔhoɔ foforɔ a obiara ne wɔn nkasaeɛ, wɔn a wɔnni kuo biara mu, ne deɛ berɛ atwam."
+    },
+    {
+      "n": 2,
+      "title": "Kyerɛw bi",
+      "caption": "Hwan, ɛkwan bɛn, ne deɛ ɛdi hɔ.",
+      "speech": "Sɛ wokyerɛw nkɔdi akyi a, ɛkora hwan na ɔfrɛeɛ, ɛkwan bɛn so, deɛ ɛsiiɛ, ne deɛ ɛsɛ sɛ ɛdi hɔ. Wobɛtumi ahyɛ no asɛm nso."
+    }
+  ]
+}

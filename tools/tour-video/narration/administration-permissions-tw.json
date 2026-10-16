@@ -1,0 +1,19 @@
+{
+  "role": "administration-permissions-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Akyɛdeɛ, ɛnyɛ dibea din",
+      "caption": "Dibea a wɔde abata beaeɛ ho.",
+      "speech": "Kwan a wɔma firi akyɛdeɛ mu: dibea a wɔabɔ din a wɔde abata asɔre baa, fekuo, adwumakuo anaa asɔre no nyinaa ho."
+    },
+    {
+      "n": 2,
+      "title": "Fa bi ma",
+      "caption": "Fa ma, na ɛyɛ adwuma ntɛm ara.",
+      "speech": "Fa akyɛdeɛ ma na saa onipa no hunu afa foforɔ no ntɛm ara. Yi na ɛgyae, nanso n’abakɔsɛm da so wɔ hɔ."
+    }
+  ]
+}

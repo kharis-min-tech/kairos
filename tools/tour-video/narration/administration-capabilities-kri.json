@@ -1,0 +1,19 @@
+{
+  "role": "administration-capabilities-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wetin na Kapabiliti",
+      "caption": "Wetin wan grant de gi fɔ tru.",
+      "speech": "Wan grant na bɔndul fɔ kapabiliti. Wan kapabiliti na di wan tin we i alaw yu fɔ du, lɛk rid wan branch ɔ rayt to wan dipatmɛnt."
+    },
+    {
+      "n": 2,
+      "title": "Usay dɛn de Wok",
+      "caption": "Ɛvri pej de chɛk dɛn.",
+      "speech": "Ɛvri pej ɛn ɛvri akshɔn de chɛk wan kapabiliti, na dat mek tu pɔsin wit difrɛn grant de si difrɛn skrin fɔ tru."
+    }
+  ]
+}

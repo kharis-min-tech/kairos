@@ -1,0 +1,25 @@
+{
+  "role": "platform-fellowships-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Fɛloship dɛn",
+      "caption": "Ɛvri smɔl grup, ɛn in tayp.",
+      "speech": "Fɛloship de lis ɛvri smɔl grup: K-Groups, Kharis Express, New Breeds ɛn di ɔda dɛn, wit udat de lid ɛn we tɛm dɛn de mit."
+    },
+    {
+      "n": 2,
+      "title": "Filta bay Tayp",
+      "caption": "Mek am smɔl to wetin yu want.",
+      "speech": "Di bɔtin dɛn pan tɔp de filta bay tayp, ɛn di drɔpdawn de mek am smɔl to wan branch, we impɔtant if plɛnti de."
+    },
+    {
+      "n": 3,
+      "title": "Fɛn am pan Map",
+      "caption": "Di grup we nia di mɛmba.",
+      "speech": "Di map de put dɛn bay ples, we na di ansa to di kwɛstyɔn we pipul de aks: wetin wan nia mi."
+    }
+  ]
+}

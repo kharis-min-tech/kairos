@@ -1,0 +1,25 @@
+{
+  "role": "platform-dashboard-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Pouls de l’église",
+      "caption": "Les quatre chiffres qui comptent.",
+      "speech": "Le pouls de l’église est en haut du tableau de bord : antennes, assemblée totale, membres confirmés et cellules, d’un coup d’œil."
+    },
+    {
+      "n": 2,
+      "title": "Attention requise",
+      "caption": "Ce qui attend votre intervention.",
+      "speech": "Cette section liste ce qui attend vraiment : approbations à donner, antennes sans pasteur, tout ce qui bloque. Cliquez pour y aller."
+    },
+    {
+      "n": 3,
+      "title": "Activité récente",
+      "caption": "Qui a rejoint, et quand.",
+      "speech": "Plus bas, l’activité récente montre qui s’est inscrit et quand, pour voir la semaine sans ouvrir autre chose."
+    }
+  ]
+}

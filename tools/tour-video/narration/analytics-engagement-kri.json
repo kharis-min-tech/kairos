@@ -1,0 +1,19 @@
+{
+  "role": "analytics-engagement-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Udat de Tek Pat",
+      "caption": "Mɔ dan jɔs fɔ kam.",
+      "speech": "Ɛngejmɛnt de kawnt mɔ dan atɛndans: if pɔsin de na grup, de sav pan tim, ɛn if dɛn de fɔlo ɔp am."
+    },
+    {
+      "n": 2,
+      "title": "Di Ɛngejmɛnt Vyu",
+      "caption": "Usay pipul de fɔl awt.",
+      "speech": "Di brek dɔŋ de sho usay pipul de lɛf, we jenarali de apin bifo dɛn stɔp fɔ kam, nɔto afta."
+    }
+  ]
+}

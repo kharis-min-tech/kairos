@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-your-first-church-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Mise en place",
+      "caption": "Les régions, puis les antennes.",
+      "speech": "La mise en place commence par les régions, puis les antennes qu’elles contiennent, car chaque membre appartient à une antenne."
+    },
+    {
+      "n": 2,
+      "title": "Votre première antenne",
+      "caption": "Nommez-la, situez-la, dirigez-la.",
+      "speech": "Donnez à l’antenne un nom, une ville et des horaires de culte, puis assignez son pasteur. Les membres viennent ensuite."
+    }
+  ]
+}

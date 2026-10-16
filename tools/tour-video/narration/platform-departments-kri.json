@@ -1,0 +1,19 @@
+{
+  "role": "platform-departments-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Ministri Tim dɛn",
+      "caption": "Ɛvri tim, ɛn udat de lid am.",
+      "speech": "Dipatmɛnt dɛn na di ministri tim dɛn. Ɛvri wan de sho in lida, in dɛpyuti, ɛn omɔch pipul de sav pan am."
+    },
+    {
+      "n": 2,
+      "title": "Insay wan Dipatmɛnt",
+      "caption": "Mɛmba lis, rota, rikrutmɛnt, yunifɔm.",
+      "speech": "Opin wan ɛn yu gɛt in mɛmba lis, in sav rota, di pipul we de aplay, ɛn di yunifɔm fɔ wan sɛvis we de kam."
+    }
+  ]
+}

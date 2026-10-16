@@ -1,0 +1,19 @@
+{
+  "role": "administration-permissions-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Des attributions, pas des titres",
+      "caption": "Un rôle, rattaché à une portée.",
+      "speech": "Les autorisations viennent d’attributions : un rôle nommé rattaché à une antenne, une cellule, un département, ou l’église entière."
+    },
+    {
+      "n": 2,
+      "title": "En accorder une",
+      "caption": "Elle prend effet aussitôt.",
+      "speech": "Accordez une attribution et la personne voit immédiatement les sections supplémentaires. Retirez-la et cela cesse, l’historique restant intact."
+    }
+  ]
+}

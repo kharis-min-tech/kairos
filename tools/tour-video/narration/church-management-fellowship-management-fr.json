@@ -1,0 +1,19 @@
+{
+  "role": "church-management-fellowship-management-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Animer une cellule",
+      "caption": "Votre groupe, votre feuille.",
+      "speech": "Si vous dirigez une cellule, vous gérez ses membres, consignez chaque réunion, et voyez qui a discrètement cessé de venir."
+    },
+    {
+      "n": 2,
+      "title": "Ses réunions",
+      "caption": "Un appel par réunion.",
+      "speech": "Chaque réunion a son propre appel. Sur quelques semaines, cela devient la tendance que lisent les rapports."
+    }
+  ]
+}

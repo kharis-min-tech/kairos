@@ -1,0 +1,19 @@
+{
+  "role": "platform-regions-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Rijɔn dɛn",
+      "caption": "Branch dɛn we dɛn grup bay ples.",
+      "speech": "Rijɔn de grup branch dɛn bay ples, so dat ripɔt kin kɔva wan kɔntri ɛn nɔto wan ples at a tɛm."
+    },
+    {
+      "n": 2,
+      "title": "Branch dɛn we Tay",
+      "caption": "Rijɔn we gɛt branch nɔ kin dilit.",
+      "speech": "Ɛvri rijɔn de sho di branch dɛn we tay pan am. Wan we gɛt branch nɔ go dilit sote dɛn muv ɛvri branch."
+    }
+  ]
+}

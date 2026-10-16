@@ -1,0 +1,19 @@
+{
+  "role": "analytics-church-health-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Asɔre no ho yɛ den?",
+      "caption": "Mmaeɛ ne nkrataa so dodoɔ.",
+      "speech": "Asɔre akwahosan de wɔn a wɔba ankasa toto wɔn a wɔwɔ nkrataa so ho, na ɛno yɛ den na ɛho wɔ mfasoɔ sene emu biara."
+    },
+    {
+      "n": 2,
+      "title": "Kenkan nkɔanim no",
+      "caption": "Ɛkwan a ɛrekɔ na ɛho hia.",
+      "speech": "Nnawɔtwe baako nka hwee. Nkɔanim a ɛwɔ nnawɔtwe nwɔtwe mu na ɛkyerɛ sɛ biribi reyɛ adwuma anaa."
+    }
+  ]
+}

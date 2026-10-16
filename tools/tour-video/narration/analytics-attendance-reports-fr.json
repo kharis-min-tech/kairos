@@ -1,0 +1,19 @@
+{
+  "role": "analytics-attendance-reports-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Rapports de présence",
+      "caption": "Par semaine, par antenne.",
+      "speech": "Les rapports de présence montrent les enregistrements par semaine face aux membres distincts, ce qui sépare la fréquence du nombre de personnes."
+    },
+    {
+      "n": 2,
+      "title": "Qui manque",
+      "caption": "Triés par durée d’absence.",
+      "speech": "La liste des absents est triée par nombre de cultes manqués d’affilée, ce qui en fait la liste dont le suivi pastoral a besoin."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "church-management-department-administration-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Mufoɔ ne nnwuma nhyehyɛeɛ",
+      "caption": "Hwan na ɔsom, ne berɛ bɛn.",
+      "speech": "Adwumakuo kora wɔn a wɔsom wɔ mu din ne nhyehyɛeɛ a ɛkyerɛ hwan na ɔsom berɛ bɛn, a wɔyi adi nnawɔtwe kakra ansa."
+    },
+    {
+      "n": 2,
+      "title": "Adwumayɛfoɔ pɛ",
+      "caption": "Abisadeɛ, nsɛmmisa, nsɔhwɛ.",
+      "speech": "Adwumayɛfoɔ pɛ firi abisadeɛ kɔ nsɛmmisa ne deɛ wɔde ma kɔsi nsɔhwɛ berɛ, a obiara wɔ ne gyinaberɛ so."
+    }
+  ]
+}

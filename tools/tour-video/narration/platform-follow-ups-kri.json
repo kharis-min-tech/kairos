@@ -1,0 +1,19 @@
+{
+  "role": "platform-follow-ups-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Lis dɛn",
+      "caption": "Fɔs-tɛm, nɔ grup, ɛn let.",
+      "speech": "Fɔlo ɔp gɛt tri lis: fɔs-tɛm pipul we nɔbɔdi nɔ tɔk to yet, pipul we nɔ de na ɛni grup, ɛn kɔntakt dɛn we dɔn let."
+    },
+    {
+      "n": 2,
+      "title": "Rɛkɔd Wan",
+      "caption": "Udat, aw, ɛn wetin nɛks.",
+      "speech": "Fɔ rɛkɔd fɔlo ɔp de kip udat tɔk to am, aw, wetin apin, ɛn wetin fɔ apin nɛks. Dɛn kin mak am as wɔri bak."
+    }
+  ]
+}

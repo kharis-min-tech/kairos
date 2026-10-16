@@ -1,0 +1,19 @@
+{
+  "role": "church-management-attendance-tracking-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Tek di Rɛjista",
+      "caption": "Na di dɛsk, we pipul de kam.",
+      "speech": "Opin di sɛvis ɛn mak pipul prɛzɛnt, let ɔ vɔchwal we dɛn de kam. Absɛns de kɔmɔt bay insɛf, so natin nɔ de fɔ mak."
+    },
+    {
+      "n": 2,
+      "title": "Sɛf Chɛk-in",
+      "caption": "QR kod na di dɔ.",
+      "speech": "Mɛmba kin skan di kod na di dɔ ɛn mak dɛnsɛf prɛzɛnt, we de lɛf di dɛsk fri fɔ di pipul we nid am."
+    }
+  ]
+}

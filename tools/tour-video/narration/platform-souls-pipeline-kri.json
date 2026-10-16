@@ -1,0 +1,19 @@
+{
+  "role": "platform-souls-pipeline-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Bɔd",
+      "caption": "Nyu, wi de fɔlo ɔp, i kɔnvat.",
+      "speech": "Di sol paiplain na wan bɔd. Pɔsin de muv frɔm nyu, to wi de fɔlo ɔp, to i kɔnvat, ɛn di kɔlɔ sho aw let di kɔntakt de."
+    },
+    {
+      "n": 2,
+      "title": "Muv Sɔmbɔdi",
+      "caption": "Drag am, ɔ opin ɛn ɔpdet.",
+      "speech": "Drag wan kad go di nɛks layn, ɔ opin am fɔ rɛkɔd wetin apin ɛn sɛt di nɛks fɔlo ɔp de."
+    }
+  ]
+}

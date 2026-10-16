@@ -1,0 +1,19 @@
+{
+  "role": "church-management-branch-management-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Branch Sɛtin",
+      "caption": "Infɔmeshɔn, skɛjul, chɛk-in.",
+      "speech": "Wan branch kɛr in adrɛs, in sɛvis skɛjul, ɛn if sɛf chɛk-in de ɔn ɛn fɔ omɔch tɛm rawnd di sɛvis."
+    },
+    {
+      "n": 2,
+      "title": "Udat de Lid am",
+      "caption": "Pasto, minista, admin.",
+      "speech": "Dɛn de gi lidaship ya: di mayn pasto, ɛni minista, ɛn di branch admin dɛn we kin manej in data."
+    }
+  ]
+}

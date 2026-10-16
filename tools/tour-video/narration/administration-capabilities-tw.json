@@ -1,0 +1,19 @@
+{
+  "role": "administration-capabilities-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Deɛ tumi yɛ",
+      "caption": "Deɛ akyɛdeɛ de ma ankasa.",
+      "speech": "Akyɛdeɛ yɛ tumi ahodoɔ bi. Tumi baako ne adeɛ baako a ɛma wotumi yɛ, te sɛ asɔre baa kenkan anaa adwumakuo nsesa."
+    },
+    {
+      "n": 2,
+      "title": "Baabi a wɔyɛ adwuma",
+      "caption": "Kratafa biara hwɛ wɔn.",
+      "speech": "Kratafa biara ne dwumadie biara hwɛ tumi bi, ɛno na ɛma nnipa mmienu a wɔwɔ akyɛdeɛ soronko hunu nneɛma soronko ankasa."
+    }
+  ]
+}

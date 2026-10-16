@@ -1,0 +1,19 @@
+{
+  "role": "platform-concerns-kri",
+  "lang": "kri",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wɛlfɛa ɛn Sefgadin",
+      "caption": "Tu inbɔks, sɛpret pɔposli.",
+      "speech": "Wɔri gɛt tu inbɔks. Wɛlfɛa ɛn sefgadin de sɛpret pɔposli, ɛn difrɛn pipul de rid dɛn."
+    },
+    {
+      "n": 2,
+      "title": "Fɔ Rid Wan",
+      "caption": "Di rɛkɔd, ɛn udat bring am.",
+      "speech": "If yu opin wan wɔri i de sho di fɔlo ɔp usay i kɔmɔt, udat bring am, ɛn wetin dɛn dɔn du bɔt am."
+    }
+  ]
+}

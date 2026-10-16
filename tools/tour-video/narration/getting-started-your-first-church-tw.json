@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-your-first-church-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Nsiesieeɛ",
+      "caption": "Mpɔtam, na asɔre mmaa.",
+      "speech": "Nsiesieeɛ firi mpɔtam so, na asɔre mmaa a ɛwɔ mu, ɛfiri sɛ ɔmanfoɔ biara ne kuo biara wɔ asɔre baa bi ase."
+    },
+    {
+      "n": 2,
+      "title": "W’asɔre baa a ɛdi kan",
+      "caption": "To no din, si no, di n’anim.",
+      "speech": "Fa din, kurow ne ɔsom berɛ ma asɔre baa no, na fa ne sɔfoɔ ma. Asɔrefoɔ bɛtumi aba akyire yi."
+    }
+  ]
+}

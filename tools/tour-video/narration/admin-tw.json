@@ -1,0 +1,61 @@
+{
+  "role": "admin-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wo Nhwɛbea",
+      "caption": "Ɛpono no ano, na deɛ wo dibea ka ho nko ara.",
+      "speech": "Yei ne Kairos. Ɛbue wɔ wo nhwɛbea so, na biribiara a wohunu ha fa deɛ wodi ho dwuma ankasa ho."
+    },
+    {
+      "n": 2,
+      "title": "Nkyɛnmu no",
+      "caption": "Akuo nsia. Wohunu deɛ ɛfa wo ho nko ara.",
+      "speech": "Nkyɛnmu no kyekyɛ mu: Nnipa, Akuo, Nhyiam, Nsɛm Nhwɛmu ne Nhyehyɛeɛ. Afa a wonhunu no, wo dibea nhia no."
+    },
+    {
+      "n": 3,
+      "title": "Asɔrefoɔ",
+      "caption": "Obiara wɔ nhwɛmu baako mu.",
+      "speech": "Asɔrefoɔ ne nhwɛmu no. Obiara a ɔwɔ asɔre no mu wɔ ha, ne n’asɔre baa ne sɛ wawie asɔrefoɔ adesua no anaa."
+    },
+    {
+      "n": 4,
+      "title": "Fekuo",
+      "caption": "Akuo nketewa, a asase mfonini ka ho.",
+      "speech": "Fekuo ne akuo nketewa no. K-Groups, Kharis Express, New Breeds ne nkaeɛ, a mfonini wɔ hɔ ma wohunu deɛ ɛbɛn wo."
+    },
+    {
+      "n": 5,
+      "title": "Adwumakuo",
+      "caption": "Asomdwuma akuo ne wɔn nnwuma nhyehyɛeɛ.",
+      "speech": "Adwumakuo ne asomdwuma akuo no. Biara kora ne mufoɔ, ne nnwuma nhyehyɛeɛ ne wɔn a wɔpɛ sɛ wɔka ho so."
+    },
+    {
+      "n": 6,
+      "title": "Mmaeɛ",
+      "caption": "Ɔsom, nkyerɛwee ne nkrataa.",
+      "speech": "Mmaeɛ fa ɔsom ne nkyerɛwee ho. Obiara tumi de QR kod kyerɛw ne din, anaa ɛpono ano hɔ kyerɛw no."
+    },
+    {
+      "n": 7,
+      "title": "Akra Kwan",
+      "caption": "Firi nkitahodie a ɛdi kan kɔsi adwumakuo mu.",
+      "speech": "Akra kwan di obi a yɛduruu ne ho wɔ asɛmpaka mu akyi: foforɔ, yɛredi akyi, n’ani gye ho, wasakra, na asuafoyɛ."
+    },
+    {
+      "n": 8,
+      "title": "Amanneɛbɔ",
+      "caption": "Mmaeɛ, nkɔsoɔ ne nkitahodie.",
+      "speech": "Amanneɛbɔ dane ne nyinaa ma ɛyɛ akontaa. Mmaeɛ nkɔsoɔ, asɔrefoɔ dodoɔ ne nkitahodie, sɛdeɛ wo dibea teɛ."
+    },
+    {
+      "n": 9,
+      "title": "Wo Kasa",
+      "caption": "Kairos ne saa akwankyerɛ yi, kasa ɛnan mu.",
+      "speech": "Kairos ka Borɔfo, Frenkye, Krio ne Twi. Sesa no wɔ nkyɛnmu no so, na akwankyerɛ no nso bue wɔ kasa korɔ no ara mu."
+    }
+  ]
+}

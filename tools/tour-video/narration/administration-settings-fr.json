@@ -1,0 +1,19 @@
+{
+  "role": "administration-settings-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Vos paramètres",
+      "caption": "Compte, sécurité, apparence.",
+      "speech": "Les paramètres couvrent votre compte, vos méthodes de connexion, l’apparence de Kairos, et la langue qu’il emploie."
+    },
+    {
+      "n": 2,
+      "title": "Notifications",
+      "caption": "Ce qui vous parvient, et à quel rythme.",
+      "speech": "Les notifications se règlent par catégorie : immédiat ou résumé quotidien, ou désactivé. Les alertes de sécurité arrivent toujours."
+    }
+  ]
+}

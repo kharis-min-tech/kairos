@@ -1,0 +1,19 @@
+{
+  "role": "church-management-department-administration-fr",
+  "lang": "fr",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Effectifs et plannings",
+      "caption": "Qui sert, et quand.",
+      "speech": "Un département tient la liste de ceux qui y servent et un planning de qui sert quand, publié quelques semaines à l’avance."
+    },
+    {
+      "n": 2,
+      "title": "Recrutement",
+      "caption": "Candidature, entretien, essai.",
+      "speech": "Le recrutement va de la candidature à l’entretien, puis à la proposition et à la période d’essai, chaque candidat visible à son étape."
+    }
+  ]
+}

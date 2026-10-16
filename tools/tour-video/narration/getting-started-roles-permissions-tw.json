@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-roles-permissions-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Hwan na ɔtumi yɛ ɛdeɛn",
+      "caption": "Dibea mmienu, akyɛdeɛ pii.",
+      "speech": "Kairos kora dibea mmienu pɛ so, admin ne member. Nkaeɛ nyinaa yɛ akyɛdeɛ a wɔde abata beaeɛ pɔtee ho."
+    },
+    {
+      "n": 2,
+      "title": "Hunu no wɔ akawnt so",
+      "caption": "Bue onipa no, kenkan n’akyɛdeɛ.",
+      "speech": "Bue obi na wobɛhunu akyɛdeɛ biara a ɔwɔ ne baabi a ɛyɛ adwuma, na ɛno ne mmuaeɛ pa a ɛkyerɛ deɛ enti a ɔhunu kratafa bi."
+    }
+  ]
+}

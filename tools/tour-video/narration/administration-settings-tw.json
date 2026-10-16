@@ -1,0 +1,19 @@
+{
+  "role": "administration-settings-tw",
+  "lang": "tw",
+  "voice": null,
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wo nhyehyɛeɛ",
+      "caption": "Akawnt, ahobammɔ, ne sɛdeɛ ɛyɛ.",
+      "speech": "Nhyehyɛeɛ fa w’akawnt, akwan a wonam so hyɛ mu, sɛdeɛ Kairos yɛ, ne kasa a ɔde kasa kyerɛ wo."
+    },
+    {
+      "n": 2,
+      "title": "Amanneɛbɔ",
+      "caption": "Deɛ ɛduru wo nkyɛn, ne mpɛn ahe.",
+      "speech": "Amanneɛbɔ yɛ ɛkuo biara dea. Yi ntɛm ara anaa daa nsɛm tiawa ma biara, anaa dum no. Ahobammɔ kɔkɔbɔ deɛ, ɛba daa."
+    }
+  ]
+}
