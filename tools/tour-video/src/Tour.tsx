@@ -39,11 +39,24 @@ export interface TourProps {
   // lets a typed interface be passed to <Composition>.
   [key: string]: unknown;
   role: string;
+  /** 'en' | 'fr' | 'kri' | 'tw'. Only the step counter needs it. */
+  lang: string;
   /** Path under public/, e.g. "capture/member.webm". */
   video: string;
   segments: Segment[];
   duration: number;
 }
+
+/**
+ * "Step 2 of 2" was the last English string left on a French clip: everything
+ * else on screen is the app's own interface, which is already translated.
+ */
+const STEP: Record<string, (n: number, total: number) => string> = {
+  en: (n, total) => `Step ${n} of ${total}`,
+  fr: (n, total) => `Étape ${n} sur ${total}`,
+  kri: (n, total) => `Stɛp ${n} pan ${total}`,
+  tw: (n, total) => `Ɔkwan ${n} wɔ ${total} mu`,
+};
 
 const PURPLE = '#3b0764';
 const GOLD = '#f8b537';
@@ -58,7 +71,11 @@ const LILAC = '#e9dcff';
  * transcribed after it is generated: the words were always known, their
  * position in time was not.
  */
-const Caption: React.FC<{ segment: Segment; total: number }> = ({ segment, total }) => {
+const Caption: React.FC<{ segment: Segment; total: number; lang: string }> = ({
+  segment,
+  total,
+  lang,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   // Sequence-relative frame -> timeline seconds.
@@ -93,7 +110,7 @@ const Caption: React.FC<{ segment: Segment; total: number }> = ({ segment, total
             color: GOLD,
           }}
         >
-          {`Step ${segment.n} of ${total}`}
+          {(STEP[lang] ?? STEP.en)(segment.n, total)}
         </div>
         <div style={{ fontSize: 23, fontWeight: 700, marginTop: 3, letterSpacing: -0.2 }}>
           {segment.title}
@@ -171,7 +188,7 @@ const Shot: React.FC<{ video: string; segment: Segment; fps: number }> = ({
   );
 };
 
-export const Tour: React.FC<TourProps> = ({ video, segments }) => {
+export const Tour: React.FC<TourProps> = ({ video, segments, lang }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
   const sec = (s: number) => Math.round(s * fps);
@@ -213,7 +230,7 @@ export const Tour: React.FC<TourProps> = ({ video, segments }) => {
 
       {segments.map((s) => (
         <Sequence key={`c-${s.n}`} from={sec(s.at)} durationInFrames={Math.max(1, sec(s.span))}>
-          <Caption segment={s} total={segments.length} />
+          <Caption segment={s} total={segments.length} lang={lang} />
         </Sequence>
       ))}
     </AbsoluteFill>

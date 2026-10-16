@@ -19,6 +19,14 @@
 export const GAP = 0.35;
 
 /**
+ * Seconds held after the last line so the closing words are not clipped.
+ * The composition appends this, so the cap has to allow for it: a clip
+ * budgeted to exactly `maxSeconds` of segments came out `maxSeconds` plus the
+ * gaps plus this, and every "thirty-second" section clip rendered at 32.3.
+ */
+export const TAIL = 2;
+
+/**
  * @param marks    recorder marks: [{ n, start }], ordered, seconds into the capture
  * @param stops    measured narration: [{ n, duration, words, title, caption }]
  * @param capture  length of the capture in seconds
@@ -45,8 +53,14 @@ export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
     // A short clip trims footage, never speech. Cutting a sentence in half to
     // hit a number is worse than a clip that runs two seconds over, so the
     // cap squeezes the picture down towards the length of the line and stops.
+    //
+    // The budget is what is left of `maxSeconds` after the gaps between stops
+    // and the tail the composition appends — dividing `maxSeconds` itself by
+    // the number of stops spent the whole budget on picture and then added
+    // the gaps and the tail on top.
     if (maxSeconds) {
-      const share = maxSeconds / ordered.length;
+      const overhead = (ordered.length - 1) * GAP + TAIL;
+      const share = Math.max(1, (maxSeconds - overhead) / ordered.length);
       captureSpan = Math.min(captureSpan, Math.max(share, stop.duration));
     }
 

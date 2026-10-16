@@ -62,7 +62,11 @@ const captureDuration = parseFloat(
 
 const { segments, duration } = buildSchedule(marks, stops, captureDuration, { maxSeconds });
 
-const props = { role, video: `capture/${role}.webm`, segments, duration };
+// The lower third's step counter is the one piece of chrome the narration
+// does not cover, so the composition needs to know the language too.
+const lang = /-(fr|kri|tw)$/.exec(role)?.[1] ?? 'en';
+
+const props = { role, lang, video: `capture/${role}.webm`, segments, duration };
 
 mkdirSync(join(HERE, 'out'), { recursive: true });
 const out = join(HERE, 'out', `tour-${role}.mp4`);

@@ -1,10 +1,11 @@
 import React from 'react';
 import { Composition, getInputProps } from 'remotion';
 import { Tour, type TourProps, type Segment } from './Tour';
+// The schedule has to subtract this to keep a capped clip under its cap, so
+// it owns the constant and this reads it rather than keeping a second copy.
+import { TAIL } from '../lib/schedule.mjs';
 
 const FPS = 30;
-/** Seconds held after the last line so the closing words are not clipped. */
-const TAIL = 2;
 
 /**
  * Props come from --props on the command line, so one composition renders any
@@ -26,6 +27,7 @@ export const RemotionRoot: React.FC = () => {
       height={1080}
       defaultProps={{
         role: input.role ?? 'member',
+        lang: input.lang ?? 'en',
         video: input.video ?? 'capture/member.webm',
         segments,
         duration: input.duration ?? 0,

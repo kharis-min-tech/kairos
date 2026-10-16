@@ -5,7 +5,7 @@
  */
 import assert from 'node:assert/strict';
 
-import { buildSchedule, GAP } from './schedule.mjs';
+import { buildSchedule, GAP, TAIL } from './schedule.mjs';
 
 /** Seconds accumulate as floats, so compare to the frame, not the bit. */
 const near = (a, b, msg) =>
@@ -111,7 +111,36 @@ test('a capped clip trims footage but never the narration', () => {
   );
   // Both lines survive in full.
   for (const s of segments) assert.ok(s.span >= s.spoken, 'the line is never cut short');
-  assert.ok(duration <= 32, `kept near the cap (got ${duration.toFixed(1)})`);
+  // `<= 32` was the old assertion, and it described the bug rather than the
+  // requirement: a "thirty-second" clip rendered at 32.3 and this passed.
+  assert.ok(
+    duration + TAIL <= 30,
+    `the finished video fits the cap (got ${(duration + TAIL).toFixed(2)})`,
+  );
+});
+
+test('the cap is on the finished video, gaps and tail included', () => {
+  // The composition renders `duration + TAIL`, so that is what has to fit.
+  // Dividing maxSeconds by the stop count and ignoring the overhead is what
+  // put every section clip at 32.34 seconds.
+  for (const count of [2, 3, 4]) {
+    const marks = Array.from({ length: count }, (_, i) => ({ n: i + 1, start: i * 40 }));
+    const stops = marks.map((m) => stop(m.n, 6));
+    const { duration } = buildSchedule(marks, stops, 400, { maxSeconds: 30 });
+    assert.ok(
+      duration + TAIL <= 30 + 1e-9,
+      `${count} stops fit in 30s (got ${(duration + TAIL).toFixed(2)})`,
+    );
+  }
+});
+
+test('a clip with no cap is still as long as it needs to be', () => {
+  const { duration } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 50 }],
+    [stop(1, 40), stop(2, 40)],
+    100,
+  );
+  assert.ok(duration > 30, 'an uncapped tour is not silently truncated');
 });
 
 test('a cap cannot cut a line in half, even an over-long one', () => {
