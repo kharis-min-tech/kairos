@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { docsUrl } from '@kairos/core';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -294,7 +295,7 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation(['nav', 'common']);
+  const { t, i18n } = useTranslation(['nav', 'common']);
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -489,7 +490,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           );
         })}
         <a
-          href="https://docs.kairos.kharis.org"
+          href={docsUrl("", i18n.language)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => setMobileOpen(false)}

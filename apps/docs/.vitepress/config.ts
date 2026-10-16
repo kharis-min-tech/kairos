@@ -1,9 +1,90 @@
 import { defineConfig } from 'vitepress';
 
+import { navFor, sidebarFor, href, type Lang } from './nav';
+
+/**
+ * The handbook is published in the same four languages as Kairos itself, and
+ * the app links straight into the reader's own: a French dashboard's "Help
+ * and guides" opens `/fr/`, not the English pages with a picker to find.
+ *
+ * English stays at the root so every link already shared or bookmarked keeps
+ * working.
+ */
+const UI: Record<Lang, {
+  label: string;
+  outline: string;
+  prev: string;
+  next: string;
+  search: string;
+  lightMode: string;
+  darkMode: string;
+  returnToTop: string;
+  menu: string;
+  langMenu: string;
+  terms: string;
+  privacy: string;
+}> = {
+  en: {
+    label: 'English', outline: 'On this page', prev: 'Previous', next: 'Next',
+    search: 'Search', lightMode: 'Switch to light theme', darkMode: 'Switch to dark theme',
+    returnToTop: 'Return to top', menu: 'Menu', langMenu: 'Change language',
+    terms: 'Terms & Conditions', privacy: 'Privacy Notice',
+  },
+  fr: {
+    label: 'Français', outline: 'Sur cette page', prev: 'Précédent', next: 'Suivant',
+    search: 'Rechercher', lightMode: 'Passer au thème clair', darkMode: 'Passer au thème sombre',
+    returnToTop: 'Revenir en haut', menu: 'Menu', langMenu: 'Changer de langue',
+    terms: 'Conditions générales', privacy: 'Avis de confidentialité',
+  },
+  kri: {
+    label: 'Krio', outline: 'Pan dis pej', prev: 'Bifo', next: 'Nɛks',
+    search: 'Luk fɔ sɔntin', lightMode: 'Go na di layt tim', darkMode: 'Go na di dak tim',
+    returnToTop: 'Go bak na tɔp', menu: 'Menyu', langMenu: 'Chenj di langwej',
+    terms: 'Tam ɛn Kɔndishɔn dɛn', privacy: 'Prayvasi Notis',
+  },
+  tw: {
+    label: 'Twi', outline: 'Saa kratafa yi so', prev: 'Deɛ Ɛdi Anim', next: 'Deɛ Ɛdi Hɔ',
+    search: 'Hwehwɛ', lightMode: 'Kɔ hann tebea mu', darkMode: 'Kɔ esum tebea mu',
+    returnToTop: 'San kɔ soro', menu: 'Menu', langMenu: 'Sesa kasa',
+    terms: 'Nhyehyɛeɛ ne Mmara', privacy: 'Kokoamsɛm Ho Amanneɛbɔ',
+  },
+};
+
+const DESCRIPTION: Record<Lang, string> = {
+  en: 'Church Administration System: documentation for Kharis Church.',
+  fr: 'Système d’administration d’église : la documentation de Kharis Church.',
+  kri: 'Chɔch Adminstreshɔn Sistem: di dɔkyumɛnteshɔn fɔ Kharis Church.',
+  tw: 'Asɔre Sohwɛ Nhyehyɛeɛ: Kharis Church nkyerɛkyerɛmu.',
+};
+
+const BCP47: Record<Lang, string> = { en: 'en-GB', fr: 'fr-FR', kri: 'kri', tw: 'tw' };
+
+function themeFor(lang: Lang) {
+  const ui = UI[lang];
+  return {
+    siteTitle: 'Kairos',
+    nav: navFor(lang),
+    sidebar: sidebarFor(lang),
+    outline: { level: [2, 3] as [number, number], label: ui.outline },
+    docFooter: { prev: ui.prev, next: ui.next },
+    darkModeSwitchLabel: ui.darkMode,
+    lightModeSwitchTitle: ui.lightMode,
+    darkModeSwitchTitle: ui.darkMode,
+    sidebarMenuLabel: ui.menu,
+    returnToTopLabel: ui.returnToTop,
+    langMenuLabel: ui.langMenu,
+    footer: {
+      message:
+        'Kairos: Church Administration System by Kharis Church &middot; ' +
+        `<a href="${href(lang, 'legal/terms')}">${ui.terms}</a> &middot; ` +
+        `<a href="${href(lang, 'legal/privacy')}">${ui.privacy}</a>`,
+    },
+  };
+}
+
 export default defineConfig({
-  lang: 'en-US',
   title: 'Kairos',
-  description: 'Church Administration System: documentation for Kharis Church.',
+  description: DESCRIPTION.en,
   base: '/',
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
@@ -23,174 +104,27 @@ export default defineConfig({
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }],
   ],
 
+  locales: {
+    root: { label: UI.en.label, lang: BCP47.en, description: DESCRIPTION.en, themeConfig: themeFor('en') },
+    fr: { label: UI.fr.label, lang: BCP47.fr, link: '/fr/', description: DESCRIPTION.fr, themeConfig: themeFor('fr') },
+    kri: { label: UI.kri.label, lang: BCP47.kri, link: '/kri/', description: DESCRIPTION.kri, themeConfig: themeFor('kri') },
+    tw: { label: UI.tw.label, lang: BCP47.tw, link: '/tw/', description: DESCRIPTION.tw, themeConfig: themeFor('tw') },
+  },
+
   themeConfig: {
-    siteTitle: 'Kairos',
-
-    nav: [
-      {
-        text: 'Getting Started',
-        items: [
-          { text: 'Introduction', link: '/getting-started/introduction' },
-          { text: 'Video Tour', link: '/getting-started/video-tour' },
-          { text: 'What is Kairos?', link: '/getting-started/what-is-kairos' },
-          { text: 'Core Concepts', link: '/getting-started/core-concepts' },
-          { text: 'Your First Church', link: '/getting-started/your-first-church' },
-          { text: 'Roles & Permissions', link: '/getting-started/roles-permissions' },
-        ],
-      },
-      {
-        text: 'Platform',
-        items: [
-          { text: 'Dashboard', link: '/platform/dashboard' },
-          { text: 'Branches', link: '/platform/branches' },
-          { text: 'Regions', link: '/platform/regions' },
-          { text: 'Members', link: '/platform/members' },
-          { text: 'Membership', link: '/platform/membership' },
-          { text: 'Attendance', link: '/platform/attendance' },
-          { text: 'Fellowships', link: '/platform/fellowships' },
-          { text: 'Reports', link: '/platform/reports' },
-          { text: 'Departments', link: '/platform/departments' },
-          { text: 'New Believers', link: '/platform/new-believers' },
-          { text: 'Follow-ups', link: '/platform/follow-ups' },
-          { text: 'Concerns', link: '/platform/concerns' },
-          { text: 'Outreach', link: '/platform/outreach' },
-          { text: 'Forms', link: '/platform/forms' },
-          { text: 'Souls Pipeline', link: '/platform/souls-pipeline' },
-          { text: 'Souls Dashboard', link: '/platform/souls-dashboard' },
-          { text: 'Profile', link: '/platform/profile' },
-        ],
-      },
-      {
-        text: 'Church Management',
-        items: [
-          { text: 'Member Lifecycle', link: '/church-management/member-lifecycle' },
-          { text: 'Attendance Tracking', link: '/church-management/attendance-tracking' },
-          { text: 'Fellowship Management', link: '/church-management/fellowship-management' },
-          { text: 'Branch Management', link: '/church-management/branch-management' },
-          { text: 'Reporting', link: '/church-management/reporting' },
-          { text: 'Department Administration', link: '/church-management/department-administration' },
-        ],
-      },
-      {
-        text: 'Administration',
-        items: [
-          { text: 'User Permissions', link: '/administration/permissions' },
-          { text: 'Capability Reference', link: '/administration/capabilities' },
-          { text: 'Approvals', link: '/administration/approvals' },
-          { text: 'Settings', link: '/administration/settings' },
-        ],
-      },
-      {
-        text: 'Analytics',
-        items: [
-          { text: 'Church Health', link: '/analytics/church-health' },
-          { text: 'Engagement', link: '/analytics/engagement' },
-          { text: 'Growth Reports', link: '/analytics/growth-reports' },
-          { text: 'Attendance Reports', link: '/analytics/attendance-reports' },
-        ],
-      },
-    ],
-
-    sidebar: [
-      {
-        text: 'Getting Started',
-        items: [
-          { text: 'Introduction', link: '/getting-started/introduction' },
-          { text: 'Video Tour', link: '/getting-started/video-tour' },
-          { text: 'What is Kairos?', link: '/getting-started/what-is-kairos' },
-          { text: 'Core Concepts', link: '/getting-started/core-concepts' },
-          { text: 'Your First Church', link: '/getting-started/your-first-church' },
-          { text: 'Roles & Permissions', link: '/getting-started/roles-permissions' },
-        ],
-      },
-      {
-        text: 'Platform',
-        items: [
-          { text: 'Dashboard', link: '/platform/dashboard' },
-          { text: 'Branches', link: '/platform/branches' },
-          { text: 'Regions', link: '/platform/regions' },
-          { text: 'Members', link: '/platform/members' },
-          { text: 'Membership', link: '/platform/membership' },
-          { text: 'Attendance', link: '/platform/attendance' },
-          { text: 'Fellowships', link: '/platform/fellowships' },
-          { text: 'Reports', link: '/platform/reports' },
-          { text: 'Departments', link: '/platform/departments' },
-          { text: 'New Believers', link: '/platform/new-believers' },
-          { text: 'Follow-ups', link: '/platform/follow-ups' },
-          { text: 'Concerns', link: '/platform/concerns' },
-          { text: 'Outreach', link: '/platform/outreach' },
-          { text: 'Forms', link: '/platform/forms' },
-          { text: 'Souls Pipeline', link: '/platform/souls-pipeline' },
-          { text: 'Souls Dashboard', link: '/platform/souls-dashboard' },
-          { text: 'Profile', link: '/platform/profile' },
-        ],
-      },
-      {
-        text: 'Church Management',
-        items: [
-          { text: 'Member Lifecycle', link: '/church-management/member-lifecycle' },
-          { text: 'Attendance Tracking', link: '/church-management/attendance-tracking' },
-          { text: 'Fellowship Management', link: '/church-management/fellowship-management' },
-          { text: 'Branch Management', link: '/church-management/branch-management' },
-          { text: 'Reporting', link: '/church-management/reporting' },
-          { text: 'Department Administration', link: '/church-management/department-administration' },
-        ],
-      },
-      {
-        text: 'Administration',
-        items: [
-          { text: 'User Permissions', link: '/administration/permissions' },
-          { text: 'Capability Reference', link: '/administration/capabilities' },
-          { text: 'Approvals', link: '/administration/approvals' },
-          { text: 'Settings', link: '/administration/settings' },
-        ],
-      },
-      {
-        text: 'Analytics',
-        items: [
-          { text: 'Church Health', link: '/analytics/church-health' },
-          { text: 'Engagement', link: '/analytics/engagement' },
-          { text: 'Growth Reports', link: '/analytics/growth-reports' },
-          { text: 'Attendance Reports', link: '/analytics/attendance-reports' },
-        ],
-      },
-      {
-        text: 'More',
-        items: [
-          { text: 'FAQ', link: '/faq' },
-          { text: 'Release Notes', link: '/release-notes' },
-        ],
-      },
-    ],
-
     search: {
       provider: 'local',
       options: {
         detailedView: true,
+        locales: {
+          fr: { translations: { button: { buttonText: UI.fr.search, buttonAriaLabel: UI.fr.search } } },
+          kri: { translations: { button: { buttonText: UI.kri.search, buttonAriaLabel: UI.kri.search } } },
+          tw: { translations: { button: { buttonText: UI.tw.search, buttonAriaLabel: UI.tw.search } } },
+        },
       },
     },
-
     socialLinks: [
       { icon: 'github', link: 'https://github.com/kharis-min-tech/kairos' },
     ],
-
-    footer: {
-      message:
-        'Kairos: Church Administration System by Kharis Church &middot; ' +
-        '<a href="/legal/terms">Terms &amp; Conditions</a> &middot; ' +
-        '<a href="/legal/privacy">Privacy Notice</a>',
-    },
-
-    outline: {
-      level: [2, 3],
-      label: 'On this page',
-    },
-
-    docFooter: {
-      prev: 'Previous',
-      next: 'Next',
-    },
-
-
   },
 });

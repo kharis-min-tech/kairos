@@ -15,6 +15,7 @@ export {
 } from './date-format';
 
 export { localiseReference } from './bible-books';
+export { docsUrl, DOCS_ORIGIN } from './docs-url';
 export { CONTINENTS, COUNTRIES_BY_CONTINENT } from './countries';
 
 export {

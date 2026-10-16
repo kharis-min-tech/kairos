@@ -37,7 +37,7 @@ import { Spotlight } from "@/components/motion/spotlight";
 import { Halo } from "@/components/motion/halo";
 import { Assemble } from "@/components/motion/assemble";
 import { useTranslation } from 'react-i18next';
-import { resolveVerse, localiseReference } from '@kairos/core';
+import { resolveVerse, localiseReference, docsUrl } from '@kairos/core';
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 // Six shipped capabilities. Donations + Notifications deliberately left off
@@ -46,15 +46,16 @@ import { resolveVerse, localiseReference } from '@kairos/core';
 // Docs host — every feature card links out to its dedicated docs page so
 // prospects can dig in one click. Kept as a constant so the surface can be
 // pointed at a preview environment without hunting every href.
-const DOCS_BASE = "https://docs.kairos.kharis.org";
 
+// Each feature links into the handbook; the full URL is built per render so
+// it lands in the reader's own language.
 const FEATURES = [
-  { Icon: Users, id: 'memberDirectory', href: `${DOCS_BASE}/platform/members` },
-  { Icon: Building2, id: 'multiBranch', href: `${DOCS_BASE}/platform/branches` },
-  { Icon: ClipboardList, id: 'attendance', href: `${DOCS_BASE}/platform/attendance` },
-  { Icon: Heart, id: 'fellowships', href: `${DOCS_BASE}/platform/fellowships` },
-  { Icon: BarChart2, id: 'reports', href: `${DOCS_BASE}/platform/reports` },
-  { Icon: ShieldCheck, id: 'roles', href: `${DOCS_BASE}/administration/permissions` },
+  { Icon: Users, id: 'memberDirectory', docs: 'platform/members' },
+  { Icon: Building2, id: 'multiBranch', docs: 'platform/branches' },
+  { Icon: ClipboardList, id: 'attendance', docs: 'platform/attendance' },
+  { Icon: Heart, id: 'fellowships', docs: 'platform/fellowships' },
+  { Icon: BarChart2, id: 'reports', docs: 'platform/reports' },
+  { Icon: ShieldCheck, id: 'roles', docs: 'administration/permissions' },
 ];
 
 const PAIN_POINTS = [
@@ -350,7 +351,7 @@ export default function KairosLanding() {
                 as="a"
                 key={f.id}
                 index={i}
-                href={f.href}
+                href={docsUrl(f.docs, i18n.language)}
                 target="_blank"
                 rel="noreferrer"
                 className="relative isolate bg-white dark:bg-[#0d0d0d] hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors p-8 group flex flex-col"

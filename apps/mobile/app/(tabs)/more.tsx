@@ -4,6 +4,7 @@ import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { docsUrl } from '@kairos/core';
 import {
   LogOut,
   ChevronRight,
@@ -49,14 +50,15 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { useCapabilities } from '@/lib/capabilities';
 
-const HELP_URL = 'https://docs.kairos.kharis.org';
-const ABOUT_URL = 'https://docs.kairos.kharis.org/getting-started/what-is-kairos';
+// Built per render so the handbook opens in the reader's own language.
+const HELP_PATH = '';
+const ABOUT_PATH = 'getting-started/what-is-kairos';
 
 export default function More() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
-  const { t } = useTranslation(['more', 'common']);
+  const { t, i18n } = useTranslation(['more', 'common']);
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
   const caps = useCapabilities();
@@ -331,12 +333,12 @@ export default function More() {
           <NavRow
             icon={HelpCircle}
             label={t('more:rows.helpAndGuides')}
-            onPress={() => Linking.openURL(HELP_URL)}
+            onPress={() => Linking.openURL(docsUrl(HELP_PATH, i18n.language))}
           />
           <NavRow
             icon={Info}
             label={t('more:rows.aboutKairos')}
-            onPress={() => Linking.openURL(ABOUT_URL)}
+            onPress={() => Linking.openURL(docsUrl(ABOUT_PATH, i18n.language))}
           />
         </Section>
 
