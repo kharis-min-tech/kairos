@@ -23,6 +23,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { speak, transcribe, VOICES, DEFAULT_VOICE } from './lib/deepgram.mjs';
+import { alignWords, alignmentConfidence } from './lib/align.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -81,7 +82,13 @@ for (const stop of script.stops) {
   // Transcribing audio we just generated is not as circular as it looks: the
   // words are known, their position in time is not, and that is what puts a
   // caption on the word instead of near it.
-  const { words, duration } = await transcribe(wav);
+  //
+  // Only the timing is taken from the transcript. The words shown come from
+  // the script, so a mishearing can shift a caption slightly but can never
+  // put a word on screen that nobody said.
+  const { words: heard, duration } = await transcribe(wav);
+  const words = alignWords(stop.speech, heard, duration);
+  const confidence = alignmentConfidence(words);
 
   stops.push({
     n: stop.n,
@@ -92,7 +99,8 @@ for (const stop of script.stops) {
     words,
   });
 
-  console.log(`${duration.toFixed(2)}s  ${words.length} words`);
+  const warn = confidence < 0.9 ? `  ⚠ ${Math.round(confidence * 100)}% aligned` : '';
+  console.log(`${duration.toFixed(2)}s  ${words.length} words${warn}`);
 }
 
 writeFileSync(

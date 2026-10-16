@@ -1,0 +1,60 @@
+{
+  "role": "general",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Your overview",
+      "caption": "The front door, and only what your role covers.",
+      "speech": "This is Kairos. It opens on your overview, and everything you can see here is scoped to what you are actually responsible for."
+    },
+    {
+      "n": 2,
+      "title": "The sidebar",
+      "caption": "Six groups. You only see the ones your role needs.",
+      "speech": "The sidebar is grouped into People, Groups, Gatherings, Insights and Organisation. A section you cannot see is simply one your role has no need of."
+    },
+    {
+      "n": 3,
+      "title": "Members",
+      "caption": "Everybody in one list, with their status on the row.",
+      "speech": "Members is the directory. Everybody in the church is here, with their home branch and whether they have completed the membership class."
+    },
+    {
+      "n": 4,
+      "title": "Fellowships",
+      "caption": "Small groups, with a map so people can find one.",
+      "speech": "Fellowships are the small groups. K-Groups, Kharis Express, New Breeds and the rest, with a map so somebody can find the one nearest them."
+    },
+    {
+      "n": 5,
+      "title": "Departments",
+      "caption": "Ministry teams, their rotas and their recruitment.",
+      "speech": "Departments are the ministry teams. Each one keeps its own roster, its serving rota and the people applying to join it."
+    },
+    {
+      "n": 6,
+      "title": "Attendance",
+      "caption": "Services, check-in, and the weekly registers.",
+      "speech": "Attendance covers services and check-in. People can check themselves in with a QR code, or the desk can record them on arrival."
+    },
+    {
+      "n": 7,
+      "title": "The souls pipeline",
+      "caption": "From first contact through to a department.",
+      "speech": "The souls pipeline follows somebody reached through evangelism: new, following up, interested, converted, and on into discipleship."
+    },
+    {
+      "n": 8,
+      "title": "Reports",
+      "caption": "Attendance, growth and engagement, scoped to you.",
+      "speech": "Reports turn all of that into numbers. Attendance trends, membership growth and engagement, again only across what your role covers."
+    },
+    {
+      "n": 9,
+      "title": "Your language",
+      "caption": "Kairos and this handbook, in four languages.",
+      "speech": "Kairos speaks English, French, Krio and Twi. Change it from the sidebar, and the handbook opens in the same language you chose."
+    }
+  ]
+}

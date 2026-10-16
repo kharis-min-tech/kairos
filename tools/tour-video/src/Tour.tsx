@@ -2,6 +2,7 @@ import React from 'react';
 import {
   AbsoluteFill,
   Audio,
+  Freeze,
   OffthreadVideo,
   Sequence,
   interpolate,
@@ -151,15 +152,19 @@ const Shot: React.FC<{ video: string; segment: Segment; fps: number }> = ({
       )}
       {segment.hold > 0 && (
         <Sequence from={sec(plays)} durationInFrames={sec(segment.hold)} layout="none">
-          {/* One frame, held. `OffthreadVideo` with a one-frame window is how
-              Remotion freezes a still out of the capture. */}
-          <OffthreadVideo
-            src={staticFile(video)}
-            startFrom={Math.max(0, Math.round((segment.captureFrom + plays) * fps) - 1)}
-            endAt={Math.max(1, Math.round((segment.captureFrom + plays) * fps))}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            muted
-          />
+          {/* The last frame of the segment, held while the line finishes.
+              An OffthreadVideo given a one-frame window renders that frame
+              once and then nothing at all, which left half the first cut as
+              bare background. <Freeze> pins the whole subtree to one frame,
+              which is what actually holds a picture on screen. */}
+          <Freeze frame={0}>
+            <OffthreadVideo
+              src={staticFile(video)}
+              startFrom={Math.max(0, Math.round((segment.captureFrom + plays) * fps) - 1)}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              muted
+            />
+          </Freeze>
         </Sequence>
       )}
     </>

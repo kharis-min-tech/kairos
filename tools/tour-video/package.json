@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "voice": "node voice.mjs",
     "smoke": "node smoke.mjs",
-    "test": "node lib/schedule.test.mjs",
+    "test": "node lib/schedule.test.mjs && node lib/align.test.mjs",
     "check:deepgram": "node check-deepgram.mjs"
   },
   "dependencies": {

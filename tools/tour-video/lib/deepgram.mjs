@@ -140,12 +140,26 @@ export async function speak(text, { voice = DEFAULT_VOICE, signal } = {}) {
  * is already known; what is not known is where each word lands in time, to the
  * millisecond, and that is what comes back here.
  */
-export async function transcribe(wav, { language = 'en', signal } = {}) {
+/**
+ * Vocabulary a general model mishears. The first test run returned "every
+ * bridge of the church" for "every branch of the church"; these are boosted
+ * so the timings land on the right tokens. Nova-3 takes one `keyterm` per
+ * occurrence rather than a list.
+ */
+export const KEYTERMS = [
+  'Kairos', 'Kharis', 'branch', 'branches', 'fellowship', 'fellowships',
+  'department', 'departments', 'pastor', 'safeguarding', 'discipleship',
+  'K-Group', 'rota', 'cohort', 'congregation',
+];
+
+export async function transcribe(wav, { language = 'en', keyterms = KEYTERMS, signal } = {}) {
   const key = readKey();
+  const boost = keyterms.map((t) => `&keyterm=${encodeURIComponent(t)}`).join('');
   const url =
     'https://api.deepgram.com/v1/listen?model=nova-3' +
     `&language=${encodeURIComponent(language)}` +
-    '&punctuate=true&smart_format=true&utterances=true';
+    '&punctuate=true&smart_format=true&utterances=true' +
+    boost;
 
   const res = await fetch(url, {
     method: 'POST',
