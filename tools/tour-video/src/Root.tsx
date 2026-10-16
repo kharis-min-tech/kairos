@@ -1,6 +1,6 @@
 import React from 'react';
 import { Composition, getInputProps } from 'remotion';
-import { Tour, type TourProps, type Mark } from './Tour';
+import { Tour, type TourProps, type Segment } from './Tour';
 
 const FPS = 30;
 /** Seconds held after the last line so the closing words are not clipped. */
@@ -8,13 +8,13 @@ const TAIL = 2;
 
 /**
  * Props come from --props on the command line, so one composition renders any
- * role. render.mjs builds them from the recorder's marks file.
+ * role. render.mjs builds them: the schedule has already fitted the capture
+ * to the measured narration, so the composition only has to lay it out.
  */
 export const RemotionRoot: React.FC = () => {
   const input = getInputProps() as Partial<TourProps>;
-  const marks: Mark[] = input.marks ?? [];
-  const lastLineEnds = marks.reduce((max, m) => Math.max(max, m.start + m.audio), 0);
-  const seconds = Math.max(input.captureDuration ?? 0, lastLineEnds) + TAIL;
+  const segments: Segment[] = input.segments ?? [];
+  const seconds = (input.duration ?? 0) + TAIL;
 
   return (
     <Composition
@@ -27,8 +27,8 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{
         role: input.role ?? 'member',
         video: input.video ?? 'capture/member.webm',
-        marks,
-        captureDuration: input.captureDuration ?? 0,
+        segments,
+        duration: input.duration ?? 0,
       }}
     />
   );

@@ -7,7 +7,11 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "node render.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "voice": "node voice.mjs",
+    "smoke": "node smoke.mjs",
+    "test": "node lib/schedule.test.mjs",
+    "check:deepgram": "node check-deepgram.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.535",

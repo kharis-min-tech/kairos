@@ -2,20 +2,28 @@
 /**
  * Render one role's tour with Remotion.
  *
- *   node render.mjs member
+ *   node voice.mjs member     # first: narration + word timings from Deepgram
+ *   node render.mjs member    # then: the video
  *
  * Expects, relative to this folder:
  *   public/capture/<role>.webm   the screen capture from the Playwright run
- *   public/voice/NN.wav          that role's narration, one file per stop
- *   marks-<role>.json            the timeline the recorder wrote
+ *   public/voice/<role>/NN.wav   narration, written by voice.mjs
+ *   timings/<role>.json          durations and word times, written by voice.mjs
+ *   marks-<role>.json            the recorder's stop offsets into the capture
  *
- * The narration is placed at the offsets the recorder measured while it was
- * performing each step, so picture and sound cannot drift apart.
+ * The recorder's marks say where in the capture each stop appears; the
+ * timings say how long saying it takes. `buildSchedule` reconciles the two by
+ * holding the picture wherever the sentence outlasts the footage, so a line
+ * can never end up describing a page the capture has already left.
+ *
+ * No credential is involved here — this step reads files voice.mjs produced.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { buildSchedule } from './lib/schedule.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const role = process.argv[2];
@@ -26,16 +34,22 @@ if (!role) {
 }
 
 const marksPath = join(HERE, `marks-${role}.json`);
+const timingsPath = join(HERE, 'timings', `${role}.json`);
 const capture = join(HERE, 'public', 'capture', `${role}.webm`);
 
-for (const [label, path] of [['timeline', marksPath], ['capture', capture]]) {
+for (const [label, path, fix] of [
+  ['timeline', marksPath, 'run the recorder'],
+  ['timings', timingsPath, `run: node voice.mjs ${role}`],
+  ['capture', capture, 'run the recorder'],
+]) {
   if (!existsSync(path)) {
-    console.error(`missing ${label}: ${path}`);
+    console.error(`missing ${label}: ${path}\n  → ${fix}`);
     process.exit(1);
   }
 }
 
 const { marks } = JSON.parse(readFileSync(marksPath, 'utf8'));
+const { stops } = JSON.parse(readFileSync(timingsPath, 'utf8'));
 
 // Trust the file on disk over whatever the recorder believed at the time.
 const captureDuration = parseFloat(
@@ -44,20 +58,19 @@ const captureDuration = parseFloat(
   ]).toString().trim(),
 );
 
-const props = {
-  role,
-  video: `capture/${role}.webm`,
-  marks,
-  captureDuration,
-};
+const { segments, duration } = buildSchedule(marks, stops, captureDuration);
+
+const props = { role, video: `capture/${role}.webm`, segments, duration };
 
 mkdirSync(join(HERE, 'out'), { recursive: true });
 const out = join(HERE, 'out', `tour-${role}.mp4`);
 
-const lastLineEnds = marks.reduce((m, k) => Math.max(m, k.start + k.audio), 0);
+const held = segments.reduce((n, s) => n + s.hold, 0);
+const words = segments.reduce((n, s) => n + s.words.length, 0);
 console.log(
-  `${role}: ${marks.length} stops, capture ${captureDuration.toFixed(1)}s, ` +
-  `last line ends ${lastLineEnds.toFixed(1)}s`,
+  `${role}: ${segments.length} stops, capture ${captureDuration.toFixed(1)}s, ` +
+  `narration ${segments.reduce((n, s) => n + s.spoken, 0).toFixed(1)}s, ` +
+  `${held.toFixed(1)}s held, ${words} caption words, final ${duration.toFixed(1)}s`,
 );
 
 execFileSync(
@@ -67,7 +80,6 @@ execFileSync(
     '--props', JSON.stringify(props),
     '--codec', 'h264',
     '--crf', '21',
-    // Matches the sample rate the narration was written at.
     '--audio-bitrate', '192k',
     '--log', 'info',
   ],

@@ -2,4 +2,9 @@ node_modules/
 out/
 public/capture/
 public/voice/
+timings/
 marks-*.json
+
+# The Deepgram key. The root .gitignore already covers `.env` at any depth;
+# repeated here so it is visible to anyone reading this folder.
+.env
