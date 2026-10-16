@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 
 import { speak, transcribe, VOICES, DEFAULT_VOICE } from './lib/deepgram.mjs';
 import { alignWords, alignmentConfidence } from './lib/align.mjs';
+import { estimateTimings } from './lib/estimate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -34,9 +35,22 @@ const flag = (name) => {
 };
 
 if (!role) {
-  console.error('usage: node voice.mjs <role> [--voice athena|draco] [--only N]');
+  console.error(
+    'usage: node voice.mjs <flow> [--voice athena|draco] [--only N] [--silent]',
+  );
   process.exit(1);
 }
+
+/**
+ * Krio and Twi have no voice in any text-to-speech engine I can reach —
+ * Deepgram's models do not cover either, and neither did Kokoro. Those clips
+ * are captions over the footage with no audio track, which is what we chose
+ * rather than narrating somebody's language at them in English.
+ *
+ * With no audio there is nothing to transcribe, so the word timings are
+ * estimated from the text instead of measured.
+ */
+const silent = argv.includes('--silent');
 
 const scriptPath = join(HERE, 'narration', `${role}.json`);
 if (!existsSync(scriptPath)) {
@@ -59,7 +73,11 @@ const previous = existsSync(timingsPath)
   ? JSON.parse(readFileSync(timingsPath, 'utf8'))
   : { role, voice: voiceName ?? 'athena', stops: [] };
 
-console.log(`${role}: ${script.stops.length} stops, voice ${voice}`);
+console.log(
+  silent
+    ? `${role}: ${script.stops.length} stops, captions only (no voice for this language)`
+    : `${role}: ${script.stops.length} stops, voice ${voice}`,
+);
 
 const stops = [];
 for (const stop of script.stops) {
@@ -75,6 +93,20 @@ for (const stop of script.stops) {
   }
 
   process.stdout.write(`  ${String(stop.n).padStart(2)} ${stop.title.slice(0, 44).padEnd(46)}`);
+
+  if (silent) {
+    const { words, duration } = estimateTimings(stop.speech);
+    stops.push({
+      n: stop.n,
+      title: stop.title,
+      caption: stop.caption,
+      file: null,
+      duration,
+      words,
+    });
+    console.log(`${duration.toFixed(2)}s  ${words.length} words  (estimated)`);
+    continue;
+  }
 
   const wav = await speak(stop.speech, { voice });
   writeFileSync(file, wav);
@@ -109,5 +141,9 @@ writeFileSync(
 );
 
 const total = stops.reduce((n, s) => n + s.duration, 0);
-console.log(`\nwrote ${stops.length} files to public/voice/${role}/`);
+console.log(
+  silent
+    ? `\nno audio written — this language has no voice`
+    : `\nwrote ${stops.length} files to public/voice/${role}/`,
+);
 console.log(`wrote timings/${role}.json  (${total.toFixed(1)}s of narration)`);

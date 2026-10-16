@@ -23,8 +23,8 @@ export interface Segment {
   n: number;
   title: string;
   caption: string;
-  /** Path under public/, e.g. "voice/member/01.wav". */
-  audio: string;
+  /** Path under public/, or null where the language has no voice. */
+  audio: string | null;
   at: number;
   span: number;
   captureFrom: number;
@@ -196,16 +196,20 @@ export const Tour: React.FC<TourProps> = ({ video, segments }) => {
         </Sequence>
       ))}
 
-      {segments.map((s) => (
-        <Sequence
-          key={`a-${s.n}`}
-          from={sec(s.at)}
-          durationInFrames={Math.max(1, sec(s.spoken))}
-          layout="none"
-        >
-          <Audio src={staticFile(s.audio)} />
-        </Sequence>
-      ))}
+      {/* Krio and Twi have no voice, so those cuts carry captions and no
+          audio track at all rather than English over somebody's own language. */}
+      {segments
+        .filter((s) => s.audio)
+        .map((s) => (
+          <Sequence
+            key={`a-${s.n}`}
+            from={sec(s.at)}
+            durationInFrames={Math.max(1, sec(s.spoken))}
+            layout="none"
+          >
+            <Audio src={staticFile(s.audio as string)} />
+          </Sequence>
+        ))}
 
       {segments.map((s) => (
         <Sequence key={`c-${s.n}`} from={sec(s.at)} durationInFrames={Math.max(1, sec(s.span))}>
