@@ -595,6 +595,7 @@ async function seed() {
     /* newBelieversMentorRole */,
     /* newBelieversTeacherRole */,
     membershipAdminRole,
+    /* membershipChampionRole */,
   ] = await db
     .insert(roles)
     .values([
@@ -645,9 +646,14 @@ async function seed() {
         description:
           'Runs the church-wide membership class: cohorts, sessions, the interest pool, admission, marking and graduation. Church-scoped, not branch-scoped.',
       },
+      {
+        roleName: 'Membership Champion',
+        description:
+          'The branch-side liaison for the church-wide membership class: encourages people into the pool and keeps their branch\u2019s cohort moving. Reads at personal altitude \u2014 it confers no lens of its own.',
+      },
     ])
     .returning();
-  console.log(`✓ 13 roles`);
+  console.log(`\u2713 14 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
