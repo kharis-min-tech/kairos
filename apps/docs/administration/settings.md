@@ -38,7 +38,7 @@ Choose between **Light**, **Dark**, or match your device's system preference. Th
 
 ### Language
 
-Currently English only. Additional languages are coming in a future release.
+Choose English, French, Krio, or Twi. The choice follows you across the web app, the mobile app, and this handbook: open the help guide while Kairos is in French and the handbook opens in French too.
 
 ## Notifications
 

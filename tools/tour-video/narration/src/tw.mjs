@@ -20,9 +20,21 @@ const general = [
   ['Wo Kasa', 'Kairos ne saa akwankyerɛ yi, kasa ɛnan mu.', 'Kairos ka Borɔfo, Frenkye, Krio ne Twi. Sesa no wɔ nkyɛnmu no so, na akwankyerɛ no nso bue wɔ kasa korɔ no ara mu.'],
 ];
 
+const admin = [
+  ['Wo nhwɛmu', 'Asɔre mmaa nyinaa prɛko.', 'Yei ne sohwɛfoɔ nhwɛmu. Asɔre Nkwa kan asɔre mmaa nyinaa prɛko, na Ɛhia Wo kyerɛ deɛ ɛretwɛn obi ɛnnɛ.'],
+  ['Asɔre Mmaa', 'Yɛ wɔn, hyehyɛ wɔn, yi wɔn.', 'Asɔre mmaa yɛ wo nko ara dea. Sohwɛfoɔ nko ara na ɔyɛ bi, de kɔ ɔmantam foforɔ mu, anaa ɔyi bi firi adwuma mu.'],
+  ['Asɔre baa bi mu', 'Ne ho nsɛm, ne hwan na ɔdi anim.', 'Bue asɔre baa bi na hyɛ ne nsɛm ne n’akannifoɔ. Sɔfopanin a wobɔ ne din wɔ ha na ɛma ɔhunu saa asɔre baa no ahobammɔ nhwɛmu.'],
+  ['Amantam', 'Mmeaeɛ a wɔde w’asɔre mmaa hyehyɛ mu.', 'Amantam de asɔre mmaa hyehyɛ mmeaeɛ so. Yɛ ɔmantam no kane; wontumi nyɛ asɔre baa kɔsi sɛ ne ɔmantam wɔ hɔ.'],
+  ['Ɔpene nhwɛmu', 'Obiara nnuru mu kɔsi sɛ obi bue.', 'Obiara a ɔkyerɛw ne din ankasa twɛn wɔ ha. Pene no so na ɔnya akwannya nyinaa; po no na wɔyi n’akawnt.'],
+  ['Hwan na ɔkura deɛn', 'Tumi, na ɛnyɛ dibea din.', 'Bue ɔmanfoɔ bi na hwɛ ne tumi so. Kairos kora nhyehyɛeɛ dibea mmienu pɛ, enti biribiara foforɔ firi tumi mu.'],
+  ['Asɔremufoɔ adesua', 'Asɔre no nyinaa dea; asɔre baa tumi nnuru so.', 'Asɔremufoɔ nhyehyɛeɛ yɛ asɔre no nyinaa dea. Akuo no gye nnipa firi asɔre mmaa nyinaa so, enti ɛhia asɔre no nyinaa tumi.'],
+  ['Nkaeɛbɔ a ɛtra asɔre mmaa so', 'Nhwɛmu korɔ a ɛtoto asɔre mmaa.', 'Nkaeɛbɔ ne nhwɛmu a ɛtra asɔre mmaa so. Wo nko ara ne dibea a wohunu asɔre baa biara bɔ mu, na ɛnyɛ baako baako.'],
+  ['Wo kasa', 'Kairos ne nwoma yi, wɔ kasa nnan mu.', 'Kairos ka Borɔfo, Frɛnkye, Krio ne Twi. Sesa no firi nkyekyɛmu no mu, na nwoma no bue wɔ kasa korɔ no ara mu.'],
+];
+
 export default {
   general,
-  admin: general,
+  admin,
   member: [
     ['Wo Nhwɛbea', 'Deɛ ɛyɛ wo dea nko ara.', 'Yei ne wo nhwɛbea. Biribiara a ɛwɔ ha yɛ wo dea: wo akuo, wo mmaeɛ, ne deɛ asɔre no hia firi wo hɔ nnawɔtwe yi.'],
     ['Deɛ wotumi hunu', 'Nkyɛnmu tiawa nkyerɛ sɛ biribi ayera.', 'Wo nkyɛnmu yɛ tiawa ɛfiri sɛ Kairos fa kɛseɛ no nyɛ wo dea sɛ wohwɛ so. Yɛmfa biribiara nsie wo.'],

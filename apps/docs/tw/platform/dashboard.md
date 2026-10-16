@@ -40,7 +40,7 @@ Akontaa nsensaneɛ a ɛwɔ atifi, wɔ asɔre baa gyinabea ne deɛ ɛkorɔn.
 **Asɔre nkwa** kyerɛ Asɔre Mmaa, Asafo no Nyinaa, Asɔrefoɔ a Wɔahyɛ Mu Den, ne Fekuo. **Asɔre baa nkwa** kyerɛ Asafo no Nyinaa, Asɔrefoɔ a Wɔahyɛ Mu Den, Nnawɔtwe a Atwam Mmaeɛ, ne Fekuo.
 
 ::: tip Asafo no nyinaa ne Asɔrefoɔ a wɔahyɛ mu den yɛ akontaa mmienu soronko
-Asafo no nyinaa ne nkrataa no nyinaa. Asɔrefoɔ a wɔahyɛ mu den kan wɔn a wɔawie [asɔrefoɔ adesua](/tw/platform/membership) no nko ara. Asɔre baa a ɛho yɛ den taa wɔ deɛ ɛdi kan no pii sene deɛ ɛtɔ so mmienu. Hwɛ [Nkɔsoɔ Amanneɛbɔ](/tw/analytics/growth-reports#congregation-breakdown).
+Asafo no nyinaa ne nkrataa no nyinaa. Asɔrefoɔ a wɔahyɛ mu den kan wɔn a wɔawie [asɔrefoɔ adesua](/tw/platform/membership) no nko ara. Asɔre baa a ɛho yɛ den taa wɔ deɛ ɛdi kan no pii sene deɛ ɛtɔ so mmienu. Hwɛ [Nkɔsoɔ Amanneɛbɔ](/tw/analytics/growth-reports#asafo-no-nkyekyɛmu).
 :::
 
 Ne ase hɔ, Nkwa kura **kɔkɔbɔ** bere a biribi hia ɔhwɛ: krataa a obiara ankyerɛw, asɔrefoɔ a wɔretwe wɔn ho, asɔre mmaa a wɔaka akyi, anaa asɔre baa a ɔnni Ɔsɔfoɔ Panin. Kɔkɔbɔ biara yɛ link a ɛkɔ kratafa a wobɛsiesie no wɔ so.

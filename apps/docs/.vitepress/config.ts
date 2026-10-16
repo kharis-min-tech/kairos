@@ -21,6 +21,8 @@ const UI: Record<Lang, {
   returnToTop: string;
   menu: string;
   langMenu: string;
+  skipToContent: string;
+  footerLine: string;
   terms: string;
   privacy: string;
 }> = {
@@ -28,25 +30,33 @@ const UI: Record<Lang, {
     label: 'English', outline: 'On this page', prev: 'Previous', next: 'Next',
     search: 'Search', lightMode: 'Switch to light theme', darkMode: 'Switch to dark theme',
     returnToTop: 'Return to top', menu: 'Menu', langMenu: 'Change language',
+    skipToContent: 'Skip to content',
+    footerLine: 'Kairos: Church Administration System by Kharis Church',
     terms: 'Terms & Conditions', privacy: 'Privacy Notice',
   },
   fr: {
     label: 'Français', outline: 'Sur cette page', prev: 'Précédent', next: 'Suivant',
     search: 'Rechercher', lightMode: 'Passer au thème clair', darkMode: 'Passer au thème sombre',
     returnToTop: 'Revenir en haut', menu: 'Menu', langMenu: 'Changer de langue',
+    skipToContent: 'Aller au contenu',
+    footerLine: 'Kairos : le système d’administration d’église de Kharis Church',
     terms: 'Conditions générales', privacy: 'Avis de confidentialité',
   },
   kri: {
     label: 'Krio', outline: 'Pan dis pej', prev: 'Bifo', next: 'Nɛks',
     search: 'Luk fɔ sɔntin', lightMode: 'Go na di layt tim', darkMode: 'Go na di dak tim',
     returnToTop: 'Go bak na tɔp', menu: 'Menyu', langMenu: 'Chenj di langwej',
-    terms: 'Tam ɛn Kɔndishɔn dɛn', privacy: 'Prayvasi Notis',
+    skipToContent: 'Go stret to di kɔntɛnt',
+    footerLine: 'Kairos: Chɔch Administreshɔn Sistem bay Kharis Church',
+    terms: 'Tɛms ɛn Kɔndishɔn', privacy: 'Prayvesi Notis',
   },
   tw: {
     label: 'Twi', outline: 'Saa kratafa yi so', prev: 'Deɛ Ɛdi Anim', next: 'Deɛ Ɛdi Hɔ',
     search: 'Hwehwɛ', lightMode: 'Kɔ hann tebea mu', darkMode: 'Kɔ esum tebea mu',
     returnToTop: 'San kɔ soro', menu: 'Menu', langMenu: 'Sesa kasa',
-    terms: 'Nhyehyɛeɛ ne Mmara', privacy: 'Kokoamsɛm Ho Amanneɛbɔ',
+    skipToContent: 'Kɔ nsɛm no so tẽẽ',
+    footerLine: 'Kairos: Kharis Church asɔre nhyehyɛeɛ',
+    terms: 'Nhyehyɛeɛ ne Mmara', privacy: 'Kokoamsɛm Nkra',
   },
 };
 
@@ -73,9 +83,10 @@ function themeFor(lang: Lang) {
     sidebarMenuLabel: ui.menu,
     returnToTopLabel: ui.returnToTop,
     langMenuLabel: ui.langMenu,
+    skipToContentLabel: ui.skipToContent,
     footer: {
       message:
-        'Kairos: Church Administration System by Kharis Church &middot; ' +
+        `${ui.footerLine} &middot; ` +
         `<a href="${href(lang, 'legal/terms')}">${ui.terms}</a> &middot; ` +
         `<a href="${href(lang, 'legal/privacy')}">${ui.privacy}</a>`,
     },

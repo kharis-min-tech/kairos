@@ -25,6 +25,13 @@
 - **Recent activity** is now a real feed from five sources: registrations, forms, membership graduations, fellowship meetings, and souls reached.
 - Sidebar sections are collapsible, and the section holding your current page opens itself.
 
+### Languages
+
+- **Kairos speaks English, French, Krio and Twi.** The web app, the mobile app and this handbook all follow the same choice, so opening the help guide while Kairos is in French opens the handbook in French.
+- **Every handbook page exists in all four languages**, with its own screenshots and its own clip.
+- **A clip on every section**, up to thirty seconds each, plus a general tour and one tour per role. Krio and Twi clips carry captions rather than a voice, because there is no text-to-speech voice for either language yet.
+- Scripture references are localised by book name only. Verse text is never machine-translated.
+
 ### Other
 
 - Group leaders now see their own people's New Believers and membership class progress, narrowed by who is in their group rather than by branch.
@@ -119,9 +126,3 @@ The whole module is new. See [Membership Classes](/platform/membership).
 ## In testing
 
 - **A mobile app** for Android and iOS, covering most of what the web app does, plus biometric sign-in and offline register-taking. Built from the same API. Not yet distributed through the app stores.
-
----
-
-## Coming soon
-
-- **Additional languages**: multi-language support beyond English

@@ -1,35 +1,17 @@
 <script setup>
 import { ref } from 'vue'
 
+const LANG = ''
+
 const tours = [
-  {
-    id: 'member',
-    pick: 'a member',
-    heading: 'Kairos for members',
-    blurb: 'Your own groups, your own attendance, and the gatherings you belong to.',
-    length: '2 min 39',
-    stops: 13,
-  },
-  {
-    id: 'leader',
-    pick: 'a leader or pastor',
-    heading: 'Kairos for leaders and pastors',
-    blurb: 'Everything a member sees, plus the branch directory, pastoral care and follow-ups.',
-    length: '3 min 25',
-    stops: 17,
-  },
-  {
-    id: 'admin',
-    pick: 'an administrator',
-    heading: 'Kairos for administrators',
-    blurb: 'The whole platform, including every branch and region.',
-    length: '4 min 08',
-    stops: 20,
-  },
+  { id: 'member', pick: 'a member', heading: 'Kairos for members', blurb: 'Your own groups, your own attendance, and the gatherings you belong to.', stops: 8 },
+  { id: 'pastor', pick: 'a leader or pastor', heading: 'Kairos for leaders and pastors', blurb: 'Your branch: the directory, pastoral care, follow-ups and reports.', stops: 9 },
+  { id: 'admin',  pick: 'an administrator',  heading: 'Kairos for administrators',  blurb: 'Branches, regions, approvals, grants and cross-branch reporting.',  stops: 9 },
 ]
 
 const chosen = ref('member')
 const tour = () => tours.find(t => t.id === chosen.value)
+const clip = id => `/clips/${id}${LANG}`
 </script>
 
 <style scoped>
@@ -62,15 +44,30 @@ const tour = () => tours.find(t => t.id === chosen.value)
   width: 100%; border-radius: 10px; margin: 1rem 0 0;
   box-shadow: 0 12px 40px rgba(0,0,0,.18); background: #000;
 }
+.silentnote {
+  font-size: 14px; color: var(--vp-c-text-3); margin: .6rem 0 0;
+}
 </style>
 
 # Video Tour
 
-A narrated walkthrough of Kairos, recorded in the real application. There are
-three of them, because Kairos shows each person only what their role needs.
-Choose the one that fits you.
+A narrated walkthrough of Kairos, recorded in the real application.
+
+Start with the general tour if Kairos is new to you. Then pick the role tour
+that matches your account: each one shows only what that role actually sees,
+so none of them walks you past a screen you cannot open.
 
 Everyone and everything in the recordings is demonstration data.
+
+## Start here: what Kairos is
+
+Nine stops across the whole platform, recorded as an administrator so the
+shape of the thing is visible. It is the only tour that shows sections your
+own role may not have.
+
+<video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Your browser cannot play embedded video. <a :href="`${clip('general')}.mp4`">Download this tour instead</a>.</video>
+
+## Then: your own role
 
 <div class="rolepick">
   <div class="q">I am…</div>
@@ -81,10 +78,10 @@ Everyone and everything in the recordings is demonstration data.
 
 <div class="tourhead">
   <h3>{{ tour().heading }}</h3>
-  <div class="meta">{{ tour().length }} · {{ tour().stops }} stops · {{ tour().blurb }}</div>
+  <div class="meta">{{ tour().stops }} stops · {{ tour().blurb }}</div>
 </div>
 
-<video :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`/tour-${chosen}.jpg`"><source :src="`/tour-${chosen}.mp4`" type="video/mp4" />Your browser cannot play embedded video. <a :href="`/tour-${chosen}.mp4`">Download this tour instead</a>.</video>
+<video :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`"><source :src="`${clip(chosen)}.mp4`" type="video/mp4" />Your browser cannot play embedded video. <a :href="`${clip(chosen)}.mp4`">Download this tour instead</a>.</video>
 
 ## Which tour is mine?
 
@@ -105,23 +102,31 @@ explains how that is decided.
 
 ### A member
 
-Signing in, your Overview, light and dark mode, My Attendance, Fellowships,
-Departments, Attendance, Check in, New Believers, Membership classes, your
-Profile, and where to find this handbook.
+Your overview, why your sidebar is short, My Attendance, your fellowship, your
+departments, checking in, forms, and your profile.
 
 ### A leader or pastor
 
-Everything above, and then My Branch, the [Members](/platform/members)
-directory, [Concerns](/platform/concerns), [Follow-ups](/platform/follow-ups),
-the [Souls Pipeline](/platform/souls-pipeline) and
-[Reports](/platform/reports).
+Your overview, [My Branch](/platform/branches), the [Members](/platform/members)
+directory, [Follow-ups](/platform/follow-ups), [Concerns](/platform/concerns),
+your own fellowship and department, the [Souls Pipeline](/platform/souls-pipeline)
+and [Reports](/platform/reports).
 
 ### An administrator
 
-The whole platform. Church Pulse and Needs You on the dashboard, the six
-sidebar groups, every section in People, Groups, Gatherings and Insights, and
-then [Branches](/platform/branches) and [Regions](/platform/regions) under
-Organisation.
+Only the parts nobody else has: [Branches](/platform/branches), inside a branch
+and its leadership, [Regions](/platform/regions), the
+[approval queue](/administration/approvals), who holds which
+[grant](/administration/permissions), the church-wide
+[membership programme](/platform/membership), and cross-branch
+[Reports](/platform/reports).
+
+## A clip on every section too
+
+Each section of this handbook opens with its own clip of up to thirty seconds,
+showing that one screen and what to do on it. The tours above are for getting
+your bearings; the section clips are for the moment you are stuck on something
+specific.
 
 ## Prefer to read?
 

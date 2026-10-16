@@ -40,7 +40,7 @@ La rangée de chiffres en haut, à l'altitude antenne et au-dessus.
 Le **pouls de l'église** affiche Antennes, Assemblée totale, Membres confirmés et Cellules. Le **pouls de l'antenne** affiche Assemblée totale, Membres confirmés, Présence la semaine dernière et Cellules.
 
 ::: tip Assemblée totale et Membres confirmés sont deux chiffres différents
-L'assemblée totale, c'est le registre entier. Les membres confirmés ne comptent que les personnes ayant terminé la [classe d'adhésion](/fr/platform/membership). Une antenne en bonne santé en a généralement beaucoup plus des premiers que des seconds. Voir [Rapports de croissance](/fr/analytics/growth-reports#congregation-breakdown).
+L'assemblée totale, c'est le registre entier. Les membres confirmés ne comptent que les personnes ayant terminé la [classe d'adhésion](/fr/platform/membership). Une antenne en bonne santé en a généralement beaucoup plus des premiers que des seconds. Voir [Rapports de croissance](/fr/analytics/growth-reports#repartition-de-l-assemblee).
 :::
 
 En dessous, le Pouls affiche des **avertissements** quand quelque chose demande attention : une feuille de présence jamais faite, des membres qui s'éloignent, des antennes en retard, ou une antenne sans pasteur principal. Chaque avertissement renvoie directement à la page où le corriger.

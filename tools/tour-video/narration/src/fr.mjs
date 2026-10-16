@@ -17,9 +17,21 @@ const general = [
   ['Votre langue', 'Kairos et ce manuel, en quatre langues.', 'Kairos parle anglais, français, krio et twi. Changez depuis la barre latérale, et le manuel s’ouvre dans la langue choisie.'],
 ];
 
+const admin = [
+  ['Votre vue d’ensemble', 'Toutes les antennes à la fois.', 'Voici la vue administrateur. Le Pouls compte toutes les antennes à la fois, et Vous attend liste ce qui attend quelqu’un aujourd’hui.'],
+  ['Antennes', 'Les créer, les regrouper, les retirer.', 'Les antennes n’appartiennent qu’à vous. Seul un administrateur en crée une, la déplace de région ou la retire du service.'],
+  ['Dans une antenne', 'Ses détails, et qui la dirige.', 'Ouvrez une antenne pour régler ses détails et sa direction. Nommer le pasteur principal ici lui donne la vue sur la file protection de cette antenne.'],
+  ['Régions', 'La géographie qui regroupe vos antennes.', 'Les régions regroupent les antennes par géographie. Créez la région d’abord : une antenne ne peut exister sans la sienne.'],
+  ['La file d’approbation', 'Personne n’entre sans qu’on le laisse entrer.', 'Toute personne inscrite d’elle-même attend ici. Approuvez-la et elle obtient l’accès complet ; refusez-la et le compte est supprimé.'],
+  ['Qui détient quoi', 'Les habilitations, pas les titres.', 'Ouvrez un membre pour gérer ses habilitations. Kairos ne stocke que deux rôles système : tout le reste vient d’une habilitation.'],
+  ['Les cours de membre', 'À l’échelle de l’église, hors de toute antenne.', 'Le programme d’adhésion est à l’échelle de l’église. Les promotions puisent partout, donc l’administrer demande une habilitation d’église.'],
+  ['Rapports inter-antennes', 'La seule vue qui compare les antennes.', 'Les rapports sont la vue inter-antennes. Vous êtes le seul rôle à voir toutes les antennes côte à côte plutôt qu’une à la fois.'],
+  ['Votre langue', 'Kairos et ce manuel, en quatre langues.', 'Kairos parle anglais, français, krio et twi. Changez depuis la barre latérale, et le manuel s’ouvre dans la langue choisie.'],
+];
+
 export default {
   general,
-  admin: general,
+  admin,
   member: [
     ['Votre vue d’ensemble', 'Uniquement ce qui vous appartient.', 'Voici votre vue d’ensemble. Tout ici est à vous : vos groupes, votre présence, et ce que l’église attend de vous cette semaine.'],
     ['Ce que vous voyez', 'Une barre courte n’est pas une fonction manquante.', 'Votre barre latérale est courte parce que l’essentiel de Kairos n’est pas à vous de gérer. Rien ne vous est caché par secret.'],

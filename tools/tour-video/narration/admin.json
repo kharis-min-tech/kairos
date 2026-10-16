@@ -6,50 +6,50 @@
     {
       "n": 1,
       "title": "Your overview",
-      "caption": "The front door, and only what your role covers.",
-      "speech": "This is Kairos. It opens on your overview, and everything you can see here is scoped to what you are actually responsible for."
+      "caption": "Every branch at once, and what needs you today.",
+      "speech": "This is the administrator view. Church Pulse counts every branch at once, and Needs You lists what is waiting on somebody today."
     },
     {
       "n": 2,
-      "title": "The sidebar",
-      "caption": "Six groups. You only see the ones your role needs.",
-      "speech": "The sidebar is grouped into People, Groups, Gatherings, Insights and Organisation. A section you cannot see is simply one your role has no need of."
+      "title": "Branches",
+      "caption": "Create them, group them by region, retire them.",
+      "speech": "Branches are yours alone. Only an administrator creates one, moves it between regions, or takes it out of active use."
     },
     {
       "n": 3,
-      "title": "Members",
-      "caption": "Everybody in one list, with their status on the row.",
-      "speech": "Members is the directory. Everybody in the church is here, with their home branch and whether they have completed the membership class."
+      "title": "Inside a branch",
+      "caption": "Its details, and who currently leads it.",
+      "speech": "Open a branch to set its details and its leadership. Naming the main pastor here is what gives them sight of that branch's safeguarding queue."
     },
     {
       "n": 4,
-      "title": "Fellowships",
-      "caption": "Small groups, with a map so people can find one.",
-      "speech": "Fellowships are the small groups. K-Groups, Kharis Express, New Breeds and the rest, with a map so somebody can find the one nearest them."
+      "title": "Regions",
+      "caption": "The geography your branches are grouped by.",
+      "speech": "Regions group branches by geography. Create the region first; a branch cannot be created until the region it belongs to exists."
     },
     {
       "n": 5,
-      "title": "Departments",
-      "caption": "Ministry teams, their rotas and their recruitment.",
-      "speech": "Departments are the ministry teams. Each one keeps its own roster, its serving rota and the people applying to join it."
+      "title": "The approval queue",
+      "caption": "Nobody gets in until somebody lets them in.",
+      "speech": "Anyone who signs up themselves waits here. Approve them and they get full member access; reject them and the account is removed."
     },
     {
       "n": 6,
-      "title": "Attendance",
-      "caption": "Services, check-in, and the weekly registers.",
-      "speech": "Attendance covers services and check-in. People can check themselves in with a QR code, or the desk can record them on arrival."
+      "title": "Who holds what",
+      "caption": "Grants, not job titles, decide what people see.",
+      "speech": "Open a member to manage their grants. Kairos stores only two system roles, so everything else somebody can do comes from a grant."
     },
     {
       "n": 7,
-      "title": "The souls pipeline",
-      "caption": "From first contact through to a department.",
-      "speech": "The souls pipeline follows somebody reached through evangelism: new, following up, interested, converted, and on into discipleship."
+      "title": "Membership classes",
+      "caption": "Church-wide, so no branch grant reaches it.",
+      "speech": "The membership programme is church-wide. Cohorts draw from every branch, so administering it takes a church-scoped grant, never a branch one."
     },
     {
       "n": 8,
-      "title": "Reports",
-      "caption": "Attendance, growth and engagement, scoped to you.",
-      "speech": "Reports turn all of that into numbers. Attendance trends, membership growth and engagement, again only across what your role covers."
+      "title": "Reports across branches",
+      "caption": "The only view that compares one branch to another.",
+      "speech": "Reports are the cross-branch view. You are the only role that sees every branch side by side rather than one at a time."
     },
     {
       "n": 9,

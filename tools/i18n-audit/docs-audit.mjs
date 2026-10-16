@@ -50,10 +50,23 @@ for (const lang of LANGS) {
     if (out.trim() === src.trim()) { untranslated.push(page); continue; }
     // A root-relative link with no locale prefix drops the reader back into
     // English halfway through their own handbook.
+    //
+    // One exception, marked rather than guessed: a translated legal page
+    // points at the English original on purpose, because that is the version
+    // that governs. Write `<!-- i18n-allow-en -->` on the line before the
+    // paragraph holding such a link and the links on the next line are
+    // allowed through.
+    const allowed = new Set();
+    const lines = out.split('\n');
+    lines.forEach((text, i) => {
+      if (!text.includes('<!-- i18n-allow-en -->')) return;
+      for (const m of (lines[i + 1] ?? '').matchAll(/\]\((\/[^)#]*)/g)) allowed.add(m[1]);
+    });
     for (const m of out.matchAll(/\]\((\/[^)#]*)/g)) {
       const href = m[1];
       if (href.startsWith(`/${lang}/`)) continue;
-      if (/^\/(screenshots|icons|favicon|tour-)/.test(href)) continue; // assets
+      if (/^\/(screenshots|icons|favicon|tour-|clips\/)/.test(href)) continue; // assets
+      if (allowed.has(href)) continue;
       leaking.push(`${page}  ->  ${href}`);
     }
   }

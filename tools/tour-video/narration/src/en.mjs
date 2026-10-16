@@ -22,17 +22,17 @@ export default {
     ['Reports', 'Attendance, growth and engagement, scoped to you.', 'Reports turn all of that into numbers. Attendance trends, membership growth and engagement, again only across what your role covers.'],
     ['Your language', 'Kairos and this handbook, in four languages.', 'Kairos speaks English, French, Krio and Twi. Change it from the sidebar, and the handbook opens in the same language you chose.'],
   ],
-  // The administrator tour walks the same ground as the general one; the
-  // difference is the account it is recorded under, not the words.
+  // The administrator tour deliberately avoids the ground the general tour
+  // already covers. It goes where only an administrator can.
   admin: [
-    ['Your overview', 'The front door, and only what your role covers.', 'This is Kairos. It opens on your overview, and everything you can see here is scoped to what you are actually responsible for.'],
-    ['The sidebar', 'Six groups. You only see the ones your role needs.', 'The sidebar is grouped into People, Groups, Gatherings, Insights and Organisation. A section you cannot see is simply one your role has no need of.'],
-    ['Members', 'Everybody in one list, with their status on the row.', 'Members is the directory. Everybody in the church is here, with their home branch and whether they have completed the membership class.'],
-    ['Fellowships', 'Small groups, with a map so people can find one.', 'Fellowships are the small groups. K-Groups, Kharis Express, New Breeds and the rest, with a map so somebody can find the one nearest them.'],
-    ['Departments', 'Ministry teams, their rotas and their recruitment.', 'Departments are the ministry teams. Each one keeps its own roster, its serving rota and the people applying to join it.'],
-    ['Attendance', 'Services, check-in, and the weekly registers.', 'Attendance covers services and check-in. People can check themselves in with a QR code, or the desk can record them on arrival.'],
-    ['The souls pipeline', 'From first contact through to a department.', 'The souls pipeline follows somebody reached through evangelism: new, following up, interested, converted, and on into discipleship.'],
-    ['Reports', 'Attendance, growth and engagement, scoped to you.', 'Reports turn all of that into numbers. Attendance trends, membership growth and engagement, again only across what your role covers.'],
+    ['Your overview', 'Every branch at once, and what needs you today.', 'This is the administrator view. Church Pulse counts every branch at once, and Needs You lists what is waiting on somebody today.'],
+    ['Branches', 'Create them, group them by region, retire them.', 'Branches are yours alone. Only an administrator creates one, moves it between regions, or takes it out of active use.'],
+    ['Inside a branch', 'Its details, and who currently leads it.', 'Open a branch to set its details and its leadership. Naming the main pastor here is what gives them sight of that branch\'s safeguarding queue.'],
+    ['Regions', 'The geography your branches are grouped by.', 'Regions group branches by geography. Create the region first; a branch cannot be created until the region it belongs to exists.'],
+    ['The approval queue', 'Nobody gets in until somebody lets them in.', 'Anyone who signs up themselves waits here. Approve them and they get full member access; reject them and the account is removed.'],
+    ['Who holds what', 'Grants, not job titles, decide what people see.', 'Open a member to manage their grants. Kairos stores only two system roles, so everything else somebody can do comes from a grant.'],
+    ['Membership classes', 'Church-wide, so no branch grant reaches it.', 'The membership programme is church-wide. Cohorts draw from every branch, so administering it takes a church-scoped grant, never a branch one.'],
+    ['Reports across branches', 'The only view that compares one branch to another.', 'Reports are the cross-branch view. You are the only role that sees every branch side by side rather than one at a time.'],
     ['Your language', 'Kairos and this handbook, in four languages.', 'Kairos speaks English, French, Krio and Twi. Change it from the sidebar, and the handbook opens in the same language you chose.'],
   ],
   member: [

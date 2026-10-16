@@ -5,57 +5,57 @@
   "stops": [
     {
       "n": 1,
-      "title": "Yu Ɔvavyu",
-      "caption": "Di fɔs dɔ, ɛn na wetin yu rol kɔva nɔmɔ.",
-      "speech": "Dis na Kairos. I de opin pan yu ɔvavyu, ɛn ɔltin we yu de si ya na wetin na yu rispɔnsibiliti fɔ tru."
+      "title": "Yu ovavyu",
+      "caption": "Ɔl di branch wan tɛm.",
+      "speech": "Dis na di admin vyu. Chɔch Pɔls de kawnt ɔl di branch wan tɛm, ɛn Nid Yu de lis wetin de wet fɔ sɔmbɔdi tide."
     },
     {
       "n": 2,
-      "title": "Di Saydba",
-      "caption": "Siks grup. Yu de si di wan dɛn we fɔ yu.",
-      "speech": "Di saydba grup insay Pipul, Grup dɛn, Gadarin dɛn, Analitiks ɛn Ɔganizeshɔn. Sɛkshɔn we yu nɔ de si na wan we yu rol nɔ nid."
+      "title": "Branch dɛn",
+      "caption": "Mek dɛn, grup dɛn, pul dɛn.",
+      "speech": "Branch na yu yon nɔmɔ. Na admin nɔmɔ kin mek wan, muv am to ɔda rijɔn, ɔ pul am awt pan di aktiv wan dɛn."
     },
     {
       "n": 3,
-      "title": "Mɛmba dɛn",
-      "caption": "Ɔlman pan wan lis.",
-      "speech": "Mɛmba na di dairɛktri. Ɔlman insay di chɔch de ya, wit dɛn om branch ɛn if dɛn dɔn du di mɛmbaship klas."
+      "title": "Insay wan branch",
+      "caption": "In ditel, ɛn udat de lid am.",
+      "speech": "Opin wan branch fɔ sɛt in ditel ɛn in lidaship. We yu nem di mayn pasto ya, dat de gi am say pan dat branch in sefgadin kyu."
     },
     {
       "n": 4,
-      "title": "Fɛloship dɛn",
-      "caption": "Di smɔl grup dɛn, wit map.",
-      "speech": "Fɛloship dɛn na di smɔl grup dɛn. K-Groups, Kharis Express, New Breeds ɛn di ɔda dɛn, wit map fɔ fɛn di wan we nia yu."
+      "title": "Rijɔn dɛn",
+      "caption": "Di ples dɛn we de grup yu branch.",
+      "speech": "Rijɔn de grup branch bay ples. Mek di rijɔn fɔs; yu nɔ kin mek branch te di rijɔn de."
     },
     {
       "n": 5,
-      "title": "Dipatmɛnt dɛn",
-      "caption": "Ministri tim dɛn ɛn dɛn rota.",
-      "speech": "Dipatmɛnt dɛn na di ministri tim dɛn. Ɛvri wan kip in yon mɛmba lis, in sav rota ɛn di pipul we de aplay fɔ jɔyn."
+      "title": "Di aproval kyu",
+      "caption": "Nɔbɔdi nɔ de ɛnta te sɔmbɔdi opin fɔ am.",
+      "speech": "Ɛnibɔdi we sayn ɔp insɛf de wet ya. Aprov am ɛn i gɛt ful mɛmba akses; rifyuz am ɛn dɛn pul di akawnt."
     },
     {
       "n": 6,
-      "title": "Atɛndans",
-      "caption": "Sɛvis, chɛk-in ɛn di rɛjista dɛn.",
-      "speech": "Atɛndans kɔva sɛvis ɛn chɛk-in. Pipul kin chɛk dɛnsɛf in wit QR kod, ɔ di dɛsk kin rɛkɔd dɛn we dɛn kam."
+      "title": "Udat ol wetin",
+      "caption": "Na grant, nɔto job taytul.",
+      "speech": "Opin wan mɛmba fɔ manej in grant dɛn. Kairos de sev tu sistem rol nɔmɔ, so ɔltin ɛls de kam frɔm grant."
     },
     {
       "n": 7,
-      "title": "Di Sol Paiplain",
-      "caption": "Frɔm di fɔs kɔntakt sote go na dipatmɛnt.",
-      "speech": "Di sol paiplain de fɔlo pɔsin we wi rich tru ɛvanjelizm: nyu, wi de fɔlo ɔp, i want, i kɔnvat, ɛn insay disaypulship."
+      "title": "Mɛmbaship klas dɛn",
+      "caption": "Chɔch-wayd, so no branch grant nɔ de rich am.",
+      "speech": "Di mɛmbaship program na chɔch-wayd. Kɔhɔt de tek pipul frɔm ɛvri branch, so fɔ administa am, yu nid chɔch-skop grant."
     },
     {
       "n": 8,
-      "title": "Ripɔt dɛn",
-      "caption": "Atɛndans, groth ɛn ɛngejmɛnt.",
-      "speech": "Ripɔt de tɔn ɔl dat to nɔmba. Atɛndans trɛnd, aw mɛmbaship de gro ɛn ɛngejmɛnt, ɔl insay wetin yu rol kɔva."
+      "title": "Ripɔt akrɔs branch",
+      "caption": "Di onli vyu we de tan branch wit branch.",
+      "speech": "Ripɔt na di krɔs-branch vyu. Na yu nɔmɔ as rol kin si ɛvri branch sayd bay sayd, nɔto wan at a tɛm."
     },
     {
       "n": 9,
-      "title": "Yu Langwej",
-      "caption": "Kairos ɛn dis gayd, na fo langwej.",
-      "speech": "Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi. Chenj am frɔm di saydba, ɛn di gayd go opin na di sem langwej."
+      "title": "Yu langwej",
+      "caption": "Kairos ɛn dis andbuk, insay fɔ langwej.",
+      "speech": "Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi. Chenj am frɔm di saydba, ɛn di andbuk de opin insay di sem langwej."
     }
   ]
 }

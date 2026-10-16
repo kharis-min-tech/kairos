@@ -40,7 +40,7 @@ Di layn fɔ nɔmba pan tɔp, na branch altitud ɛn ɔp.
 **Chɔch pɔls** de sho Branch dɛn, Ɔl di Kɔngrigeshɔn, Kɔnfam Mɛmba dɛn, ɛn Fɛloship dɛn. **Branch pɔls** de sho Ɔl di Kɔngrigeshɔn, Kɔnfam Mɛmba dɛn, Atɛndans las wik, ɛn Fɛloship dɛn.
 
 ::: tip Ɔl di kɔngrigeshɔn ɛn Kɔnfam mɛmba na tu difrɛn nɔmba
-Ɔl di kɔngrigeshɔn na di ol rɔl. Kɔnfam mɛmba de kawnt di pipul dɛn we dɔn finish di [mɛmbaship klas](/kri/platform/membership) nɔmɔ. Wan branch we ɛlti kin gɛt plɛnti mɔ pan di fɔs wan dan di sɛkɔn. Si [Groth Ripɔt dɛn](/kri/analytics/growth-reports#congregation-breakdown).
+Ɔl di kɔngrigeshɔn na di ol rɔl. Kɔnfam mɛmba de kawnt di pipul dɛn we dɔn finish di [mɛmbaship klas](/kri/platform/membership) nɔmɔ. Wan branch we ɛlti kin gɛt plɛnti mɔ pan di fɔs wan dan di sɛkɔn. Si [Groth Ripɔt dɛn](/kri/analytics/growth-reports#kɔngrigeshɔn-brekdawn).
 :::
 
 Ɔnda de, Pɔls de kɛr **wɔnin** we sɔntin nid atɛnshɔn: rɛjista we nɔbɔdi nɔ tek, mɛmba dɛn we de drift, branch dɛn we de bihayn, ɔ branch we nɔ gɛt Mayn Pasto. Ɛvri wɔnin na link strɛt to di pej usay yu go fiks am.

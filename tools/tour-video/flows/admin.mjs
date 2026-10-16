@@ -1,11 +1,13 @@
 import { ACCOUNTS } from './index.mjs';
 
 /**
- * The administrator tour: what Kairos is, for somebody who has just been given an
- * account and does not yet know which parts are theirs.
+ * The administrator tour: the parts of Kairos that only an administrator has.
  *
- * Recorded as an administrator, because the point of this one is the shape of
- * the whole platform. The role tours show what each person actually sees.
+ * Deliberately *not* a walk of the main sections — the general tour already
+ * does that, and repeating it under a different account produced two clips
+ * that were the same film. This one goes where a member or a pastor cannot:
+ * branches, regions, the approval queue, who holds which grant, the
+ * church-wide membership programme, and cross-branch reporting.
  */
 export default {
   id: 'admin',
@@ -21,57 +23,55 @@ export default {
     },
     {
       n: 2,
-      title: 'The sidebar',
+      title: 'Branches',
       async run(k) {
-        // The sidebar groups collapse, so point at the Overview link, which
-        // is always rendered, rather than one that may be inside a closed group.
-        await k.moveTo('a[href="/dashboard"]');
-        await k.settle(4800);
+        await k.goto('/admin/branches');
+        await k.settle(5600);
       },
     },
     {
       n: 3,
-      title: 'Members',
+      title: 'Inside a branch',
+      async run(k) {
+        await k.goto('/my-branch');
+        await k.settle(5600);
+      },
+    },
+    {
+      n: 4,
+      title: 'Regions',
+      async run(k) {
+        await k.goto('/admin/regions');
+        await k.settle(5200);
+      },
+    },
+    {
+      n: 5,
+      title: 'The approval queue',
+      async run(k) {
+        await k.goto('/members/approval');
+        await k.settle(5600);
+      },
+    },
+    {
+      n: 6,
+      title: 'Who holds what',
       async run(k) {
         await k.goto('/members');
         await k.settle(5600);
       },
     },
     {
-      n: 4,
-      title: 'Fellowships',
-      async run(k) {
-        await k.goto('/fellowships');
-        await k.settle(5600);
-      },
-    },
-    {
-      n: 5,
-      title: 'Departments',
-      async run(k) {
-        await k.goto('/departments');
-        await k.settle(5200);
-      },
-    },
-    {
-      n: 6,
-      title: 'Attendance',
-      async run(k) {
-        await k.goto('/attendance');
-        await k.settle(5200);
-      },
-    },
-    {
       n: 7,
-      title: 'The souls pipeline',
+      title: 'Membership classes',
       async run(k) {
-        await k.goto('/souls');
+        await k.goto('/membership');
         await k.settle(5600);
       },
     },
     {
       n: 8,
-      title: 'Reports',
+      title: 'Reports across branches',
       async run(k) {
         await k.goto('/reports');
         await k.settle(6000);

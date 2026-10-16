@@ -21,9 +21,21 @@ const general = [
   ['Yu Langwej', 'Kairos ɛn dis gayd, na fo langwej.', 'Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi. Chenj am frɔm di saydba, ɛn di gayd go opin na di sem langwej.'],
 ];
 
+const admin = [
+  ['Yu ovavyu', 'Ɔl di branch wan tɛm.', 'Dis na di admin vyu. Chɔch Pɔls de kawnt ɔl di branch wan tɛm, ɛn Nid Yu de lis wetin de wet fɔ sɔmbɔdi tide.'],
+  ['Branch dɛn', 'Mek dɛn, grup dɛn, pul dɛn.', 'Branch na yu yon nɔmɔ. Na admin nɔmɔ kin mek wan, muv am to ɔda rijɔn, ɔ pul am awt pan di aktiv wan dɛn.'],
+  ['Insay wan branch', 'In ditel, ɛn udat de lid am.', 'Opin wan branch fɔ sɛt in ditel ɛn in lidaship. We yu nem di mayn pasto ya, dat de gi am say pan dat branch in sefgadin kyu.'],
+  ['Rijɔn dɛn', 'Di ples dɛn we de grup yu branch.', 'Rijɔn de grup branch bay ples. Mek di rijɔn fɔs; yu nɔ kin mek branch te di rijɔn de.'],
+  ['Di aproval kyu', 'Nɔbɔdi nɔ de ɛnta te sɔmbɔdi opin fɔ am.', 'Ɛnibɔdi we sayn ɔp insɛf de wet ya. Aprov am ɛn i gɛt ful mɛmba akses; rifyuz am ɛn dɛn pul di akawnt.'],
+  ['Udat ol wetin', 'Na grant, nɔto job taytul.', 'Opin wan mɛmba fɔ manej in grant dɛn. Kairos de sev tu sistem rol nɔmɔ, so ɔltin ɛls de kam frɔm grant.'],
+  ['Mɛmbaship klas dɛn', 'Chɔch-wayd, so no branch grant nɔ de rich am.', 'Di mɛmbaship program na chɔch-wayd. Kɔhɔt de tek pipul frɔm ɛvri branch, so fɔ administa am, yu nid chɔch-skop grant.'],
+  ['Ripɔt akrɔs branch', 'Di onli vyu we de tan branch wit branch.', 'Ripɔt na di krɔs-branch vyu. Na yu nɔmɔ as rol kin si ɛvri branch sayd bay sayd, nɔto wan at a tɛm.'],
+  ['Yu langwej', 'Kairos ɛn dis andbuk, insay fɔ langwej.', 'Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi. Chenj am frɔm di saydba, ɛn di andbuk de opin insay di sem langwej.'],
+];
+
 export default {
   general,
-  admin: general,
+  admin,
   member: [
     ['Yu Ɔvavyu', 'Na wetin na fɔ yu nɔmɔ.', 'Dis na yu ɔvavyu. Ɔltin ya na fɔ yu: yu grup dɛn, yu atɛndans, ɛn wetin di chɔch nid frɔm yu dis wik.'],
     ['Wetin yu kin si', 'Shɔt saydba nɔto mistek.', 'Yu saydba shɔt bikɔs plɛnti pan Kairos nɔto fɔ yu fɔ ron. Natin nɔ de ayd frɔm yu bikɔs na sikrit.'],
