@@ -35,6 +35,7 @@ const clips = readdirSync(OUT)
   .sort();
 
 let copied = 0;
+let skipped = 0;
 let posters = 0;
 let bytes = 0;
 
@@ -45,6 +46,16 @@ for (const file of clips) {
   const poster = join(DEST, `${slug}.jpg`);
 
   const src = statSync(from);
+
+  // Safe to run while a batch is still rendering: a file the renderer is
+  // part way through writing has a very recent mtime, and copying it would
+  // publish a truncated clip. Leave anything that young for the next run.
+  const SETTLE_MS = 60_000;
+  if (Date.now() - src.mtimeMs < SETTLE_MS) {
+    skipped++;
+    continue;
+  }
+
   const fresh = !existsSync(to) || statSync(to).mtimeMs < src.mtimeMs;
   if (!fresh) continue;
 
@@ -76,3 +87,6 @@ console.log(
     ? `\n${copied} clips would be published (${(bytes / 1e6).toFixed(0)} MB)`
     : `published ${copied} clips and ${posters} posters to apps/docs/public/clips/ (${(bytes / 1e6).toFixed(0)} MB)`,
 );
+if (skipped) {
+  console.log(`${skipped} still being written; run again when the batch finishes`);
+}

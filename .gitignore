@@ -18,7 +18,12 @@ grant-proposal/
 # Android signing keystores — private material. `eas credentials --download`
 # drops these into apps/mobile/; they must never be committed.
 *.jks
-*.keystoretools/tour-video/out/
+*.keystore
+
+# Generated video. Large, regenerable from tools/tour-video, and belongs
+# wherever the docs site is published rather than in the repository.
+tools/tour-video/out/
 tools/tour-video/public/capture/
 tools/tour-video/public/voice/
 tools/tour-video/marks-*.json
+apps/docs/public/clips/
