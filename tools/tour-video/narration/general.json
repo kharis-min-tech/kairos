@@ -1,5 +1,6 @@
 {
   "role": "general",
+  "lang": "en",
   "voice": "athena",
   "stops": [
     {

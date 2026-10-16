@@ -87,9 +87,42 @@ test('a mark with no narration is skipped rather than rendered silent', () => {
   assert.equal(segments.length, 1);
 });
 
-test('the finished video is never shorter than the capture', () => {
-  const { duration } = buildSchedule([{ n: 1, start: 0 }], [stop(1, 1)], 30);
-  assert.ok(duration >= 30);
+test('the video is the segments, not the capture it was cut from', () => {
+  // A capture carries the sign-in at the front and whatever was still
+  // recording at the end. Taking the longer of the timeline and the capture
+  // pinned a 30-second section clip to 79 seconds that opened on a login
+  // screen, so the timeline alone decides.
+  const { duration, segments } = buildSchedule(
+    [{ n: 1, start: 24 }, { n: 2, start: 30 }],
+    [stop(1, 4), stop(2, 4)],
+    79,
+  );
+  const lastEnds = segments.at(-1).at + segments.at(-1).span;
+  near(duration, lastEnds, 'duration ends with the last segment');
+  assert.ok(duration < 60, `a two-stop clip is not 79 seconds (got ${duration})`);
+});
+
+test('a capped clip trims footage but never the narration', () => {
+  const { segments, duration } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 40 }],
+    [stop(1, 9), stop(2, 9)],
+    120,
+    { maxSeconds: 30 },
+  );
+  // Both lines survive in full.
+  for (const s of segments) assert.ok(s.span >= s.spoken, 'the line is never cut short');
+  assert.ok(duration <= 32, `kept near the cap (got ${duration.toFixed(1)})`);
+});
+
+test('a cap cannot cut a line in half, even an over-long one', () => {
+  const { segments } = buildSchedule(
+    [{ n: 1, start: 0 }],
+    [stop(1, 45)],
+    60,
+    { maxSeconds: 30 },
+  );
+  assert.equal(segments[0].spoken, 45);
+  assert.ok(segments[0].span >= 45, 'a 45-second line is not squeezed into 30');
 });
 
 test('marks arriving out of order are put back in time order', () => {

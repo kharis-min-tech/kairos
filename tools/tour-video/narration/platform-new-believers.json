@@ -1,0 +1,19 @@
+{
+  "role": "platform-new-believers",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The pipeline",
+      "caption": "Four sessions, then a department.",
+      "speech": "New Believers is the discipleship track. Four sessions, then integration into a department, with each person visible on the board."
+    },
+    {
+      "n": 2,
+      "title": "Sessions",
+      "caption": "Scheduled, taught and registered.",
+      "speech": "Sessions are scheduled per branch with a teacher and a date. Take the register in the session, then advance people to the next stage."
+    }
+  ]
+}

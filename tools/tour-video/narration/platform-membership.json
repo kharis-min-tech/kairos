@@ -1,0 +1,19 @@
+{
+  "role": "platform-membership",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The class",
+      "caption": "Four weeks, and what it confers.",
+      "speech": "Membership is the four-week class. Completing it is what formally makes somebody a Member, however long they have been attending."
+    },
+    {
+      "n": 2,
+      "title": "Cohorts",
+      "caption": "Intakes, marks and graduation.",
+      "speech": "A cohort is one intake. You schedule its four sessions, mark attendance and the final test, and graduate the people who passed."
+    }
+  ]
+}

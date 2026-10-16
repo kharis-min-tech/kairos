@@ -1,0 +1,19 @@
+{
+  "role": "church-management-member-lifecycle",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "From visitor to member",
+      "caption": "Four stages, one list.",
+      "speech": "Everybody sits somewhere on the same journey: visitor, returner, then member once the four-week class is done."
+    },
+    {
+      "n": 2,
+      "title": "Where status shows",
+      "caption": "On the row, and on the profile.",
+      "speech": "The directory row shows which stage somebody is at, so you can see at a glance who has never been followed up."
+    }
+  ]
+}

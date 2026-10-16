@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-your-first-church",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Setting up",
+      "caption": "Regions, then branches.",
+      "speech": "Setting up starts with regions, then the branches inside them, because every member and every group belongs to a branch."
+    },
+    {
+      "n": 2,
+      "title": "Your first branch",
+      "caption": "Name it, place it, lead it.",
+      "speech": "Give the branch a name, a city and a service schedule, then assign its pastor. Members can be added or imported after that."
+    }
+  ]
+}

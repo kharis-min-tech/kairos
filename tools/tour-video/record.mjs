@@ -134,7 +134,36 @@ await page.goto(`${base}/login`, { waitUntil: 'networkidle' });
 await page.fill('input[type="email"]', email);
 await page.fill('input[type="password"]', password);
 await page.click('button[type="submit"]');
-await page.waitForURL('**/dashboard', { timeout: 60000, waitUntil: 'domcontentloaded' });
+await page.waitForURL(/\/(dashboard|accept-policies)/, {
+  timeout: 60000,
+  waitUntil: 'domcontentloaded',
+});
+
+// A freshly seeded database has no consent records, and the gate is enforced
+// on navigation rather than at sign-in — so the first run landed on the
+// dashboard, looked fine, and then redirected to the policy screen the moment
+// it tried to open /members. Clearing it up front, explicitly, keeps that
+// screen out of the recording. The acceptance is stored, so only the first
+// run on each account pays for it.
+await page.goto(`${base}/accept-policies`, { waitUntil: 'networkidle' });
+if (page.url().includes('/accept-policies')) {
+  const boxes = page.locator('input[type="checkbox"]');
+  const count = await boxes.count();
+  if (count > 0) {
+    for (let i = 0; i < count; i++) {
+      await boxes.nth(i).click({ force: true }).catch(() => {});
+    }
+    await page
+      .getByRole('button', { name: /accept|continue|accepter|continuer/i })
+      .last()
+      .click()
+      .catch(() => {});
+    await page.waitForURL(/\/dashboard/, { timeout: 30000 }).catch(() => {});
+    console.log(`  (accepted ${count} outstanding policies first)`);
+  }
+}
+
+await page.goto(`${base}/dashboard`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
 
 // Sign-in is done. Offsets are measured from the start of the recording,
@@ -178,7 +207,11 @@ rmSync(tmpDir, { recursive: true, force: true });
 
 writeFileSync(
   join(HERE, `marks-${slug}.json`),
-  `${JSON.stringify({ flow: flowId, lang, signInTook, marks }, null, 2)}\n`,
+  `${JSON.stringify(
+    { flow: flowId, lang, signInTook, maxSeconds: flow.maxSeconds ?? null, marks },
+    null,
+    2,
+  )}\n`,
 );
 
 console.log(`\nwrote ${out}`);

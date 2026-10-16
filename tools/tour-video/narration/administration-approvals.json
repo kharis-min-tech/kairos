@@ -1,0 +1,19 @@
+{
+  "role": "administration-approvals",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The queue",
+      "caption": "People waiting to be let in.",
+      "speech": "The approval queue holds everybody who has registered but not yet been approved. Until they are, they cannot sign in."
+    },
+    {
+      "n": 2,
+      "title": "Approving somebody",
+      "caption": "Check the branch, then approve.",
+      "speech": "Check the branch they have chosen and the details they gave, then approve. They can sign in from that moment."
+    }
+  ]
+}

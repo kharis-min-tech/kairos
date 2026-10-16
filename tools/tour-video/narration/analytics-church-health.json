@@ -1,0 +1,19 @@
+{
+  "role": "analytics-church-health",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Is the church healthy",
+      "caption": "Attendance against the roll.",
+      "speech": "Church health compares who actually attends against who is on the roll, which is a harder and more useful number than either alone."
+    },
+    {
+      "n": 2,
+      "title": "Reading the trend",
+      "caption": "The direction matters more.",
+      "speech": "A single week says little. The trend over eight weeks is what tells you whether something is working."
+    }
+  ]
+}

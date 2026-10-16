@@ -1,0 +1,25 @@
+{
+  "role": "platform-fellowships",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The fellowships",
+      "caption": "Every small group, and its type.",
+      "speech": "Fellowships lists every small group: K-Groups, Kharis Express, New Breeds and the rest, with who leads it and when it meets."
+    },
+    {
+      "n": 2,
+      "title": "Filtering by type",
+      "caption": "Narrow it to the kind you want.",
+      "speech": "The chips along the top filter by type, and the dropdown narrows to one branch, which matters once there are a few dozen."
+    },
+    {
+      "n": 3,
+      "title": "Finding one on the map",
+      "caption": "The nearest group to a member.",
+      "speech": "Find on the map plots them geographically, which is how you answer the question people actually ask: which one is nearest me."
+    }
+  ]
+}

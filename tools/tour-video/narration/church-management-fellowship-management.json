@@ -1,0 +1,19 @@
+{
+  "role": "church-management-fellowship-management",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Running a fellowship",
+      "caption": "Your group, your register.",
+      "speech": "If you lead a fellowship you manage its members, record each meeting, and see who has quietly stopped coming."
+    },
+    {
+      "n": 2,
+      "title": "Its meetings",
+      "caption": "A roll call per meeting.",
+      "speech": "Each meeting gets its own roll call. Over a few weeks that becomes the attendance pattern the reports read from."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "administration-capabilities",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "What a capability is",
+      "caption": "The thing a grant actually confers.",
+      "speech": "A grant is a bundle of capabilities. A capability is the single thing it lets you do, like reading a branch or writing to a department."
+    },
+    {
+      "n": 2,
+      "title": "Where they bite",
+      "caption": "Every page checks them.",
+      "speech": "Every page and every action checks a capability, which is why two people with different grants see genuinely different screens."
+    }
+  ]
+}

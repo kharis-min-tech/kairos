@@ -1,0 +1,19 @@
+{
+  "role": "church-management-branch-management",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Branch settings",
+      "caption": "Details, schedule, check-in.",
+      "speech": "A branch carries its address, its service schedule, and whether self check-in is on and for how long around the service."
+    },
+    {
+      "n": 2,
+      "title": "Who leads it",
+      "caption": "Pastor, ministers, admins.",
+      "speech": "Leadership is assigned here: the main pastor, any ministers, and the branch admins who can manage its data."
+    }
+  ]
+}

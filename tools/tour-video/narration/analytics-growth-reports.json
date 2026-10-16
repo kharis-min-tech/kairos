@@ -1,0 +1,19 @@
+{
+  "role": "analytics-growth-reports",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Growth",
+      "caption": "New members, over time.",
+      "speech": "Growth reports count new members over the period, where they joined, and how that compares with the months before."
+    },
+    {
+      "n": 2,
+      "title": "New members",
+      "caption": "Where they came from.",
+      "speech": "The breakdown shows which branch and which route they came through, so you can see what is actually bringing people in."
+    }
+  ]
+}

@@ -22,9 +22,10 @@ export const GAP = 0.35;
  * @param marks    recorder marks: [{ n, start }], ordered, seconds into the capture
  * @param stops    measured narration: [{ n, duration, words, title, caption }]
  * @param capture  length of the capture in seconds
+ * @param opts.maxSeconds  cap for a short section clip, trimming footage only
  * @returns one entry per stop, in timeline order
  */
-export function buildSchedule(marks, stops, capture) {
+export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
   const byN = new Map(stops.map((s) => [s.n, s]));
   const ordered = [...marks].sort((a, b) => a.start - b.start);
 
@@ -39,7 +40,15 @@ export function buildSchedule(marks, stops, capture) {
     // How much capture this stop owns: up to the next mark, or to the end.
     const captureFrom = mark.start;
     const captureTo = ordered[i + 1]?.start ?? capture;
-    const captureSpan = Math.max(0, captureTo - captureFrom);
+    let captureSpan = Math.max(0, captureTo - captureFrom);
+
+    // A short clip trims footage, never speech. Cutting a sentence in half to
+    // hit a number is worse than a clip that runs two seconds over, so the
+    // cap squeezes the picture down towards the length of the line and stops.
+    if (maxSeconds) {
+      const share = maxSeconds / ordered.length;
+      captureSpan = Math.min(captureSpan, Math.max(share, stop.duration));
+    }
 
     // The segment lasts as long as whichever is longer, then a breath.
     const spoken = stop.duration;
@@ -71,5 +80,9 @@ export function buildSchedule(marks, stops, capture) {
     timeline += span + GAP;
   }
 
-  return { segments: out, duration: Math.max(timeline, capture) };
+  // The timeline is the video. An earlier version took the longer of this
+  // and the capture, which pinned every clip to the full recording — sign-in
+  // included — and turned a thirty-second section clip into eighty seconds
+  // that opened on a login screen.
+  return { segments: out, duration: Math.max(0, timeline - GAP) };
 }

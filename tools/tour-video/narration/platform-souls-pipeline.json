@@ -1,0 +1,19 @@
+{
+  "role": "platform-souls-pipeline",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The board",
+      "caption": "New, following up, converted.",
+      "speech": "The souls pipeline is a board. Somebody moves from new, to following up, to converted, and the colour shows how overdue their contact is."
+    },
+    {
+      "n": 2,
+      "title": "Moving somebody along",
+      "caption": "Drag, or open and update.",
+      "speech": "Drag a card to the next lane, or open it to record what happened and set the next follow-up date."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "platform-outreach",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Programmes",
+      "caption": "Evangelism, with a date and a place.",
+      "speech": "Outreach programmes are the evangelism events: where, when, and which workers are going out."
+    },
+    {
+      "n": 2,
+      "title": "Capturing a soul",
+      "caption": "A name and a number is enough.",
+      "speech": "During an outreach you capture the people you meet. A name and a phone number is enough to start; the pipeline takes it from there."
+    }
+  ]
+}

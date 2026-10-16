@@ -1,0 +1,25 @@
+{
+  "role": "platform-members",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The directory",
+      "caption": "Everybody, in one list.",
+      "speech": "Members is the directory. Everybody in the church is here, with their home branch and whether they have done the membership class."
+    },
+    {
+      "n": 2,
+      "title": "Finding somebody",
+      "caption": "Search by name, email or phone.",
+      "speech": "Type a name, an email or a phone number into the search box. You can also filter by branch, by status, or by role."
+    },
+    {
+      "n": 3,
+      "title": "Opening a profile",
+      "caption": "Their whole history, in one place.",
+      "speech": "Clicking a row opens that person: their contact details, their groups, their attendance and every follow-up logged about them."
+    }
+  ]
+}

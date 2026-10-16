@@ -1,0 +1,19 @@
+{
+  "role": "platform-attendance",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Services",
+      "caption": "Every gathering, and its register.",
+      "speech": "Attendance lists the services. Each one shows how many were recorded and whether the register is still open."
+    },
+    {
+      "n": 2,
+      "title": "Recording who came",
+      "caption": "The desk, or the member themselves.",
+      "speech": "Open a service to mark people present, late or virtual. Members can also check themselves in with the QR code at the door."
+    }
+  ]
+}

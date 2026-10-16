@@ -1,0 +1,19 @@
+{
+  "role": "platform-forms",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The forms",
+      "caption": "Six, for the things people ask for.",
+      "speech": "Forms covers a first-time visit, baptism, a testimony, baby naming, baby dedication and the New Believers class."
+    },
+    {
+      "n": 2,
+      "title": "Filling one in",
+      "caption": "It reaches the right person.",
+      "speech": "Fill one in and it lands with whoever handles it, with the person linked to their record if they already have one."
+    }
+  ]
+}

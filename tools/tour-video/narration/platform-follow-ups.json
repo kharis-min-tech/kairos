@@ -1,0 +1,19 @@
+{
+  "role": "platform-follow-ups",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The queues",
+      "caption": "First-timers, no group, and overdue.",
+      "speech": "Follow-ups has three queues: first-timers nobody has contacted yet, people in no group at all, and contacts that are now overdue."
+    },
+    {
+      "n": 2,
+      "title": "Logging one",
+      "caption": "Who, how, and what happens next.",
+      "speech": "Logging a follow-up records who reached out, how, what happened, and what should happen next. It can be flagged as a concern too."
+    }
+  ]
+}

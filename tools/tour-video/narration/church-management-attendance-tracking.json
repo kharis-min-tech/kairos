@@ -1,0 +1,19 @@
+{
+  "role": "church-management-attendance-tracking",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Taking a register",
+      "caption": "At the desk, as people arrive.",
+      "speech": "Open the service and mark people present, late or virtual as they arrive. Absence is inferred, so there is nothing to mark for it."
+    },
+    {
+      "n": 2,
+      "title": "Self check-in",
+      "caption": "A QR code at the door.",
+      "speech": "Members can scan the code at the door and mark themselves present, which keeps the desk free for the people who need it."
+    }
+  ]
+}

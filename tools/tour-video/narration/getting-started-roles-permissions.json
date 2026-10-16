@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-roles-permissions",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Who can do what",
+      "caption": "Two system roles, many grants.",
+      "speech": "Kairos stores only two system roles, admin and member. Everything else is a grant: a named role pinned to a specific scope."
+    },
+    {
+      "n": 2,
+      "title": "Seeing it on an account",
+      "caption": "Open the person, read the grants.",
+      "speech": "Open somebody and you can see every grant they hold and where it applies, which is the honest answer to why they can see a page."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "administration-permissions",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Grants, not job titles",
+      "caption": "A role, pinned to a scope.",
+      "speech": "Permissions come from grants: a named role pinned to one branch, one fellowship, one department, or the whole church."
+    },
+    {
+      "n": 2,
+      "title": "Assigning one",
+      "caption": "Give it, and it takes effect at once.",
+      "speech": "Assign a grant and that person sees the extra sections immediately. Remove it and they stop, with their history intact."
+    }
+  ]
+}

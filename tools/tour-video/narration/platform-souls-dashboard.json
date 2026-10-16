@@ -1,0 +1,19 @@
+{
+  "role": "platform-souls-dashboard",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "The numbers",
+      "caption": "How the pipeline is doing.",
+      "speech": "The souls dashboard turns the pipeline into numbers: how many at each stage, how many converted, and how fresh the follow-ups are."
+    },
+    {
+      "n": 2,
+      "title": "By status",
+      "caption": "Click a bar to see who.",
+      "speech": "The charts break it down by status and by urgency. Click any bar to see exactly which people it is counting."
+    }
+  ]
+}

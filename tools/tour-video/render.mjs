@@ -48,7 +48,9 @@ for (const [label, path, fix] of [
   }
 }
 
-const { marks } = JSON.parse(readFileSync(marksPath, 'utf8'));
+// `maxSeconds` comes from the flow that was recorded: a section clip caps
+// itself, a role tour runs as long as it needs to.
+const { marks, maxSeconds } = JSON.parse(readFileSync(marksPath, 'utf8'));
 const { stops } = JSON.parse(readFileSync(timingsPath, 'utf8'));
 
 // Trust the file on disk over whatever the recorder believed at the time.
@@ -58,7 +60,7 @@ const captureDuration = parseFloat(
   ]).toString().trim(),
 );
 
-const { segments, duration } = buildSchedule(marks, stops, captureDuration);
+const { segments, duration } = buildSchedule(marks, stops, captureDuration, { maxSeconds });
 
 const props = { role, video: `capture/${role}.webm`, segments, duration };
 

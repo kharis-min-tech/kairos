@@ -1,0 +1,19 @@
+{
+  "role": "platform-departments",
+  "lang": "en",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Ministry teams",
+      "caption": "Every team, and who leads it.",
+      "speech": "Departments are the ministry teams. Each one shows its lead, its deputy, and how many people serve on it."
+    },
+    {
+      "n": 2,
+      "title": "Inside a department",
+      "caption": "Roster, rota, recruitment, uniform.",
+      "speech": "Open one and you get its roster, its serving rota, the people applying to join, and the uniform for an upcoming service."
+    }
+  ]
+}
