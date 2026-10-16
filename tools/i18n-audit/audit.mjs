@@ -98,7 +98,12 @@ function findHardcoded(file) {
   // display props
   // `text` was missing from this list, which is how the homepage's hero
   // strapline stayed English in every language without the audit noticing.
-  for (const m of src.matchAll(/\b(?:label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle|heading|emptyText|text|alt|caption|description|tooltip|ariaLabel|confirmText|cancelText|submitText|helperText)="[A-Z][^"]{1,160}"/g)) {
+  // `name` is in here for Recharts: a series' `name` is what the legend and
+  // the tooltip print, so `name="Check-ins"` is a visible English string on
+  // an otherwise translated chart -- which is how four of them survived on
+  // the attendance report. A form field's `name` is an identifier, not a
+  // sentence, so the leading capital keeps those out.
+  for (const m of src.matchAll(/\b(?:label|placeholder|title|accessibilityLabel|accessibilityHint|subtitle|heading|emptyText|text|alt|caption|description|tooltip|ariaLabel|confirmText|cancelText|submitText|helperText|name)="[A-Z][^"]{1,160}"/g)) {
     push(m.index, m[0]);
   }
 

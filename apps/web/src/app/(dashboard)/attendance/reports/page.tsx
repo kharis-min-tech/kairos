@@ -32,7 +32,7 @@ import { FrequencyBucketsCard } from '../_components/frequency-buckets-card';
 import { FirstTimeReturningCard } from '../_components/first-time-returning-card';
 import { useTranslation } from 'react-i18next';
 
-export default function AttendanceReportsPage() {  const { t } = useTranslation(['reports', 'common']);
+export default function AttendanceReportsPage() {  const { t } = useTranslation(['reports', 'attendance', 'common']);
 
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
@@ -181,7 +181,7 @@ export default function AttendanceReportsPage() {  const { t } = useTranslation(
                   <Line
                     type="monotone"
                     dataKey="attendees"
-                    name="Check-ins"
+                    name={t('attendance:chartCheckIns')}
                     stroke="#5D3FD3"
                     strokeWidth={2}
                     dot={{ fill: '#5D3FD3', r: 3 }}
@@ -189,7 +189,7 @@ export default function AttendanceReportsPage() {  const { t } = useTranslation(
                   <Line
                     type="monotone"
                     dataKey="distinctAttendees"
-                    name="Distinct members"
+                    name={t('attendance:chartDistinctMembers')}
                     stroke="#f8b537"
                     strokeWidth={2}
                     strokeDasharray="4 4"

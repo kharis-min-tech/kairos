@@ -57,7 +57,7 @@ export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }:
           <div className="h-56 animate-pulse rounded-lg bg-foreground/5" />
         ) : q.isError ? (
           <p role="alert" className="text-sm font-medium text-destructive">
-            {q.error instanceof Error ? q.error.message : 'Could not load this report.'}
+            {q.error instanceof Error ? q.error.message : t('attendance:couldNotLoadThisReport')}
           </p>
         ) : chartData.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t('attendance:noAttendanceInTheLastWeeks')}</p>
@@ -70,8 +70,8 @@ export function FirstTimeReturningCard({ branchId, departmentId, fellowshipId }:
                 <YAxis allowDecimals={false} fontSize={12} />
                 <Tooltip />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="returning" stackId="a" fill="#5D3FD3" name="Returning" />
-                <Bar dataKey="firstTime" stackId="a" fill="#f8b537" name="First-time" />
+                <Bar dataKey="returning" stackId="a" fill="#5D3FD3" name={t('attendance:chartReturning')} />
+                <Bar dataKey="firstTime" stackId="a" fill="#f8b537" name={t('attendance:chartFirstTime')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
