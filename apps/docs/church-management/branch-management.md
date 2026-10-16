@@ -1,5 +1,7 @@
 # Branch Management
 
+<SectionClip slug="church-management/branch-management" />
+
 Creating and deactivating branches is an Admin-only function. Branch administrators can edit their own branch's operational details and appoint its leadership, but cannot bring a branch into existence or take one out.
 
 ## Creating a branch

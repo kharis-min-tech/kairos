@@ -1,5 +1,7 @@
 # Attendance Reports
 
+<SectionClip slug="analytics/attendance-reports" />
+
 Attendance reports give you a clear view of service and fellowship participation trends over time, helping you spot drops early and respond before they become patterns.
 
 ## Two places to look

@@ -1,5 +1,7 @@
 # User Permissions
 
+<SectionClip slug="administration/permissions" />
+
 Permissions in Kairos are driven by **functional grants**, not by a job title. Understanding the difference between a system role, a grant, and a scope is the key to configuring access correctly.
 
 ## The two system roles

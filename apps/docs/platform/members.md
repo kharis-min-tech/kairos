@@ -1,5 +1,7 @@
 # Members
 
+<SectionClip slug="platform/members" />
+
 The Members page is the church's directory. It shows the people in your branch (or across all branches for Admins) with their status, contact details, and fellowship assignment.
 
 ::: tip Who is in the directory

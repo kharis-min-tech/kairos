@@ -1,5 +1,7 @@
 # Engagement
 
+<SectionClip slug="analytics/engagement" />
+
 Engagement asks a different question from attendance. Attendance asks whether somebody came. Engagement asks whether they are actually embedded in church life, which is what tends to decide whether they are still here next year.
 
 ::: warning The old engagement card has been removed

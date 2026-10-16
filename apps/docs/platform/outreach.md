@@ -1,5 +1,7 @@
 # Outreach Programs
 
+<SectionClip slug="platform/outreach" />
+
 The Outreach Programs page is where evangelism events are created and managed. Programs are branch-scoped, so members can only register for programs within their own branch.
 
 <div class="screenshot-window screenshot-light">

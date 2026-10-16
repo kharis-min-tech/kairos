@@ -1,5 +1,7 @@
 # Church Health
 
+<SectionClip slug="analytics/church-health" />
+
 "Church health" is not one number in Kairos. It is a handful of figures in a handful of places, and this page says which figure answers which question.
 
 ::: warning If you are looking for the old engagement score

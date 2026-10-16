@@ -1,5 +1,7 @@
 # Branches
 
+<SectionClip slug="platform/branches" />
+
 The Branches page shows every church location in the system. Admins see all branches across all regions. Pastors and members see their own branch context.
 
 <div class="screenshot-window screenshot-light">

@@ -1,5 +1,7 @@
 # Attendance
 
+<SectionClip slug="platform/attendance" />
+
 The Attendance page covers service attendance: Sunday services, midweek services, and special services. Fellowship meeting attendance is managed separately from within each fellowship.
 
 <div class="screenshot-window screenshot-light">

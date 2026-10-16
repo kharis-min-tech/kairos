@@ -1,5 +1,7 @@
 # Dashboard
 
+<SectionClip slug="platform/dashboard" />
+
 The dashboard is the first thing you see after logging in. It gives you an at-a-glance view of what's happening in your church, scoped to your role.
 
 <div class="screenshot-window screenshot-light">

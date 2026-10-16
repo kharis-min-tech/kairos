@@ -1,5 +1,7 @@
 # Your First Church
 
+<SectionClip slug="getting-started/your-first-church" />
+
 This guide walks an Admin through setting up Kairos for a new church from scratch. If your church is already set up, skip to [Platform](/platform/dashboard).
 
 ## Step 1: Create a Region

@@ -1,5 +1,7 @@
 # Growth Reports
 
+<SectionClip slug="analytics/growth-reports" />
+
 Growth reports track how the church is expanding: new members joining, members returning after inactivity, and the overall trajectory of the congregation over time.
 
 ## Accessing growth data

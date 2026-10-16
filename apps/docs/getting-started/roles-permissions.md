@@ -1,5 +1,7 @@
 # Roles & Permissions
 
+<SectionClip slug="getting-started/roles-permissions" />
+
 What you can see and do in Kairos is decided by the **grants** on your account, not by a job title. There is no role switcher, and no step after signing in where you pick who to be. Your permissions are set when your account is configured and take effect from your next sign-in.
 
 ## The one thing to understand first

@@ -1,5 +1,7 @@
 # Membership Classes
 
+<SectionClip slug="platform/membership" />
+
 The Membership page runs the four-week membership class: the programme that makes somebody a Member of the church in the formal sense.
 
 ::: warning What "Member" means here

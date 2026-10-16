@@ -1,6 +1,5 @@
 # Ripɔt ɛn Analitiks
 
-<SectionClip slug="platform/reports" />
 
 Di Ripɔt pej de gi yu klia pikchɔ fɔ yu chɔch in ɛlt: atɛndans trɛnd, mɛmbaship gro, awtrich awtkam, ɛn ɛngejmɛnt skɔ. Ɔl di data de tay to yu rol.
 

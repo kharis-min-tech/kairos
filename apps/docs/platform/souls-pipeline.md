@@ -1,5 +1,7 @@
 # Souls Pipeline
 
+<SectionClip slug="platform/souls-pipeline" />
+
 The Souls Pipeline is the operational view for managing every person captured through outreach. It shows where each soul is in their journey and makes it easy to log follow-ups and track progress.
 
 <div class="screenshot-window screenshot-light">

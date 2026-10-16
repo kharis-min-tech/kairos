@@ -1,5 +1,7 @@
 # Attendance Tracking
 
+<SectionClip slug="church-management/attendance-tracking" />
+
 Kairos tracks two types of attendance: **service attendance** for Sunday, midweek, and special services, and **fellowship meeting attendance** for small group gatherings.
 
 ## Service attendance

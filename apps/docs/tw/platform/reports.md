@@ -1,6 +1,5 @@
 # Nkaeɛbɔ ne Nhwɛmu
 
-<SectionClip slug="platform/reports" />
 
 Nkaeɛbɔ kratafa no ma wohunu w'asɔre apɔwmuden pefee: mmaeɛ nkɔsoɔ, asɔremufoɔ dodoɔ nkɔanim, asɛmpatrɛw aba, ne ahokeka dodoɔ. Nsɛm no nyinaa gyina wo dibea so.
 

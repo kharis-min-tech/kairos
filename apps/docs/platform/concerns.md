@@ -1,5 +1,7 @@
 # Concerns
 
+<SectionClip slug="platform/concerns" />
+
 The **Concerns** page is the inbox for [follow-ups](/platform/follow-ups) that somebody flagged as needing attention. It has two tabs, holding two different kinds of concern, read by two different sets of people.
 
 ## Welfare and safeguarding are not the same thing

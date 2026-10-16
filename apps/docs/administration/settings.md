@@ -1,5 +1,7 @@
 # Settings
 
+<SectionClip slug="administration/settings" />
+
 App Settings let you manage your account security, display preferences, notifications, and privacy. Every user has access to their own settings.
 
 <div class="screenshot-window screenshot-light">

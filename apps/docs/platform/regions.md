@@ -1,5 +1,7 @@
 # Regions
 
+<SectionClip slug="platform/regions" />
+
 Regions are geographic groupings that organise your branches. Every branch must belong to a region.
 
 <div class="screenshot-window screenshot-light">

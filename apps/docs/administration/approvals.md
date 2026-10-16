@@ -1,5 +1,7 @@
 # Approvals
 
+<SectionClip slug="administration/approvals" />
+
 The approval queue is where anyone holding a branch grant reviews new member registrations before granting full access.
 
 ## Why approvals exist

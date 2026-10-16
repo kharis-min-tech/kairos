@@ -1,6 +1,5 @@
 # Rapports et analyses
 
-<SectionClip slug="platform/reports" />
 
 La page Rapports vous donne une image claire de la santé de votre église : tendances de présence, croissance de l'effectif, résultats de l'évangélisation et scores d'engagement. Toutes les données sont limitées à votre rôle.
 

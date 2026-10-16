@@ -1,5 +1,7 @@
 # Fellowships
 
+<SectionClip slug="platform/fellowships" />
+
 Fellowships are the small groups within each branch. Kairos supports multiple fellowship types, a map view for finding nearby groups, and full meeting and attendance tracking.
 
 <div class="screenshot-window screenshot-light">

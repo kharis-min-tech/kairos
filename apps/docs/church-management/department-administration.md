@@ -1,5 +1,7 @@
 # Department Administration
 
+<SectionClip slug="church-management/department-administration" />
+
 This guide covers running a department in Kairos, from setup through roster management, follow-ups, and the recruitment pipeline.
 
 ## Setting up a department

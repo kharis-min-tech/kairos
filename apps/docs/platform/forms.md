@@ -1,5 +1,7 @@
 # Forms & Data Capture
 
+<SectionClip slug="platform/forms" />
+
 The Forms page is where front-desk data capture happens. It covers altar call responses, baptism and dedication requests, first-time visitor intake, and testimonies.
 
 <div class="screenshot-window screenshot-light">

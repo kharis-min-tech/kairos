@@ -1,5 +1,7 @@
 # New Believers
 
+<SectionClip slug="platform/new-believers" />
+
 The New Believers page tracks the discipleship journey of recently converted members, from their first altar call or outreach conversion through four teaching sessions until they join a department as a full church member.
 
 <div class="screenshot-window screenshot-light">

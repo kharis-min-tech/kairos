@@ -1,5 +1,7 @@
 # Member Lifecycle
 
+<SectionClip slug="church-management/member-lifecycle" />
+
 This guide covers the full journey of a member in Kairos, from first registration through approval, active membership, and eventual deactivation.
 
 ## 1. Registration

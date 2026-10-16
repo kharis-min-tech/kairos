@@ -1,5 +1,7 @@
 # Reporting
 
+<SectionClip slug="church-management/reporting" />
+
 Kairos has built-in reports for tracking church health over time. Reports are role-scoped, so you always see data relevant to your level of access.
 
 ## Accessing reports

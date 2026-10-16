@@ -1,5 +1,7 @@
 # Follow-ups
 
+<SectionClip slug="platform/follow-ups" />
+
 Follow-ups are the record of pastoral contact: who reached out, how, what happened, and what should happen next. The **Follow-ups** page in the sidebar is the branch-level working list of people nobody has got to yet.
 
 ## Where a follow-up lives

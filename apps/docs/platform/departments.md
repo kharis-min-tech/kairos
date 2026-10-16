@@ -1,5 +1,7 @@
 # Departments
 
+<SectionClip slug="platform/departments" />
+
 Departments are the ministry teams within each branch. Kairos supports the full range of Kharis Church ministries.
 
 <div class="screenshot-window screenshot-light">

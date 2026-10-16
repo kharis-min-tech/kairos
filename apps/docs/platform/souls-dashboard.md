@@ -1,5 +1,7 @@
 # Souls Dashboard
 
+<SectionClip slug="platform/souls-dashboard" />
+
 The Souls Dashboard provides a dedicated analytics view for the souls pipeline, showing how people captured through outreach are progressing through follow-up, and how many are converting.
 
 <div class="screenshot-window screenshot-light">
