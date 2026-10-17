@@ -134,24 +134,32 @@ const api = {
 // times out, which costs the whole clip. It only happens when the machine is
 // busy — which, during a 113-clip batch, is always — so wait for hydration
 // and start the sign-in over if the fallback GET happens anyway.
+//
+// The retry wraps the whole attempt, not just the wait at the end. A first
+// version guarded only `waitForURL`, and the next failure was `fill` timing
+// out instead — the field is there, hydration re-renders it, and the handle
+// detaches underneath. Anything in here can lose a race on a loaded machine,
+// so anything in here is worth starting over.
 const { email, password } = flow.account;
 for (let attempt = 1; ; attempt++) {
-  await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded', timeout: 90000 });
-  await page.waitForSelector('input[type="email"]', { timeout: 60000 });
-  await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
-  await page.waitForTimeout(1200);
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-  await page.click('button[type="submit"]');
   try {
+    await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded', timeout: 90000 });
+    await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 60000 });
+    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(1200);
+    await page.fill('input[type="email"]', email, { timeout: 30000 });
+    await page.fill('input[type="password"]', password, { timeout: 30000 });
+    await page.click('button[type="submit"]', { timeout: 30000 });
     await page.waitForURL(/\/(dashboard|accept-policies)/, {
       timeout: 45000,
       waitUntil: 'domcontentloaded',
     });
     break;
   } catch (err) {
-    if (attempt >= 3) throw err;
-    console.log(`  (sign-in attempt ${attempt} did not take; retrying)`);
+    if (attempt >= 4) throw err;
+    const why = String(err.message).split('\n')[0];
+    console.log(`  (sign-in attempt ${attempt} failed: ${why} — retrying)`);
+    await page.waitForTimeout(2000 * attempt);
   }
 }
 
