@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { FORM_TYPES } from '@kairos/types';
 
 // ── Flexible Drizzle mock builder ─────────────────────────
 function createChain(result: unknown = []) {
@@ -1277,6 +1278,23 @@ describe('updateSubmission', () => {
 
 // ── exportSubmissionsToCSV ────────────────────────────────
 describe('exportSubmissionsToCSV', () => {
+  // EXPORT_COLUMNS is a loose Record<string, string[]> with a `?? []` fallback,
+  // so a form type missing from it exports a CSV of id/formType/status/createdAt
+  // and silently no answers at all. TypeScript cannot catch that; this does.
+  it('projects payload columns for EVERY form type, not just the old ones', async () => {
+    const { exportSubmissionsToCSV } = await import('./service');
+    const BASE_COLUMNS = ['id', 'formType', 'status', 'createdAt'];
+    for (const formType of FORM_TYPES) {
+      setupSelectSequence([]);
+      const csv = await exportSubmissionsToCSV(mockDb, adminAuth, { formType });
+      const headers = csv.split('\n')[0]!.split(',');
+      expect(
+        headers.length,
+        `${formType} exports no payload columns — add it to EXPORT_COLUMNS`,
+      ).toBeGreaterThan(BASE_COLUMNS.length);
+    }
+  });
+
   it('projects testimony payload columns into the CSV', async () => {
     setupSelectSequence([
       {
@@ -1585,7 +1603,7 @@ describe('getMyFormsCapabilities', () => {
   it('admin sees all form types + attendees', async () => {
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, adminAuth);
-    expect(result.visibleFormTypes.length).toBe(6);
+    expect(result.visibleFormTypes.length).toBe(9);
     expect(result.canSeeAttendees).toBe(true);
   });
   it('Admin-dept leader sees all form types + attendees (branch-superuser)', async () => {
@@ -1593,7 +1611,7 @@ describe('getMyFormsCapabilities', () => {
     setupSelectSequence(POSITIVE, POSITIVE);
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, leaderAuth);
-    expect(result.visibleFormTypes.length).toBe(6);
+    expect(result.visibleFormTypes.length).toBe(9);
     expect(result.canSeeAttendees).toBe(true);
   });
 
@@ -1603,7 +1621,15 @@ describe('getMyFormsCapabilities', () => {
     setupSelectSequence(EMPTY, POSITIVE, EMPTY);
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, memberAuth);
-    expect(result.visibleFormTypes).toEqual(['altar_call', 'first_time_visitor', 'baptism']);
+    expect(result.visibleFormTypes).toEqual([
+      'altar_call',
+      'first_time_visitor',
+      'baptism',
+      'kgroup_host',
+    ]);
+    // A front desk must not see a marriage enquiry or a signature request.
+    expect(result.visibleFormTypes).not.toContain('marriage_pack');
+    expect(result.visibleFormTypes).not.toContain('signature_request');
     expect(result.canSeeAttendees).toBe(false);
   });
 
@@ -1611,7 +1637,15 @@ describe('getMyFormsCapabilities', () => {
     setupSelectSequence(EMPTY, EMPTY, POSITIVE, EMPTY);
     const { getMyFormsCapabilities } = await import('./service');
     const result = await getMyFormsCapabilities(mockDb, memberAuth);
-    expect(result.visibleFormTypes).toEqual(['altar_call', 'first_time_visitor', 'baptism']);
+    expect(result.visibleFormTypes).toEqual([
+      'altar_call',
+      'first_time_visitor',
+      'baptism',
+      'kgroup_host',
+    ]);
+    // A front desk must not see a marriage enquiry or a signature request.
+    expect(result.visibleFormTypes).not.toContain('marriage_pack');
+    expect(result.visibleFormTypes).not.toContain('signature_request');
     expect(result.canSeeAttendees).toBe(false);
   });
 
@@ -1621,5 +1655,140 @@ describe('getMyFormsCapabilities', () => {
     const result = await getMyFormsCapabilities(mockDb, memberAuth);
     expect(result.visibleFormTypes).toEqual([]);
     expect(result.canSeeAttendees).toBe(false);
+  });
+});
+
+// ── submitForm: signature request ─────────────────────────
+//
+// The only form that links and never mints. The church is being asked to
+// vouch for somebody; minting a shell from the request itself would make the
+// church vouch for a person it holds no record of.
+describe('submitForm — signature request', () => {
+  const signaturePayload = {
+    firstName: 'Jane',
+    lastName: 'Doe',
+    phone: '07123456789',
+    documentType: 'Letter from Solicitor' as const,
+    timeInKharis: '2-5 years' as const,
+    reason: 'A solicitor has asked the church to confirm how long I have attended.',
+  };
+
+  it('files with no subject rather than minting a shell when nobody matches', async () => {
+    setupSelectSequence([]); // no in-branch phone match
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'signature_request', { payload: signaturePayload });
+
+    // Only the submission — no shell. This is the assertion that matters.
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.formType).toBe('signature_request');
+    expect(submission.subjectMemberId).toBeNull();
+    expect(submission.status).toBe('new');
+  });
+
+  it('links an existing in-branch member by phone', async () => {
+    setupSelectSequence([{ id: subjectId }]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'signature_request', { payload: signaturePayload });
+
+    expect(insertValuesArgs.length).toBe(1);
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect(submission.linkedEntityType).toBe('member');
+  });
+
+  it('rejects a document type outside the offered set', async () => {
+    const { ValidationError } = await import('@kairos/utils');
+    const { submitForm } = await import('./service');
+    await expect(
+      submitForm(mockDb, memberAuth, 'signature_request', {
+        payload: { ...signaturePayload, documentType: 'Mortgage' },
+      })
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+// ── submitForm: marriage pack ─────────────────────────────
+describe('submitForm — marriage pack', () => {
+  const marriagePayload = {
+    firstName: 'Jane',
+    lastName: 'Doe',
+    phone: '07123456789',
+    spouseName: 'John Smith',
+    spousePhone: '07999888777',
+  };
+
+  it('mints an attendee shell for a requester the directory does not hold', async () => {
+    setupSelectSequence([], []);
+    setupInsert([{ id: subjectId }], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'marriage_pack', { payload: marriagePayload });
+
+    expect(insertValuesArgs.length).toBe(2);
+    expect((insertValuesArgs[0] as Record<string, unknown>).memberType).toBe('attendee');
+    const submission = insertValuesArgs[1] as Record<string, unknown>;
+    expect(submission.formType).toBe('marriage_pack');
+    expect(submission.subjectMemberId).toBe(subjectId);
+  });
+
+  it('keeps the intended spouse as a typed name when they are not in the directory', async () => {
+    setupSelectSequence([{ id: subjectId }]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'marriage_pack', { payload: marriagePayload });
+
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    const payload = submission.payload as Record<string, unknown>;
+    expect(payload.spouseName).toBe('John Smith');
+    expect(payload.spouseMemberId).toBeUndefined();
+  });
+
+  it('refuses a request that names no spouse at all', async () => {
+    const { ValidationError } = await import('@kairos/utils');
+    const { submitForm } = await import('./service');
+    await expect(
+      submitForm(mockDb, memberAuth, 'marriage_pack', {
+        payload: { ...marriagePayload, spouseName: undefined },
+      })
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+// ── submitForm: K-group host ──────────────────────────────
+describe('submitForm — K-group host', () => {
+  const hostPayload = {
+    firstName: 'Jane',
+    lastName: 'Doe',
+    phone: '07123456789',
+    address: '14 Elm Road',
+    city: 'London',
+    postalCode: 'SE1 7AB',
+    capacity: '6-10' as const,
+  };
+
+  it('records the venue on the submission, not just the host', async () => {
+    setupSelectSequence([{ id: subjectId }]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'kgroup_host', { payload: hostPayload });
+
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.formType).toBe('kgroup_host');
+    const payload = submission.payload as Record<string, unknown>;
+    expect(payload.address).toBe('14 Elm Road');
+    expect(payload.postalCode).toBe('SE1 7AB');
+    expect(payload.capacity).toBe('6-10');
+  });
+
+  it('rejects an offer with no capacity, which a coordinator cannot act on', async () => {
+    const { ValidationError } = await import('@kairos/utils');
+    const { submitForm } = await import('./service');
+    await expect(
+      submitForm(mockDb, memberAuth, 'kgroup_host', {
+        payload: { ...hostPayload, capacity: undefined },
+      })
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 });

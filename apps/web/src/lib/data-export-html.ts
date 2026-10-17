@@ -300,6 +300,9 @@ const FORM_TYPE_LABELS: Record<string, string> = {
   testimony: 'Testimony',
   baby_naming: 'Baby naming',
   baby_dedication: 'Baby dedication',
+  signature_request: 'Signature request',
+  marriage_pack: 'Marriage pack',
+  kgroup_host: 'K-group host offer',
   first_time_visitor: 'First-time visitor',
 };
 

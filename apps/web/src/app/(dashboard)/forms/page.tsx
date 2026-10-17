@@ -13,6 +13,9 @@ import {
   ClipboardList,
   Archive,
   ChevronRight,
+  PenLine,
+  HeartHandshake,
+  House,
 } from 'lucide-react';
 import { FORM_DEFINITIONS, FORM_TYPES, type FormType } from '@kairos/types';
 
@@ -23,6 +26,9 @@ const FORM_ICONS: Record<FormType, React.ReactNode> = {
   testimony: <MessageSquareQuote className="h-6 w-6" />,
   baby_naming: <Baby className="h-6 w-6" />,
   baby_dedication: <HandHeart className="h-6 w-6" />,
+  signature_request: <PenLine className="h-6 w-6" />,
+  marriage_pack: <HeartHandshake className="h-6 w-6" />,
+  kgroup_host: <House className="h-6 w-6" />,
 };
 
 export default function FormsLandingPage() {

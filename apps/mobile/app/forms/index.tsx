@@ -10,6 +10,9 @@ import {
   MessageSquareQuote,
   Baby,
   HandHeart,
+  PenLine,
+  HeartHandshake,
+  House,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import {
@@ -39,6 +42,9 @@ const FORM_ICONS: Record<FormType, LucideIcon> = {
   testimony: MessageSquareQuote,
   baby_naming: Baby,
   baby_dedication: HandHeart,
+  signature_request: PenLine,
+  marriage_pack: HeartHandshake,
+  kgroup_host: House,
 };
 
 export default function FormsLanding() {

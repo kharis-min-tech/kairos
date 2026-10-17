@@ -31,6 +31,9 @@ const FORM_TYPE_LABELS: Record<string, string> = {
   baby_naming: 'baby naming',
   baby_dedication: 'baby dedication',
   altar_call: 'altar call',
+  signature_request: 'signature request',
+  marriage_pack: 'marriage pack request',
+  kgroup_host: 'K-group host offer',
 };
 
 function formSubmissionPortalUrl(submissionId: string): string {
@@ -93,6 +96,9 @@ import {
   type ArchiveAttendeesInput,
   type FirstTimeVisitorPayload,
   type BaptismPayload,
+  type SignatureRequestPayload,
+  type MarriagePackPayload,
+  type KGroupHostPayload,
   type TestimonyPayload,
   type BabyPayload,
 } from './schemas';
@@ -201,6 +207,8 @@ const FRONT_DESK_FORMS: FormType[] = [
   FormTypeEnum.AltarCall,
   FormTypeEnum.FirstTimeVisitor,
   FormTypeEnum.Baptism,
+  // Logistics rather than pastoral care: somebody offering a room.
+  FormTypeEnum.KGroupHost,
 ];
 
 /** Form types reviewable only by Admin-dept leader, pastor, or admin. */
@@ -208,6 +216,10 @@ const PASTOR_ONLY_FORMS: FormType[] = [
   FormTypeEnum.BabyNaming,
   FormTypeEnum.BabyDedication,
   FormTypeEnum.Testimony,
+  // A marriage enquiry should not sit in a front-desk queue, and signing a
+  // document on the church's behalf is a pastor's call, not an office task.
+  FormTypeEnum.MarriagePack,
+  FormTypeEnum.SignatureRequest,
 ];
 
 const ALL_FORM_TYPES: FormType[] = [...FRONT_DESK_FORMS, ...PASTOR_ONLY_FORMS];
@@ -490,6 +502,16 @@ async function submitFormByType(
     return submitBabyForm(db, auth, branchId, formType, body, payload as BabyPayload);
   }
 
+  if (formType === 'signature_request') {
+    return submitSignatureRequest(db, auth, branchId, body, payload as SignatureRequestPayload);
+  }
+  if (formType === 'marriage_pack') {
+    return submitMarriagePack(db, auth, branchId, body, payload as MarriagePackPayload);
+  }
+  if (formType === 'kgroup_host') {
+    return submitKGroupHost(db, auth, branchId, body, payload as KGroupHostPayload);
+  }
+
   if (formType === 'altar_call') {
     // ── altar_call: match-or-mint an attendee, then ensure enrollment ──
     const ac = payload as { firstName: string; lastName: string; phone: string };
@@ -746,6 +768,83 @@ async function submitBaptism(
   });
   return insertFormSubmission(db, auth, body, {
     formType: 'baptism',
+    branchId,
+    submittedBy: auth.memberId,
+    subjectMemberId,
+    payload,
+  });
+}
+
+// ── Signature request: link only, NEVER mint. The church is vouching for
+//    somebody; a shell record minted from the request itself would be the
+//    church vouching for a person it has no record of. An unmatched request
+//    still files, with no subject, and the reviewer decides. ──
+async function submitSignatureRequest(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  body: { subjectMemberId?: string } & ConsentEnvelope,
+  payload: SignatureRequestPayload,
+) {
+  const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
+    explicitSubjectMemberId: body.subjectMemberId,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    phone: payload.phone,
+    onNoMatch: { mode: 'linkOnly' },
+  });
+  return insertFormSubmission(db, auth, body, {
+    formType: 'signature_request',
+    branchId,
+    submittedBy: auth.memberId,
+    subjectMemberId,
+    payload,
+  });
+}
+
+// ── Marriage pack: match or mint, like baptism. An enquiry from somebody
+//    the directory does not hold yet is still an enquiry worth keeping. ──
+async function submitMarriagePack(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  body: { subjectMemberId?: string } & ConsentEnvelope,
+  payload: MarriagePackPayload,
+) {
+  const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
+    explicitSubjectMemberId: body.subjectMemberId,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    phone: payload.phone,
+    onNoMatch: { mode: 'mint', memberType: 'attendee' },
+  });
+  return insertFormSubmission(db, auth, body, {
+    formType: 'marriage_pack',
+    branchId,
+    submittedBy: auth.memberId,
+    subjectMemberId,
+    payload,
+  });
+}
+
+// ── K-group host: match or mint. Somebody offering a room is somebody the
+//    church wants on file whether or not they were already. ──
+async function submitKGroupHost(
+  db: Database,
+  auth: AuthContext,
+  branchId: string,
+  body: { subjectMemberId?: string } & ConsentEnvelope,
+  payload: KGroupHostPayload,
+) {
+  const subjectMemberId = await resolveOrMintSubject(db, auth, branchId, {
+    explicitSubjectMemberId: body.subjectMemberId,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    phone: payload.phone,
+    onNoMatch: { mode: 'mint', memberType: 'attendee' },
+  });
+  return insertFormSubmission(db, auth, body, {
+    formType: 'kgroup_host',
     branchId,
     submittedBy: auth.memberId,
     subjectMemberId,
@@ -1153,6 +1252,31 @@ const EXPORT_COLUMNS: Record<string, string[]> = {
     'interest',
     'howDidYouHear',
     'invitedBy',
+  ],
+  signature_request: ['firstName', 'lastName', 'phone', 'documentType', 'timeInKharis', 'reason'],
+  marriage_pack: [
+    'firstName',
+    'lastName',
+    'phone',
+    'email',
+    // Both halves of the spouse reference. Listing only the name would leave
+    // the column blank for every couple where the spouse WAS in the
+    // directory, which is the case the reference exists to capture.
+    'spouseName',
+    'spouseMemberId',
+    'spousePhone',
+    'spouseEmail',
+  ],
+  kgroup_host: [
+    'firstName',
+    'lastName',
+    'phone',
+    'email',
+    'address',
+    'city',
+    'postalCode',
+    'capacity',
+    'notes',
   ],
 };
 

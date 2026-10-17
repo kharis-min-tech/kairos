@@ -214,6 +214,9 @@ export const FormType = {
   BabyNaming: 'baby_naming',
   BabyDedication: 'baby_dedication',
   FirstTimeVisitor: 'first_time_visitor',
+  SignatureRequest: 'signature_request',
+  MarriagePack: 'marriage_pack',
+  KGroupHost: 'kgroup_host',
 } as const;
 export type FormType = (typeof FormType)[keyof typeof FormType];
 

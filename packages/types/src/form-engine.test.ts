@@ -12,6 +12,9 @@ import {
   TESTIMONY_FORM,
   BABY_NAMING_FORM,
   BABY_DEDICATION_FORM,
+  SIGNATURE_REQUEST_FORM,
+  MARRIAGE_PACK_FORM,
+  KGROUP_HOST_FORM,
   FORM_DEFINITIONS,
   type FormConditionDef,
 } from './form-engine';
@@ -433,5 +436,73 @@ describe('success copy', () => {
   it('names the ceremony each baby form is actually for', () => {
     expect(BABY_NAMING_FORM.success?.title).toBe('Naming request submitted');
     expect(BABY_DEDICATION_FORM.success?.title).toBe('Dedication request submitted');
+  });
+});
+
+// The three forms added in 0059. These assertions are less about the field
+// lists than about the decisions behind them, each of which is easy to undo
+// by accident later.
+describe('signature request, marriage pack and K-group host', () => {
+  const NEW_FORMS = [SIGNATURE_REQUEST_FORM, MARRIAGE_PACK_FORM, KGROUP_HOST_FORM];
+
+  it('never asks a question the record already answers', () => {
+    // The paper forms asked whether the person had completed the membership
+    // or foundation class. Both are held — members.membershipClassCompletedAt
+    // and the new-believer enrolment — so asking invites a wrong answer that
+    // contradicts the record.
+    for (const def of NEW_FORMS) {
+      for (const id of declaredFieldIds(def)) {
+        expect(id).not.toMatch(/membershipClass|foundationClass|completedClass/i);
+      }
+    }
+  });
+
+  it('still asks how long somebody has been at Kharis, which is NOT held', () => {
+    // The counterpart to the rule above: `members` has no join date, so this
+    // one really is unknown. Dropping it would lose information.
+    expect(declaredFieldIds(SIGNATURE_REQUEST_FORM).has('timeInKharis')).toBe(true);
+  });
+
+  it('asks for an address only on the host form, where it is the subject', () => {
+    // A venue is what the host form is for; on the other two an address would
+    // just be a stale copy of the profile.
+    expect(declaredFieldIds(KGROUP_HOST_FORM).has('address')).toBe(true);
+    expect(declaredFieldIds(SIGNATURE_REQUEST_FORM).has('address')).toBe(false);
+    expect(declaredFieldIds(MARRIAGE_PACK_FORM).has('address')).toBe(false);
+  });
+
+  it('takes the intended spouse as a reference or a name, never neither', () => {
+    const spouse = MARRIAGE_PACK_FORM.blocks
+      .flatMap((b) => b.fields)
+      .find((f) => f.id === 'spouseMemberId');
+    expect(spouse?.type).toBe('member');
+    expect(spouse?.freeTextFieldId).toBe('spouseName');
+    expect(memberReferenceState(spouse!, { spouseMemberId: 'id' })).toBe('linked');
+    expect(memberReferenceState(spouse!, { spouseName: 'Jane Doe' })).toBe('named');
+    expect(memberReferenceState(spouse!, {})).toBe('empty');
+  });
+
+  it('offers a closed set of host capacities rather than a free number', () => {
+    const capacity = KGROUP_HOST_FORM.blocks
+      .flatMap((b) => b.fields)
+      .find((f) => f.id === 'capacity');
+    expect(capacity?.type).toBe('select');
+    expect(capacity?.options?.map((o) => o.value)).toEqual(['1-5', '6-10', '11-15', '16+']);
+  });
+
+  it('names a document type a reviewer can act on', () => {
+    const docType = SIGNATURE_REQUEST_FORM.blocks
+      .flatMap((b) => b.fields)
+      .find((f) => f.id === 'documentType');
+    expect(docType?.options?.map((o) => o.value)).toContain('Letter from Solicitor');
+    expect(docType?.options?.map((o) => o.value)).toContain('Marriage');
+  });
+
+  it('requires the fields a follow-up depends on', () => {
+    const required = (def: typeof SIGNATURE_REQUEST_FORM) =>
+      new Set(def.blocks.flatMap((b) => b.fields).filter((f) => f.required).map((f) => f.id));
+    expect(required(SIGNATURE_REQUEST_FORM)).toContain('reason');
+    expect(required(MARRIAGE_PACK_FORM)).toContain('spousePhone');
+    expect(required(KGROUP_HOST_FORM)).toContain('postalCode');
   });
 });

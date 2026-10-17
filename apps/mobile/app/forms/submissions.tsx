@@ -35,6 +35,9 @@ const FORM_LABEL: Record<string, string> = {
   baby_naming: 'Baby naming',
   baby_dedication: 'Baby dedication',
   first_time_visitor: 'First-timer',
+  signature_request: 'Signature request',
+  marriage_pack: 'Marriage pack',
+  kgroup_host: 'K-group host',
 };
 
 const STATUS_TONE: Record<string, 'primary' | 'gold' | 'success' | 'neutral'> = {
@@ -52,6 +55,9 @@ const FORM_FILTERS: { key: FormType | 'all'; label: string }[] = [
   { key: 'baby_naming' as FormType, label: 'Baby name' },
   { key: 'baby_dedication' as FormType, label: 'Baby ded.' },
   { key: 'first_time_visitor' as FormType, label: 'First-timer' },
+  { key: 'signature_request' as FormType, label: 'Signature' },
+  { key: 'marriage_pack' as FormType, label: 'Marriage' },
+  { key: 'kgroup_host' as FormType, label: 'Hosting' },
 ];
 
 const STATUS_FILTERS: { key: 'all' | 'new' | 'reviewed' | 'converted' | 'dismissed'; label: string }[] = [

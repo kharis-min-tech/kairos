@@ -891,12 +891,57 @@ export interface BabyDedicationPayload {
   additionalNotes?: string;
 }
 
+export type SignatureDocumentType =
+  | 'Letter from Solicitor'
+  | 'Letter from School or University'
+  | 'Marriage'
+  | 'Other';
+
+export interface SignatureRequestPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  documentType: SignatureDocumentType;
+  /** Asked because `members` carries no join date — see the form definition. */
+  timeInKharis: string;
+  reason: string;
+}
+
+export interface MarriagePackPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  /** Set when the intended spouse was picked from the directory. */
+  spouseMemberId?: string;
+  /** Set instead when they were only named. Exactly one of the two. */
+  spouseName?: string;
+  spousePhone: string;
+  spouseEmail?: string;
+}
+
+export interface KGroupHostPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  /** The venue, not a copy of the profile — this is where a group would meet. */
+  address: string;
+  city: string;
+  postalCode: string;
+  capacity: string;
+  notes?: string;
+}
+
 export type FormSubmissionPayload =
   | AltarCallPayload
   | BaptismPayload
   | TestimonyPayload
   | BabyNamingPayload
-  | BabyDedicationPayload;
+  | BabyDedicationPayload
+  | SignatureRequestPayload
+  | MarriagePackPayload
+  | KGroupHostPayload;
 
 export interface FormSubmission extends BaseEntity {
   formType: FormType;

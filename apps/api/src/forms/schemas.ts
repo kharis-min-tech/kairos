@@ -1,15 +1,12 @@
 import { z } from 'zod';
-import { evaluateCondition } from '@kairos/types';
+import { evaluateCondition, FORM_TYPES, type FormType } from '@kairos/types';
 
-// ── Form type enum (matches @kairos/types FormType) ────────
-export const formTypes = [
-  'altar_call',
-  'baptism',
-  'testimony',
-  'baby_naming',
-  'baby_dedication',
-  'first_time_visitor',
-] as const;
+// ── Form type enum ─────────────────────────────────────────
+// Derived from FORM_TYPES, not retyped. This was a hand-kept copy that said
+// it matched `FormType` and then did not: it gates the submissions filter and
+// the CSV export, so a form missing from it was rejected by the export
+// endpoint while rendering perfectly everywhere else.
+export const formTypes = FORM_TYPES as [FormType, ...FormType[]];
 
 export const formSubmissionStatuses = [
   'new',
@@ -32,6 +29,23 @@ const testimonyCategories = [
 ] as const;
 
 const genderEnum = z.enum(['Male', 'Female']);
+
+const signatureDocumentTypes = [
+  'Letter from Solicitor',
+  'Letter from School or University',
+  'Marriage',
+  'Other',
+] as const;
+
+const timeInKharisBands = [
+  'Under 6 months',
+  '6-12 months',
+  '1-2 years',
+  '2-5 years',
+  'Over 5 years',
+] as const;
+
+const hostCapacityBands = ['1-5', '6-10', '11-15', '16+'] as const;
 
 // ── Per-form payload schemas (match @kairos/types payload interfaces) ──
 
@@ -243,6 +257,9 @@ export const firstTimeVisitorPayloadSchema = z
 export type FirstTimeVisitorPayload = z.infer<typeof firstTimeVisitorPayloadSchema>;
 export type BaptismPayload = z.infer<typeof baptismPayloadSchema>;
 export type TestimonyPayload = z.infer<typeof testimonyPayloadSchema>;
+export type SignatureRequestPayload = z.infer<typeof signatureRequestPayloadSchema>;
+export type MarriagePackPayload = z.infer<typeof marriagePackPayloadSchema>;
+export type KGroupHostPayload = z.infer<typeof kgroupHostPayloadSchema>;
 export type BabyNamingPayload = z.infer<typeof babyNamingPayloadSchema>;
 export type BabyDedicationPayload = z.infer<typeof babyDedicationPayloadSchema>;
 /** Baby naming and dedication share the fields the service touches (babyFullName,
@@ -250,6 +267,58 @@ export type BabyDedicationPayload = z.infer<typeof babyDedicationPayloadSchema>;
  *  dedication's `parentsAreMembers` checkbox was removed in favour of reading
  *  the parent member references, and its preferred-date key differs in name. */
 export type BabyPayload = BabyNamingPayload | BabyDedicationPayload;
+
+/**
+ * The intended spouse is a member reference with a free-text fallback, the
+ * same pair the baby forms use for parents: a reference where the directory
+ * has them, a name where it does not, and never both under one key.
+ */
+function requireSpouse(
+  v: { spouseMemberId?: string; spouseName?: string },
+  ctx: z.RefinementCtx,
+) {
+  if (!v.spouseMemberId && !v.spouseName?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['spouseName'],
+      message: 'Intended spouse is required — pick a member or type their name',
+    });
+  }
+}
+
+export const signatureRequestPayloadSchema = z.object({
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  phone: z.string().min(1).max(20),
+  documentType: z.enum(signatureDocumentTypes),
+  timeInKharis: z.enum(timeInKharisBands),
+  reason: z.string().min(1).max(2000),
+});
+
+export const marriagePackPayloadSchema = z
+  .object({
+    firstName: z.string().min(1).max(100),
+    lastName: z.string().min(1).max(100),
+    phone: z.string().min(1).max(20),
+    email: z.string().email().optional(),
+    spouseMemberId: z.string().uuid().optional(),
+    spouseName: z.string().max(200).optional(),
+    spousePhone: z.string().min(1).max(20),
+    spouseEmail: z.string().email().optional(),
+  })
+  .superRefine(requireSpouse);
+
+export const kgroupHostPayloadSchema = z.object({
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100),
+  phone: z.string().min(1).max(20),
+  email: z.string().email().optional(),
+  address: z.string().min(1).max(500),
+  city: z.string().min(1).max(100),
+  postalCode: z.string().min(1).max(20),
+  capacity: z.enum(hostCapacityBands),
+  notes: z.string().max(2000).optional(),
+});
 
 /** Map of formType → payload schema. Used to validate the submit body
  *  against the route's :formType param (discriminated by the route). */
@@ -260,6 +329,9 @@ export const payloadSchemaByFormType = {
   baby_naming: babyNamingPayloadSchema,
   baby_dedication: babyDedicationPayloadSchema,
   first_time_visitor: firstTimeVisitorPayloadSchema,
+  signature_request: signatureRequestPayloadSchema,
+  marriage_pack: marriagePackPayloadSchema,
+  kgroup_host: kgroupHostPayloadSchema,
 } as const;
 
 /** Build the body validator for POST /:formType/submit.
