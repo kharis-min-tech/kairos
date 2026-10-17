@@ -28,13 +28,36 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 
-/** Aura-2's two British voices. Draco is masculine, Athena feminine. */
+/**
+ * The voices, per language. A voice speaks one language: pointing an English
+ * voice at French text does not give you a French accent, it gives you an
+ * American reading French words as if they were English, which is what the
+ * French clips sounded like until this was fixed.
+ *
+ * Athena, the previous default, is `en-US` despite being used for both. The
+ * brief asked for British, so English is now Pandora (en-GB, feminine) with
+ * Draco (en-GB, masculine) beside it. French is Agathe (fr-FR, feminine).
+ *
+ * `node check-deepgram.mjs --voices` lists what the account can actually
+ * reach; Krio and Twi are in neither this table nor Deepgram's catalogue,
+ * which is why those clips carry captions instead.
+ */
 export const VOICES = {
+  // en-GB
+  pandora: 'aura-2-pandora-en',
   draco: 'aura-2-draco-en',
-  athena: 'aura-2-athena-en',
+  // fr-FR
+  agathe: 'aura-2-agathe-fr',
+  hector: 'aura-2-hector-fr',
 };
 
-export const DEFAULT_VOICE = VOICES.athena;
+/** The voice each narrated language is read in. */
+export const VOICE_FOR_LANG = {
+  en: VOICES.pandora,
+  fr: VOICES.agathe,
+};
+
+export const DEFAULT_VOICE = VOICES.pandora;
 
 /**
  * 24 kHz linear16. Deepgram accepts 8/16/24/32/48 kHz for linear16 and wraps

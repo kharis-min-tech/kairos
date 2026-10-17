@@ -17,6 +17,8 @@
  * track — chosen over reading somebody English in place of their own language.
  */
 import { execFileSync } from 'node:child_process';
+
+import { VOICE_FOR_LANG } from './lib/deepgram.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,10 +30,16 @@ const argv = process.argv.slice(2);
 const flagOf = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
 const has = (n) => argv.includes(`--${n}`);
 
-/** Languages the handbook is published in. Voice only where one exists. */
+/**
+ * Languages the handbook is published in, and the voice each is read in.
+ *
+ * Both narrated languages used to name `athena`, which is en-US — so the
+ * French clips were an American voice reading French words. The voice now
+ * comes from VOICE_FOR_LANG, where each language has one of its own.
+ */
 export const LANGS = [
-  { code: 'en', voice: 'athena' },
-  { code: 'fr', voice: 'athena' },
+  { code: 'en', voice: VOICE_FOR_LANG.en },
+  { code: 'fr', voice: VOICE_FOR_LANG.fr },
   { code: 'kri', voice: null },
   { code: 'tw', voice: null },
 ];

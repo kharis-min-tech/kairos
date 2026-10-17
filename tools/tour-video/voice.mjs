@@ -36,7 +36,7 @@ const flag = (name) => {
 
 if (!role) {
   console.error(
-    'usage: node voice.mjs <flow> [--voice athena|draco] [--only N] [--silent]',
+    'usage: node voice.mjs <flow> [--voice <name|model>] [--only N] [--silent]',
   );
   process.exit(1);
 }
@@ -71,7 +71,7 @@ mkdirSync(timingsDir, { recursive: true });
 const timingsPath = join(timingsDir, `${role}.json`);
 const previous = existsSync(timingsPath)
   ? JSON.parse(readFileSync(timingsPath, 'utf8'))
-  : { role, voice: voiceName ?? 'athena', stops: [] };
+  : { role, voice: silent ? null : (voiceName ?? DEFAULT_VOICE), stops: [] };
 
 console.log(
   silent
@@ -137,7 +137,7 @@ for (const stop of script.stops) {
 
 writeFileSync(
   timingsPath,
-  `${JSON.stringify({ role, voice: voiceName ?? 'athena', stops }, null, 2)}\n`,
+  `${JSON.stringify({ role, voice: silent ? null : (voiceName ?? DEFAULT_VOICE), stops }, null, 2)}\n`,
 );
 
 const total = stops.reduce((n, s) => n + s.duration, 0);

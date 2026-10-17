@@ -14,12 +14,15 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { listFlows } from '../../flows/index.mjs';
+import { VOICE_FOR_LANG } from '../../lib/deepgram.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, '..');
 
 const LANGS = ['en', 'fr', 'kri', 'tw'];
-const VOICE = { en: 'athena', fr: 'athena', kri: null, tw: null };
+// A voice speaks one language. Naming the same English voice for both is
+// what made the French clips an American reading French words.
+const VOICE = { en: VOICE_FOR_LANG.en, fr: VOICE_FOR_LANG.fr, kri: null, tw: null };
 
 const tables = {};
 for (const lang of LANGS) {
