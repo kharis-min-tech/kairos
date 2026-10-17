@@ -111,6 +111,19 @@ export const membershipInterest = pgTable(
      */
     branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'set null' }),
     status: varchar('status', { length: 20 }).notNull().default('waiting'),
+    // ── Membership programme application ──
+    // Captured when interest is expressed, to plan cohorts against. All three
+    // are nullable: interest can still be expressed in one tap without them.
+    /**
+     * Which day's class stream suits the applicant. No CHECK, matching
+     * `fellowships.meeting_day` — a stream that moves to a Wednesday should
+     * not need a migration.
+     */
+    preferredClassDay: varchar('preferred_class_day', { length: 20 }),
+    /** When they started attending Kharis — we hold no join date on members. */
+    startedAttendingOn: date('started_attending_on'),
+    /** Pastorally relevant, and it shapes how the class is pitched to them. */
+    attendsAnotherChurch: boolean('attends_another_church'),
     expressedAt: timestamp('expressed_at').defaultNow().notNull(),
     /**
      * When this entry stops counting as waiting. Stored per row rather than
