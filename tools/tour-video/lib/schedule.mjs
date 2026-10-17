@@ -37,6 +37,52 @@ export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
   const byN = new Map(stops.map((s) => [s.n, s]));
   const ordered = [...marks].sort((a, b) => a.start - b.start);
 
+  // A short clip trims footage, never speech. Cutting a sentence in half to
+  // hit a number is worse than a clip that runs two seconds over.
+  //
+  // Dividing the budget into equal shares was not enough. A stop whose line
+  // runs past its share takes the length it needs, while the others sit
+  // padded out to a share they do not use — so one talkative stop pushed the
+  // whole clip over while four seconds of pure picture sat beside it doing
+  // nothing. Eleven clips came out between 30.1 and 35 seconds that way.
+  //
+  // So: every stop is first given exactly as long as its line, and what is
+  // left of the budget is then poured over the stops that still have footage
+  // to show, a level at a time, until it runs out or they are full. A long
+  // line borrows the slack from a short one, and nothing is ever clipped.
+  const budget = new Map();
+  if (maxSeconds) {
+    const live = ordered
+      .map((m, i) => {
+        const stop = byN.get(m.n);
+        if (!stop) return null;
+        const to = ordered[i + 1]?.start ?? capture;
+        return { n: m.n, spoken: stop.duration, room: Math.max(0, to - m.start) };
+      })
+      .filter(Boolean);
+
+    const overhead = Math.max(0, live.length - 1) * GAP + TAIL;
+    let spare = maxSeconds - overhead - live.reduce((n, s) => n + s.spoken, 0);
+
+    for (const s of live) budget.set(s.n, Math.min(s.room, s.spoken));
+
+    // Water-filling: share what is spare between the stops that can still use
+    // it, and go round again with whatever they could not take.
+    let open = live.filter((s) => s.room > budget.get(s.n));
+    while (spare > 1e-6 && open.length) {
+      const slice = spare / open.length;
+      let used = 0;
+      for (const s of open) {
+        const take = Math.min(slice, s.room - budget.get(s.n));
+        budget.set(s.n, budget.get(s.n) + take);
+        used += take;
+      }
+      if (used <= 1e-9) break;
+      spare -= used;
+      open = open.filter((s) => s.room - budget.get(s.n) > 1e-6);
+    }
+  }
+
   const out = [];
   let timeline = 0;
 
@@ -50,19 +96,7 @@ export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
     const captureTo = ordered[i + 1]?.start ?? capture;
     let captureSpan = Math.max(0, captureTo - captureFrom);
 
-    // A short clip trims footage, never speech. Cutting a sentence in half to
-    // hit a number is worse than a clip that runs two seconds over, so the
-    // cap squeezes the picture down towards the length of the line and stops.
-    //
-    // The budget is what is left of `maxSeconds` after the gaps between stops
-    // and the tail the composition appends — dividing `maxSeconds` itself by
-    // the number of stops spent the whole budget on picture and then added
-    // the gaps and the tail on top.
-    if (maxSeconds) {
-      const overhead = (ordered.length - 1) * GAP + TAIL;
-      const share = Math.max(1, (maxSeconds - overhead) / ordered.length);
-      captureSpan = Math.min(captureSpan, Math.max(share, stop.duration));
-    }
+    if (maxSeconds) captureSpan = Math.min(captureSpan, budget.get(stop.n) ?? captureSpan);
 
     // The segment lasts as long as whichever is longer, then a breath.
     const spoken = stop.duration;

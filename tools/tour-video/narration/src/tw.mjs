@@ -58,8 +58,8 @@ export default {
   ],
   'platform-dashboard': [
     ['Asɔre Nkwa', 'Akontaa ɛnan a ɛho hia.', 'Asɔre Nkwa wɔ dashboard no atifi: asɔre mmaa, asafo no nyinaa, asɔrefoɔ a wɔahyɛ mu den, ne fekuo.'],
-    ['Ɛhia Wo', 'Nneɛma a ɛretwɛn wo.', 'Saa afa yi kyerɛ deɛ ɛretwɛn ankasa: ɔpene a ɛsɛ sɛ woyɛ, asɔre mmaa a wonni ɔsɔfoɔ, biribiara a asi. Mia na kɔ hɔ.'],
-    ['Nneyɛeɛ a Ɛbaa Nnansa', 'Hwan na ɔbaeɛ, ne berɛ bɛn.', 'Aseɛ hɔ, nneyɛeɛ a ɛbaa nnansa kyerɛ hwan na ɔkyerɛwee ne din ne berɛ bɛn, enti wohunu nnawɔtwe no a wommue biribi foforɔ.'],
+    ['Ɛhia Wo', 'Nneɛma a ɛretwɛn wo.', 'Saa afa yi kyerɛ deɛ ɛretwɛn: ɔpene a ɛsɛ sɛ woyɛ, asɔre mmaa a wonni ɔsɔfoɔ. Mia na kɔ hɔ.'],
+    ['Nneyɛeɛ a Ɛbaa Nnansa', 'Hwan na ɔbaeɛ, ne berɛ bɛn.', 'Aseɛ hɔ, nneyɛeɛ a ɛbaa nnansa kyerɛ hwan na ɔkyerɛwee ne din ne berɛ bɛn, a wommue biribi foforɔ.'],
   ],
   'platform-members': [
     ['Nhwɛmu no', 'Obiara, wɔ nhwɛmu baako mu.', 'Asɔrefoɔ ne nhwɛmu no. Obiara a ɔwɔ asɔre no mu wɔ ha, ne n’asɔre baa ne sɛ wawie asɔrefoɔ adesua no anaa.'],
@@ -75,9 +75,9 @@ export default {
     ['Asɔre mmaa a ɛbata ho', 'Ɔmantam a ɛwɔ mmaa no, wɔrentumi nyi.', 'Ɔmantam biara kyerɛ asɔre mmaa a ɛbata ho. Deɛ ɛwɔ bi no, wɔrentumi nyi no kɔsɛ wɔayi baa biara afiri hɔ.'],
   ],
   'platform-fellowships': [
-    ['Fekuo no', 'Kuo ketewa biara, ne ne su.', 'Fekuo kyerɛ kuo ketewa biara: K-Groups, Kharis Express, New Breeds ne nkaeɛ, ne hwan na ɔdi anim ne berɛ a wɔhyia.'],
-    ['Yi mu fa su so', 'Te so ma ɛyɛ deɛ wopɛ.', 'Nkorabata a ɛwɔ atifi no yiyi mu fa su so, na deɛ ɛsiane no te so ma ɛyɛ asɔre baa baako, a ɛho hia sɛ pii wɔ hɔ a.'],
-    ['Hunu no wɔ mfonini so', 'Kuo a ɛbɛn ɔmanfoɔ no.', 'Mfonini no de wɔn si asase so, na ɛno na ɛbua asɛm a nnipa bisa ankasa: deɛ ɛbɛn me ne hwan.'],
+    ['Fekuo no', 'Kuo ketewa biara, ne ne su.', 'Fekuo kyerɛ kuo ketewa biara: K-Groups, Kharis Express, New Breeds, ne hwan na ɔdi anim ne berɛ a wɔhyia.'],
+    ['Yi mu fa su so', 'Te so ma ɛyɛ deɛ wopɛ.', 'Nkorabata a ɛwɔ atifi no yiyi mu fa su so, na deɛ ɛsiane no te so ma ɛyɛ asɔre baa baako.'],
+    ['Hunu no wɔ mfonini so', 'Kuo a ɛbɛn ɔmanfoɔ no.', 'Mfonini no de wɔn si asase so, na ɛbua asɛm no: deɛ ɛbɛn me ne hwan.'],
   ],
   'platform-departments': [
     ['Asomdwuma Akuo', 'Kuo biara, ne hwan na ɔdi anim.', 'Adwumakuo ne asomdwuma akuo no. Biara kyerɛ ne kannifoɔ, ne boafoɔ, ne dodoɔ a wɔsom wɔ mu.'],

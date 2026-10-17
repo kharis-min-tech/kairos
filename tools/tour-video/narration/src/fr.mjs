@@ -54,9 +54,9 @@ export default {
     ['Rapports', 'Votre antenne, en chiffres.', 'Les rapports traduisent votre antenne en chiffres : tendances de présence, qui manque à l’appel, et la croissance des groupes.'],
   ],
   'platform-dashboard': [
-    ['Pouls de l’église', 'Les quatre chiffres qui comptent.', 'Le pouls de l’église est en haut du tableau de bord : antennes, assemblée totale, membres confirmés et cellules, d’un coup d’œil.'],
-    ['Attention requise', 'Ce qui attend votre intervention.', 'Cette section liste ce qui attend vraiment : approbations à donner, antennes sans pasteur, tout ce qui bloque. Cliquez pour y aller.'],
-    ['Activité récente', 'Qui a rejoint, et quand.', 'Plus bas, l’activité récente montre qui s’est inscrit et quand, pour voir la semaine sans ouvrir autre chose.'],
+    ['Pouls de l’église', 'Les quatre chiffres qui comptent.', 'Le pouls de l’église est en haut : antennes, assemblée, membres confirmés et cellules, d’un coup d’œil.'],
+    ['Attention requise', 'Ce qui attend votre intervention.', 'Cette section liste ce qui attend : approbations, antennes sans pasteur, ce qui bloque. Cliquez pour y aller.'],
+    ['Activité récente', 'Qui a rejoint, et quand.', 'Plus bas, l’activité récente montre qui s’est inscrit et quand, sans rien ouvrir d’autre.'],
   ],
   'platform-members': [
     ['L’annuaire', 'Tout le monde, en une liste.', 'Membres est l’annuaire. Toute l’église s’y trouve, avec son antenne de rattachement et si la classe d’adhésion a été faite.'],
@@ -72,9 +72,9 @@ export default {
     ['Antennes rattachées', 'Une région occupée ne se supprime pas.', 'Chaque région affiche ses antennes rattachées. Une région qui en a ne peut être supprimée tant qu’elles ne sont pas déplacées.'],
   ],
   'platform-fellowships': [
-    ['Les cellules', 'Chaque petit groupe, et son type.', 'Cellules liste chaque petit groupe : K-Groups, Kharis Express, New Breeds et les autres, avec son responsable et ses horaires.'],
-    ['Filtrer par type', 'Réduire à ce que vous cherchez.', 'Les puces en haut filtrent par type, et le menu déroulant limite à une antenne, ce qui compte dès qu’il y en a plusieurs dizaines.'],
-    ['Trouver sur la carte', 'La cellule la plus proche.', 'La carte les place géographiquement, ce qui répond à la vraie question : laquelle est la plus proche de chez moi.'],
+    ['Les cellules', 'Chaque petit groupe, et son type.', 'Cellules liste chaque petit groupe — K-Groups, Kharis Express, New Breeds — avec son responsable et ses horaires.'],
+    ['Filtrer par type', 'Réduire à ce que vous cherchez.', 'Les puces filtrent par type, et le menu limite à une antenne quand il y en a beaucoup.'],
+    ['Trouver sur la carte', 'La cellule la plus proche.', 'La carte les place géographiquement, et répond à la vraie question : laquelle est la plus proche.'],
   ],
   'platform-departments': [
     ['Équipes de ministère', 'Chaque équipe, et qui la dirige.', 'Les départements sont les équipes de ministère. Chacune affiche son responsable, son adjoint, et combien de personnes y servent.'],

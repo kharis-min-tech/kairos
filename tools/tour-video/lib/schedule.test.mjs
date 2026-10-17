@@ -134,6 +134,35 @@ test('the cap is on the finished video, gaps and tail included', () => {
   }
 });
 
+test('one long line borrows the slack from short ones', () => {
+  // The case that produced eleven clips between 30.1 and 35 seconds: stop 2
+  // speaks for longer than an equal share, while stops 1 and 3 have seconds
+  // of pure picture they are not using.
+  const { segments, duration } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 20 }, { n: 3, start: 40 }],
+    [stop(1, 6.8), stop(2, 9.7), stop(3, 6.8)],
+    80,
+    { maxSeconds: 30 },
+  );
+  assert.ok(duration + TAIL <= 30 + 1e-9, `fits (got ${(duration + TAIL).toFixed(2)})`);
+  const long = segments.find((s) => s.n === 2);
+  assert.ok(long.span >= 9.7, 'the long line still plays in full');
+  for (const s of segments) assert.ok(s.span >= s.spoken, 'no line is cut');
+});
+
+test('a stop with little footage does not hoard budget it cannot use', () => {
+  // Stop 2 only has two seconds of capture behind it, so the spare seconds
+  // belong to the stops that can actually show something.
+  const { segments } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 30 }, { n: 3, start: 32 }],
+    [stop(1, 4), stop(2, 1), stop(3, 4)],
+    60,
+    { maxSeconds: 30 },
+  );
+  const short = segments.find((s) => s.n === 2);
+  assert.ok(short.capturePlays <= 2 + 1e-9, 'it is held to the footage it has');
+});
+
 test('a clip with no cap is still as long as it needs to be', () => {
   const { duration } = buildSchedule(
     [{ n: 1, start: 0 }, { n: 2, start: 50 }],

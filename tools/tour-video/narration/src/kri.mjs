@@ -12,7 +12,7 @@
 const general = [
   ['Yu Ɔvavyu', 'Di fɔs dɔ, ɛn na wetin yu rol kɔva nɔmɔ.', 'Dis na Kairos. I de opin pan yu ɔvavyu, ɛn ɔltin we yu de si ya na wetin na yu rispɔnsibiliti fɔ tru.'],
   ['Di Saydba', 'Siks grup. Yu de si di wan dɛn we fɔ yu.', 'Di saydba grup insay Pipul, Grup dɛn, Gadarin dɛn, Analitiks ɛn Ɔganizeshɔn. Sɛkshɔn we yu nɔ de si na wan we yu rol nɔ nid.'],
-  ['Mɛmba dɛn', 'Ɔlman pan wan lis.', 'Mɛmba na di dairɛktri. Ɔlman insay di chɔch de ya, wit dɛn om branch ɛn if dɛn dɔn du di mɛmbaship klas.'],
+  ['Mɛmba dɛn', 'Ɔlman pan wan lis.', 'Mɛmba na di dairɛktri. Ɔlman de ya, wit dɛn om branch ɛn if dɛn dɔn du di mɛmbaship klas.'],
   ['Fɛloship dɛn', 'Di smɔl grup dɛn, wit map.', 'Fɛloship dɛn na di smɔl grup dɛn. K-Groups, Kharis Express, New Breeds ɛn di ɔda dɛn, wit map fɔ fɛn di wan we nia yu.'],
   ['Dipatmɛnt dɛn', 'Ministri tim dɛn ɛn dɛn rota.', 'Dipatmɛnt dɛn na di ministri tim dɛn. Ɛvri wan kip in yon mɛmba lis, in sav rota ɛn di pipul we de aplay fɔ jɔyn.'],
   ['Atɛndans', 'Sɛvis, chɛk-in ɛn di rɛjista dɛn.', 'Atɛndans kɔva sɛvis ɛn chɛk-in. Pipul kin chɛk dɛnsɛf in wit QR kod, ɔ di dɛsk kin rɛkɔd dɛn we dɛn kam.'],
@@ -58,13 +58,13 @@ export default {
     ['Ripɔt dɛn', 'Yu branch, insay nɔmba.', 'Ripɔt de tɔn yu branch to nɔmba: atɛndans trɛnd, udat nɔ de kam, ɛn aw di grup dɛn de gro.'],
   ],
   'platform-dashboard': [
-    ['Chɔch Pɔls', 'Di fo nɔmba dɛn we impɔtant.', 'Chɔch Pɔls de na di tɔp pan di dashbɔd: branch dɛn, ɔl di kɔngrigeshɔn, kɔnfam mɛmba dɛn ɛn fɛloship dɛn.'],
-    ['I Nid Yu', 'Di tin dɛn we de wet pan yu.', 'Dis sɛkshɔn de lis wetin de wet fɔ tru: aproval fɔ gi, branch we nɔ gɛt pasto, ɛni tin we stɔk. Klik fɔ go de.'],
-    ['Rɛsɛnt Aktiviti', 'Udat jɔyn, ɛn we tɛm.', 'Bilo, rɛsɛnt aktiviti de sho udat rejista ɛn we tɛm, so yu kin si di wik witawt opin ɛni ɔda tin.'],
+    ['Chɔch Pɔls', 'Di fo nɔmba dɛn we impɔtant.', 'Chɔch Pɔls de na di tɔp: branch dɛn, di kɔngrigeshɔn, kɔnfam mɛmba ɛn fɛloship dɛn.'],
+    ['I Nid Yu', 'Di tin dɛn we de wet pan yu.', 'Dis sɛkshɔn de lis wetin de wet: aproval fɔ gi, branch we nɔ gɛt pasto. Klik fɔ go de.'],
+    ['Rɛsɛnt Aktiviti', 'Udat jɔyn, ɛn we tɛm.', 'Bilo, rɛsɛnt aktiviti de sho udat rejista ɛn we tɛm, witawt opin ɛni ɔda tin.'],
   ],
   'platform-members': [
     ['Di Dairɛktri', 'Ɔlman, pan wan lis.', 'Mɛmba na di dairɛktri. Ɔlman insay di chɔch de ya, wit dɛn om branch ɛn if dɛn dɔn du di mɛmbaship klas.'],
-    ['Fɔ Fɛn Sɔmbɔdi', 'Wit nem, imel ɔ fon.', 'Rayt nem, imel ɔ fon nɔmba insay di sach bɔks. Yu kin filta bay branch, bay stetɔs, ɔ bay rol bak.'],
+    ['Fɔ Fɛn Sɔmbɔdi', 'Wit nem, imel ɔ fon.', 'Rayt nem, imel ɔ fon nɔmba insay di sach bɔks. Yu kin filta bay branch, stetɔs, ɔ rol.'],
     ['Fɔ Opin Prɔfayl', 'Ɔl dɛn istri na wan ples.', 'If yu klik wan layn i de opin dat pɔsin: dɛn kɔntakt, dɛn grup, dɛn atɛndans ɛn ɛvri fɔlo ɔp bɔt dɛn.'],
   ],
   'platform-branches': [
@@ -76,9 +76,9 @@ export default {
     ['Branch dɛn we Tay', 'Rijɔn we gɛt branch nɔ kin dilit.', 'Ɛvri rijɔn de sho di branch dɛn we tay pan am. Wan we gɛt branch nɔ go dilit sote dɛn muv ɛvri branch.'],
   ],
   'platform-fellowships': [
-    ['Di Fɛloship dɛn', 'Ɛvri smɔl grup, ɛn in tayp.', 'Fɛloship de lis ɛvri smɔl grup: K-Groups, Kharis Express, New Breeds ɛn di ɔda dɛn, wit udat de lid ɛn we tɛm dɛn de mit.'],
-    ['Filta bay Tayp', 'Mek am smɔl to wetin yu want.', 'Di bɔtin dɛn pan tɔp de filta bay tayp, ɛn di drɔpdawn de mek am smɔl to wan branch, we impɔtant if plɛnti de.'],
-    ['Fɛn am pan Map', 'Di grup we nia di mɛmba.', 'Di map de put dɛn bay ples, we na di ansa to di kwɛstyɔn we pipul de aks: wetin wan nia mi.'],
+    ['Di Fɛloship dɛn', 'Ɛvri smɔl grup, ɛn in tayp.', 'Fɛloship de lis ɛvri smɔl grup: K-Groups, Kharis Express, New Breeds, wit udat de lid ɛn we tɛm dɛn de mit.'],
+    ['Filta bay Tayp', 'Mek am smɔl to wetin yu want.', 'Di bɔtin dɛn pan tɔp de filta bay tayp, ɛn di drɔpdawn de mek am smɔl to wan branch.'],
+    ['Fɛn am pan Map', 'Di grup we nia di mɛmba.', 'Di map de put dɛn bay ples, we de ansa di kwɛstyɔn: us wan nia mi.'],
   ],
   'platform-departments': [
     ['Ministri Tim dɛn', 'Ɛvri tim, ɛn udat de lid am.', 'Dipatmɛnt dɛn na di ministri tim dɛn. Ɛvri wan de sho in lida, in dɛpyuti, ɛn omɔch pipul de sav pan am.'],

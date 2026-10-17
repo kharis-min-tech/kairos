@@ -7,19 +7,19 @@
       "n": 1,
       "title": "Les cellules",
       "caption": "Chaque petit groupe, et son type.",
-      "speech": "Cellules liste chaque petit groupe : K-Groups, Kharis Express, New Breeds et les autres, avec son responsable et ses horaires."
+      "speech": "Cellules liste chaque petit groupe — K-Groups, Kharis Express, New Breeds — avec son responsable et ses horaires."
     },
     {
       "n": 2,
       "title": "Filtrer par type",
       "caption": "Réduire à ce que vous cherchez.",
-      "speech": "Les puces en haut filtrent par type, et le menu déroulant limite à une antenne, ce qui compte dès qu’il y en a plusieurs dizaines."
+      "speech": "Les puces filtrent par type, et le menu limite à une antenne quand il y en a beaucoup."
     },
     {
       "n": 3,
       "title": "Trouver sur la carte",
       "caption": "La cellule la plus proche.",
-      "speech": "La carte les place géographiquement, ce qui répond à la vraie question : laquelle est la plus proche de chez moi."
+      "speech": "La carte les place géographiquement, et répond à la vraie question : laquelle est la plus proche."
     }
   ]
 }
