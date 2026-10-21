@@ -66,7 +66,7 @@ fɔ di ful tin. Na di onli tɔ we de sho sɛkshɔn dɛn we yu yon rol kin nɔ g�
 
 <video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Yu brawza nɔ kin ple dis vidio. <a :href="`${clip('general')}.mp4`">Dawnlod di tɔ</a>.</video>
 
-<p class="silentnote">Krio tɔ dɛn gɛt kapshɔn nɔmɔ — nɔ tɔk-vɔys nɔ de fɔ Krio yet, so rid di wɔd dɛn pan di skrin.</p>
+<p class="silentnote">Nɔ Krio tɔk-vɔys nɔ de yet, so na Inglish vɔys de rid di Krio — di sawnd nɔ go rayt ɔltɛm. Di kapshɔn dɛn na di tru Krio, so fɔlo dɛn.</p>
 
 ## Dɔn: yu yon rol
 

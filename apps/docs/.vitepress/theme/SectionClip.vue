@@ -6,9 +6,10 @@
  * language, because somebody reading the French handbook should not be shown
  * a video in English.
  *
- * Krio and Twi clips have no audio: Deepgram has no voice for either, so
- * those carry captions over the footage instead. The player says so rather
- * than letting somebody conclude their sound is broken.
+ * Every language is narrated. Krio and Twi are read by an English voice,
+ * since Deepgram has no voice for either, so the pronunciation is
+ * approximate — the subtitles carry the real language, and they come from
+ * the script rather than from anything the voice was heard to say.
  */
 import { computed } from 'vue'
 import { useData } from 'vitepress'
@@ -24,27 +25,22 @@ const file = computed(() => {
   return code.value === 'en' ? base : `${base}-${code.value}`
 })
 
-const silent = computed(() => code.value === 'kri' || code.value === 'tw')
 
-const COPY: Record<string, { heading: string; noAudio: string; fallback: string }> = {
+const COPY: Record<string, { heading: string; fallback: string }> = {
   en: {
     heading: 'Watch this in 30 seconds',
-    noAudio: 'Captions only — there is no text-to-speech voice for this language yet.',
     fallback: 'Your browser cannot play this video.',
   },
   fr: {
     heading: 'À voir en 30 secondes',
-    noAudio: 'Sous-titres seulement — il n’existe pas encore de voix de synthèse pour cette langue.',
     fallback: 'Votre navigateur ne peut pas lire cette vidéo.',
   },
   kri: {
     heading: 'Wach dis na 30 sɛkɔn',
-    noAudio: 'Kapshɔn nɔmɔ — nɔ tɔk-vɔys nɔ de fɔ dis langwej yet.',
     fallback: 'Yu brawza nɔ kin ple dis vidio.',
   },
   tw: {
     heading: 'Hwɛ yei wɔ simma 30 mu',
-    noAudio: 'Nsɛm a wɔatwerɛ nko ara — kasa yi nni nne a wɔyɛ no nnɛ.',
     fallback: 'Wo browser ntumi nto saa video yi.',
   },
 }
@@ -56,7 +52,6 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
   <figure class="section-clip">
     <figcaption class="section-clip__head">
       {{ t.heading }}
-      <span v-if="silent" class="section-clip__note">{{ t.noAudio }}</span>
     </figcaption>
     <video
       :key="file"
@@ -87,12 +82,6 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
   text-transform: uppercase;
   color: var(--vp-c-text-2);
   margin-bottom: 0.6rem;
-}
-.section-clip__note {
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--vp-c-text-3);
 }
 .section-clip__video {
   width: 100%;

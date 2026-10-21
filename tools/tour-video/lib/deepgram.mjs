@@ -29,35 +29,50 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..');
 
 /**
- * The voices, per language. A voice speaks one language: pointing an English
- * voice at French text does not give you a French accent, it gives you an
- * American reading French words as if they were English, which is what the
- * French clips sounded like until this was fixed.
+ * The voices, per language.
  *
- * Athena, the previous default, is `en-US` despite being used for both. The
- * brief asked for British, so English is now Pandora (en-GB, feminine) with
- * Draco (en-GB, masculine) beside it. French is Agathe (fr-FR, feminine).
+ * A voice speaks one language. Pointing an English voice at French text does
+ * not give a French accent, it gives an American reading French words — which
+ * is what the French clips sounded like until Agathe replaced Athena there.
  *
- * `node check-deepgram.mjs --voices` lists what the account can actually
- * reach; Krio and Twi are in neither this table nor Deepgram's catalogue,
- * which is why those clips carry captions instead.
+ * Krio and Twi have no voice in Deepgram's catalogue. They are narrated in
+ * Athena by explicit choice: an English voice reading Krio or Twi mispronounces
+ * it, and Krio — being English-based — fares better than Twi. The subtitles
+ * are always the real language, because the captions come from the script and
+ * never from what the voice was heard to say. Set either back to `null` here
+ * and that language returns to captions over silence.
  */
 export const VOICES = {
   // en-GB
   pandora: 'aura-2-pandora-en',
   draco: 'aura-2-draco-en',
+  // en-US
+  athena: 'aura-2-athena-en',
   // fr-FR
   agathe: 'aura-2-agathe-fr',
   hector: 'aura-2-hector-fr',
 };
 
-/** The voice each narrated language is read in. */
+/** The voice each language is read in. `null` means captions over silence. */
 export const VOICE_FOR_LANG = {
-  en: VOICES.pandora,
+  en: VOICES.athena,
   fr: VOICES.agathe,
+  kri: VOICES.athena,
+  tw: VOICES.athena,
 };
 
-export const DEFAULT_VOICE = VOICES.pandora;
+/**
+ * Languages whose audio is another language's script.
+ *
+ * Deepgram has no Krio or Twi voice, and an English voice reading Krio aloud
+ * mispronounces it. So those clips are narrated in English and subtitled in
+ * the reader's language — ordinary subtitling. The captions are never
+ * translated from the audio; both come from their own narration table, so
+ * they say the same thing in two languages.
+ */
+export const DUB_FROM = { kri: 'en', tw: 'en' };
+
+export const DEFAULT_VOICE = VOICES.athena;
 
 /**
  * 24 kHz linear16. Deepgram accepts 8/16/24/32/48 kHz for linear16 and wraps
@@ -255,4 +270,35 @@ export function concatWav(buffers) {
   header.writeUInt32LE(data.length, 40);
   header.writeUInt32LE(36 + data.length, 4);
   return Buffer.concat([header, data]);
+}
+
+/**
+ * How long a WAV runs, read from its own header.
+ *
+ * A dubbed clip spreads its caption across the audio rather than pinning
+ * each word to a spoken one, so the only thing the transcript was giving it
+ * was the length — which the file already knows. Reading it here saves a
+ * Deepgram round trip per stop on every Krio and Twi clip, and the credits
+ * that go with them.
+ *
+ * Walks the RIFF chunks for the same reason concatWav does: a fixed 44-byte
+ * header is a guess that some responses break.
+ */
+export function wavDuration(buf) {
+  let offset = 12;
+  let byteRate = 0;
+  while (offset + 8 <= buf.length) {
+    const id = buf.toString('ascii', offset, offset + 4);
+    const size = buf.readUInt32LE(offset + 4);
+    if (id === 'fmt ') byteRate = buf.readUInt32LE(offset + 16);
+    if (id === 'data') {
+      // Deepgram streams its WAV, so the data chunk carries a placeholder
+      // length of 0x7FFFF000 rather than the real one — believing it gives a
+      // twelve-hour clip. What is actually in the file is the truth.
+      const real = Math.min(size, buf.length - (offset + 8));
+      return byteRate > 0 ? real / byteRate : 0;
+    }
+    offset += 8 + size + (size % 2);
+  }
+  return 0;
 }

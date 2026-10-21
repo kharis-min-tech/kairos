@@ -1,7 +1,7 @@
 {
   "role": "administration-permissions-kri",
   "lang": "kri",
-  "voice": null,
+  "voice": "aura-2-athena-en",
   "stops": [
     {
       "n": 1,

@@ -29,7 +29,7 @@
 
 - **Kairos parle anglais, français, krio et twi.** L'application web, l'application mobile et ce manuel suivent tous le même choix : ouvrir le guide d'aide pendant que Kairos est en français ouvre le manuel en français.
 - **Chaque page du manuel existe dans les quatre langues**, avec ses propres captures et son propre clip.
-- **Un clip sur chaque section**, de trente secondes au plus, plus une visite générale et une visite par rôle. Les clips en krio et en twi portent des sous-titres plutôt qu'une voix, parce qu'il n'existe pas encore de voix de synthèse pour ces langues.
+- **Un clip sur chaque section**, de trente secondes au plus, plus une visite générale et une visite par rôle. Toutes les langues sont narrées. Il n'existe toujours pas de voix de synthèse pour le krio ni le twi : ces clips sont lus par une voix anglaise et la prononciation est approximative ; les sous-titres portent la vraie langue.
 - Les références bibliques sont localisées par nom de livre seulement. Le texte des versets n'est jamais traduit automatiquement.
 
 ### Divers

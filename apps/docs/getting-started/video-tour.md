@@ -67,6 +67,8 @@ own role may not have.
 
 <video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Your browser cannot play embedded video. <a :href="`${clip('general')}.mp4`">Download this tour instead</a>.</video>
 
+<p class="silentnote">Krio and Twi have no text-to-speech voice yet, so those tours are read by an English voice and the pronunciation is approximate. The subtitles carry the real language.</p>
+
 ## Then: your own role
 
 <div class="rolepick">

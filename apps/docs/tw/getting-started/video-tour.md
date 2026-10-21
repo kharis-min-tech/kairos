@@ -67,7 +67,7 @@ dibea nni bi.
 
 <video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Wo browser ntumi nto saa video yi. <a :href="`${clip('general')}.mp4`">Twe akwantuo no</a>.</video>
 
-<p class="silentnote">Twi akwantuo wɔ nsɛm a wɔatwerɛ nko ara — kasa yi nni nne a wɔyɛ no nnɛ, enti kenkan nsɛm a ɛwɔ skrin no so.</p>
+<p class="silentnote">Twi nne biara nni hɔ nnɛ, enti Borɔfo nne na ɛkenkan Twi no — ɛnka no yie. Nsɛm a wɔatwerɛ no ne Twi ankasa, enti di akyi.</p>
 
 ## Afei: w'ankasa dibea
 

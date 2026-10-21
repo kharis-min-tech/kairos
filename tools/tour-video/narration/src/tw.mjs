@@ -1,7 +1,9 @@
 /**
  * Every clip's script, in Twi. Mirrors en.mjs entry for entry.
  *
- * Twi has no voice in Deepgram either, so these are captions over the
+ * Twi has no voice of its own in Deepgram either, so it too is read by an
+ * English voice. The captions are the real language; they come from here, not
+ * from the audio. Previously these were captions over the
  * footage with no audio. Written to be spoken all the same, so nothing needs
  * rewriting if a voice appears.
  *

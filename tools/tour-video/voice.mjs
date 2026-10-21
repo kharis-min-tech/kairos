@@ -22,9 +22,9 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { speak, transcribe, VOICES, DEFAULT_VOICE } from './lib/deepgram.mjs';
+import { speak, transcribe, wavDuration, VOICES, DEFAULT_VOICE } from './lib/deepgram.mjs';
 import { alignWords, alignmentConfidence } from './lib/align.mjs';
-import { estimateTimings } from './lib/estimate.mjs';
+import { estimateTimings, spreadWords } from './lib/estimate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
@@ -36,12 +36,16 @@ const flag = (name) => {
 
 if (!role) {
   console.error(
-    'usage: node voice.mjs <flow> [--voice <name|model>] [--only N] [--silent]',
+    'usage: node voice.mjs <flow> [--voice <name|model>] [--dub <slug>] [--only N] [--silent]',
   );
   process.exit(1);
 }
 
 /**
+ * A language can still be narrated with `--silent`, which writes captions
+ * over no audio at all. Krio and Twi used that until they were given an
+ * English voice by choice; the note below is why the option exists.
+ *
  * Krio and Twi have no voice in any text-to-speech engine I can reach —
  * Deepgram's models do not cover either, and neither did Kokoro. Those clips
  * are captions over the footage with no audio track, which is what we chose
@@ -59,6 +63,21 @@ if (!existsSync(scriptPath)) {
 }
 
 const script = JSON.parse(readFileSync(scriptPath, 'utf8'));
+/**
+ * `--dub <slug>` speaks that script while captioning this one. Krio and Twi
+ * have no voice of their own, and an English voice reading Krio aloud
+ * mispronounces it, so the audio is the English narration and the subtitle
+ * stays in the reader's language — ordinary subtitling, rather than a voice
+ * stumbling through an orthography it does not know.
+ */
+/** 'platform-members-fr' -> 'fr'; no suffix means English. */
+const langOf = (slug) => (/-(fr|kri|tw)$/.exec(slug)?.[1] ?? 'en');
+
+const dubFrom = flag('dub');
+const dubScript = dubFrom
+  ? JSON.parse(readFileSync(join(HERE, 'narration', `${dubFrom}.json`), 'utf8'))
+  : null;
+
 const voiceName = flag('voice') ?? script.voice;
 const voice = VOICES[voiceName] ?? (voiceName?.startsWith('aura-') ? voiceName : DEFAULT_VOICE);
 const only = flag('only') ? Number(flag('only')) : undefined;
@@ -108,7 +127,14 @@ for (const stop of script.stops) {
     continue;
   }
 
-  const wav = await speak(stop.speech, { voice });
+  // Dubbed: the audio is the other script's sentence, the caption is this
+  // one's. The two never line up word for word, so the caption is spread
+  // across the line rather than pinned to a spoken word.
+  const spokenText = dubScript
+    ? (dubScript.stops.find((x) => x.n === stop.n)?.speech ?? stop.speech)
+    : stop.speech;
+
+  const wav = await speak(spokenText, { voice });
   writeFileSync(file, wav);
 
   // Transcribing audio we just generated is not as circular as it looks: the
@@ -118,9 +144,27 @@ for (const stop of script.stops) {
   // Only the timing is taken from the transcript. The words shown come from
   // the script, so a mishearing can shift a caption slightly but can never
   // put a word on screen that nobody said.
-  const { words: heard, duration } = await transcribe(wav);
-  const words = alignWords(stop.speech, heard, duration);
-  const confidence = alignmentConfidence(words);
+  // Transcribe in the language that was actually spoken. This defaulted to
+  // English, so French audio went to an English model, almost nothing was
+  // recognised, and alignWords fell back to even spacing — every French
+  // caption word was `approximate`, which is to say the word-by-word
+  // highlighting was guessed rather than measured. A dubbed clip is spoken
+  // in the language it is dubbed from.
+  // A dubbed clip needs the length and nothing else, and the WAV knows its
+  // own length — so it skips the transcription entirely.
+  let duration;
+  let words;
+  let confidence = 1;
+  if (dubScript) {
+    duration = wavDuration(wav);
+    words = spreadWords(stop.speech, duration);
+  } else {
+    const spokenLang = langOf(role);
+    const heard = await transcribe(wav, { language: spokenLang });
+    duration = heard.duration;
+    words = alignWords(stop.speech, heard.words, duration);
+    confidence = alignmentConfidence(words);
+  }
 
   stops.push({
     n: stop.n,
@@ -132,12 +176,13 @@ for (const stop of script.stops) {
   });
 
   const warn = confidence < 0.9 ? `  ⚠ ${Math.round(confidence * 100)}% aligned` : '';
-  console.log(`${duration.toFixed(2)}s  ${words.length} words${warn}`);
+  const how = dubScript ? '  (dubbed)' : '';
+  console.log(`${duration.toFixed(2)}s  ${words.length} words${warn}${how}`);
 }
 
 writeFileSync(
   timingsPath,
-  `${JSON.stringify({ role, voice: silent ? null : (voiceName ?? DEFAULT_VOICE), stops }, null, 2)}\n`,
+  `${JSON.stringify({ role, voice: silent ? null : (voiceName ?? DEFAULT_VOICE), dubbedFrom: dubFrom ? langOf(dubFrom) : null, stops }, null, 2)}\n`,
 );
 
 const total = stops.reduce((n, s) => n + s.duration, 0);

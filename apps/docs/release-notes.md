@@ -29,7 +29,7 @@
 
 - **Kairos speaks English, French, Krio and Twi.** The web app, the mobile app and this handbook all follow the same choice, so opening the help guide while Kairos is in French opens the handbook in French.
 - **Every handbook page exists in all four languages**, with its own screenshots and its own clip.
-- **A clip on every section**, up to thirty seconds each, plus a general tour and one tour per role. Krio and Twi clips carry captions rather than a voice, because there is no text-to-speech voice for either language yet.
+- **A clip on every section**, up to thirty seconds each, plus a general tour and one tour per role. Every language is narrated. There is still no text-to-speech voice for Krio or Twi, so those are read by an English voice and the pronunciation is approximate; the subtitles carry the real language.
 - Scripture references are localised by book name only. Verse text is never machine-translated.
 
 ### Other

@@ -12,13 +12,15 @@
  * `out/` is left alone unless `--force` is given. Stopping and restarting
  * costs nothing.
  *
- * English and French are narrated by Deepgram. Krio and Twi have no voice in
+ * Every language is narrated by Deepgram. Krio and Twi have no voice of their
+ * own in its catalogue and are read by an English one; the captions come from
+ * the script, so the subtitles stay in the real language. Was: no voice in
  * any engine available, so those are captions over the footage with no audio
  * track — chosen over reading somebody English in place of their own language.
  */
 import { execFileSync } from 'node:child_process';
 
-import { VOICE_FOR_LANG } from './lib/deepgram.mjs';
+import { VOICE_FOR_LANG, DUB_FROM } from './lib/deepgram.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,8 +42,8 @@ const has = (n) => argv.includes(`--${n}`);
 export const LANGS = [
   { code: 'en', voice: VOICE_FOR_LANG.en },
   { code: 'fr', voice: VOICE_FOR_LANG.fr },
-  { code: 'kri', voice: null },
-  { code: 'tw', voice: null },
+  { code: 'kri', voice: VOICE_FOR_LANG.kri },
+  { code: 'tw', voice: VOICE_FOR_LANG.tw },
 ];
 
 const only = flagOf('only');
@@ -89,9 +91,12 @@ for (const job of todo) {
 
   try {
     run('node', ['record.mjs', job.flow, '--lang', job.lang.code]);
+    // A dubbed language speaks the English script of the same flow.
+    const dub = DUB_FROM[job.lang.code];
     run('node', [
       'voice.mjs', job.slug,
       ...(job.lang.voice ? ['--voice', job.lang.voice] : ['--silent']),
+      ...(dub ? ['--dub', job.flow.replace(/\//g, '-')] : []),
     ]);
     run('node', ['render.mjs', job.slug]);
   } catch (err) {

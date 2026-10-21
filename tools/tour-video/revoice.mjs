@@ -12,15 +12,48 @@
  * re-rendered around the new timings.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { VOICE_FOR_LANG } from './lib/deepgram.mjs';
+import { VOICE_FOR_LANG, DUB_FROM } from './lib/deepgram.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const plan = argv.includes('--plan');
+const force = argv.includes('--force');
+
+/**
+ * Already done, and done with the voice we are asking for.
+ *
+ * A sleeping laptop wedged a Remotion render for five and a half hours and
+ * the whole queue sat behind it; restarting then meant redoing 26 clips that
+ * were already correct. A pass is now resumable: a clip whose timings record
+ * the target voice, and whose video is newer than those timings, is left
+ * alone unless --force says otherwise.
+ */
+const alreadyDone = (slug, voice) => {
+  if (force) return false;
+  const t = join(HERE, 'timings', `${slug}.json`);
+  const v = join(HERE, 'out', `tour-${slug}.mp4`);
+  if (!existsSync(t) || !existsSync(v)) return false;
+  try {
+    const timings = JSON.parse(readFileSync(t, 'utf8'));
+    if (timings.voice !== voice) return false;
+
+    // A dubbed clip and one voiced in its own language record the same voice,
+    // so the voice alone cannot tell them apart. voice.mjs writes which
+    // script it spoke; an older file without the field predates dubbing and
+    // is redone. Inferring this from `approximate` would have been wrong:
+    // that flag also means "timing was guessed", which the French clips all
+    // were while they went to an English transcriber.
+    const wantsDub = DUB_FROM[langOf(slug)] ?? null;
+    if ((timings.dubbedFrom ?? null) !== (wantsDub ? wantsDub : null)) return false;
+  } catch {
+    return false;
+  }
+  return statSync(v).mtimeMs >= statSync(t).mtimeMs;
+};
 const only = argv.indexOf('--lang') >= 0 ? argv[argv.indexOf('--lang') + 1] : null;
 
 /** 'platform-members-fr' -> 'fr'; no suffix means English. */
@@ -40,9 +73,12 @@ if (!jobs.length) {
   process.exit(1);
 }
 
-console.log(`${jobs.length} clips to re-voice`);
+const todo = jobs.filter((slug) => !alreadyDone(slug, VOICE_FOR_LANG[langOf(slug)]));
+const skipped = jobs.length - todo.length;
+
+console.log(`${jobs.length} clips, ${skipped} already done, ${todo.length} to re-voice`);
 for (const [lang, voice] of Object.entries(VOICE_FOR_LANG)) {
-  const n = jobs.filter((s) => langOf(s) === lang).length;
+  const n = todo.filter((s) => langOf(s) === lang).length;
   if (n) console.log(`  ${lang}: ${n} in ${voice}`);
 }
 console.log();
@@ -50,12 +86,22 @@ if (plan) process.exit(0);
 
 let done = 0;
 const failed = [];
-for (const slug of jobs) {
+for (const slug of todo) {
   const voice = VOICE_FOR_LANG[langOf(slug)];
-  process.stdout.write(`${String(++done).padStart(3)}/${jobs.length}  ${slug.padEnd(44)}`);
+  process.stdout.write(`${String(++done).padStart(3)}/${todo.length}  ${slug.padEnd(44)}`);
   try {
-    execFileSync('node', ['voice.mjs', slug, '--voice', voice], { cwd: HERE, stdio: 'pipe' });
-    execFileSync('node', ['render.mjs', slug], { cwd: HERE, stdio: 'pipe' });
+    const lang = langOf(slug);
+    const dub = DUB_FROM[lang];
+    // The English script of the same flow: the slug without its suffix.
+    const base = lang === 'en' ? slug : slug.replace(new RegExp(`-${lang}$`), '');
+    // A tour renders in about ninety seconds; ten minutes means something is
+    // wedged, and a wedged step used to stop the whole queue indefinitely.
+    const STEP_TIMEOUT = 10 * 60 * 1000;
+    execFileSync('node', [
+      'voice.mjs', slug, '--voice', voice,
+      ...(dub ? ['--dub', base] : []),
+    ], { cwd: HERE, stdio: 'pipe', timeout: STEP_TIMEOUT });
+    execFileSync('node', ['render.mjs', slug], { cwd: HERE, stdio: 'pipe', timeout: STEP_TIMEOUT });
     console.log('ok');
   } catch (err) {
     console.log('FAILED');

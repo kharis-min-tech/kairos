@@ -69,6 +69,8 @@ des sections que votre propre rôle n'a peut-être pas.
 
 <video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Votre navigateur ne peut pas lire cette vidéo. <a :href="`${clip('general')}.mp4`">Téléchargez la visite</a>.</video>
 
+<p class="silentnote">Le krio et le twi n’ont pas encore de voix de synthèse : ces visites sont lues par une voix anglaise et la prononciation est approximative. Les sous-titres portent la vraie langue.</p>
+
 ## Ensuite : votre propre rôle
 
 <div class="rolepick">

@@ -22,7 +22,7 @@ const OUT = join(HERE, '..');
 const LANGS = ['en', 'fr', 'kri', 'tw'];
 // A voice speaks one language. Naming the same English voice for both is
 // what made the French clips an American reading French words.
-const VOICE = { en: VOICE_FOR_LANG.en, fr: VOICE_FOR_LANG.fr, kri: null, tw: null };
+const VOICE = VOICE_FOR_LANG;
 
 const tables = {};
 for (const lang of LANGS) {

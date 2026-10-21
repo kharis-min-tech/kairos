@@ -1,7 +1,10 @@
 /**
  * Every clip's script, in Krio. Mirrors en.mjs entry for entry.
  *
- * Krio has no voice in Deepgram, and had none in Kokoro, so these clips carry
+ * Krio has no voice of its own in Deepgram, so these are read by an English
+ * voice and the pronunciation is approximate. The captions below are what a
+ * reader actually sees, and they come from here rather than from anything the
+ * voice was heard to say. Previously these clips carried
  * captions over the footage with no audio track. The lines are still written
  * to be spoken rather than read off a page: if a voice ever becomes
  * available, nothing here has to be rewritten.

@@ -29,7 +29,7 @@
 
 - **Kairos ka Borɔfo, Frɛnkye, Krio ne Twi.** Wɛb app, mobile app, ne nwoma yi nyinaa di deɛ woyi no akyi, enti sɛ wobue mmoa akwankyerɛ bere a Kairos wɔ Twi mu a, nwoma no bue wɔ Twi mu.
 - **Nwoma no kratafa biara wɔ kasa nnan no nyinaa mu**, a ɛwɔ n'ankasa mfonini ne n'ankasa video tiawa.
-- **Video tiawa wɔ afa biara so**, a ɛnnuru simma aduasa, ne akwantuo kɛseɛ ne akwantuo baako ma dibea biara. Krio ne Twi video wɔ nsɛm a wɔatwerɛ na ɛnyɛ nne, ɛfiri sɛ kasa mmienu no mu biara nni nne a wɔyɛ no nnɛ.
+- **Video tiawa wɔ afa biara so**, a ɛnnuru simma aduasa, ne akwantuo kɛseɛ ne akwantuo baako ma dibea biara. Kasa nyinaa wɔ nne seesei. Krio ne Twi nni nne a wɔyɛ no nnɛ, enti Borɔfo nne na ɛkenkan wɔn na ɛnka no yie; nsɛm a wɔatwerɛ no ne kasa ankasa.
 - Wɔdane Atwerɛsɛm nsɛm no nwoma din nko ara. Wɔmfa mfidie ntwerɛ nkyekyɛmu no mu nsɛm da.
 
 ### Nkaeɛ

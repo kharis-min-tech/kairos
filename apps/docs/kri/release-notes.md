@@ -29,7 +29,7 @@
 
 - **Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi.** Di wɛb ap, di mobayl ap, ɛn dis andbuk ɔl de fɔlo di sem pik, so if yu opin di ɛlp gayd we Kairos de na Krio, di andbuk de opin na Krio.
 - **Ɛvri andbuk pej de insay ɔl di fɔ langwej**, wit in yon skrinshɔt ɛn in yon klip.
-- **Wan klip pan ɛvri sɛkshɔn**, tɔti sɛkɔn maksimɔm, plɔs wan jɛnɛral tɔ ɛn wan tɔ fɔ ɛvri rol. Krio ɛn Twi klip gɛt kapshɔn nɔto vɔys, bikɔs nɔ tɔk-vɔys nɔ de fɔ dɛn tu langwej yet.
+- **Wan klip pan ɛvri sɛkshɔn**, tɔti sɛkɔn maksimɔm, plɔs wan jɛnɛral tɔ ɛn wan tɔ fɔ ɛvri rol. Ɔl di langwej dɛn gɛt vɔys naw. Nɔ tɔk-vɔys nɔ de fɔ Krio ɔ Twi yet, so na Inglish vɔys de rid dɛn ɛn di sawnd nɔ rayt ɔltɛm; di kapshɔn dɛn na di tru langwej.
 - Dɛn de tɔn di Bayblo rɛfrɛns bay buk nem nɔmɔ. Dɛn nɔ de mashin-translet di vas wɔd dɛn at ɔl.
 
 ### Ɔda tin dɛn
