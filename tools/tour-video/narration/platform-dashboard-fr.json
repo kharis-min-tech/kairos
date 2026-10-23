@@ -7,19 +7,19 @@
       "n": 1,
       "title": "Pouls de l’église",
       "caption": "Les quatre chiffres qui comptent.",
-      "speech": "Le pouls de l’église est en haut : antennes, assemblée, membres confirmés et cellules, d’un coup d’œil."
+      "speech": "Le pouls de l’église est en haut. Antennes, assemblée, membres confirmés, et cellules. D’un coup d’œil."
     },
     {
       "n": 2,
       "title": "Attention requise",
       "caption": "Ce qui attend votre intervention.",
-      "speech": "Cette section liste ce qui attend : approbations, antennes sans pasteur, ce qui bloque. Cliquez pour y aller."
+      "speech": "Cette section liste ce qui attend. Approbations, antennes sans pasteur, ce qui bloque. Cliquez pour y aller."
     },
     {
       "n": 3,
       "title": "Activité récente",
       "caption": "Qui a rejoint, et quand.",
-      "speech": "Plus bas, l’activité récente montre qui s’est inscrit et quand, sans rien ouvrir d’autre."
+      "speech": "Plus bas, l’activité récente montre qui s’est inscrit, et quand. Sans rien ouvrir d’autre."
     }
   ]
 }

@@ -7,13 +7,13 @@
       "n": 1,
       "title": "Paramètres d’antenne",
       "caption": "Détails, horaires, enregistrement.",
-      "speech": "Une antenne porte son adresse, ses horaires de culte, et si l’auto-enregistrement est actif et pendant combien de temps."
+      "speech": "Une antenne porte son adresse, et ses horaires de culte. Et aussi si l’auto-enregistrement est actif, et pendant combien de temps."
     },
     {
       "n": 2,
       "title": "Qui la dirige",
       "caption": "Pasteur, ministres, administrateurs.",
-      "speech": "La direction s’assigne ici : le pasteur principal, les ministres éventuels, et les administrateurs de l’antenne."
+      "speech": "La direction s’assigne ici. Le pasteur principal, les ministres éventuels, et les administrateurs de l’antenne."
     }
   ]
 }

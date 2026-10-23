@@ -50,7 +50,10 @@ for (const [label, path, fix] of [
 
 // `maxSeconds` comes from the flow that was recorded: a section clip caps
 // itself, a role tour runs as long as it needs to.
-const { marks, maxSeconds } = JSON.parse(readFileSync(marksPath, 'utf8'));
+// `gestures` is where the camera aims: captures recorded before the recorder
+// logged them simply have none, and those clips render with a centred push-in
+// and no click punches rather than failing.
+const { marks, maxSeconds, gestures = [] } = JSON.parse(readFileSync(marksPath, 'utf8'));
 const { stops } = JSON.parse(readFileSync(timingsPath, 'utf8'));
 
 // Trust the file on disk over whatever the recorder believed at the time.
@@ -60,7 +63,10 @@ const captureDuration = parseFloat(
   ]).toString().trim(),
 );
 
-const { segments, duration } = buildSchedule(marks, stops, captureDuration, { maxSeconds });
+const { segments, duration, over } = buildSchedule(marks, stops, captureDuration, {
+  maxSeconds,
+  gestures,
+});
 
 // The lower third's step counter is the one piece of chrome the narration
 // does not cover, so the composition needs to know the language too.
@@ -73,11 +79,20 @@ const out = join(HERE, 'out', `tour-${role}.mp4`);
 
 const held = segments.reduce((n, s) => n + s.hold, 0);
 const words = segments.reduce((n, s) => n + s.words.length, 0);
+const spoken = segments.reduce((n, s) => n + s.spoken, 0);
+const clicks = segments.reduce((n, s) => n + s.clicks.length, 0);
+const rate = segments.reduce((n, s) => n + s.rate, 0) / Math.max(1, segments.length);
+// Silence is the number this pipeline got wrong for a long time, so it is
+// reported on every render rather than left to be measured afterwards.
+const silence = duration - spoken;
 console.log(
   `${role}: ${segments.length} stops, capture ${captureDuration.toFixed(1)}s, ` +
-  `narration ${segments.reduce((n, s) => n + s.spoken, 0).toFixed(1)}s, ` +
-  `${held.toFixed(1)}s held, ${words} caption words, final ${duration.toFixed(1)}s`,
+  `narration ${spoken.toFixed(1)}s, final ${duration.toFixed(1)}s, ` +
+  `silence ${silence.toFixed(1)}s (${((silence / Math.max(0.001, duration)) * 100).toFixed(0)}%), ` +
+  `footage ${rate.toFixed(2)}x, ${held.toFixed(1)}s held, ` +
+  `${clicks} click zooms, ${words} caption words`,
 );
+if (over) console.log(`  (narration alone runs ${over}s past the ${maxSeconds}s cap)`);
 
 execFileSync(
   'npx',

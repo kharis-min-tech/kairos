@@ -7,13 +7,13 @@
       "n": 1,
       "title": "Faire l’appel",
       "caption": "À l’accueil, à l’arrivée.",
-      "speech": "Ouvrez le culte et notez présent, en retard ou en ligne au fur et à mesure. L’absence est déduite, rien à cocher pour elle."
+      "speech": "Ouvrez le culte, et notez présent, en retard, ou en ligne, au fur et à mesure. L’absence est déduite. Rien à cocher pour elle."
     },
     {
       "n": 2,
       "title": "Auto-enregistrement",
       "caption": "Un QR code à l’entrée.",
-      "speech": "Chacun peut scanner le code à l’entrée et se noter présent, ce qui libère l’accueil pour ceux qui en ont besoin."
+      "speech": "Chacun peut scanner le code à l’entrée, et se noter présent. Cela libère l’accueil pour ceux qui en ont besoin."
     }
   ]
 }

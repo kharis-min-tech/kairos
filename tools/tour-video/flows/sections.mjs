@@ -9,6 +9,23 @@
  * conceptual pages that describe the model rather than a screen — are listed
  * at the bottom with the reason, so the gap is a decision rather than an
  * oversight.
+ *
+ * ## `act`
+ *
+ * What the beat actually does, beyond loading the page. Originally no beat
+ * had one: all 67 either loaded a page or scrolled it, while the narration
+ * over the top said things like "clicking a row opens that person" and "open
+ * a service to mark people present". The clips described a product being
+ * used and showed a product sitting still.
+ *
+ *   act: 'open'                    click into the first row or card
+ *   act: { open: 'sel' }           click into something specific
+ *   act: { search: 'Emma' }        type into the page's search box
+ *   act: { click: /regex/ }        press the first button or tab that matches
+ *   act: (k) => …                  anything else
+ *
+ * Each one is best-effort: a selector that no longer matches costs the beat
+ * its gesture and leaves the list on screen, rather than failing the clip.
  */
 import { ACCOUNTS } from './index.mjs';
 import { sectionFlow } from './section.mjs';
@@ -27,57 +44,61 @@ export const SECTIONS = [
   ]},
   { slug: 'platform/members', path: '/members', account: admin, stops: [
     { title: 'The directory' },
-    { title: 'Finding somebody', point: 'input[type="search"], input[placeholder*="earch"]' },
-    { title: 'Opening a profile', scroll: 300 },
+    { title: 'Finding somebody', act: { search: 'Emma' } },
+    { title: 'Opening a profile', act: 'open' },
   ]},
   { slug: 'platform/branches', path: '/admin/branches', account: admin, stops: [
     { title: 'Every branch' },
-    { title: 'Inside one', scroll: 300 },
+    { title: 'Inside one', act: 'open' },
   ]},
   { slug: 'platform/regions', path: '/admin/regions', account: admin, stops: [
     { title: 'Regions' },
-    { title: 'Branches attached', scroll: 260 },
+    { title: 'Branches attached', act: 'open' },
   ]},
   { slug: 'platform/fellowships', path: '/fellowships', account: admin, stops: [
     { title: 'The fellowships' },
-    { title: 'Filtering by type' },
-    { title: 'Finding one on the map' },
+    { title: 'Filtering by type', act: { click: /k-?group|express|new breed|type/i } },
+    // "Find on Map" is translated — fr "Trouver sur la carte", tw "Hwehwɛ wɔ
+    // Asase Mfonini so" — so matching only /map/i clicked nothing outside
+    // English and the French clip lost its second gesture. The type chips
+    // above are hardcoded proper nouns and do match everywhere.
+    { title: 'Finding one on the map', act: { click: /map|carte|mfonini/i } },
   ]},
   { slug: 'platform/departments', path: '/departments', account: pastor, stops: [
     { title: 'Ministry teams' },
-    { title: 'Inside a department', scroll: 300 },
+    { title: 'Inside a department', act: 'open' },
   ]},
   { slug: 'platform/attendance', path: '/attendance', account: admin, stops: [
     { title: 'Services' },
-    { title: 'Recording who came', scroll: 300 },
+    { title: 'Recording who came', act: 'open' },
   ]},
   { slug: 'platform/membership', path: '/membership', account: admin, stops: [
     { title: 'The class' },
-    { title: 'Cohorts', scroll: 320 },
+    { title: 'Cohorts', act: 'open' },
   ]},
   { slug: 'platform/new-believers', path: '/new-believers', account: admin, stops: [
     { title: 'The pipeline' },
-    { title: 'Sessions', scroll: 260 },
+    { title: 'Sessions', act: 'open' },
   ]},
   { slug: 'platform/follow-ups', path: '/follow-ups', account: pastor, stops: [
     { title: 'The queues' },
-    { title: 'Logging one', scroll: 280 },
+    { title: 'Logging one', act: 'open' },
   ]},
   { slug: 'platform/concerns', path: '/concerns', account: pastor, stops: [
     { title: 'Welfare and safeguarding' },
-    { title: 'Reading one', scroll: 280 },
+    { title: 'Reading one', act: 'open' },
   ]},
   { slug: 'platform/outreach', path: '/outreach/programs', account: admin, stops: [
     { title: 'Programmes' },
-    { title: 'Capturing a soul', scroll: 280 },
+    { title: 'Capturing a soul', act: 'open' },
   ]},
   { slug: 'platform/forms', path: '/forms', account: admin, stops: [
     { title: 'The forms' },
-    { title: 'Filling one in', scroll: 300 },
+    { title: 'Filling one in', act: 'open' },
   ]},
   { slug: 'platform/souls-pipeline', path: '/souls', account: admin, stops: [
     { title: 'The board' },
-    { title: 'Moving somebody along', scroll: 260 },
+    { title: 'Moving somebody along', act: 'open' },
   ]},
   { slug: 'platform/souls-dashboard', path: '/souls-dashboard', account: admin, stops: [
     { title: 'The numbers' },
@@ -94,30 +115,36 @@ export const SECTIONS = [
     { title: 'Where status shows', scroll: 300 },
   ]},
   { slug: 'church-management/attendance-tracking', path: '/attendance', account: admin, stops: [
-    { title: 'Taking a register' },
+    { title: 'Taking a register', act: 'open' },
     { title: 'Self check-in', at: '/attendance/check-in' },
   ]},
   { slug: 'church-management/fellowship-management', path: '/fellowships', account: pastor, stops: [
     { title: 'Running a fellowship' },
-    { title: 'Its meetings', scroll: 300 },
+    { title: 'Its meetings', act: 'open' },
   ]},
   { slug: 'church-management/branch-management', path: '/admin/branches', account: admin, stops: [
-    { title: 'Branch settings' },
+    { title: 'Branch settings', act: 'open' },
     { title: 'Who leads it', scroll: 300 },
   ]},
   { slug: 'church-management/reporting', path: '/reports', account: admin, stops: [
     { title: 'What is reported' },
+    // No action: /reports has no period control to click. The page hardcodes
+    // `useMyAttendance({ weeks: 8 })`, so the line "change the window to widen
+    // or narrow the period" describes something the screen cannot do. Faking
+    // it with a tab click would be the same error this pass set out to fix —
+    // the narration and the picture disagreeing. Flagged for the line to be
+    // reworded or the control to be built.
     { title: 'Changing the window', scroll: 300 },
   ]},
   { slug: 'church-management/department-administration', path: '/departments', account: pastor, stops: [
-    { title: 'Rosters and rotas' },
+    { title: 'Rosters and rotas', act: 'open' },
     { title: 'Recruitment', scroll: 320 },
   ]},
 
   // ── Administration ──────────────────────────────────────────
   { slug: 'administration/permissions', path: '/admin/branches', account: admin, stops: [
     { title: 'Grants, not job titles' },
-    { title: 'Assigning one', scroll: 300 },
+    { title: 'Assigning one', act: 'open' },
   ]},
   { slug: 'administration/capabilities', path: '/admin/branches', account: admin, stops: [
     { title: 'What a capability is' },
@@ -125,7 +152,7 @@ export const SECTIONS = [
   ]},
   { slug: 'administration/approvals', path: '/members/approval', account: admin, stops: [
     { title: 'The queue' },
-    { title: 'Approving somebody' },
+    { title: 'Approving somebody', act: 'open' },
   ]},
   { slug: 'administration/settings', path: '/profile/settings/notifications', account: admin, stops: [
     { title: 'Your settings' },
@@ -153,11 +180,11 @@ export const SECTIONS = [
   // ── Getting started ─────────────────────────────────────────
   { slug: 'getting-started/your-first-church', path: '/admin/branches', account: admin, stops: [
     { title: 'Setting up' },
-    { title: 'Your first branch', scroll: 260 },
+    { title: 'Your first branch', act: 'open' },
   ]},
   { slug: 'getting-started/roles-permissions', path: '/admin/branches', account: admin, stops: [
     { title: 'Who can do what' },
-    { title: 'Seeing it on an account', scroll: 300 },
+    { title: 'Seeing it on an account', at: '/members', act: 'open' },
   ]},
 ];
 

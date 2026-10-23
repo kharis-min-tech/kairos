@@ -7,13 +7,13 @@
       "n": 1,
       "title": "Chaque antenne",
       "caption": "Tout le réseau, listé.",
-      "speech": "Antennes liste chaque site de l’église, sa ville, sa région et le nombre de personnes dans son assemblée."
+      "speech": "Antennes liste chaque site de l’église. Sa ville, sa région, et le nombre de personnes dans son assemblée."
     },
     {
       "n": 2,
       "title": "À l’intérieur",
       "caption": "Paramètres, direction et membres.",
-      "speech": "Ouvrez une antenne pour régler ses détails, assigner son pasteur, et voir les membres, groupes et cultes qui lui appartiennent."
+      "speech": "Ouvrez une antenne pour régler ses détails, assigner son pasteur, et voir les membres, les groupes, et les cultes qui lui appartiennent."
     }
   ]
 }

@@ -56,7 +56,12 @@ export const VOICES = {
 /** The voice each language is read in. `null` means captions over silence. */
 export const VOICE_FOR_LANG = {
   en: VOICES.athena,
-  fr: VOICES.agathe,
+  // Hector rather than Agathe: Deepgram has exactly two French voices in a
+  // catalogue of 103, and Agathe was the one that read as mechanical. The
+  // French scripts were also repunctuated at the same time — Aura takes its
+  // phrasing from the commas, and a run of short unbroken clauses is most of
+  // what makes any of these voices sound like a machine.
+  fr: VOICES.hector,
   kri: VOICES.athena,
   tw: VOICES.athena,
 };

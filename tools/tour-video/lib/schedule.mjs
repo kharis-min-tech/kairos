@@ -3,85 +3,78 @@
  *
  * The recorder timestamps each stop as it performs it, which says *where in
  * the capture* the thing being described is on screen. The narration says
- * *how long* describing it takes. Those two rarely agree: a line that reads
- * in four seconds can sit over a page that was on screen for two.
+ * *how long* describing it takes. Those two rarely agree.
  *
- * The old pipeline placed the audio at the recorder's mark and let the
- * mismatch fall where it may — a line could still be talking about the
- * members list while the capture had moved on to attendance.
+ * ## What this used to do, and why it was wrong
  *
- * Here the capture is cut into one segment per stop and each segment holds
- * its last frame for however long the narration overruns it. Nothing is sped
- * up and nothing is clipped: the picture waits for the sentence to finish.
+ * The first version let the picture lead: a segment lasted as long as its
+ * footage, and froze the last frame if the sentence overran. Then a cap was
+ * added for the short section clips, and the leftover budget was poured back
+ * into footage so each clip filled its thirty seconds.
+ *
+ * Measured across the 128 section clips, that put 15.2 seconds of narration
+ * into a 30-second clip — **49% of every clip was silence**, held on a page
+ * that was not moving, because the recorder's own dwell was a 14-second
+ * `settle()` per beat. The clips did not read as video. They read as
+ * screenshots with gaps.
+ *
+ * ## What it does now
+ *
+ * The narration leads. A segment lasts exactly as long as its line, and the
+ * footage behind it is *time-fitted* to that length: sped up when there is
+ * more capture than speech, gently slowed when there is less. Nothing is
+ * padded, so there is no dead air, and the picture is moving for as much of
+ * the line as there is footage to move.
+ *
+ * Speech is still never cut. That rule has not changed — it is the reason a
+ * cap trims footage and not sentences.
  */
 
 /** Silence between stops, so lines do not run into each other. */
-export const GAP = 0.35;
+export const GAP = 0.12;
 
 /**
  * Seconds held after the last line so the closing words are not clipped.
- * The composition appends this, so the cap has to allow for it: a clip
- * budgeted to exactly `maxSeconds` of segments came out `maxSeconds` plus the
- * gaps plus this, and every "thirty-second" section clip rendered at 32.3.
+ * The composition appends this, so a cap has to allow for it.
  */
-export const TAIL = 2;
+export const TAIL = 0.9;
+
+/**
+ * Cross-dissolve between stops, in seconds.
+ *
+ * Purely a composition concern: the outgoing shot holds its last frame this
+ * much longer and the incoming one fades in over the top. Segment start times
+ * are untouched, so the audio still never overlaps.
+ */
+export const CROSS = 0.4;
+
+/**
+ * How far the footage may be pushed off real time.
+ *
+ * Screen recordings take speed well — a cursor crossing a list at 2x still
+ * reads as somebody using software, and it is what makes a clip feel edited
+ * rather than observed. Past about 2.2 it starts to read as comic.
+ *
+ * The floor matters just as much: given less footage than speech, stretching
+ * what there is to 0.6x looks far better than freezing a frame. Freezing is
+ * the last resort, not the first.
+ */
+const MAX_RATE = 2.2;
+const MIN_RATE = 0.6;
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 /**
  * @param marks    recorder marks: [{ n, start }], ordered, seconds into the capture
  * @param stops    measured narration: [{ n, duration, words, title, caption }]
  * @param capture  length of the capture in seconds
  * @param opts.maxSeconds  cap for a short section clip, trimming footage only
+ * @param opts.gestures    recorder gestures: [{ t, x, y, kind }], capture-relative
  * @returns one entry per stop, in timeline order
  */
-export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
+export function buildSchedule(marks, stops, capture, { maxSeconds, gestures = [] } = {}) {
   const byN = new Map(stops.map((s) => [s.n, s]));
   const ordered = [...marks].sort((a, b) => a.start - b.start);
-
-  // A short clip trims footage, never speech. Cutting a sentence in half to
-  // hit a number is worse than a clip that runs two seconds over.
-  //
-  // Dividing the budget into equal shares was not enough. A stop whose line
-  // runs past its share takes the length it needs, while the others sit
-  // padded out to a share they do not use — so one talkative stop pushed the
-  // whole clip over while four seconds of pure picture sat beside it doing
-  // nothing. Eleven clips came out between 30.1 and 35 seconds that way.
-  //
-  // So: every stop is first given exactly as long as its line, and what is
-  // left of the budget is then poured over the stops that still have footage
-  // to show, a level at a time, until it runs out or they are full. A long
-  // line borrows the slack from a short one, and nothing is ever clipped.
-  const budget = new Map();
-  if (maxSeconds) {
-    const live = ordered
-      .map((m, i) => {
-        const stop = byN.get(m.n);
-        if (!stop) return null;
-        const to = ordered[i + 1]?.start ?? capture;
-        return { n: m.n, spoken: stop.duration, room: Math.max(0, to - m.start) };
-      })
-      .filter(Boolean);
-
-    const overhead = Math.max(0, live.length - 1) * GAP + TAIL;
-    let spare = maxSeconds - overhead - live.reduce((n, s) => n + s.spoken, 0);
-
-    for (const s of live) budget.set(s.n, Math.min(s.room, s.spoken));
-
-    // Water-filling: share what is spare between the stops that can still use
-    // it, and go round again with whatever they could not take.
-    let open = live.filter((s) => s.room > budget.get(s.n));
-    while (spare > 1e-6 && open.length) {
-      const slice = spare / open.length;
-      let used = 0;
-      for (const s of open) {
-        const take = Math.min(slice, s.room - budget.get(s.n));
-        budget.set(s.n, budget.get(s.n) + take);
-        used += take;
-      }
-      if (used <= 1e-9) break;
-      spare -= used;
-      open = open.filter((s) => s.room - budget.get(s.n) > 1e-6);
-    }
-  }
 
   const out = [];
   let timeline = 0;
@@ -94,13 +87,18 @@ export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
     // How much capture this stop owns: up to the next mark, or to the end.
     const captureFrom = mark.start;
     const captureTo = ordered[i + 1]?.start ?? capture;
-    let captureSpan = Math.max(0, captureTo - captureFrom);
+    const room = Math.max(0, captureTo - captureFrom);
 
-    if (maxSeconds) captureSpan = Math.min(captureSpan, budget.get(stop.n) ?? captureSpan);
-
-    // The segment lasts as long as whichever is longer, then a breath.
+    // The line is the length of the segment. Everything else bends to it.
     const spoken = stop.duration;
-    const span = Math.max(captureSpan, spoken);
+    const span = spoken;
+
+    // Fit the footage into the line.
+    const rate = room > 0 && spoken > 0 ? clamp(room / spoken, MIN_RATE, MAX_RATE) : 1;
+    const plays = Math.min(room, spoken * rate);
+    const playedFor = rate > 0 ? plays / rate : 0;
+
+    const focus = lastGestureIn(gestures, captureFrom, captureFrom + plays);
 
     out.push({
       n: stop.n,
@@ -109,14 +107,28 @@ export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
       audio: stop.file,
       /** Where this segment begins on the finished timeline. */
       at: timeline,
-      /** How long it lasts, including any held frame. */
+      /** How long it lasts. Equal to the line: no padding, ever. */
       span,
-      /** Where to seek into the capture, and how much of it actually plays. */
+      /** Where to seek into the capture, and how much of it is consumed. */
       captureFrom,
-      capturePlays: captureSpan,
-      /** Still frame held after the capture runs out, so the line can finish. */
-      hold: Math.max(0, spoken - captureSpan),
+      capturePlays: plays,
+      /** How fast that footage runs, so `plays` seconds fill `playedFor`. */
+      rate,
+      /** Timeline seconds of moving picture. */
+      playedFor,
+      /** Still frame, only where there was not enough footage even at 0.6x. */
+      hold: Math.max(0, span - playedFor),
       spoken,
+      /**
+       * Where the camera should favour, in capture pixels, or null to sit
+       * centred. Taken from the last thing the cursor did in this stop,
+       * which is the thing the line has just finished describing.
+       */
+      focus: focus ? { x: focus.x, y: focus.y } : null,
+      /** Clicks to punch in on, in timeline seconds. */
+      clicks: gestures
+        .filter((g) => g.kind === 'click' && g.t >= captureFrom && g.t < captureFrom + plays)
+        .map((g) => ({ at: timeline + (g.t - captureFrom) / rate, x: g.x, y: g.y })),
       /** Word times, shifted from audio-relative to timeline-absolute. */
       words: (stop.words ?? []).map((w) => ({
         word: w.word,
@@ -132,5 +144,23 @@ export function buildSchedule(marks, stops, capture, { maxSeconds } = {}) {
   // and the capture, which pinned every clip to the full recording — sign-in
   // included — and turned a thirty-second section clip into eighty seconds
   // that opened on a login screen.
-  return { segments: out, duration: Math.max(0, timeline - GAP) };
+  const duration = Math.max(0, timeline - GAP);
+
+  // A cap can no longer be met by trimming footage, because the footage is
+  // already fitted to the speech. If the speech alone overruns, say so and
+  // let it overrun: cutting a sentence in half to hit a number is worse.
+  if (maxSeconds && duration + TAIL > maxSeconds + 1e-9) {
+    out.over = +(duration + TAIL - maxSeconds).toFixed(2);
+  }
+
+  return { segments: out, duration, over: out.over ?? 0 };
+}
+
+/** The last gesture inside a window, which is what the stop ended on. */
+function lastGestureIn(gestures, from, to) {
+  let best = null;
+  for (const g of gestures) {
+    if (g.t >= from && g.t < to && (!best || g.t > best.t)) best = g;
+  }
+  return best;
 }

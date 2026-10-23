@@ -9,9 +9,27 @@
  * This injects a pointer into the page and animates it between targets. It
  * has to live inside the recorded page — an overlay drawn outside the browser
  * would not be in the capture.
+ *
+ * ## Why it is this big
+ *
+ * The first version was a 22-pixel dot. On a 1920-wide frame, scaled into the
+ * handbook's content column, that is about nine pixels — small enough that
+ * the clicks genuinely could not be seen, which is what it was there to show.
+ * It is now a proper arrow at 36 pixels with a high-contrast outline, and the
+ * composition zooms in on each click as well.
  */
 (() => {
   if (window.__kairosCursor) return;
+
+  const PURPLE = '#3b0764';
+  const GOLD = '#f8b537';
+
+  // A real pointer shape rather than a blob: a viewer reads the arrow as a
+  // mouse immediately, and its tip marks the exact pixel being acted on.
+  const arrow =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36">' +
+    `<path d="M4 2 L4 20 L9.2 15.2 L12.4 22.4 L15.8 20.8 L12.6 13.8 L19.5 13.4 Z" fill="#fff" stroke="${PURPLE}" stroke-width="1.4" stroke-linejoin="round"/>` +
+    '</svg>';
 
   const dot = document.createElement('div');
   dot.id = 'kairos-tour-cursor';
@@ -19,16 +37,17 @@
     position: 'fixed',
     left: '0px',
     top: '0px',
-    width: '22px',
-    height: '22px',
-    marginLeft: '-3px',
-    marginTop: '-3px',
-    borderRadius: '50% 50% 50% 2px',
-    background: 'rgba(255,255,255,0.96)',
-    border: '2px solid rgba(59,7,100,0.85)',
-    boxShadow: '0 3px 14px rgba(0,0,0,0.45)',
+    width: '36px',
+    height: '36px',
+    // The arrow's tip is at its top-left, so the box hangs off the point.
+    marginLeft: '-2px',
+    marginTop: '-2px',
+    backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(arrow)}")`,
+    backgroundRepeat: 'no-repeat',
+    filter: 'drop-shadow(0 3px 7px rgba(0,0,0,0.55))',
     zIndex: '2147483647',
     pointerEvents: 'none',
+    transformOrigin: '2px 2px',
     transition: 'transform 90ms ease-out',
     willChange: 'left, top',
   });
@@ -36,16 +55,17 @@
   const ring = document.createElement('div');
   Object.assign(ring.style, {
     position: 'fixed',
-    width: '42px',
-    height: '42px',
-    marginLeft: '-21px',
-    marginTop: '-21px',
+    width: '64px',
+    height: '64px',
+    marginLeft: '-32px',
+    marginTop: '-32px',
     borderRadius: '50%',
-    border: '2px solid #f8b537',
+    border: `3px solid ${GOLD}`,
+    boxShadow: `0 0 18px ${GOLD}`,
     opacity: '0',
     zIndex: '2147483646',
     pointerEvents: 'none',
-    transition: 'opacity 140ms ease-out, transform 240ms ease-out',
+    transition: 'opacity 150ms ease-out, transform 260ms ease-out',
   });
 
   document.documentElement.append(dot, ring);
@@ -83,17 +103,17 @@
     /** A visible press: the pointer dips and a ring pulses out. */
     click() {
       return new Promise((resolve) => {
-        dot.style.transform = 'scale(0.78)';
+        dot.style.transform = 'scale(0.82)';
         ring.style.opacity = '1';
-        ring.style.transform = 'scale(0.4)';
+        ring.style.transform = 'scale(0.35)';
         requestAnimationFrame(() => {
-          ring.style.transform = 'scale(1.25)';
+          ring.style.transform = 'scale(1.35)';
           ring.style.opacity = '0';
         });
         setTimeout(() => {
           dot.style.transform = 'scale(1)';
           resolve();
-        }, 180);
+        }, 190);
       });
     },
     hide() {

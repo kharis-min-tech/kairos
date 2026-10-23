@@ -27,3 +27,4 @@ tools/tour-video/public/capture/
 tools/tour-video/public/voice/
 tools/tour-video/marks-*.json
 apps/docs/public/clips/
+apps/docs/public/voice-samples/

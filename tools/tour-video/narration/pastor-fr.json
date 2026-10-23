@@ -7,7 +7,7 @@
       "n": 1,
       "title": "Votre vue d’ensemble",
       "caption": "Votre antenne, et ce qu’elle attend de vous.",
-      "speech": "Votre vue d’ensemble s’ouvre sur votre antenne : combien de personnes dans l’assemblée, et ce qui attend votre intervention aujourd’hui."
+      "speech": "Votre vue d’ensemble s’ouvre sur votre antenne. Combien de personnes dans l’assemblée, et ce qui attend votre intervention aujourd’hui."
     },
     {
       "n": 2,
@@ -25,13 +25,13 @@
       "n": 4,
       "title": "Suivis",
       "caption": "Trois files, sur un calendrier serré.",
-      "speech": "Les suivis comptent trois files : les premières visites sans contact, les personnes sans groupe, et les relances en retard."
+      "speech": "Les suivis comptent trois files. Les premières visites sans contact, les personnes sans groupe, et les relances en retard."
     },
     {
       "n": 5,
       "title": "Préoccupations",
       "caption": "Bien-être et protection, séparés.",
-      "speech": "Les préoccupations regroupent bien-être et protection. Ce sont deux boîtes distinctes, lues par des personnes délibérément différentes."
+      "speech": "Les préoccupations regroupent bien-être, et protection. Ce sont deux boîtes distinctes, lues par des personnes délibérément différentes."
     },
     {
       "n": 6,
@@ -43,19 +43,19 @@
       "n": 7,
       "title": "Votre département",
       "caption": "Effectif, planning et recrutement.",
-      "speech": "Pour votre département, vous gérez l’effectif, publiez le planning, et traitez les candidatures reçues."
+      "speech": "Pour votre département, vous gérez l’effectif, vous publiez le planning, et vous traitez les candidatures reçues."
     },
     {
       "n": 8,
       "title": "Le parcours des âmes",
       "caption": "Du premier contact au département.",
-      "speech": "Le parcours des âmes suit une personne touchée par l’évangélisation, du premier contact jusqu’à son entrée dans un département."
+      "speech": "Le parcours des âmes suit une personne touchée par l’évangélisation. Du premier contact, jusqu’à son entrée dans un département."
     },
     {
       "n": 9,
       "title": "Rapports",
       "caption": "Votre antenne, en chiffres.",
-      "speech": "Les rapports traduisent votre antenne en chiffres : tendances de présence, qui manque à l’appel, et la croissance des groupes."
+      "speech": "Les rapports traduisent votre antenne en chiffres. Tendances de présence, qui manque à l’appel, et la croissance des groupes."
     }
   ]
 }

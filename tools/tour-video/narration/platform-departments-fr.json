@@ -7,13 +7,13 @@
       "n": 1,
       "title": "Équipes de ministère",
       "caption": "Chaque équipe, et qui la dirige.",
-      "speech": "Les départements sont les équipes de ministère. Chacune affiche son responsable, son adjoint, et combien de personnes y servent."
+      "speech": "Les départements, ce sont les équipes de ministère. Chacune affiche son responsable, son adjoint, et le nombre de personnes qui y servent."
     },
     {
       "n": 2,
       "title": "Dans un département",
       "caption": "Effectif, planning, recrutement, tenue.",
-      "speech": "Ouvrez-en un et vous avez son effectif, son planning de service, les candidatures, et la tenue prévue pour un culte à venir."
+      "speech": "Ouvrez-en un, et vous avez son effectif, son planning de service, les candidatures, et la tenue prévue pour un culte à venir."
     }
   ]
 }

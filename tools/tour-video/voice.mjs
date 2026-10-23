@@ -5,6 +5,7 @@
  *   node voice.mjs member
  *   node voice.mjs member --voice draco
  *   node voice.mjs member --only 3        # just re-do stop 3 after a reword
+ *   node voice.mjs member --force         # re-synthesise even if unchanged
  *
  * Reads  narration/<role>.json
  * Writes public/voice/<role>/NN.wav      one file per stop, 24 kHz linear16
@@ -18,6 +19,7 @@
  * Needs DEEPGRAM_API_KEY. The key is read from the environment inside
  * lib/deepgram.mjs and is never written to either output.
  */
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -81,6 +83,19 @@ const dubScript = dubFrom
 const voiceName = flag('voice') ?? script.voice;
 const voice = VOICES[voiceName] ?? (voiceName?.startsWith('aura-') ? voiceName : DEFAULT_VOICE);
 const only = flag('only') ? Number(flag('only')) : undefined;
+const force = argv.includes('--force');
+
+/**
+ * What a stop's audio depends on. If none of it has moved, the WAV on disk is
+ * still the right WAV and there is nothing to ask Deepgram for.
+ *
+ * Without this, re-running the pipeline after a change to the *video* side
+ * re-synthesised all 144 clips — every line, in four languages, for nothing.
+ * The French rewrite changed 91 lines; this is what keeps the other 300-odd
+ * from being bought again.
+ */
+const fingerprint = (text, spoken) =>
+  createHash('sha256').update(`${voice}\u0000${text}\u0000${spoken}`).digest('hex').slice(0, 16);
 
 const voiceDir = join(HERE, 'public', 'voice', role);
 const timingsDir = join(HERE, 'timings');
@@ -134,6 +149,15 @@ for (const stop of script.stops) {
     ? (dubScript.stops.find((x) => x.n === stop.n)?.speech ?? stop.speech)
     : stop.speech;
 
+  // Nothing about this line has changed since it was last spoken: keep it.
+  const mark = fingerprint(stop.speech, spokenText);
+  const kept = previous.stops?.find((s) => s.n === stop.n);
+  if (!force && kept?.mark === mark && kept.file && existsSync(file)) {
+    stops.push(kept);
+    console.log(`${kept.duration.toFixed(2)}s  ${kept.words.length} words  (unchanged)`);
+    continue;
+  }
+
   const wav = await speak(spokenText, { voice });
   writeFileSync(file, wav);
 
@@ -171,6 +195,8 @@ for (const stop of script.stops) {
     title: stop.title,
     caption: stop.caption,
     file: `voice/${role}/${name}`,
+    /** Voice + caption text + spoken text, so a re-run knows what moved. */
+    mark,
     duration,
     words,
   });

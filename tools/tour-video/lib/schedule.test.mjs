@@ -27,14 +27,21 @@ const stop = (n, duration, words = []) => ({
   words,
 });
 
-test('a stop whose narration fits inside its footage holds nothing', () => {
+test('a segment lasts as long as its line, not as long as its footage', () => {
+  // This assertion used to read `span === 10` — the footage length — and that
+  // was the defect, not the requirement. Ten seconds of capture behind a
+  // four-second line meant six seconds of silence on a still page, and across
+  // the 128 section clips it worked out at 49% of the running time. The line
+  // leads now, and the footage is fitted into it.
   const { segments } = buildSchedule(
     [{ n: 1, start: 0 }, { n: 2, start: 10 }],
     [stop(1, 4), stop(2, 3)],
     20,
   );
   assert.equal(segments[0].hold, 0);
-  assert.equal(segments[0].span, 10, 'segment lasts as long as its footage');
+  assert.equal(segments[0].span, 4, 'the segment is the length of the sentence');
+  assert.ok(segments[0].rate > 1, 'the footage is sped up to fill the line');
+  near(segments[0].playedFor, 4, 'picture moves for the whole line');
 });
 
 test('a line longer than its footage freezes the picture, never clips the line', () => {
@@ -43,9 +50,13 @@ test('a line longer than its footage freezes the picture, never clips the line',
     [stop(1, 6), stop(2, 3)],
     10,
   );
-  assert.equal(segments[0].capturePlays, 2);
-  assert.equal(segments[0].hold, 4, 'four seconds of held frame');
+  assert.equal(segments[0].capturePlays, 2, 'all the footage there is');
   assert.equal(segments[0].span, 6, 'the segment lasts as long as the sentence');
+  // Two seconds of capture under a six-second line. Stretching it to 0.6x
+  // covers 3.33 of those seconds with moving picture and freezes the rest;
+  // the old scheduler froze all four of them.
+  near(segments[0].rate, 0.6, 'slowed, not frozen');
+  assert.ok(segments[0].hold < 3, `less frozen than before (${segments[0].hold})`);
 });
 
 test('stops never overlap: each starts after the one before, plus a breath', () => {
@@ -190,6 +201,69 @@ test('marks arriving out of order are put back in time order', () => {
     12,
   );
   assert.deepEqual(segments.map((s) => s.n), [1, 2]);
+});
+
+test('no segment is ever padded past its line', () => {
+  // The whole complaint, as an assertion: a clip with generous footage and
+  // short lines must not come out half silent.
+  const { segments, duration } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 14 }, { n: 3, start: 28 }],
+    [stop(1, 5), stop(2, 6), stop(3, 4)],
+    42,
+    { maxSeconds: 30 },
+  );
+  for (const s of segments) near(s.span, s.spoken, `stop ${s.n} is not padded`);
+  const spoken = segments.reduce((n, s) => n + s.spoken, 0);
+  const silence = duration - spoken;
+  assert.ok(silence <= GAP * 2 + 1e-9, `silence is only the breaths (${silence})`);
+});
+
+test('footage is never pushed past the point where it reads as comic', () => {
+  const { segments } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 90 }],
+    [stop(1, 3), stop(2, 3)],
+    120,
+  );
+  assert.ok(segments[0].rate <= 2.2 + 1e-9, `capped (${segments[0].rate})`);
+  // Past the cap the remaining footage is simply not used, rather than the
+  // line being stretched to cover it.
+  assert.ok(segments[0].capturePlays < 90, 'the surplus is dropped, not raced through');
+});
+
+test('a click is placed where it falls on the finished timeline, not the capture', () => {
+  // The composition punches in on clicks. A click 8 seconds into a capture
+  // that is playing at 2x lands 4 seconds into the segment, so the zoom has
+  // to be told the timeline moment, not the recorder's.
+  const { segments } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 20 }],
+    [stop(1, 10), stop(2, 5)],
+    40,
+    { gestures: [{ t: 8, x: 400, y: 300, kind: 'click' }] },
+  );
+  const [click] = segments[0].clicks;
+  assert.ok(click, 'the click survived into the schedule');
+  near(click.at, 8 / segments[0].rate, 'rescaled by the playback rate');
+  assert.deepEqual([click.x, click.y], [400, 300], 'in capture pixels, untouched');
+});
+
+test('a stop with no gesture simply has no focus point', () => {
+  const { segments } = buildSchedule(
+    [{ n: 1, start: 0 }],
+    [stop(1, 4)],
+    10,
+  );
+  assert.equal(segments[0].focus, null);
+  assert.deepEqual(segments[0].clicks, []);
+});
+
+test('a cap that speech alone overruns is reported rather than enforced', () => {
+  const { over } = buildSchedule(
+    [{ n: 1, start: 0 }, { n: 2, start: 30 }],
+    [stop(1, 20), stop(2, 20)],
+    60,
+    { maxSeconds: 30 },
+  );
+  assert.ok(over > 0, 'the overrun is surfaced');
 });
 
 console.log(`\n${passed} scheduler tests passed`);
