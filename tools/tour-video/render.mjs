@@ -102,6 +102,11 @@ execFileSync(
     '--codec', 'h264',
     '--crf', '21',
     '--audio-bitrate', '192k',
+    // Playwright writes a streaming VP8 webm with no seek index, so pulling a
+    // frame from deep inside a long capture means decoding everything before
+    // it. On the 87-second role tours that can pass Remotion's 28-second
+    // default and fail the whole render for a frame that was merely slow.
+    '--timeout', '180000',
     '--log', 'info',
   ],
   { cwd: HERE, stdio: 'inherit' },

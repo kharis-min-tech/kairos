@@ -306,15 +306,23 @@ const Caption: React.FC<{ segment: Segment; total: number; lang: string }> = ({
 
   // In on a slide, out before the dissolve, so two captions are never up at
   // once and the card is never caught mid-cross-fade.
-  const IN = 0.42;
-  const OUT = 0.3;
-  const opacity = interpolate(
-    local,
-    [0, IN, Math.max(IN, segment.span - OUT), segment.span],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.ease) },
-  );
-  const lift = interpolate(local, [0, IN], [26, 0], {
+  //
+  // The two moments are derived from the span rather than fixed, because
+  // interpolate() requires a strictly increasing input range: a line short
+  // enough that `span - OUT` fell at or below the fade-in produced
+  // [0, 0.42, 0.42, span] and threw, taking the whole render with it. No
+  // narration line is currently under two seconds, so this has never fired —
+  // it is a trap laid for whoever writes a three-word one.
+  const IN = Math.min(0.42, segment.span * 0.3);
+  const OUT = Math.min(0.3, segment.span * 0.25);
+  const outAt = Math.max(IN + 1e-3, segment.span - OUT);
+  const end = Math.max(outAt + 1e-3, segment.span);
+  const opacity = interpolate(local, [0, IN, outAt, end], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.ease),
+  });
+  const lift = interpolate(local, [0, Math.max(1e-3, IN)], [26, 0], {
     extrapolateRight: 'clamp',
     easing: Easing.out(Easing.cubic),
   });

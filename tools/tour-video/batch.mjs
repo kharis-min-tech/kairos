@@ -71,8 +71,31 @@ if (has('plan')) {
   process.exit(0);
 }
 
+/**
+ * No step may take longer than this.
+ *
+ * Learned the hard way, twice. If the machine sleeps mid-render, Chrome's
+ * sessions die under Remotion and `cycle-browser-tabs` spins on
+ * "Protocol error (Page.bringToFront): Session closed" forever. The batch
+ * process stays alive and reports no failure, so it looks healthy from the
+ * outside while doing nothing at all — the last run sat wedged on one clip
+ * for roughly twelve hours.
+ *
+ * A render is about a minute for a section clip and four for a role tour, so
+ * fifteen minutes is far beyond any legitimate step. Exceeding it kills the
+ * child, fails the clip, and lets the run carry on to the next one; the
+ * clip is picked up by the next pass because nothing was written to out/.
+ */
+const STEP_TIMEOUT = 15 * 60 * 1000;
+
 const run = (cmd, args) =>
-  execFileSync(cmd, args, { cwd: HERE, stdio: 'inherit', env: process.env });
+  execFileSync(cmd, args, {
+    cwd: HERE,
+    stdio: 'inherit',
+    env: process.env,
+    timeout: STEP_TIMEOUT,
+    killSignal: 'SIGKILL',
+  });
 
 let done = 0;
 let failed = 0;
@@ -100,7 +123,10 @@ for (const job of todo) {
     ]);
     run('node', ['render.mjs', job.slug]);
   } catch (err) {
-    console.log(`  FAILED: ${err.message.split('\n')[0]}`);
+    const why = err.signal === 'SIGKILL'
+      ? `timed out after ${STEP_TIMEOUT / 60000} minutes and was killed`
+      : err.message.split('\n')[0];
+    console.log(`  FAILED: ${why}`);
     failed++;
     continue;
   }

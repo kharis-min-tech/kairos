@@ -1,23 +1,42 @@
 import { ACCOUNTS } from './index.mjs';
 
 /**
- * The member tour: what somebody with no grants at all actually sees.
+ * The member tour: the short sidebar, and why it is short.
  *
- * Recorded as a real member rather than an administrator pretending. Most of
- * the sidebar is simply not there for them, and that absence is the point of
- * the tour.
+ * Each stop shows its screen being used rather than standing on it. The two
+ * stops that describe what is inside a group or a team open one.
  */
+const stop = (n, title, path, run) => ({ n, title, async run(k) { await k.goto(path); await run(k); } });
+
 export default {
   id: 'member',
   account: ACCOUNTS.member,
   stops: [
-    { n: 1, title: 'Your overview', async run(k) { await k.goto('/dashboard'); await k.settle(5200); } },
-    { n: 2, title: 'What you can see', async run(k) { await k.moveTo('a[href="/dashboard"]'); await k.settle(4800); } },
-    { n: 3, title: 'Your attendance', async run(k) { await k.goto('/me/attendance'); await k.settle(5600); } },
-    { n: 4, title: 'Your fellowship', async run(k) { await k.goto('/fellowships'); await k.settle(5200); } },
-    { n: 5, title: 'Your departments', async run(k) { await k.goto('/departments'); await k.settle(5200); } },
-    { n: 6, title: 'Checking in', async run(k) { await k.goto('/attendance/check-in'); await k.settle(5200); } },
-    { n: 7, title: 'Forms', async run(k) { await k.goto('/forms'); await k.settle(5200); } },
-    { n: 8, title: 'Your profile', async run(k) { await k.goto('/profile'); await k.settle(5200); } },
+    stop(1, 'Your overview', '/dashboard', (k) => k.showcase(8200)),
+    {
+      n: 2,
+      title: 'What you can see',
+      // No navigation: this stop is about the sidebar itself, so the cursor
+      // walks it rather than opening anything.
+      async run(k) {
+        await k.moveTo('a[href="/dashboard"]');
+        await k.showcase(7400);
+      },
+    },
+    stop(3, 'Your attendance', '/me/attendance', (k) => k.showcase(8600)),
+    // "Fellowships shows the group you belong to, when it meets and where."
+    stop(4, 'Your fellowship', '/fellowships', async (k) => {
+      await k.openFirst();
+      await k.showcase(6000);
+    }),
+    // "Departments lists the teams you serve on, when you are next on the
+    // rota, and the uniform…"
+    stop(5, 'Your departments', '/departments', async (k) => {
+      await k.openFirst();
+      await k.showcase(6000);
+    }),
+    stop(6, 'Checking in', '/attendance/check-in', (k) => k.showcase(8200)),
+    stop(7, 'Forms', '/forms', (k) => k.showcase(8200)),
+    stop(8, 'Your profile', '/profile', (k) => k.showcase(8200)),
   ],
 };

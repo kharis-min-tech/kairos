@@ -152,7 +152,14 @@ export const SECTIONS = [
   ]},
   { slug: 'administration/approvals', path: '/members/approval', account: admin, stops: [
     { title: 'The queue' },
-    { title: 'Approving somebody', act: 'open' },
+    // Deliberately no click. There is no detail view behind a queue entry —
+    // the row carries Reject and Approve directly — so `act: 'open'` found
+    // nothing and did nothing. Worse, pressing Approve would actually
+    // approve somebody: the queue would be emptied by the English recording
+    // and the French, Krio and Twi clips would film an empty screen. The
+    // cursor tours the queue instead, which is what the line describes
+    // anyway — check what they gave you, then approve.
+    { title: 'Approving somebody' },
   ]},
   { slug: 'administration/settings', path: '/profile/settings/notifications', account: admin, stops: [
     { title: 'Your settings' },

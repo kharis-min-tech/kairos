@@ -14,7 +14,7 @@
  * that puts them where a build will pick them up.
  */
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,6 +29,26 @@ if (!existsSync(OUT)) {
 }
 
 mkdirSync(DEST, { recursive: true });
+
+/**
+ * Clear the destination first.
+ *
+ * Clips are copied by name, so a clip that failed to render simply leaves
+ * the previous one in place — and the previous ones here are the old
+ * half-silent cut. A handbook quietly mixing two generations of clip is
+ * worse than one with a visible hole, because nobody would ever find it.
+ * `check-clips.mjs` runs straight after this and names anything missing.
+ */
+if (!dry && existsSync(DEST)) {
+  let removed = 0;
+  for (const f of readdirSync(DEST)) {
+    if (f.endsWith('.mp4') || f.endsWith('.jpg')) {
+      rmSync(join(DEST, f));
+      removed++;
+    }
+  }
+  if (removed) console.log(`cleared ${removed} previously published files\n`);
+}
 
 const clips = readdirSync(OUT)
   .filter((f) => f.startsWith('tour-') && f.endsWith('.mp4') && f !== 'tour-smoke.mp4')

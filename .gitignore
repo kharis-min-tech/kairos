@@ -26,5 +26,7 @@ tools/tour-video/out/
 tools/tour-video/public/capture/
 tools/tour-video/public/voice/
 tools/tour-video/marks-*.json
+tools/tour-video/stale/
+tools/tour-video/.capture-tmp/
 apps/docs/public/clips/
 apps/docs/public/voice-samples/
