@@ -124,7 +124,7 @@ const api = {
     if (!box) return false;
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
-    await page.evaluate(([tx, ty]) => window.__kairosCursor?.moveTo(tx, ty), [x, y]);
+    await page.evaluate(([tx, ty]) => window.__kairosCursor.moveTo(tx, ty), [x, y]);
     await page.waitForTimeout(460);
     gesture('move', x, y);
     api.pointer = { x, y };
@@ -133,17 +133,37 @@ const api = {
   async click(selector) {
     if (!(await api.moveTo(selector))) return false;
     gesture('click', api.pointer.x, api.pointer.y);
-    await page.evaluate(() => window.__kairosCursor?.click());
+    await page.evaluate(() => window.__kairosCursor.click());
     await page.waitForTimeout(200);
     await page.locator(selector).first().click().catch(() => {});
-    await page.waitForTimeout(600);
+    await api.settleAfterClick();
     return true;
+  },
+  /**
+   * Hold until the screen a click opened has actually drawn.
+   *
+   * A flat 600ms was not enough: the camera punches in exactly at the click,
+   * and what it found there was Next's skeleton -- grey placeholder blocks
+   * where the content should be. Wait for the network to go quiet, then give
+   * the frame a beat to paint, so the zoom lands on real content.
+   */
+  async settleAfterClick() {
+    await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    // Skeletons are rendered, so "no network" is not proof of "no skeleton".
+    await page
+      .waitForFunction(
+        () => !document.querySelector('[data-skeleton], .animate-pulse, [aria-busy="true"]'),
+        null,
+        { timeout: 6000 },
+      )
+      .catch(() => {});
+    await page.waitForTimeout(500);
   },
   /** Where the pointer is, so a gesture can be logged without re-measuring. */
   pointer: { x: WIDTH / 2, y: HEIGHT / 2 },
   /** Glide to a point already known, without re-measuring an element. */
   async moveToPoint(x, y, ms = 420) {
-    await page.evaluate(([tx, ty, d]) => window.__kairosCursor?.moveTo(tx, ty, d), [x, y, ms]);
+    await page.evaluate(([tx, ty, d]) => window.__kairosCursor.moveTo(tx, ty, d), [x, y, ms]);
     await page.waitForTimeout(ms + 40);
     gesture('move', x, y);
     api.pointer = { x, y };
@@ -231,7 +251,7 @@ const api = {
 
     await api.moveToPoint(box.x, box.y, 440);
     gesture('click', box.x, box.y);
-    await page.evaluate(() => window.__kairosCursor?.click());
+    await page.evaluate(() => window.__kairosCursor.click());
     await page.waitForTimeout(170);
     await page.mouse.click(box.x, box.y);
 
@@ -253,7 +273,7 @@ const api = {
   async typeInto(selector, text) {
     if (!(await api.moveTo(selector))) return false;
     gesture('click', api.pointer.x, api.pointer.y);
-    await page.evaluate(() => window.__kairosCursor?.click());
+    await page.evaluate(() => window.__kairosCursor.click());
     await page.locator(selector).first().click().catch(() => {});
     await page.locator(selector).first().type(text, { delay: 85 }).catch(() => {});
     await page.waitForTimeout(900);
@@ -269,7 +289,7 @@ const api = {
     const y = box.y + box.height / 2;
     await api.moveToPoint(x, y, 380);
     gesture('click', x, y);
-    await page.evaluate(() => window.__kairosCursor?.click());
+    await page.evaluate(() => window.__kairosCursor.click());
     await target.click().catch(() => {});
     await page.waitForTimeout(800);
     return true;
@@ -414,6 +434,20 @@ if (page.url().includes('/accept-policies')) {
 
 await page.goto(`${base}/dashboard`, { waitUntil: 'networkidle' });
 await page.waitForTimeout(1500);
+
+// Prove the pointer is really on the page before filming anything.
+//
+// It was not, for every one of the first 144 clips: the overlay mounted
+// itself into <html> before <body> existed, the parser dropped it, and the
+// API object survived on `window` so every moveTo and click resolved without
+// complaint. The recording looked fine to the recorder and shipped with no
+// cursor in it. An assertion here costs one evaluate and makes that
+// particular silence impossible.
+if (!(await page.evaluate(() => window.__kairosCursor?.ready?.() === true))) {
+  throw new Error(
+    'the cursor overlay is not on the page - refusing to record a tour with no visible pointer',
+  );
+}
 
 // Sign-in is done. Offsets are measured from the start of the recording,
 // because that is the clock the capture file is on.

@@ -58,6 +58,13 @@ export interface TourProps {
   // Remotion types composition props as a record; the index signature is what
   // lets a typed interface be passed to <Composition>.
   [key: string]: unknown;
+  // The music bed is deliberately NOT here. It is mixed into the finished
+  // file by music.mjs instead, because baking it into the render means every
+  // adjustment to its level costs a full re-render of all 144 clips -- and a
+  // music level is exactly the kind of thing somebody wants to hear and then
+  // change. Mixed afterwards the video is stream-copied untouched and only
+  // the audio is rebuilt, so a change costs minutes.
+
   role: string;
   /** 'en' | 'fr' | 'kri' | 'tw'. Only the step counter needs it. */
   lang: string;
@@ -67,21 +74,23 @@ export interface TourProps {
   duration: number;
 }
 
-/**
- * "Step 2 of 2" was the last English string left on a French clip: everything
- * else on screen is the app's own interface, which is already translated.
- */
-const STEP: Record<string, (n: number, total: number) => string> = {
-  en: (n, total) => `Step ${n} of ${total}`,
-  fr: (n, total) => `Étape ${n} sur ${total}`,
-  kri: (n, total) => `Stɛp ${n} pan ${total}`,
-  tw: (n, total) => `Ɔkwan ${n} wɔ ${total} mu`,
-};
-
+// The step counter that used to live here ("Step 2 of 2", translated four
+// ways) went with the lower-third card. Nothing on screen is English-only
+// now: the subtitle is the narration, and the rest is the app's own
+// interface, which is already translated.
 const PURPLE = '#3b0764';
-const GOLD = '#f8b537';
-const LILAC = '#e9dcff';
 
+/**
+ * How loud the music is at a given moment.
+ *
+ * The bed sits well under the voice and drops further while anybody is
+ * speaking, which is the difference between music and interference. The duck
+ * is ramped rather than switched: a hard cut on every sentence boundary
+ * pumps audibly, and on a clip with nine stops that is nine pumps.
+ *
+ * Narration windows come from the segments themselves, so the music follows
+ * whatever the scheduler decided rather than a second, drifting copy of it.
+ */
 const W = 1920;
 const H = 1080;
 
@@ -121,9 +130,15 @@ function camera(segment: Segment, local: number): Camera {
 
   // The nearest click whose window this frame falls in. Clicks are at least
   // a gesture apart in practice, so the first match is the right one.
+  // The punch has to be out of the way before the page changes under it.
+  // It used to hold 1.5x for 0.55s and ease out over 0.85s, so for nearly a
+  // second and a half the camera stayed locked on the pixel that was
+  // clicked -- by which time the click had opened a different screen, and
+  // that pixel was now empty margin. The shot was a 1.5x close-up of
+  // whitespace. Shorter, and slightly shallower, so a near miss costs less.
   const LEAD = 0.34; // start diving just before the press
-  const HOLD = 0.55; // stay in while the page responds
-  const OUT = 0.85; // and come back out unhurriedly
+  const HOLD = 0.3; // only while the old screen is still up
+  const OUT = 0.6; // then release
 
   for (const click of segment.clicks) {
     const rel = segment.at + local - click.at;
@@ -143,7 +158,7 @@ function camera(segment: Segment, local: number): Camera {
             });
 
     return {
-      scale: drift + (1.5 - drift) * e,
+      scale: drift + (1.38 - drift) * e,
       ox: fx + (click.x - fx) * e,
       oy: fy + (click.y - fy) * e,
     };
@@ -151,50 +166,6 @@ function camera(segment: Segment, local: number): Camera {
 
   return { scale: drift, ox: fx, oy: fy };
 }
-
-/**
- * The ring a click leaves behind.
- *
- * The page draws its own at capture time, but that one is recorded at
- * whatever speed the footage ends up running at and is the same few pixels as
- * the cursor. This one is drawn at render time, inside the same transformed
- * space as the video, so it lands on the pixel that was clicked and reads
- * clearly at any zoom.
- */
-const Ripple: React.FC<{ click: Click; now: number }> = ({ click, now }) => {
-  const rel = now - click.at;
-  // Half a second, and gone. A longer ring outlived the navigation it caused
-  // and ended up circling an arbitrary spot on the page that had just
-  // loaded — pointing at the wrong thing is worse than not pointing.
-  const LIFE = 0.5;
-  if (rel < 0 || rel > LIFE) return null;
-
-  const scale = interpolate(rel, [0, LIFE], [0.25, 1.75], {
-    extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
-  });
-  const opacity = interpolate(rel, [0, 0.08, LIFE], [0, 0.9, 0], { extrapolateRight: 'clamp' });
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: click.x,
-        top: click.y,
-        width: 112,
-        height: 112,
-        marginLeft: -56,
-        marginTop: -56,
-        borderRadius: '50%',
-        border: `4px solid ${GOLD}`,
-        boxShadow: `0 0 26px ${GOLD}`,
-        opacity,
-        transform: `scale(${scale})`,
-        pointerEvents: 'none',
-      }}
-    />
-  );
-};
 
 /**
  * The capture for one stop, under the camera.
@@ -275,46 +246,40 @@ const Shot: React.FC<{ video: string; segment: Segment; fps: number; first: bool
             </Freeze>
           </Sequence>
         )}
-
-        {segment.clicks.map((c, i) => (
-          <Ripple key={`r-${i}`} click={c} now={segment.at + local} />
-        ))}
       </AbsoluteFill>
     </AbsoluteFill>
   );
 };
 
 /**
- * The lower third, lit a word at a time.
+ * The subtitle.
  *
- * The caption line is the written summary and stays put. Underneath it the
- * spoken sentence plays back word by word, each one brightening as Deepgram
- * reports it being said. That is only possible because the narration is
- * transcribed after it is generated: the words were always known, their
- * position in time was not.
+ * This replaced a lower-third card that stacked five things on top of each
+ * other: a gold "STEP 2 OF 2" chip, a bold title, a lilac summary line, the
+ * spoken sentence lit word-by-word as it was said, and a gold progress bar
+ * along the bottom. Every one of them was defensible on its own and together
+ * they read as a beginner's tutorial -- the karaoke highlight especially,
+ * which is the single most recognisable tell of a hobby screencast.
+ *
+ * What is left is what a subtitle is for: the sentence being spoken, once,
+ * legibly, out of the way. The step counter went because a viewer watching a
+ * fifteen-second clip does not need a progress indicator, the summary line
+ * went because it restated the narration, and the title went because the
+ * handbook page the clip sits in is already headed with it.
+ *
+ * It sits bottom-centre rather than bottom-left so it reads as part of the
+ * video rather than as a badge stuck on one corner of it.
  */
-const Caption: React.FC<{ segment: Segment; total: number; lang: string }> = ({
-  segment,
-  total,
-  lang,
-}) => {
+const Caption: React.FC<{ segment: Segment; total: number; lang: string }> = ({ segment }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  // Sequence-relative frame -> timeline seconds.
   const local = frame / fps;
-  const now = segment.at + local;
 
-  // In on a slide, out before the dissolve, so two captions are never up at
-  // once and the card is never caught mid-cross-fade.
-  //
-  // The two moments are derived from the span rather than fixed, because
-  // interpolate() requires a strictly increasing input range: a line short
-  // enough that `span - OUT` fell at or below the fade-in produced
-  // [0, 0.42, 0.42, span] and threw, taking the whole render with it. No
-  // narration line is currently under two seconds, so this has never fired —
-  // it is a trap laid for whoever writes a three-word one.
-  const IN = Math.min(0.42, segment.span * 0.3);
-  const OUT = Math.min(0.3, segment.span * 0.25);
+  // Derived from the span, not fixed: interpolate() needs a strictly
+  // increasing input range, and a line short enough that `span - OUT` fell at
+  // or below the fade-in would otherwise throw and take the render with it.
+  const IN = Math.min(0.26, segment.span * 0.22);
+  const OUT = Math.min(0.24, segment.span * 0.2);
   const outAt = Math.max(IN + 1e-3, segment.span - OUT);
   const end = Math.max(outAt + 1e-3, segment.span);
   const opacity = interpolate(local, [0, IN, outAt, end], [0, 1, 1, 0], {
@@ -322,78 +287,45 @@ const Caption: React.FC<{ segment: Segment; total: number; lang: string }> = ({
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.ease),
   });
-  const lift = interpolate(local, [0, Math.max(1e-3, IN)], [26, 0], {
+  const lift = interpolate(local, [0, Math.max(1e-3, IN)], [14, 0], {
     extrapolateRight: 'clamp',
     easing: Easing.out(Easing.cubic),
   });
 
-  const through = interpolate(local, [0, Math.max(0.001, segment.span)], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
+  // The spoken sentence. Where a language has no word timings the written
+  // caption stands in, so a subtitle is never missing entirely.
+  const line = segment.words.length
+    ? segment.words.map((w) => w.word).join(' ')
+    : segment.caption;
+  if (!line) return null;
 
   return (
-    <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'flex-start' }}>
+    <AbsoluteFill style={{ justifyContent: 'flex-end', alignItems: 'center' }}>
       <div
         style={{
-          margin: '0 0 44px 48px',
-          maxWidth: 1180,
-          borderRadius: 14,
-          overflow: 'hidden',
-          background:
-            'linear-gradient(135deg, rgba(49,5,86,0.95) 0%, rgba(26,2,48,0.95) 100%)',
-          border: '1px solid rgba(255,255,255,0.16)',
-          boxShadow: '0 26px 70px rgba(0,0,0,0.55)',
-          backdropFilter: 'blur(2px)',
+          margin: '0 0 58px',
+          maxWidth: 1320,
+          padding: '18px 34px',
+          borderRadius: 12,
+          // A scrim that hugs the text, not a bordered card. The app behind
+          // is mostly white, so the subtitle needs its own ground to stay
+          // readable, but it should read as a caption rather than as chrome.
+          background: 'rgba(11,7,20,0.80)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 20px 56px rgba(0,0,0,0.44)',
           color: '#fff',
           fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
+          fontSize: 31,
+          fontWeight: 500,
+          lineHeight: 1.36,
+          letterSpacing: -0.2,
+          textAlign: 'center',
+          textWrap: 'balance',
           opacity,
           transform: `translateY(${lift}px)`,
         }}
       >
-        <div style={{ padding: '16px 26px 18px' }}>
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 600,
-              letterSpacing: 2,
-              textTransform: 'uppercase',
-              color: GOLD,
-            }}
-          >
-            {(STEP[lang] ?? STEP.en)(segment.n, total)}
-          </div>
-          <div style={{ fontSize: 25, fontWeight: 700, marginTop: 4, letterSpacing: -0.3 }}>
-            {segment.title}
-          </div>
-          <div style={{ fontSize: 15, color: LILAC, marginTop: 3 }}>{segment.caption}</div>
-
-          {segment.words.length > 0 && (
-            <div style={{ fontSize: 17, marginTop: 11, lineHeight: 1.45, maxWidth: 1080 }}>
-              {segment.words.map((w, i) => {
-                const spoken = now >= w.start;
-                const saying = now >= w.start && now <= w.end;
-                return (
-                  <span
-                    key={`${w.start}-${i}`}
-                    style={{
-                      color: spoken ? '#fff' : 'rgba(255,255,255,0.36)',
-                      textShadow: saying ? `0 0 18px ${GOLD}` : 'none',
-                      transition: 'none',
-                    }}
-                  >
-                    {w.word}{' '}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* How far through this stop is — the one piece of chrome that tells
-            a viewer the clip is going somewhere. */}
-        <div style={{ height: 3, background: 'rgba(255,255,255,0.12)' }}>
-          <div style={{ height: '100%', width: `${through * 100}%`, background: GOLD }} />
-        </div>
+        {line}
       </div>
     </AbsoluteFill>
   );
@@ -447,6 +379,7 @@ export const Tour: React.FC<TourProps> = ({ video, segments, lang }) => {
           <Caption segment={s} total={segments.length} lang={lang} />
         </Sequence>
       ))}
+
     </AbsoluteFill>
   );
 };

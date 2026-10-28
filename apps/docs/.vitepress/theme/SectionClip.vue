@@ -59,6 +59,8 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
       controls
       preload="metadata"
       playsinline
+      width="1920"
+      height="1080"
       :poster="`/clips/${file}.jpg`"
     >
       <source :src="`/clips/${file}.mp4`" type="video/mp4" />
@@ -85,6 +87,14 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
 }
 .section-clip__video {
   width: 100%;
+  /* The box has to be the right shape before a single byte of video
+     arrives. Without this the element is the browser's default 2:1 until
+     `preload="metadata"` lands, then snaps to 16:9 -- and because metadata
+     is fetched lazily, that snap happens mid-scroll and shoves the rest of
+     the page, which reads as the video glitching. The intrinsic width and
+     height attributes cover browsers that ignore aspect-ratio. */
+  aspect-ratio: 16 / 9;
+  height: auto;
   border-radius: 10px;
   border: 1px solid var(--vp-c-divider);
   background: #1b1033;

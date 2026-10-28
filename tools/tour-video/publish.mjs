@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, 'out');
+const MIXED = join(HERE, 'mixed');
 const DEST = join(HERE, '..', '..', 'apps', 'docs', 'public', 'clips');
 const dry = process.argv.includes('--dry');
 
@@ -54,6 +55,19 @@ const clips = readdirSync(OUT)
   .filter((f) => f.startsWith('tour-') && f.endsWith('.mp4') && f !== 'tour-smoke.mp4')
   .sort();
 
+/**
+ * Where to take each clip from.
+ *
+ * `music.mjs` writes its mixes to mixed/ and leaves out/ as the renderer
+ * produced it, so the version with the music under it is preferred wherever
+ * one exists and the voice-only render is used otherwise. That also means a
+ * half-finished mixing run publishes a coherent set rather than a mixture.
+ */
+const sourceFor = (file) => {
+  const mixed = join(MIXED, file);
+  return existsSync(mixed) ? mixed : join(OUT, file);
+};
+
 let copied = 0;
 let skipped = 0;
 let posters = 0;
@@ -61,7 +75,7 @@ let bytes = 0;
 
 for (const file of clips) {
   const slug = file.replace(/^tour-/, '').replace(/\.mp4$/, '');
-  const from = join(OUT, file);
+  const from = sourceFor(file);
   const to = join(DEST, `${slug}.mp4`);
   const poster = join(DEST, `${slug}.jpg`);
 
