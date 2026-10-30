@@ -100,6 +100,19 @@ const navItems: NavItem[] = [
   { href: '/reports', label: 'Reports', section: 'Insights' },
   { href: '/souls-dashboard', label: 'Souls Dashboard', section: 'Insights' },
 
+  // Gift Aid is church-wide and finance-held. `capability` with no scope is
+  // the right check here: only the church-scoped Gift Aid Admin role carries
+  // `giftaid:admin`, so no branch grant can light this up. The page re-checks
+  // at CHURCH_SCOPE.
+  // Sits under /admin, not /gift-aid: the public declaration form owns
+  // /gift-aid (it is the URL the congregation is given), and `(dashboard)` is
+  // a route group that contributes no path segment, so the two would collide.
+  {
+    href: '/admin/gift-aid',
+    label: 'Gift Aid',
+    capability: 'giftaid:admin',
+    section: 'Organisation',
+  },
   { href: '/admin/branches', label: 'Branches', adminOnly: true, section: 'Organisation' },
   { href: '/admin/regions', label: 'Regions', adminOnly: true, section: 'Organisation' },
   { href: '/admin/oauth-clients', label: 'Connected apps', adminOnly: true, section: 'Organisation' },

@@ -173,6 +173,16 @@ import type {
   MembershipEnrollmentDetail,
   MembershipGraduationReadiness,
   MembershipBranchViewResponse,
+  MyGiftAidStatus,
+  GiftAidDeclaration,
+  GiftAidDeclarationRequest,
+  PublicGiftAidDeclarationRequest,
+  CaptureGiftAidDeclarationRequest,
+  RecordGiftAidWithdrawalRequest,
+  GiftAidDeclarationTextResponse,
+  GiftAidListParams,
+  GiftAidRegisterRow,
+  GiftAidStatus,
   CreateMembershipCohortRequest,
   UpdateMembershipCohortRequest,
   UpsertMembershipSessionRequest,
@@ -1659,6 +1669,118 @@ export function createApiClient(
     media: {
       mintUploadUrl: (data: MintUploadUrlRequest) =>
         client.post<ApiResponse<MintUploadUrlResponse>>('/api/media/upload-url', data),
+    },
+
+    // Gift Aid. Declarations name the CHARITY, so nothing here is
+    // branch-scoped — `branchId` is only ever a filter on the admin queue.
+    giftAid: {
+      /**
+       * The caller's own position: the declaration in force, the history
+       * beneath it, and whether the profile should offer "declare" or
+       * "update". Gated on nothing but being signed in.
+       */
+      me: () => client.get<ApiResponse<MyGiftAidStatus>>('/api/gift-aid/me'),
+
+      declare: (data: GiftAidDeclarationRequest) =>
+        client.post<ApiResponse<GiftAidDeclaration>>('/api/gift-aid/me', data),
+
+      /** Prospective. Earlier claims stand; nothing is deleted. */
+      withdraw: (data?: { notes?: string }) =>
+        client.post<ApiResponse<GiftAidDeclaration>>('/api/gift-aid/me/withdraw', data ?? {}),
+
+      /**
+       * The public, unauthenticated pre-rollout form. Takes no token, so it
+       * is the one method here a signed-out visitor can call.
+       */
+      submitPublic: (data: PublicGiftAidDeclarationRequest) =>
+        client.post<ApiResponse<{ id: string; declaredAt: string }>>(
+          '/api/public/gift-aid/declarations',
+          data,
+        ),
+
+      /** The declaration wording, from the one shared renderer. */
+      declarationText: () =>
+        client.get<ApiResponse<GiftAidDeclarationTextResponse>>(
+          '/api/public/gift-aid/declaration-text',
+        ),
+
+      // ── Admin (giftaid:admin at church scope) ──
+
+      list: (params?: GiftAidListParams) => {
+        const qs = new URLSearchParams();
+        if (params?.page) qs.set('page', String(params.page));
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.status) qs.set('status', params.status);
+        if (params?.channel) qs.set('channel', params.channel);
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.search) qs.set('search', params.search);
+        if (params?.unmatched) qs.set('unmatched', 'true');
+        if (params?.sortOrder) qs.set('sortOrder', params.sortOrder);
+        const query = qs.toString();
+        return client.get<
+          ApiResponse<{
+            items: GiftAidDeclaration[];
+            total: number;
+            page: number;
+            limit: number;
+          }>
+        >(`/api/gift-aid${query ? `?${query}` : ''}`);
+      },
+
+      get: (id: string) =>
+        client.get<ApiResponse<GiftAidDeclaration>>(`/api/gift-aid/${encodeURIComponent(id)}`),
+
+      /** Paper form handed in, imported register row, or verbal declaration. */
+      capture: (data: CaptureGiftAidDeclarationRequest) =>
+        client.post<ApiResponse<GiftAidDeclaration>>('/api/gift-aid', data),
+
+      /** Attach an unmatched declaration to its member. Link only. */
+      match: (id: string, memberId: string) =>
+        client.post<ApiResponse<GiftAidDeclaration>>(
+          `/api/gift-aid/${encodeURIComponent(id)}/match`,
+          { memberId },
+        ),
+
+      /** A withdrawal that arrived by phone, letter, email or in person. */
+      recordWithdrawal: (id: string, data: RecordGiftAidWithdrawalRequest) =>
+        client.post<ApiResponse<GiftAidDeclaration>>(
+          `/api/gift-aid/${encodeURIComponent(id)}/withdraw`,
+          data,
+        ),
+
+      markInvalid: (id: string, reason: string) =>
+        client.post<ApiResponse<GiftAidDeclaration>>(
+          `/api/gift-aid/${encodeURIComponent(id)}/invalid`,
+          { reason },
+        ),
+
+      register: (params?: { from?: string; status?: GiftAidStatus; branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.from) qs.set('from', params.from);
+        if (params?.status) qs.set('status', params.status);
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.get<ApiResponse<GiftAidRegisterRow[]>>(
+          `/api/gift-aid/register${query ? `?${query}` : ''}`,
+        );
+      },
+
+      /**
+       * The register as a CSV blob.
+       *
+       * Fetched through the client, not opened as a URL in a new tab: the
+       * route is behind `authMiddleware`, and a browser navigation carries no
+       * Authorization header, so a window.open would simply 401. Same
+       * reasoning as the members and forms exports above.
+       */
+      registerCsv: (params?: { from?: string; status?: GiftAidStatus; branchId?: string }) => {
+        const qs = new URLSearchParams();
+        if (params?.from) qs.set('from', params.from);
+        if (params?.status) qs.set('status', params.status);
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        const query = qs.toString();
+        return client.getBlob(`/api/gift-aid/register.csv${query ? `?${query}` : ''}`);
+      },
     },
   };
 }

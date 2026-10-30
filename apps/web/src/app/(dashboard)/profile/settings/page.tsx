@@ -248,6 +248,22 @@ export default function SettingsPage() {
           </div>
           <div className="border-t pt-4">
             <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">Gift Aid</p>
+                <p className="text-xs text-muted-foreground">
+                  Let the church reclaim 25p for every 1 pound you give, or withdraw your
+                  declaration.
+                </p>
+              </div>
+              <Link href="/profile/settings/gift-aid">
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  Manage
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-start gap-3">
                 <Download className="mt-0.5 h-4 w-4 text-muted-foreground" aria-hidden />
                 <div>
