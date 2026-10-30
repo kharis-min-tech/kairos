@@ -159,7 +159,9 @@ Administrative, gated on `giftaid:admin` at `CHURCH_SCOPE`:
 |---|---|
 | Public pre-rollout form | `/gift-aid` (outside both route groups, chrome mirrors `/legal`) |
 | Member's own declaration | `/profile/settings/gift-aid`, linked from Privacy & Data in settings |
-| Admin queue and register | `/gift-aid`, nav item under Organisation, visible only with `giftaid:admin` |
+| Admin queue and register | `/admin/gift-aid`, nav item under Organisation, visible only with `giftaid:admin` |
+
+The admin surface sits under `/admin` rather than at `/gift-aid` because `(dashboard)` is an App Router route group and contributes no path segment, so `(dashboard)/gift-aid/page.tsx` and `gift-aid/page.tsx` both resolve to `/gift-aid` and Next refuses to build. The public form keeps the short URL, since that is the one the congregation is given. Typecheck and lint do not catch this; only running the app does.
 
 Mobile has no Gift Aid surface yet. The giving tab is a WebView over kharis.org, so the public form is reachable there today; a native profile surface is open work.
 
@@ -226,6 +228,8 @@ Two things to settle before the first claim:
 
 - **Phase 0 - before publishing anything.** Finance and legal sign off on the wording (section 9) and the drafted privacy notice changes (section 8), via the review doc at https://claude.ai/artifact/Us9LvjYfFYYEddXyC5epP3. Confirm HMRC Gift Aid registration is in place, and whether there are existing paper declarations to import.
 - **Phase 1 - shipped.** Schema and migration, the `Gift Aid Admin` role, API, public form, profile surface with withdrawal, admin review and match queue, register export.
+
+  Verified against a real database locally, not just in unit tests: all eight CHECK constraints reject what they should, a public submission lands in force and unmatched with its postcode normalised and its backdating set, matching preserves the declared name and address rather than overwriting them from the profile, withdrawal is prospective and sets a retention review date of 31 May 2033, and **a declaration survives account deletion** (the member row scrubs to "Deleted User" with a null address while the declaration keeps "Dr Jonathan Smithson, 9 Oak Avenue, M1 1AE"). `scripts/local-up.ps1` brings the stack up.
 - **Phase 2 - open.** Annual tax-responsibility reminder via `notification_events`. Address-change tracking (a change does not invalidate a declaration but must be recorded). A retention review surface. Verbal declaration capture with the 30-day window. A mobile profile surface.
 - **Phase 3 - open.** GASDS tracking, including the community-buildings election per branch.
 - **Phase 4 - open, and a separate decision.** Donations in Kairos.
