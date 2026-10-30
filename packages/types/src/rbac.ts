@@ -38,6 +38,13 @@ export const FunctionalRole = {
   // notifications for members of their branch (join waitlist, admitted,
   // graduated, withdrew/lapsed).
   MembershipChampion: 'MembershipChampion',
+  // Gift Aid declarations and the HMRC claim register. Church-scoped for the
+  // same reason MembershipAdmin is: a declaration names the CHARITY, and one
+  // charity contains every branch, so no branch grant could describe
+  // authority over one. Held by finance, not by branch leadership — a
+  // declaration carries a home address and a statement about the donor's tax
+  // affairs, which is not branch-operations data.
+  GiftAidAdmin: 'GiftAidAdmin',
   // DERIVED — never stored in `member_roles` and never assignable in the RBAC
   // admin UI. `resolveGrants` synthesises it for whoever currently holds the
   // `Main Pastor` row in `branch_leadership` for a branch.
@@ -77,6 +84,13 @@ export const Capability = {
   // branch. Grants sight of the branch's waitlist entries and members
   // currently admitted into cohorts. Never gates a mutation.
   MembershipBranchRead: 'membership:branch:read',
+  // Everything administrative about Gift Aid is one capability, for the same
+  // reason `membership:admin` is: the donor-facing surfaces (make a
+  // declaration, see your own, withdraw it) are gated on nothing but being
+  // the donor, so anything this gates is administration — reviewing
+  // submissions, matching them to members, recording a withdrawal taken by
+  // phone or letter, and exporting the claim register.
+  GiftAidAdmin: 'giftaid:admin',
 } as const;
 export type Capability = (typeof Capability)[keyof typeof Capability];
 
@@ -101,6 +115,7 @@ export const RoleCapabilities: Record<FunctionalRole, readonly Capability[]> = {
   NewBelieversTeacher: ['newbelievers:teach'],
   MembershipAdmin: ['membership:admin'],
   MembershipChampion: ['membership:branch:read'],
+  GiftAidAdmin: ['giftaid:admin'],
   // Carries safeguarding sight and nothing else. Everything else a Main
   // Pastor can do already comes from their BranchAdmin grant; this bundle is
   // only what must NOT extend to a Minister holding the same grant.
@@ -122,6 +137,7 @@ export const RoleScopeKind: Record<FunctionalRole, RoleScope['kind']> = {
   NewBelieversTeacher: 'branch',
   MembershipAdmin: 'church',
   MembershipChampion: 'branch',
+  GiftAidAdmin: 'church',
   BranchPastor: 'branch',
 };
 

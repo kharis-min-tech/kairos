@@ -100,6 +100,11 @@ const navItems: NavItem[] = [
   { href: '/reports', label: 'Reports', section: 'Insights' },
   { href: '/souls-dashboard', label: 'Souls Dashboard', section: 'Insights' },
 
+  // Gift Aid is church-wide and finance-held. `capability` with no scope is
+  // the right check here: only the church-scoped Gift Aid Admin role carries
+  // `giftaid:admin`, so no branch grant can light this up. The page re-checks
+  // at CHURCH_SCOPE.
+  { href: '/gift-aid', label: 'Gift Aid', capability: 'giftaid:admin', section: 'Organisation' },
   { href: '/admin/branches', label: 'Branches', adminOnly: true, section: 'Organisation' },
   { href: '/admin/regions', label: 'Regions', adminOnly: true, section: 'Organisation' },
   { href: '/admin/oauth-clients', label: 'Connected apps', adminOnly: true, section: 'Organisation' },

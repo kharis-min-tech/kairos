@@ -104,6 +104,12 @@ export {
   type NewConsentRecord,
 } from './consent-records';
 export {
+  giftAidDeclarations,
+  giftAidDeclarationsRelations,
+  type GiftAidDeclarationRow,
+  type NewGiftAidDeclarationRow,
+} from './gift-aid-declarations';
+export {
   oauthAccounts,
   oauthAccountsRelations,
   type OAuthAccount,

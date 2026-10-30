@@ -34,6 +34,7 @@ export const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
   'New Believers Teacher': FunctionalRole.NewBelieversTeacher,
   'Membership Admin': FunctionalRole.MembershipAdmin,
   'Membership Champion': FunctionalRole.MembershipChampion,
+  'Gift Aid Admin': FunctionalRole.GiftAidAdmin,
 };
 
 // ── resolveGrants ──────────────────────────────────────────
