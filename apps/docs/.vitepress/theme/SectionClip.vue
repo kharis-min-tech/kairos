@@ -95,9 +95,22 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
      height attributes cover browsers that ignore aspect-ratio. */
   aspect-ratio: 16 / 9;
   height: auto;
-  border-radius: 10px;
-  border: 1px solid var(--vp-c-divider);
-  background: #1b1033;
   display: block;
+  /* No frame of any kind, in either theme: the clip sits in the prose the
+     way a paragraph does rather than in a card. The background has to be
+     transparent rather than a theme colour, because any fill would show as
+     a box in the moment before the poster paints and again behind the
+     letterboxing. */
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* The frame goes, but not the keyboard focus ring -- it is the only thing
+   telling someone tabbing through the page where they are. It is drawn only
+   for keyboard focus, so it never appears for a mouse user. */
+.section-clip__video:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
 }
 </style>
