@@ -86,6 +86,7 @@ The implementation is already exactly this, and it should stay this way:
 - `Gift Aid Admin` is a row in `roles`, seeded by migration 0059 and granted through `member_roles`. No member holds it on creation and nothing derives it.
 - It carries one capability, `giftaid:admin`, and nothing else. No `branch:read`, no directory, no safeguarding, no reports.
 - It is orthogonal to `systemRole`. A member with `systemRole: 'member'` holds it and works, which is the whole point.
+- **A `systemRole: 'admin'` account can read the register without holding the grant.** `matchesCapability` returns true for a system admin against every capability in Kairos, so Gift Aid is not an exception to a rule, it sits inside a blanket override that predates this feature. Verified at runtime: `admin@kairos.local`, which holds no grants at all, gets 200 on `GET /api/gift-aid` and `/register`, while a plain member with no grant gets 403. Confirmed as intended by the product owner. There will be one or two system admins, and anything needing that level of access is handled by granting `systemRole: 'admin'` for the task and revoking it once done, so the elevation is deliberate and temporary rather than a standing permission.
 - It is church-scoped, so it is not a per-branch grant and cannot be narrowed to one.
 - Revoking it (`is_active = false` on the `member_roles` row) removes the access immediately on the next token refresh.
 
