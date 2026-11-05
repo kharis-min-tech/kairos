@@ -27,6 +27,7 @@ import {
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   gradients,
   radii,
@@ -39,6 +40,29 @@ import {
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
+import {
+  DepartmentApplySheet,
+  type DepartmentApplication,
+} from '@/components/department-apply-sheet';
+import { useAuthStore } from '@/store/auth';
+
+// Mirrors the web department page so a member sees the same stage named the
+// same way whichever device they open.
+const OPEN_STATUSES = [
+  'applied',
+  'interview_scheduled',
+  'interviewed',
+  'offered',
+  'probation',
+] as const;
+
+const STAGE_LABELS: Record<string, string> = {
+  applied: 'Application received',
+  interview_scheduled: 'Interview scheduled',
+  interviewed: 'Interview complete',
+  offered: 'Offer pending your response',
+  probation: 'On probation',
+};
 
 export default function DepartmentDetail() {
   const styles = useThemedStyles(makeStyles);
@@ -81,6 +105,74 @@ export default function DepartmentDetail() {
   });
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
+
+  // The caller's own applications, across every department. Needed here to
+  // tell "never applied" from "waiting on a decision" from "offered a place",
+  // which are three different screens for the same member.
+  const myRequests = useQuery({
+    queryKey: ['departments', 'me', 'joinRequests'],
+    queryFn: async () => (await api.departments.joinRequests.listMine()).data ?? [],
+  });
+
+  const applyToDepartment = useMutation({
+    mutationFn: async (data: DepartmentApplication) =>
+      (await api.departments.joinRequests.create(id, data)).data!,
+    onSuccess: () => {
+      setApplyOpen(false);
+      qc.invalidateQueries({ queryKey: ['departments', 'me', 'joinRequests'] });
+      qc.invalidateQueries({ queryKey: ['departments', id] });
+      alert.info(
+        'Application submitted',
+        'A department leader will review it and you will hear back.',
+      );
+    },
+    onError: (err) =>
+      alert.info(
+        'Could not apply',
+        err instanceof Error ? err.message : 'Please try again in a moment.',
+      ),
+  });
+
+  const respondToOffer = useMutation({
+    mutationFn: async (vars: { requestId: string; offerResponse: 'accepted' | 'declined' }) =>
+      (
+        await api.departments.joinRequests.respondToOffer(id, vars.requestId, {
+          offerResponse: vars.offerResponse,
+        })
+      ).data!,
+    onSuccess: (_r, vars) => {
+      qc.invalidateQueries({ queryKey: ['departments', 'me', 'joinRequests'] });
+      qc.invalidateQueries({ queryKey: ['departments', id, 'members'] });
+      qc.invalidateQueries({ queryKey: ['departments', id] });
+      alert.info(
+        vars.offerResponse === 'accepted' ? 'Offer accepted' : 'Offer declined',
+        vars.offerResponse === 'accepted'
+          ? 'Welcome aboard. Your probation starts now and your rota will appear under My department.'
+          : 'The department has been told. You can apply again later if you change your mind.',
+      );
+    },
+    onError: (err) =>
+      alert.info(
+        'Could not respond',
+        err instanceof Error ? err.message : 'Please try again in a moment.',
+      ),
+  });
+
+  const withdrawApplication = useMutation({
+    mutationFn: async (requestId: string) =>
+      (await api.departments.joinRequests.withdraw(id, requestId)).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['departments', 'me', 'joinRequests'] });
+      qc.invalidateQueries({ queryKey: ['departments', id] });
+      alert.info('Application withdrawn', 'You can apply again whenever you are ready.');
+    },
+    onError: (err) =>
+      alert.info(
+        'Could not withdraw',
+        err instanceof Error ? err.message : 'Please try again in a moment.',
+      ),
+  });
 
   const refresh = () => {
     department.refetch();
@@ -93,6 +185,23 @@ export default function DepartmentDetail() {
     () => new Set((members.data ?? []).map((m) => m.memberId)),
     [members.data],
   );
+
+  const myId = useAuthStore((st) => st.user?.id) ?? null;
+  const isMemberOfDept = !!myId && memberIds.has(myId);
+  const myOpenRequest = useMemo(
+    () =>
+      (myRequests.data ?? []).find(
+        (r) =>
+          r.branchDepartmentId === id &&
+          (OPEN_STATUSES as readonly string[]).includes(r.status),
+      ) ?? null,
+    [myRequests.data, id],
+  );
+  // A leader looking at their own department doesn't need an apply card; the
+  // same gate the write actions use decides that.
+  const canManage =
+    !!d && caps.has('department:write', { kind: 'department', id, branchId: d.branchId });
+  const showApply = !canManage && !isMemberOfDept && !myOpenRequest;
 
   async function confirmRemoveMember(memberId: string, name: string) {
     const ok = await alert.confirm({
@@ -206,6 +315,103 @@ export default function DepartmentDetail() {
                 ) : null}
               </View>
             </LinearGradient>
+
+            {showApply ? (
+              <Card padding="md" style={{ gap: spacing.sm }}>
+                <Text style={styles.applyTitle}>Serve in this department</Text>
+                <Text style={styles.applyMeta}>
+                  Apply to join. A leader reviews every application, and you
+                  can withdraw at any point before you accept a place.
+                </Text>
+                <Button
+                  label="Apply to join"
+                  fullWidth
+                  onPress={() => setApplyOpen(true)}
+                />
+              </Card>
+            ) : null}
+
+            {myOpenRequest ? (
+              <Card padding="md" style={{ gap: spacing.sm }}>
+                <View style={styles.applyStatusRow}>
+                  <Text style={styles.applyTitle}>Your application</Text>
+                  <Badge
+                    label={STAGE_LABELS[myOpenRequest.status] ?? myOpenRequest.status}
+                    variant={myOpenRequest.status === 'offered' ? 'gold' : 'primary'}
+                    size="sm"
+                  />
+                </View>
+
+                {myOpenRequest.status === 'offered' ? (
+                  <>
+                    <Text style={styles.applyMeta}>
+                      You have been offered a place. Accepting starts your
+                      probation; the department will be told either way.
+                    </Text>
+                    <Button
+                      label="Accept the offer"
+                      fullWidth
+                      busy={respondToOffer.isPending}
+                      onPress={() =>
+                        respondToOffer.mutate({
+                          requestId: myOpenRequest.id,
+                          offerResponse: 'accepted',
+                        })
+                      }
+                    />
+                    <Button
+                      label="Decline"
+                      variant="secondary"
+                      fullWidth
+                      disabled={respondToOffer.isPending}
+                      onPress={async () => {
+                        const ok = await alert.confirm({
+                          title: 'Decline the offer?',
+                          message:
+                            'The department will be told you have declined. You can apply again later.',
+                          confirmLabel: 'Decline',
+                          destructive: true,
+                        });
+                        if (!ok) return;
+                        respondToOffer.mutate({
+                          requestId: myOpenRequest.id,
+                          offerResponse: 'declined',
+                        });
+                      }}
+                    />
+                  </>
+                ) : myOpenRequest.status === 'probation' ? (
+                  <Text style={styles.applyMeta}>
+                    You are serving on probation. Your rota and team are under
+                    My department.
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={styles.applyMeta}>
+                      A leader is reviewing your application. You will hear
+                      back once they have made a decision.
+                    </Text>
+                    <Button
+                      label="Withdraw application"
+                      variant="secondary"
+                      fullWidth
+                      busy={withdrawApplication.isPending}
+                      onPress={async () => {
+                        const ok = await alert.confirm({
+                          title: 'Withdraw your application?',
+                          message:
+                            'It will be closed and the department notified. You can apply again whenever you are ready.',
+                          confirmLabel: 'Withdraw',
+                          destructive: true,
+                        });
+                        if (!ok) return;
+                        withdrawApplication.mutate(myOpenRequest.id);
+                      }}
+                    />
+                  </>
+                )}
+              </Card>
+            ) : null}
 
             {caps.has('department:write', { kind: 'department', id, branchId: d.branchId }) ? (
               <Pressable
@@ -359,7 +565,16 @@ export default function DepartmentDetail() {
       </ScrollView>
 
       {d ? (
-        <MemberPickerSheet
+        <>
+          <DepartmentApplySheet
+            open={applyOpen}
+            departmentName={d.departmentName}
+            submitting={applyToDepartment.isPending}
+            onClose={() => setApplyOpen(false)}
+            onSubmit={(data) => applyToDepartment.mutate(data)}
+          />
+
+          <MemberPickerSheet
           open={pickerOpen}
           onClose={() => setPickerOpen(false)}
           branchId={d.branchId}
@@ -375,7 +590,8 @@ export default function DepartmentDetail() {
               },
             });
           }}
-        />
+          />
+        </>
       ) : null}
     </SafeAreaView>
   );
@@ -465,6 +681,14 @@ function makeStyles(c: ThemeColors) {
     ...typography.body,
     color: c.inkMuted,
     padding: spacing.md,
+  },
+  applyTitle: { ...typography.cardTitle, color: c.ink },
+  applyMeta: { ...typography.body, color: c.inkMuted, lineHeight: 20 },
+  applyStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   errorLine: {
     ...typography.body,
