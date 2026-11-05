@@ -256,6 +256,34 @@ export interface FellowshipJoinRequest extends BaseEntity {
 }
 
 /** The applicant's own view: which fellowship, at which branch. */
+/**
+ * A child on the caller's own record. Under-16s have no login; the guardian
+ * holds the record, so this is the shape a parent sees and manages.
+ */
+export interface MyChild {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+  gender: string | null;
+  memberType: MemberType;
+  photoUrl?: string | null;
+  homeBranchId: string;
+  /** Mother, Father, Guardian … as the parent described it. Null if unsaid. */
+  relationship: string | null;
+  isPrimaryGuardian: boolean;
+  createdAt: Date;
+}
+
+export interface AddMyChildRequest {
+  firstName: string;
+  lastName: string;
+  /** YYYY-MM-DD. Required — every U16 protection keys off the age. */
+  dateOfBirth: string;
+  gender?: 'Male' | 'Female';
+  relationship?: 'Mother' | 'Father' | 'Grandparent' | 'Guardian' | 'Carer' | 'Other';
+}
+
 export interface MyFellowshipJoinRequest extends FellowshipJoinRequest {
   fellowshipName: string;
   branchId: string;

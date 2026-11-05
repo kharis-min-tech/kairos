@@ -21,7 +21,9 @@ import {
   memberFollowups,
   mentorFollowups,
   souls,
+  memberGuardians,
 } from '@kairos/database';
+import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
 import type {
   AuthContext,
   MeActivityItem,
@@ -29,9 +31,16 @@ import type {
   MeFollowupItem,
   MeLeadershipResponse,
 } from '@kairos/types';
-import { verifyPassword, UnauthorizedError, NotFoundError } from '@kairos/utils';
+import {
+  verifyPassword,
+  UnauthorizedError,
+  NotFoundError,
+  ValidationError,
+  ConflictError,
+} from '@kairos/utils';
 import { randomTokenHex } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
+import { createMemberShell } from '../lib/member-shell';
 
 /**
  * Build the caller's leadership footprint:
@@ -987,4 +996,139 @@ export async function listMyActivity(
   };
   items.sort((a, b) => timeOf(b) - timeOf(a));
   return items.slice(0, 200);
+}
+
+// ── My children ───────────────────────────────────────────────────────────
+//
+// Under-16s cannot sign in — a guardian holds the record on their behalf — and
+// `POST /api/members` needs `branch:write`, so until now the only routes a
+// child could enter by were the first-time-visitor form and the baby
+// naming/dedication forms. An existing member whose children already attend
+// had no route at all; their kids were either in the system from before or
+// never.
+//
+// These two functions are that route. They are deliberately narrow:
+//
+//   * A parent may CREATE a child and is recorded as its guardian. They are
+//     the source of the data, so self-asserted guardianship over a record
+//     they just made carries no real risk.
+//   * A parent may NOT link themselves to a child that already exists. That
+//     is the actual attack surface — claiming guardianship of somebody else's
+//     child — and it stays with the admins who can verify it.
+
+/** Children the caller is an active guardian of. */
+export async function listMyChildren(db: Database, auth: AuthContext) {
+  return db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      dateOfBirth: members.dateOfBirth,
+      gender: members.gender,
+      memberType: members.memberType,
+      photoUrl: members.photoUrl,
+      homeBranchId: members.homeBranchId,
+      relationship: memberGuardians.relationship,
+      isPrimaryGuardian: memberGuardians.isPrimary,
+      createdAt: members.createdAt,
+    })
+    .from(memberGuardians)
+    .innerJoin(members, eq(memberGuardians.memberId, members.id))
+    .where(
+      and(
+        eq(memberGuardians.guardianMemberId, auth.memberId),
+        eq(memberGuardians.isActive, true),
+        eq(members.isActive, true),
+      ),
+    )
+    .orderBy(members.dateOfBirth);
+}
+
+/**
+ * Add a child to the caller's own record.
+ *
+ * The child is minted through `createMemberShell`, the same path the forms
+ * use, so there is one way a child record comes into being rather than two
+ * that drift. It lands in the caller's active branch with no usable login.
+ */
+export async function addMyChild(
+  db: Database,
+  auth: AuthContext,
+  data: {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    gender?: 'Male' | 'Female';
+    relationship?: string;
+  },
+) {
+  // The record is typed `child` and the U16 protections hang off that, so an
+  // adult must not be filed as one. Checked server-side: the client's date
+  // picker is a convenience, not a guarantee.
+  if (!isMinorMember({ dateOfBirth: data.dateOfBirth })) {
+    throw new ValidationError(
+      `A child record is for someone under ${MINOR_AGE_THRESHOLD}. For an adult, ask your branch admin to add them as a member.`,
+    );
+  }
+
+  const [guardian] = await db
+    .select({
+      homeBranchId: members.homeBranchId,
+      secondaryBranchId: members.secondaryBranchId,
+      isAtSecondaryBranch: members.isAtSecondaryBranch,
+    })
+    .from(members)
+    .where(eq(members.id, auth.memberId))
+    .limit(1);
+  if (!guardian) throw new NotFoundError('Member not found');
+
+  const branchId =
+    guardian.isAtSecondaryBranch && guardian.secondaryBranchId !== null
+      ? guardian.secondaryBranchId
+      : guardian.homeBranchId;
+
+  // Re-adding the same child is a slip, not an intention — a parent who taps
+  // twice should not end up with twins. Matched on name + date of birth among
+  // the children this guardian already holds.
+  const existing = await listMyChildren(db, auth);
+  const duplicate = existing.find(
+    (ch) =>
+      ch.firstName.trim().toLowerCase() === data.firstName.trim().toLowerCase() &&
+      ch.lastName.trim().toLowerCase() === data.lastName.trim().toLowerCase() &&
+      ch.dateOfBirth === data.dateOfBirth,
+  );
+  if (duplicate) {
+    throw new ConflictError(`${data.firstName} is already on your record`);
+  }
+
+  const childId = await createMemberShell(db, branchId, {
+    firstName: data.firstName.trim(),
+    lastName: data.lastName.trim(),
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender ?? null,
+    memberType: 'child',
+    guardians: [
+      {
+        memberId: auth.memberId,
+        relationship: data.relationship ?? null,
+        isPrimary: true,
+      },
+    ],
+  });
+
+  const [child] = await db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      dateOfBirth: members.dateOfBirth,
+      gender: members.gender,
+      memberType: members.memberType,
+      homeBranchId: members.homeBranchId,
+    })
+    .from(members)
+    .where(eq(members.id, childId))
+    .limit(1);
+
+  return child!;
 }

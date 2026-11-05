@@ -214,6 +214,8 @@ import type {
   FellowshipJoinRequest,
   FellowshipJoinRequestWithMember,
   MyFellowshipJoinRequest,
+  MyChild,
+  AddMyChildRequest,
   FellowshipFollowup,
   FellowshipFollowupWithDetails,
   Department,
@@ -1035,6 +1037,17 @@ export function createApiClient(
         client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
       approvals: () =>
         client.get<ApiResponse<MeApprovalItem[]>>('/api/me/approvals'),
+
+      /**
+       * The caller's own children. Creating one is allowed (the parent is the
+       * source of the data); linking to an existing child is not, and stays
+       * with admins who can verify the claim.
+       */
+      children: {
+        list: () => client.get<ApiResponse<MyChild[]>>('/api/me/children'),
+        add: (data: AddMyChildRequest) =>
+          client.post<ApiResponse<MyChild>>('/api/me/children', data),
+      },
       followups: () =>
         client.get<ApiResponse<MeFollowupItem[]>>('/api/me/followups'),
       welfareInbox: () =>

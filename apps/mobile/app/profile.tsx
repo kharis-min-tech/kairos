@@ -29,6 +29,7 @@ import {
 import { formatShortDate } from '@kairos/core';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { MyChildren } from '@/components/my-children';
 
 export default function Profile() {
   const styles = useThemedStyles(makeStyles);
@@ -201,6 +202,9 @@ export default function Profile() {
             value={user.emergencyContactName ?? '—'}
           />
         </Section>
+
+        {/* Children live on the parent's record — under-16s have no login. */}
+        <MyChildren />
 
         <Pressable
           onPress={() => router.push(`/members/edit/${user.id}`)}

@@ -10,6 +10,7 @@ import { useBranches } from '@/hooks/use-branches';
 import { useMyConsentStatuses } from '@/hooks/use-consent';
 import { useCompleteOauthProfile } from '@/hooks/use-auth';
 import { DateSelect } from '@/components/date-select';
+import { MyChildrenCard } from './_components/my-children-card';
 import { ImageUpload } from '@/components/image-upload';
 import { AddressAutofillGroup, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
@@ -611,6 +612,11 @@ export default function ProfilePage() {
               </dl>
             </CardContent>
           </Card>
+
+          {/* Children live on the parent's record: under-16s have no login of
+              their own. Read-mode only — it owns its own dialog and has
+              nothing to do with the profile form above. */}
+          <MyChildrenCard />
         </>
       )}
     </div>
