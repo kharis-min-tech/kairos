@@ -1,0 +1,26 @@
+-- 0060 — a role revoked today can be granted again today.
+--
+-- 0027 created two unique indexes on member_roles:
+--
+--   uq_member_roles_active_assignment  (member, role, scope) WHERE is_active
+--   uq_member_roles_assignment         (member, role, scope, assigned_date)
+--
+-- The first is the real invariant: one grant in force per member, role and
+-- scope. Its own comment in 0027 says "inactive rows are exempt so re-grants
+-- are allowed", and that is the intended behaviour.
+--
+-- The second silently contradicts it. `removeRole` is a soft delete: it sets
+-- is_active = false and leaves assigned_date alone. So granting a role,
+-- revoking it, and granting it again ON THE SAME DAY produces a second row
+-- whose (member, role, scope, assigned_date) matches the revoked one, and
+-- Postgres rejects the insert. The admin sees "This value already exists and
+-- must be unique" against a member whose roles list reads "No roles
+-- assigned", and the only way through is to wait until tomorrow.
+--
+-- Dropping it loses nothing. Beyond the partial index it prevents only two
+-- rows with the same key where at most one is active — duplicate HISTORY,
+-- which is not a correctness problem. The in-force invariant, and the TOCTOU
+-- guard from 0026 that it protects, both live entirely in the partial index,
+-- which stays.
+
+DROP INDEX IF EXISTS uq_member_roles_assignment;
