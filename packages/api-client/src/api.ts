@@ -213,6 +213,7 @@ import type {
   FellowshipMeetingAttendance,
   FellowshipJoinRequest,
   FellowshipJoinRequestWithMember,
+  MyFellowshipJoinRequest,
   FellowshipFollowup,
   FellowshipFollowupWithDetails,
   Department,
@@ -534,6 +535,9 @@ export function createApiClient(
       joinRequests: {
         create: (fellowshipId: string, data: CreateJoinRequestRequest) =>
           client.post<ApiResponse<FellowshipJoinRequest>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests`, data),
+        /** The caller's own applications. `list` below is the leader's view. */
+        listMine: () =>
+          client.get<ApiResponse<MyFellowshipJoinRequest[]>>(`/api/fellowships/me/join-requests`),
         list: (fellowshipId: string) =>
           client.get<ApiResponse<FellowshipJoinRequestWithMember[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests`),
         review: (fellowshipId: string, requestId: string, data: ReviewJoinRequestRequest) =>

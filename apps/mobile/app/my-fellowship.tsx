@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Calendar, MapPin, Users, UsersRound } from 'lucide-react-native';
 import {
+  Button,
   Avatar,
   Badge,
   Card,
@@ -276,6 +277,7 @@ export default function MyFellowship() {
 function EmptyState() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const router = useRouter();
   return (
     <Card padding="md" style={styles.emptyCard}>
       <View style={styles.emptyIconTile}>
@@ -283,10 +285,15 @@ function EmptyState() {
       </View>
       <Text style={styles.emptyTitle}>You&apos;re not in a fellowship yet</Text>
       <Text style={styles.emptyMeta}>
-        Ask your pastor or branch admin to add you to a K-Group or fellowship.
-        Once added, your fellowship details, members, and upcoming meetings show
-        up here.
+        Find a K-Group near you and ask to join — the leader reviews each
+        request. Once you are in, your fellowship details, members, and
+        upcoming meetings show up here.
       </Text>
+      <Button
+        label="Find a K-Group"
+        variant="secondary"
+        onPress={() => router.push('/fellowships')}
+      />
     </Card>
   );
 }

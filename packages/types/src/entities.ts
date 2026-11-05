@@ -255,6 +255,13 @@ export interface FellowshipJoinRequest extends BaseEntity {
   reviewedAt: Date | null;
 }
 
+/** The applicant's own view: which fellowship, at which branch. */
+export interface MyFellowshipJoinRequest extends FellowshipJoinRequest {
+  fellowshipName: string;
+  branchId: string;
+  branchName: string;
+}
+
 export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
   memberFirstName: string;
   memberLastName: string;

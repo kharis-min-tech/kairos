@@ -48,6 +48,7 @@ import {
 import type { FellowshipJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
 import { MemberPickerSheet } from '@/components/member-picker-sheet';
 
 function formatMeetingDate(iso: string | Date): string {
@@ -74,6 +75,22 @@ export default function FellowshipDetail() {
     queryFn: async () => (await api.fellowships.get(id)).data ?? null,
   });
 
+  // Write authority: fellowship lead/co-lead (`fellowship:write` on this
+  // fellowship) OR branch admin (`branch:write` on the branch this fellowship
+  // sits in). Everyone else sees the fellowship read-only — no edit pencil,
+  // no attendance/follow-up leader CTAs, no add-member, no log-meeting.
+  //
+  // Derived here rather than further down because the join-request queries
+  // below branch on it.
+  const canWrite =
+    !!fellowship.data &&
+    (caps.has('fellowship:write', {
+      kind: 'fellowship',
+      id,
+      branchId: fellowship.data.branchId,
+    }) ||
+      caps.has('branch:write', { kind: 'branch', id: fellowship.data.branchId }));
+
   const members = useQuery({
     queryKey: ['fellowships', id, 'members'],
     enabled: !!id,
@@ -88,9 +105,18 @@ export default function FellowshipDetail() {
 
   const joinRequests = useQuery({
     queryKey: ['fellowships', id, 'join-requests'],
-    enabled: !!id,
+    // Leader-only: the service enforces leader-or-above, so firing this as a
+    // plain member just 403s on every fellowship they look at.
+    enabled: !!id && canWrite,
     queryFn: async () =>
       (await api.fellowships.joinRequests.list(id)).data ?? [],
+  });
+
+  // The caller's own applications. Needed to tell "never asked" from "waiting
+  // on a leader", which the leader-only query above cannot answer for them.
+  const myRequests = useQuery({
+    queryKey: ['fellowships', 'me', 'join-requests'],
+    queryFn: async () => (await api.fellowships.joinRequests.listMine()).data ?? [],
   });
 
   const addMember = useMutation({
@@ -163,14 +189,6 @@ export default function FellowshipDetail() {
   };
 
   const f = fellowship.data;
-  // Write authority: fellowship lead/co-lead (`fellowship:write` on this
-  // fellowship) OR branch admin (`branch:write` on the branch this fellowship
-  // sits in). Everyone else sees the fellowship read-only — no edit pencil,
-  // no attendance/follow-up leader CTAs, no add-member, no log-meeting.
-  const canWrite = !!f && (
-    caps.has('fellowship:write', { kind: 'fellowship', id, branchId: f.branchId }) ||
-    caps.has('branch:write', { kind: 'branch', id: f.branchId })
-  );
   const today = new Date();
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const upcoming = (meetings.data ?? [])
@@ -190,6 +208,33 @@ export default function FellowshipDetail() {
     () => new Set((members.data ?? []).map((m) => m.memberId)),
     [members.data],
   );
+
+  const myId = useAuthStore((st) => st.user?.id) ?? null;
+  const isMemberOfFellowship = !!myId && memberIds.has(myId);
+  const myPendingRequest =
+    (myRequests.data ?? []).find(
+      (r) => r.fellowshipId === id && r.status === 'pending',
+    ) ?? null;
+  // A leader of this fellowship has no use for a join card.
+  const showJoin = !canWrite && !isMemberOfFellowship && !myPendingRequest;
+
+  const requestToJoin = useMutation({
+    mutationFn: async () =>
+      (await api.fellowships.joinRequests.create(id, {})).data!,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['fellowships', 'me', 'join-requests'] });
+      qc.invalidateQueries({ queryKey: ['fellowships', id] });
+      alert.info(
+        'Request sent',
+        'The K-Group leader will review it and you will hear back.',
+      );
+    },
+    onError: (err) =>
+      alert.info(
+        'Could not send request',
+        err instanceof Error ? err.message : 'Please try again in a moment.',
+      ),
+  });
 
   async function confirmRemoveMember(memberId: string, name: string) {
     const ok = await alert.confirm({
@@ -291,6 +336,35 @@ export default function FellowshipDetail() {
                 </View>
               ) : null}
             </LinearGradient>
+
+            {showJoin ? (
+              <Card padding="md" style={{ gap: spacing.sm }}>
+                <Text style={styles.joinTitle}>Join this K-Group</Text>
+                <Text style={styles.joinMeta}>
+                  Ask to join and the leader will review your request. You will
+                  hear back once they have decided.
+                </Text>
+                <Button
+                  label={requestToJoin.isPending ? 'Sending…' : 'Request to join'}
+                  fullWidth
+                  busy={requestToJoin.isPending}
+                  onPress={() => requestToJoin.mutate()}
+                />
+              </Card>
+            ) : null}
+
+            {myPendingRequest ? (
+              <Card padding="md" style={{ gap: spacing.xs }}>
+                <View style={styles.joinStatusRow}>
+                  <Text style={styles.joinTitle}>Your request</Text>
+                  <Badge label="Awaiting review" variant="primary" size="sm" />
+                </View>
+                <Text style={styles.joinMeta}>
+                  Sent {formatMeetingDate(String(myPendingRequest.createdAt))}. The
+                  leader will review it and you will hear back.
+                </Text>
+              </Card>
+            ) : null}
 
             {nextMeeting ? (
               <Card padding="md" style={styles.nextCard}>
@@ -691,6 +765,14 @@ function makeStyles(c: ThemeColors) {
   },
   nextCard: {
     gap: spacing.xs,
+  },
+  joinTitle: { ...typography.cardTitle, color: c.ink },
+  joinMeta: { ...typography.body, color: c.inkMuted, lineHeight: 20 },
+  joinStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
   sectionEyebrow: {
     ...typography.eyebrow,

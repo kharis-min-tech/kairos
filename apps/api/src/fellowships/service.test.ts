@@ -123,6 +123,7 @@ import {
   getFellowshipStats,
   createJoinRequest,
   listJoinRequests,
+  listMyJoinRequests,
   reviewJoinRequest,
 } from './service';
 
@@ -524,6 +525,34 @@ describe('createJoinRequest', () => {
     await expect(
       createJoinRequest(mockDb, memberAuth, fellowshipId, {}),
     ).rejects.toThrow('You already have a pending join request for this fellowship');
+  });
+});
+
+// ── listMyJoinRequests ────────────────────────────────────
+
+describe('listMyJoinRequests', () => {
+  it('returns the caller\'s own requests without any leader check', async () => {
+    // The point of this function: `listJoinRequests` enforces
+    // leader-or-above, so an ordinary member could not read back a request
+    // they had just made. Here a plain member with no grants succeeds, and
+    // crucially there is no getFellowship call to gate on — one select only.
+    const rows = [
+      { ...sampleJoinRequest, fellowshipName: 'Hope K-Group', branchName: 'Main' },
+    ];
+    setupSelectSequence(rows);
+    const result = await listMyJoinRequests(mockDb, memberAuth);
+    expect(result).toEqual(rows);
+    expect((mockDb.select as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
+  });
+
+  it('filters on the caller, so it cannot leak another member\'s applications', async () => {
+    setupSelectSequence([]);
+    await listMyJoinRequests(mockDb, memberAuth);
+    const chain = (mockDb.select as ReturnType<typeof vi.fn>).mock.results[0]!.value;
+    // The where clause is built from auth.memberId, never from an argument —
+    // there is no parameter a caller could pass to widen it.
+    expect(chain.where).toHaveBeenCalledTimes(1);
+    expect(listMyJoinRequests.length).toBe(2);
   });
 });
 

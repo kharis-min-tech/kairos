@@ -41,6 +41,7 @@ import {
   getFellowshipStats,
   createJoinRequest,
   listJoinRequests,
+  listMyJoinRequests,
   reviewJoinRequest,
   listFellowshipsForMap,
 } from './service';
@@ -165,6 +166,14 @@ fellowshipsRouter.get('/:id/stats', async (c) => {
 });
 
 // ── Join Requests ──────────────────────────────────────────
+
+// Declared before `/:id/join-requests` so "me" isn't captured as a fellowship
+// id. The caller's own applications; the filter is their own member id.
+fellowshipsRouter.get('/me/join-requests', async (c) => {
+  const auth = getAuth(c);
+  return c.json(successResponse(await listMyJoinRequests(db, auth)));
+});
+
 
 fellowshipsRouter.post('/:id/join-requests', zValidator('json', createJoinRequestSchema), async (c) => {
   const auth = getAuth(c);
