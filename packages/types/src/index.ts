@@ -10,3 +10,4 @@ export * from './oauth-server';
 export * from './consent';
 export * from './membership';
 export * from './media';
+export * from './gift-aid';

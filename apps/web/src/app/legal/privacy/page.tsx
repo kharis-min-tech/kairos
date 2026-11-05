@@ -178,6 +178,23 @@ export default function PrivacyPage() {
                 </td>
                 <td className="py-2">Your explicit consent</td>
               </tr>
+              {/*
+                DRAFT, awaiting legal sign-off. Gift Aid is the one purpose
+                here that is NOT legitimate interests or consent: the
+                declaration is kept to meet a tax obligation, which is why
+                erasure does not reach it. See requirements/gift-aid.md §8.
+              */}
+              <tr>
+                <td className="py-2 pr-4">
+                  Claiming Gift Aid on your donations, including keeping your
+                  declaration and the record of any withdrawal
+                </td>
+                <td className="py-2">
+                  A legal obligation under UK tax law. This is not based on
+                  your consent, and it is not something we can stop doing at
+                  your request
+                </td>
+              </tr>
               <tr>
                 <td className="py-2 pr-4">
                   Protecting Kairos against fraud and abuse, and keeping audit
@@ -269,6 +286,15 @@ export default function PrivacyPage() {
             your account plus 6 years, because they are our evidence that we
             processed data lawfully.
           </li>
+          {/* DRAFT, awaiting legal sign-off. See requirements/gift-aid.md §8. */}
+          <li>
+            <strong>Gift Aid declarations</strong> are kept for 6 years after
+            the end of the accounting period containing the last donation they
+            covered, and for longer if HM Revenue and Customs has an open
+            enquiry. We keep the declaration, the name and home address you
+            gave on it, and the record of any withdrawal, because they are our
+            evidence for the tax we reclaimed.
+          </li>
           <li>
             <strong>Sign-in logs and error reports</strong> are kept for
             up to 90 days, then automatically deleted.
@@ -291,6 +317,18 @@ export default function PrivacyPage() {
             <strong>Erase</strong> your data (&ldquo;the right to be
             forgotten&rdquo;), except where we are required to keep it for
             safeguarding or legal reasons
+          </li>
+          {/*
+            DRAFT, awaiting legal sign-off. The caveat above technically
+            covers Gift Aid, but a donor should not have to work that out
+            from it. See requirements/gift-aid.md §8.
+          */}
+          <li>
+            If you have made a <strong>Gift Aid declaration</strong>, deleting
+            your profile does not delete that declaration or the name and home
+            address you gave on it. HM Revenue and Customs requires us to keep
+            them as evidence for the tax we have already reclaimed. Everything
+            else on your profile is still cleared
           </li>
           <li>
             <strong>Restrict</strong> how we process your data while a query

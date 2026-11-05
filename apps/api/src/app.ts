@@ -20,6 +20,7 @@ import { followupsRouter } from './followups/router';
 import { formsRouter } from './forms/router';
 import { attendanceRouter } from './attendance/router';
 import { mediaRouter } from './media/router';
+import { giftAidRouter, publicGiftAidRouter } from './gift-aid/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -54,6 +55,11 @@ export function createApp() {
     return c.json(successResponse(rows));
   });
 
+  // Gift Aid: the public declaration form. Mounted BEFORE the consent gate
+  // because the people it serves have no Kairos account and so can owe no
+  // policy acceptance.
+  app.route('/api/public/gift-aid', publicGiftAidRouter);
+
   // Consent gate — 403s any /api/* request from a user who owes a required
   // policy acceptance (with an allowlist for the consent flow + GDPR
   // escape hatches). Client-side, the dashboard layout also redirects to
@@ -80,6 +86,7 @@ export function createApp() {
   app.route('/api/forms', formsRouter);
   app.route('/api/attendance', attendanceRouter);
   app.route('/api/media', mediaRouter);
+  app.route('/api/gift-aid', giftAidRouter);
 
   // Error handler
   app.onError(errorHandler);

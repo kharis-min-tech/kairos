@@ -19,3 +19,5 @@ grant-proposal/
 # drops these into apps/mobile/; they must never be committed.
 *.jks
 *.keystore
+# Local dev server logs (scripts/local-up.ps1)
+.local-logs/

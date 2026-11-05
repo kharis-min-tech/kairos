@@ -595,6 +595,8 @@ async function seed() {
     /* newBelieversMentorRole */,
     /* newBelieversTeacherRole */,
     membershipAdminRole,
+    /* membershipChampionRole */,
+    /* giftAidAdminRole */,
   ] = await db
     .insert(roles)
     .values([
@@ -638,16 +640,35 @@ async function seed() {
         roleName: 'New Believers Teacher',
         description: 'Teaches new-believer sessions in a branch. Authority is branch-scoped.',
       },
-      // The only CHURCH-scoped role. Membership cohorts run church-wide, so no
-      // branch grant can describe authority over one — see migration 0048.
+      // CHURCH-scoped. Membership cohorts run church-wide, so no branch grant
+      // can describe authority over one — see migration 0048.
       {
         roleName: 'Membership Admin',
         description:
           'Runs the church-wide membership class: cohorts, sessions, the interest pool, admission, marking and graduation. Church-scoped, not branch-scoped.',
       },
+      // Per-branch liaison for the membership programme. Referenced by the
+      // persona grants in 14c, which crashed with "Cannot read properties of
+      // undefined (reading 'id')" while this row was missing: the seed
+      // TRUNCATEs `roles` and then re-inserts them here, so a role created by
+      // a migration and not repeated in this list does not survive a seed.
+      {
+        roleName: 'Membership Champion',
+        description:
+          'Read-only sight of their own branch’s membership waitlist and admitted members, and the recipient of that branch’s membership lifecycle notifications. Creates no cohorts and marks no sessions.',
+      },
+      // CHURCH-scoped, and held by nobody unless it is granted by name: a
+      // Gift Aid declaration names the charity, and the finance people who
+      // need it are not otherwise admins. Created by migration 0059, repeated
+      // here for the same reason as Membership Champion above.
+      {
+        roleName: 'Gift Aid Admin',
+        description:
+          'Church-wide administration of Gift Aid declarations. Reviews submissions, matches them to members, records withdrawals taken by phone or letter, and exports the HMRC claim register. Carries no branch, directory or safeguarding sight.',
+      },
     ])
     .returning();
-  console.log(`✓ 13 roles`);
+  console.log(`✓ 16 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -1820,6 +1841,28 @@ async function seed() {
     })),
   ]);
   console.log(`✓ 5 safeguarding leads + 1 church safeguarding head + 5 membership champions`);
+
+  // Gift Aid Admin — the finance case, and church-scoped for the same reason
+  // Membership Admin is: a declaration names the charity, and one charity
+  // contains every branch.
+  //
+  // Granted to a plain member with no authority anywhere else, because that
+  // is the shape the real grants take. Gift Aid access is given to a named
+  // person as and when they need it, never attached to a job title and never
+  // held by default: the people who need it are the finance team, who
+  // administer nothing else in Kairos. Deliberately NOT a branch admin — a
+  // declaration carries a home address and a statement about someone's
+  // personal tax affairs.
+  await db.insert(memberRoles).values([
+    {
+      memberId: findExtra('amina.bello@kairos.local').id,
+      roleId: roleId('Gift Aid Admin'),
+      branchId: london!.id,
+      scopeKind: 'church',
+      scopeId: CHURCH_SCOPE_ID,
+    },
+  ]);
+  console.log(`✓ 1 gift aid admin (church-scoped, held by a plain member)`);
 
   // New Believers teachers and mentors — two different jobs, and at Kharis two
   // different people. Kumasi is the deliberate exception where one person
