@@ -506,3 +506,57 @@ describe('signature request, marriage pack and K-group host', () => {
     expect(required(KGROUP_HOST_FORM)).toContain('postalCode');
   });
 });
+
+describe('baby forms: godparents and ceremony month', () => {
+  const BABY_FORMS = [BABY_NAMING_FORM, BABY_DEDICATION_FORM];
+
+  it('asks for two godparents on both forms, neither required', () => {
+    for (const def of BABY_FORMS) {
+      const fields = def.blocks.flatMap((b) => b.fields);
+      const godparents = fields.filter((f) => f.id.startsWith('godparent'));
+      // Two member-reference fields, each with its free-text twin.
+      expect(godparents.map((f) => f.id).sort()).toEqual([
+        'godparentOneMemberId',
+        'godparentTwoMemberId',
+      ]);
+      for (const f of godparents) {
+        expect(f.type).toBe('member');
+        // Families often file before godparents are settled, and a godparent
+        // is frequently not a member. Requiring either would block the form.
+        expect(f.required).toBeFalsy();
+        expect(f.freeTextFieldId).toBeTruthy();
+      }
+    }
+  });
+
+  it('offers two month choices, from the same closed list', () => {
+    for (const def of BABY_FORMS) {
+      const fields = def.blocks.flatMap((b) => b.fields);
+      const first = fields.find((f) => f.id === 'preferredMonthFirstChoice');
+      const second = fields.find((f) => f.id === 'preferredMonthSecondChoice');
+      expect(first?.type).toBe('select');
+      expect(second?.type).toBe('select');
+      expect(first?.options).toHaveLength(12);
+      // The second choice exists because the first is often full, so the two
+      // must offer exactly the same months.
+      expect(second?.options).toEqual(first?.options);
+    }
+  });
+
+  it('keeps the specific-date field alongside the month preference', () => {
+    // The month is what families can usually answer; a known date is still
+    // worth capturing when they have one, so the month did not replace it.
+    expect(declaredFieldIds(BABY_NAMING_FORM).has('preferredCeremonyDate')).toBe(true);
+    expect(declaredFieldIds(BABY_DEDICATION_FORM).has('preferredDedicationDate')).toBe(true);
+  });
+
+  it('does not ask who the K-group leader is', () => {
+    // Dropped deliberately: the member's fellowship is already on the record,
+    // so asking invites an answer that contradicts it.
+    for (const def of BABY_FORMS) {
+      for (const id of declaredFieldIds(def)) {
+        expect(id).not.toMatch(/kgroupLeader|kGroupLeader|cellLeader/i);
+      }
+    }
+  });
+});

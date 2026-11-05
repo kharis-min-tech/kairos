@@ -106,6 +106,9 @@ export interface Member extends BaseEntity {
   // preserved across the systemRole collapse. Null for members who don't
   // hold a ceremonial title.
   honorific: string | null;
+  // Collected once on the Kingdom Service application and kept here rather
+  // than inside that request's row, so it stays queryable church-wide.
+  profession: string | null;
   memberType: MemberType;
   // Task #33 P1: ISO-8601 timestamp the member completed the 4-week
   // membership class. NULL = not yet a confirmed Member in the formal
@@ -869,6 +872,14 @@ export interface BabyNamingPayload {
   mothersName: string;
   parentContactPhone: string;
   parentContactEmail?: string;
+  /** Optional, and often not a member — see the godparents section. */
+  godparentOneName?: string;
+  godparentOneMemberId?: string;
+  godparentTwoName?: string;
+  godparentTwoMemberId?: string;
+  /** Month names, lower case, from the ceremony month list. */
+  preferredMonthFirstChoice?: string;
+  preferredMonthSecondChoice?: string;
   preferredCeremonyDate?: string; // ISO date string
   additionalNotes?: string;
 }
@@ -887,6 +898,14 @@ export interface BabyDedicationPayload {
   parentsAreMembers?: boolean;
   parentContactPhone: string;
   parentContactEmail?: string;
+  /** Optional, and often not a member — see the godparents section. */
+  godparentOneName?: string;
+  godparentOneMemberId?: string;
+  godparentTwoName?: string;
+  godparentTwoMemberId?: string;
+  /** Month names, lower case, from the ceremony month list. */
+  preferredMonthFirstChoice?: string;
+  preferredMonthSecondChoice?: string;
   preferredDedicationDate?: string; // ISO date string
   additionalNotes?: string;
 }

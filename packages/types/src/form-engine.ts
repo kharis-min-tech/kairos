@@ -874,6 +874,29 @@ export const TESTIMONY_FORM: FormDefinition = {
 
 // ── Baby naming / dedication (share the same shell) ──────────────────
 
+/**
+ * Month options for the baby-ceremony preferences.
+ *
+ * Asked as a month rather than only a date because the ceremony is batched:
+ * leaders run naming and dedication services periodically, so "sometime in
+ * March" is the answer families actually have, and a specific date they pick
+ * unaided is usually wrong. Two choices, because the first is often full.
+ */
+const CEREMONY_MONTHS: { value: string; label: string }[] = [
+  { value: 'january', label: 'January' },
+  { value: 'february', label: 'February' },
+  { value: 'march', label: 'March' },
+  { value: 'april', label: 'April' },
+  { value: 'may', label: 'May' },
+  { value: 'june', label: 'June' },
+  { value: 'july', label: 'July' },
+  { value: 'august', label: 'August' },
+  { value: 'september', label: 'September' },
+  { value: 'october', label: 'October' },
+  { value: 'november', label: 'November' },
+  { value: 'december', label: 'December' },
+];
+
 function babyForm(
   formType: 'baby_naming' | 'baby_dedication',
   title: string,
@@ -973,9 +996,47 @@ function babyForm(
       },
       {
         kind: 'section',
+        id: 'godparents',
+        title: 'Godparents',
+        // Optional throughout: families often have not settled on godparents
+        // when they file, and a godparent is frequently not a member. Same
+        // pick-or-type shape as the parents above, so one who IS a member
+        // gets linked rather than retyped.
+        fields: [
+          {
+            id: 'godparentOneMemberId',
+            type: 'member',
+            label: 'Godparent',
+            placeholder: 'Search, or type their name if they’re not a member',
+            freeTextFieldId: 'godparentOneName',
+          },
+          {
+            id: 'godparentTwoMemberId',
+            type: 'member',
+            label: 'Second godparent',
+            placeholder: 'Search, or type their name if they’re not a member',
+            freeTextFieldId: 'godparentTwoName',
+          },
+        ],
+      },
+      {
+        kind: 'section',
         id: 'preferences',
         title: 'Preferences',
         fields: [
+          {
+            id: 'preferredMonthFirstChoice',
+            type: 'select',
+            label: 'Preferred month (first choice)',
+            options: CEREMONY_MONTHS,
+          },
+          {
+            id: 'preferredMonthSecondChoice',
+            type: 'select',
+            label: 'Preferred month (second choice)',
+            helpText: 'Used if the first choice is already full.',
+            options: CEREMONY_MONTHS,
+          },
           {
             id: preferredDateFieldId,
             type: 'date',

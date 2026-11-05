@@ -276,6 +276,7 @@ export interface UpdateMemberRequest {
   secondaryAddress?: string;
   secondaryCity?: string;
   secondaryPostalCode?: string;
+  profession?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRelationship?: string;

@@ -185,7 +185,13 @@ export function useCreateDepartmentJoinRequest() {
       data,
     }: {
       branchDeptId: string;
-      data: { notes?: string };
+      data: {
+        notes?: string;
+        experience?: string;
+        profession?: string;
+        declarationAccepted: true;
+        signatureName: string;
+      };
     }) => {
       const res = await api.departments.joinRequests.create(branchDeptId, data);
       return res.data!;

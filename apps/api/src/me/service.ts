@@ -283,6 +283,7 @@ export async function deleteMyAccount(
       emergencyContactPhone: null,
       emergencyContactRelationship: null,
       honorific: null,
+      profession: null,
       passwordHash: unusablePasswordHash,
       passwordResetToken: null,
       passwordResetExpiry: null,

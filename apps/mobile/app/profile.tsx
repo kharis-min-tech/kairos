@@ -195,6 +195,7 @@ export default function Profile() {
                 : '—'
             }
           />
+          <RowItem label="Profession" value={user.profession ?? '—'} />
           <RowItem
             label="Emergency contact"
             value={user.emergencyContactName ?? '—'}

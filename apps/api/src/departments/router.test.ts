@@ -278,7 +278,13 @@ describe('POST /api/departments/:id/join-requests', () => {
     const res = await app.request(`/api/departments/${branchDeptId}/join-requests`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
-      body: JSON.stringify({ notes: 'I want to join' }),
+      // The declaration and printed signature are mandatory now — an
+      // application without them is a 400, which is the point.
+      body: JSON.stringify({
+        notes: 'I want to join',
+        declarationAccepted: true,
+        signatureName: 'M X',
+      }),
     });
     expect(res.status).toBe(201);
   });

@@ -23,6 +23,7 @@ import {
   useWithdrawInterest,
   useMembershipBranchView,
 } from '@/hooks/use-membership';
+import { InterestDialog } from './_components/interest-dialog';
 import { toast } from 'sonner';
 import { CHURCH_SCOPE } from '@kairos/types';
 import type {
@@ -168,6 +169,7 @@ export default function MembershipPage() {
 function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['data'] }) {
   const express = useExpressInterest();
   const withdraw = useWithdrawInterest();
+  const [interestOpen, setInterestOpen] = useState(false);
 
   if (!mine) return null;
 
@@ -267,19 +269,25 @@ function MyMembershipCard({ mine }: { mine: ReturnType<typeof useMyMembership>['
                 : 'Join the list and a membership admin will place you in an upcoming cohort.'}
           </p>
         </div>
-        <Button
-          size="sm"
-          disabled={express.isPending}
-          onClick={() =>
-            express.mutate(undefined, {
-              onSuccess: () => toast.success('You are on the list for the next class.'),
-              onError: (e: unknown) =>
-                toast.error(e instanceof Error ? e.message : 'Could not join the list.'),
-            })
-          }
-        >
-          {express.isPending ? 'Joining…' : ended ? 'Join again' : 'Join the list'}
+        <Button size="sm" onClick={() => setInterestOpen(true)}>
+          {ended ? 'Join again' : 'Join the list'}
         </Button>
+        {interestOpen && (
+          <InterestDialog
+            isSubmitting={express.isPending}
+            onCancel={() => setInterestOpen(false)}
+            onSubmit={(data) =>
+              express.mutate(data, {
+                onSuccess: () => {
+                  setInterestOpen(false);
+                  toast.success('You are on the list for the next class.');
+                },
+                onError: (e: unknown) =>
+                  toast.error(e instanceof Error ? e.message : 'Could not join the list.'),
+              })
+            }
+          />
+        )}
       </CardContent>
     </Card>
   );

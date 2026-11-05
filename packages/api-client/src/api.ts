@@ -163,6 +163,7 @@ import type {
 } from '@kairos/types';
 
 import type {
+  MembershipClassDay,
   MembershipCohort,
   MembershipCohortSummary,
   MembershipInterest,
@@ -654,7 +655,17 @@ export function createApiClient(
 
       // Join requests / recruitment pipeline
       joinRequests: {
-        create: (branchDeptId: string, data: { notes?: string | null }) =>
+        create: (
+          branchDeptId: string,
+          data: {
+            notes?: string | null;
+            experience?: string | null;
+            /** Stored on the member, not the request — kept queryable. */
+            profession?: string | null;
+            declarationAccepted: true;
+            signatureName: string;
+          },
+        ) =>
           client.post<ApiResponse<DepartmentJoinRequest>>(`/api/departments/${encodeURIComponent(branchDeptId)}/join-requests`, data),
         listMine: () =>
           client.get<ApiResponse<MyDepartmentJoinRequest[]>>(`/api/departments/me/join-requests`),
@@ -1315,8 +1326,12 @@ export function createApiClient(
        */
       interest: {
         /** Join the pool. The caller's own action; needs no capability. */
-        express: () =>
-          client.post<ApiResponse<MembershipInterest>>('/api/membership/interest', {}),
+        express: (data: {
+          preferredClassDay?: MembershipClassDay;
+          startedAttendingOn?: string;
+          attendsAnotherChurch?: boolean;
+        } = {}) =>
+          client.post<ApiResponse<MembershipInterest>>('/api/membership/interest', data),
         /** Leave the pool. Terminal — re-joining later starts a fresh wait. */
         withdraw: () =>
           client.delete<ApiResponse<MembershipInterest>>('/api/membership/interest'),

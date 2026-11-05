@@ -246,3 +246,21 @@ export const ServiceAttendanceStatus = {
 } as const;
 export type ServiceAttendanceStatus =
   (typeof ServiceAttendanceStatus)[keyof typeof ServiceAttendanceStatus];
+
+/**
+ * Day options for the membership-class preference.
+ *
+ * Deliberately the whole week rather than the two days the class currently
+ * runs: `membership_interest.preferred_class_day` carries no CHECK, so a
+ * stream that moves to a Wednesday is a copy change, not a migration.
+ */
+export const MEMBERSHIP_CLASS_DAYS = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+] as const;
+export type MembershipClassDay = (typeof MEMBERSHIP_CLASS_DAYS)[number];

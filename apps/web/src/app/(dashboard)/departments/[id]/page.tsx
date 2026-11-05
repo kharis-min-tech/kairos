@@ -36,6 +36,7 @@ import { MyRotaTab } from './_components/my-rota-tab';
 import { DepartmentAttendanceTab } from './_components/attendance-tab';
 import { useConfirm } from '@/components/confirm-dialog';
 import { NbStageChip } from '@/components/nb-stage-chip';
+import { ApplyDialog } from './_components/apply-dialog';
 
 type Tab = 'overview' | 'my-rota' | 'members' | 'attendance' | 'followups' | 'uniform' | 'rota' | 'recruitment';
 
@@ -122,6 +123,7 @@ export default function DepartmentDetailPage() {
   const removeMember = useRemoveDepartmentMember();
   const { confirm, dialog: confirmDialog } = useConfirm();
   const createJoinRequest = useCreateDepartmentJoinRequest();
+  const [applyOpen, setApplyOpen] = useState(false);
   const respondOffer = useRespondToDepartmentOffer();
   const withdrawRequest = useWithdrawDepartmentJoinRequest();
 
@@ -209,6 +211,25 @@ export default function DepartmentDetailPage() {
   return (
     <div className="space-y-6">
       {confirmDialog}
+      {applyOpen && (
+        <ApplyDialog
+          departmentName={dept.departmentName}
+          isSubmitting={createJoinRequest.isPending}
+          onCancel={() => setApplyOpen(false)}
+          onSubmit={(data) =>
+            createJoinRequest.mutate(
+              { branchDeptId: id, data },
+              {
+                onSuccess: () => {
+                  setApplyOpen(false);
+                  toast.success('Application submitted.');
+                },
+                onError: () => toast.error('Failed to submit application.'),
+              },
+            )
+          }
+        />
+      )}
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div className="min-w-0 flex-1">
@@ -238,20 +259,8 @@ export default function DepartmentDetailPage() {
         </div>
         <div className="flex shrink-0 gap-2">
           {showRequestToJoin && (
-            <Button
-              size="sm"
-              onClick={() =>
-                createJoinRequest.mutate(
-                  { branchDeptId: id, data: {} },
-                  {
-                    onSuccess: () => toast.success('Join request submitted.'),
-                    onError: () => toast.error('Failed to submit request.'),
-                  },
-                )
-              }
-              disabled={createJoinRequest.isPending}
-            >
-              {createJoinRequest.isPending ? 'Requesting...' : 'Request to Join'}
+            <Button size="sm" onClick={() => setApplyOpen(true)}>
+              Apply to Join
             </Button>
           )}
           {hasMyOpenRequestPill(myOpenRequest) && (

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, getAuth } from '../middleware/auth';
 import { db } from '../db';
-import { successResponse } from '@kairos/utils';
+import { successResponse, ValidationError } from '@kairos/utils';
 import {
   createCohortSchema,
   updateCohortSchema,
@@ -16,6 +16,7 @@ import {
   graduateSchema,
   withdrawEnrollmentSchema,
   listEnrollmentsQuerySchema,
+  expressInterestSchema,
 } from './schemas';
 import {
   listCohorts,
@@ -73,9 +74,20 @@ membershipRouter.get('/branch-view', async (c) => {
 // church-wide pool; an admin later admits them into a cohort.
 
 /** Join the pool. The caller's own action, open to any approved member. */
+// Validated by hand rather than with `zValidator('json', ...)`, which reads
+// the body eagerly and 400s when there isn't one. Every field here is
+// optional and the mobile build already in TestFlight posts no body at all,
+// so a member would be refused a place on the waiting list over questions
+// they were never shown. Treat a missing or unparseable body as `{}`.
 membershipRouter.post('/interest', async (c) => {
   const auth = getAuth(c);
-  return c.json(successResponse(await expressInterest(db, auth)), 201);
+  const raw = await c.req.json().catch(() => ({}));
+  const parsed = expressInterestSchema.safeParse(raw ?? {});
+  if (!parsed.success) {
+    throw new ValidationError(parsed.error.errors[0]?.message ?? 'Invalid request');
+  }
+  const result = await expressInterest(db, auth, parsed.data);
+  return c.json(successResponse(result), 201);
 });
 
 /** Leave the pool. Terminal — re-joining later starts a fresh wait. */

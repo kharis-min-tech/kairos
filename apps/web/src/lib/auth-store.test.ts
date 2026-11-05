@@ -30,6 +30,7 @@ const mockMember: Member = {
   approvalStatus: 'approved',
   mustCompleteProfile: false,
   systemRole: 'member', honorific: null,
+  profession: null,
   memberType: 'member',
   emailVerified: true,
   mustChangePassword: false,

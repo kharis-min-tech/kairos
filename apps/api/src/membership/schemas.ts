@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MEMBERSHIP_CLASS_DAYS } from '@kairos/types';
 
 const cohortStatuses = ['planned', 'active', 'completed', 'cancelled'] as const;
 const interestStatuses = ['waiting', 'admitted', 'lapsed', 'withdrawn'] as const;
@@ -15,6 +16,17 @@ const mark = z.number().int().min(0).max(100);
 
 /** A calendar date, not a timestamp — deadlines and ceremony dates are days. */
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a YYYY-MM-DD date');
+
+// ── Joining the interest pool ─────────────────────────────────────────────
+// Every field is optional: the pool is a church-wide waiting list, and
+// refusing somebody a place on it because they did not know which day they
+// preferred would be the wrong trade. What they do answer helps the admin
+// team stream the cohorts.
+export const expressInterestSchema = z.object({
+  preferredClassDay: z.enum(MEMBERSHIP_CLASS_DAYS).optional(),
+  startedAttendingOn: isoDate.optional(),
+  attendsAnotherChurch: z.boolean().optional(),
+});
 
 export const createCohortSchema = z.object({
   name: z.string().min(2).max(120),

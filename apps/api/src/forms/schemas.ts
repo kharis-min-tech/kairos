@@ -105,6 +105,14 @@ function requireParent(
   }
 }
 
+// Mirrors CEREMONY_MONTHS in the form definition. A bounded set, so a typo
+// or a stale client can't quietly land "Marchh" in the export.
+const ceremonyMonths = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+] as const;
+const ceremonyMonthEnum = z.enum(ceremonyMonths);
+
 export const babyNamingPayloadSchema = z.object({
   babyFullName: z.string().min(1).max(200),
   dateOfBirth: z.string().min(1),
@@ -115,6 +123,12 @@ export const babyNamingPayloadSchema = z.object({
   motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
   parentContactEmail: z.string().email().optional(),
+  godparentOneName: z.string().max(200).optional(),
+  godparentOneMemberId: z.string().uuid().optional(),
+  godparentTwoName: z.string().max(200).optional(),
+  godparentTwoMemberId: z.string().uuid().optional(),
+  preferredMonthFirstChoice: ceremonyMonthEnum.optional(),
+  preferredMonthSecondChoice: ceremonyMonthEnum.optional(),
   preferredCeremonyDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
 }).superRefine(requireParent);
@@ -129,6 +143,12 @@ export const babyDedicationPayloadSchema = z.object({
   motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
   parentContactEmail: z.string().email().optional(),
+  godparentOneName: z.string().max(200).optional(),
+  godparentOneMemberId: z.string().uuid().optional(),
+  godparentTwoName: z.string().max(200).optional(),
+  godparentTwoMemberId: z.string().uuid().optional(),
+  preferredMonthFirstChoice: ceremonyMonthEnum.optional(),
+  preferredMonthSecondChoice: ceremonyMonthEnum.optional(),
   preferredDedicationDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
 }).superRefine(requireParent);
