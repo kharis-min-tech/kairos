@@ -9,6 +9,19 @@ export const departmentJoinRequests = pgTable('department_join_requests', {
   memberId: uuid('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   status: varchar('status', { length: 30 }).default('applied').notNull(),
   notes: text('notes'),
+  // ── Kingdom Service application ──
+  /** What the applicant has done before and what they bring to the role. */
+  experience: text('experience'),
+  /**
+   * When the applicant accepted the service declaration (availability,
+   * commitment, loyalty, character). A timestamp rather than a boolean: a
+   * flag would say they agreed but not when, and this is the row a leader
+   * stands on when they say somebody undertook to serve.
+   */
+  declarationAcceptedAt: timestamp('declaration_accepted_at'),
+  /** Typed name standing in for a signature, as the paper form collected. */
+  signatureName: varchar('signature_name', { length: 150 }),
+  signatureDate: date('signature_date'),
   reviewedBy: uuid('reviewed_by').references(() => members.id, { onDelete: 'set null' }),
   reviewedAt: timestamp('reviewed_at'),
   reviewNotes: text('review_notes'),

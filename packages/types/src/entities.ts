@@ -106,6 +106,9 @@ export interface Member extends BaseEntity {
   // preserved across the systemRole collapse. Null for members who don't
   // hold a ceremonial title.
   honorific: string | null;
+  // Collected once on the Kingdom Service application and kept here rather
+  // than inside that request's row, so it stays queryable church-wide.
+  profession: string | null;
   memberType: MemberType;
   // Task #33 P1: ISO-8601 timestamp the member completed the 4-week
   // membership class. NULL = not yet a confirmed Member in the formal
@@ -250,6 +253,41 @@ export interface FellowshipJoinRequest extends BaseEntity {
   notes: string | null;
   reviewedBy: string | null;
   reviewedAt: Date | null;
+}
+
+/** The applicant's own view: which fellowship, at which branch. */
+/**
+ * A child on the caller's own record. Under-16s have no login; the guardian
+ * holds the record, so this is the shape a parent sees and manages.
+ */
+export interface MyChild {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+  gender: string | null;
+  memberType: MemberType;
+  photoUrl?: string | null;
+  homeBranchId: string;
+  /** Mother, Father, Guardian … as the parent described it. Null if unsaid. */
+  relationship: string | null;
+  isPrimaryGuardian: boolean;
+  createdAt: Date;
+}
+
+export interface AddMyChildRequest {
+  firstName: string;
+  lastName: string;
+  /** YYYY-MM-DD. Required — every U16 protection keys off the age. */
+  dateOfBirth: string;
+  gender?: 'Male' | 'Female';
+  relationship?: 'Mother' | 'Father' | 'Grandparent' | 'Guardian' | 'Carer' | 'Other';
+}
+
+export interface MyFellowshipJoinRequest extends FellowshipJoinRequest {
+  fellowshipName: string;
+  branchId: string;
+  branchName: string;
 }
 
 export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
@@ -869,6 +907,14 @@ export interface BabyNamingPayload {
   mothersName: string;
   parentContactPhone: string;
   parentContactEmail?: string;
+  /** Optional, and often not a member — see the godparents section. */
+  godparentOneName?: string;
+  godparentOneMemberId?: string;
+  godparentTwoName?: string;
+  godparentTwoMemberId?: string;
+  /** Month names, lower case, from the ceremony month list. */
+  preferredMonthFirstChoice?: string;
+  preferredMonthSecondChoice?: string;
   preferredCeremonyDate?: string; // ISO date string
   additionalNotes?: string;
 }
@@ -887,8 +933,58 @@ export interface BabyDedicationPayload {
   parentsAreMembers?: boolean;
   parentContactPhone: string;
   parentContactEmail?: string;
+  /** Optional, and often not a member — see the godparents section. */
+  godparentOneName?: string;
+  godparentOneMemberId?: string;
+  godparentTwoName?: string;
+  godparentTwoMemberId?: string;
+  /** Month names, lower case, from the ceremony month list. */
+  preferredMonthFirstChoice?: string;
+  preferredMonthSecondChoice?: string;
   preferredDedicationDate?: string; // ISO date string
   additionalNotes?: string;
+}
+
+export type SignatureDocumentType =
+  | 'Letter from Solicitor'
+  | 'Letter from School or University'
+  | 'Marriage'
+  | 'Other';
+
+export interface SignatureRequestPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  documentType: SignatureDocumentType;
+  /** Asked because `members` carries no join date — see the form definition. */
+  timeInKharis: string;
+  reason: string;
+}
+
+export interface MarriagePackPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  /** Set when the intended spouse was picked from the directory. */
+  spouseMemberId?: string;
+  /** Set instead when they were only named. Exactly one of the two. */
+  spouseName?: string;
+  spousePhone: string;
+  spouseEmail?: string;
+}
+
+export interface KGroupHostPayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  /** The venue, not a copy of the profile — this is where a group would meet. */
+  address: string;
+  city: string;
+  postalCode: string;
+  capacity: string;
+  notes?: string;
 }
 
 export type FormSubmissionPayload =
@@ -896,7 +992,10 @@ export type FormSubmissionPayload =
   | BaptismPayload
   | TestimonyPayload
   | BabyNamingPayload
-  | BabyDedicationPayload;
+  | BabyDedicationPayload
+  | SignatureRequestPayload
+  | MarriagePackPayload
+  | KGroupHostPayload;
 
 export interface FormSubmission extends BaseEntity {
   formType: FormType;

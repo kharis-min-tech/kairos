@@ -21,17 +21,11 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
-import type { FormSubmission, FormSubmissionStatus, FormType } from '@kairos/types';
+import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
+// Titles live with the form definitions — this screen kept its own copy of
+// all six, which is the drift FORM_DEFINITIONS exists to prevent.
+import { FORM_DEFINITIONS } from '@kairos/types';
 import { api } from '@/lib/api-client';
-
-const FORM_TITLES: Record<FormType, string> = {
-  first_time_visitor: 'First-Time Visitor',
-  altar_call: 'New Believers Class',
-  baptism: 'Baptism',
-  testimony: 'Testimony',
-  baby_naming: 'Baby Naming',
-  baby_dedication: 'Baby Dedication',
-};
 
 const STATUS_VARIANT: Record<
   FormSubmissionStatus,
@@ -138,7 +132,7 @@ export default function MyFormSubmissions() {
         {rows.length > 0 ? (
           <View style={styles.list}>
             {rows.map((row) => {
-              const title = FORM_TITLES[row.formType];
+              const title = FORM_DEFINITIONS[row.formType].title;
               const subject = subjectName(
                 row.payload as unknown as Record<string, unknown> | undefined,
               );

@@ -330,6 +330,49 @@ describe('expressing interest', () => {
     expect(created).toMatchObject({ status: 'waiting' });
   });
 
+  it('stores the class-day preference, start date and other-church answer', async () => {
+    setupSelectSequence(
+      [{ homeBranchId: branchId, completedAt: null }],
+      [],
+      [],
+    );
+    setupInsert([{ id: 'interest-1', status: 'waiting' }]);
+
+    await expressInterest(mockDb, memberAuth, {
+      preferredClassDay: 'saturday',
+      startedAttendingOn: '2026-03-01',
+      attendsAnotherChurch: false,
+    });
+
+    const chain = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!.value;
+    expect(chain.values.mock.calls[0]![0]).toMatchObject({
+      preferredClassDay: 'saturday',
+      startedAttendingOn: '2026-03-01',
+      attendsAnotherChurch: false,
+    });
+  });
+
+  it('still joins the pool when the caller answers nothing', async () => {
+    // The mobile build already in TestFlight sends no body at all. Losing a
+    // place on the waiting list over unanswered optional questions would be
+    // the wrong trade, so this has to keep working.
+    setupSelectSequence(
+      [{ homeBranchId: branchId, completedAt: null }],
+      [],
+      [],
+    );
+    setupInsert([{ id: 'interest-1', status: 'waiting' }]);
+
+    const created = await expressInterest(mockDb, memberAuth);
+    expect(created).toMatchObject({ status: 'waiting' });
+
+    const chain = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!.value;
+    const values = chain.values.mock.calls[0]![0];
+    expect(values.preferredClassDay).toBeUndefined();
+    expect(values.startedAttendingOn).toBeUndefined();
+    expect(values.attendsAnotherChurch).toBeUndefined();
+  });
+
   it('refuses when the caller has already completed the class', async () => {
     setupSelectSequence([{ homeBranchId: branchId, completedAt: new Date('2026-01-01') }]);
     await expect(expressInterest(mockDb, memberAuth)).rejects.toThrow(/already completed/i);

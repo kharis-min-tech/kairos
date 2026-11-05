@@ -10,6 +10,7 @@ import { useBranches } from '@/hooks/use-branches';
 import { useMyConsentStatuses } from '@/hooks/use-consent';
 import { useCompleteOauthProfile } from '@/hooks/use-auth';
 import { DateSelect } from '@/components/date-select';
+import { MyChildrenCard } from './_components/my-children-card';
 import { ImageUpload } from '@/components/image-upload';
 import { AddressAutofillGroup, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, CustomSelect } from '@kairos/ui';
 import type { UpdateMemberRequest } from '@kairos/types';
@@ -88,6 +89,7 @@ export default function ProfilePage() {
       secondaryAddress: (profile as { secondaryAddress?: string | null })?.secondaryAddress ?? '',
       secondaryCity: (profile as { secondaryCity?: string | null })?.secondaryCity ?? '',
       secondaryPostalCode: (profile as { secondaryPostalCode?: string | null })?.secondaryPostalCode ?? '',
+      profession: (profile as { profession?: string | null })?.profession ?? '',
       emergencyContactName: (profile as { emergencyContactName?: string | null })?.emergencyContactName ?? '',
       emergencyContactRelationship: (profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship ?? '',
       emergencyContactPhone: (profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone ?? '',
@@ -103,6 +105,7 @@ export default function ProfilePage() {
     secondaryBranchId?: string | null; isAtSecondaryBranch?: boolean;
     secondaryAddress?: string | null; secondaryCity?: string | null; secondaryPostalCode?: string | null;
     emergencyContactName?: string | null; emergencyContactRelationship?: string | null; emergencyContactPhone?: string | null;
+    profession?: string | null;
     systemRole?: string; photoUrl?: string | null;
     homeBranchId?: string | null;
   };
@@ -133,6 +136,7 @@ export default function ProfilePage() {
       secondaryAddress: (profile as { secondaryAddress?: string | null })?.secondaryAddress ?? '',
       secondaryCity: (profile as { secondaryCity?: string | null })?.secondaryCity ?? '',
       secondaryPostalCode: (profile as { secondaryPostalCode?: string | null })?.secondaryPostalCode ?? '',
+      profession: (profile as { profession?: string | null })?.profession ?? '',
       emergencyContactName: (profile as { emergencyContactName?: string | null })?.emergencyContactName ?? '',
       emergencyContactRelationship: (profile as { emergencyContactRelationship?: string | null })?.emergencyContactRelationship ?? '',
       emergencyContactPhone: (profile as { emergencyContactPhone?: string | null })?.emergencyContactPhone ?? '',
@@ -390,6 +394,10 @@ export default function ProfilePage() {
                     onChange={(val) => setValue('dateOfBirth', val)}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="profession">Profession</Label>
+                  <Input id="profession" {...register('profession')} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -543,6 +551,7 @@ export default function ProfilePage() {
                 <Field label="Phone" value={profile?.phone} />
                 <Field label="Gender" value={profile?.gender} />
                 <Field label="Date of Birth" value={(profile as { dateOfBirth?: string | null })?.dateOfBirth} />
+                <Field label="Profession" value={(profile as { profession?: string | null })?.profession} />
               </dl>
             </CardContent>
           </Card>
@@ -603,6 +612,11 @@ export default function ProfilePage() {
               </dl>
             </CardContent>
           </Card>
+
+          {/* Children live on the parent's record: under-16s have no login of
+              their own. Read-mode only — it owns its own dialog and has
+              nothing to do with the profile form above. */}
+          <MyChildrenCard />
         </>
       )}
     </div>

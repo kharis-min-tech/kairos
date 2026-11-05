@@ -13,8 +13,10 @@ import {
   listMyActivity,
   listMyApprovals,
   listMyFollowups,
+  listMyChildren,
+  addMyChild,
 } from './service';
-import { meLeadershipResponseSchema, deleteAccountSchema } from './schemas';
+import { meLeadershipResponseSchema, deleteAccountSchema, addMyChildSchema } from './schemas';
 import { getMyHome } from './home-service';
 import {
   listEffectivePreferences,
@@ -68,6 +70,21 @@ meRouter.put(
     return c.json(successResponse(updated));
   },
 );
+
+// ── My children ───────────────────────────────────────────
+// A parent holds their own children's records: under-16s cannot sign in, and
+// creating a member otherwise needs `branch:write`. Creating is allowed here;
+// linking yourself to an EXISTING child is not, and stays with admins.
+meRouter.get('/children', async (c) => {
+  const auth = getAuth(c);
+  return c.json(successResponse(await listMyChildren(db, auth)));
+});
+
+meRouter.post('/children', zValidator('json', addMyChildSchema), async (c) => {
+  const auth = getAuth(c);
+  const child = await addMyChild(db, auth, c.req.valid('json'));
+  return c.json(successResponse(child, 'Child added'), 201);
+});
 
 meRouter.get('/approvals', async (c) => {
   const auth = getAuth(c);

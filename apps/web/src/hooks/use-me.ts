@@ -1,8 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import type { DeleteAccountRequest, MeHomeResponse, MeLeadershipResponse } from '@kairos/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  AddMyChildRequest,
+  DeleteAccountRequest,
+  MeHomeResponse,
+  MeLeadershipResponse,
+} from '@kairos/types';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { buildDataExportHtml } from '@/lib/data-export-html';
@@ -124,5 +129,28 @@ export function useDeleteMyAccount() {
       const res = await api.me.deleteAccount(data);
       return res.data!;
     },
+  });
+}
+
+/**
+ * The caller's own children.
+ *
+ * Under-16s have no login, so a parent holds the record. Creating is
+ * self-service; linking to a child who already exists is not — that stays
+ * with admins who can verify the claim.
+ */
+export function useMyChildren() {
+  return useQuery({
+    queryKey: ['me', 'children'],
+    queryFn: async () => (await api.me.children.list()).data ?? [],
+  });
+}
+
+export function useAddMyChild() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: AddMyChildRequest) =>
+      (await api.me.children.add(data)).data!,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['me', 'children'] }),
   });
 }

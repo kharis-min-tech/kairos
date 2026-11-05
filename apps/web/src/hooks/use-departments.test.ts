@@ -104,11 +104,20 @@ describe('useCreateDepartmentJoinRequest', () => {
     });
 
     await act(async () => {
-      await result.current.mutateAsync({ branchDeptId, data: { notes: 'I want to join' } });
+      await result.current.mutateAsync({
+        branchDeptId,
+        data: {
+          notes: 'I want to join',
+          declarationAccepted: true,
+          signatureName: 'A Member',
+        },
+      });
     });
 
     expect(api.departments.joinRequests.create).toHaveBeenCalledWith(branchDeptId, {
       notes: 'I want to join',
+      declarationAccepted: true,
+      signatureName: 'A Member',
     });
   });
 });

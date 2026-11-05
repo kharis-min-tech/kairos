@@ -163,6 +163,7 @@ import type {
 } from '@kairos/types';
 
 import type {
+  MembershipClassDay,
   MembershipCohort,
   MembershipCohortSummary,
   MembershipInterest,
@@ -212,6 +213,9 @@ import type {
   FellowshipMeetingAttendance,
   FellowshipJoinRequest,
   FellowshipJoinRequestWithMember,
+  MyFellowshipJoinRequest,
+  MyChild,
+  AddMyChildRequest,
   FellowshipFollowup,
   FellowshipFollowupWithDetails,
   Department,
@@ -533,6 +537,9 @@ export function createApiClient(
       joinRequests: {
         create: (fellowshipId: string, data: CreateJoinRequestRequest) =>
           client.post<ApiResponse<FellowshipJoinRequest>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests`, data),
+        /** The caller's own applications. `list` below is the leader's view. */
+        listMine: () =>
+          client.get<ApiResponse<MyFellowshipJoinRequest[]>>(`/api/fellowships/me/join-requests`),
         list: (fellowshipId: string) =>
           client.get<ApiResponse<FellowshipJoinRequestWithMember[]>>(`/api/fellowships/${encodeURIComponent(fellowshipId)}/join-requests`),
         review: (fellowshipId: string, requestId: string, data: ReviewJoinRequestRequest) =>
@@ -654,7 +661,17 @@ export function createApiClient(
 
       // Join requests / recruitment pipeline
       joinRequests: {
-        create: (branchDeptId: string, data: { notes?: string | null }) =>
+        create: (
+          branchDeptId: string,
+          data: {
+            notes?: string | null;
+            experience?: string | null;
+            /** Stored on the member, not the request — kept queryable. */
+            profession?: string | null;
+            declarationAccepted: true;
+            signatureName: string;
+          },
+        ) =>
           client.post<ApiResponse<DepartmentJoinRequest>>(`/api/departments/${encodeURIComponent(branchDeptId)}/join-requests`, data),
         listMine: () =>
           client.get<ApiResponse<MyDepartmentJoinRequest[]>>(`/api/departments/me/join-requests`),
@@ -1020,6 +1037,17 @@ export function createApiClient(
         client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
       approvals: () =>
         client.get<ApiResponse<MeApprovalItem[]>>('/api/me/approvals'),
+
+      /**
+       * The caller's own children. Creating one is allowed (the parent is the
+       * source of the data); linking to an existing child is not, and stays
+       * with admins who can verify the claim.
+       */
+      children: {
+        list: () => client.get<ApiResponse<MyChild[]>>('/api/me/children'),
+        add: (data: AddMyChildRequest) =>
+          client.post<ApiResponse<MyChild>>('/api/me/children', data),
+      },
       followups: () =>
         client.get<ApiResponse<MeFollowupItem[]>>('/api/me/followups'),
       welfareInbox: () =>
@@ -1315,8 +1343,12 @@ export function createApiClient(
        */
       interest: {
         /** Join the pool. The caller's own action; needs no capability. */
-        express: () =>
-          client.post<ApiResponse<MembershipInterest>>('/api/membership/interest', {}),
+        express: (data: {
+          preferredClassDay?: MembershipClassDay;
+          startedAttendingOn?: string;
+          attendsAnotherChurch?: boolean;
+        } = {}) =>
+          client.post<ApiResponse<MembershipInterest>>('/api/membership/interest', data),
         /** Leave the pool. Terminal — re-joining later starts a fresh wait. */
         withdraw: () =>
           client.delete<ApiResponse<MembershipInterest>>('/api/membership/interest'),
@@ -1552,10 +1584,9 @@ export function createApiClient(
         client.post<ApiResponse<RecordAttendanceResult>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`, data),
       listAttendance: (serviceId: string) =>
         client.get<ApiResponse<ServiceAttendanceRow[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`),
-      selfCheckIn: (serviceId: string) =>
-        client.post<ApiResponse<SelfCheckInResult>>(
-          `/api/attendance/services/${encodeURIComponent(serviceId)}/self-check-in`,
-        ),
+      // There is no unverified `selfCheckIn` any more. Attendance is recorded
+      // only where somebody was seen: the member scans the rotating desk code
+      // (`selfCheckInQr`), or an usher scans the member's code and records it.
       selfCheckInCandidates: () =>
         client.get<ApiResponse<SelfCheckInCandidate[]>>('/api/attendance/self-check-in/candidates'),
       // Rotating QR pair: admin polls `getQrToken`; member scan posts to `selfCheckInQr`.

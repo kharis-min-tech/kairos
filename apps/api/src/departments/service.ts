@@ -679,7 +679,13 @@ export async function createJoinRequest(
   db: Database,
   auth: AuthContext,
   branchDepartmentId: string,
-  data: { notes?: string },
+  data: {
+    notes?: string;
+    experience?: string;
+    profession?: string;
+    declarationAccepted: true;
+    signatureName: string;
+  },
 ) {
   const bd = await getBranchDepartment(db, auth, branchDepartmentId);
 
@@ -738,14 +744,33 @@ export async function createJoinRequest(
     );
   }
 
+  // One instant for both stamps, so the declaration time and the signature
+  // date can never tell different stories about when this was signed.
+  const signedAt = new Date();
+
   const [request] = await db
     .insert(departmentJoinRequests)
     .values({
       branchDepartmentId,
       memberId: auth.memberId,
       notes: data.notes,
+      experience: data.experience,
+      declarationAcceptedAt: signedAt,
+      signatureName: data.signatureName,
+      signatureDate: signedAt.toISOString().slice(0, 10),
     })
     .returning();
+
+  // Profession lives on the member so it stays queryable across the church,
+  // rather than being buried in one application's row. The applicant is
+  // telling us about themselves right now, so this is the freshest answer we
+  // have; the profile page remains the place to correct it.
+  if (data.profession) {
+    await db
+      .update(members)
+      .set({ profession: data.profession, updatedAt: signedAt })
+      .where(eq(members.id, auth.memberId));
+  }
 
   // Fire-and-forget confirmation email
   const [requester] = await db

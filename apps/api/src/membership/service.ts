@@ -339,7 +339,15 @@ async function lapseExpiredInterest(db: Database): Promise<void> {
  * somebody who drifted away for a season does not silently keep their place
  * in the queue ahead of people who have been turning up.
  */
-export async function expressInterest(db: Database, auth: AuthContext) {
+export async function expressInterest(
+  db: Database,
+  auth: AuthContext,
+  data: {
+    preferredClassDay?: string;
+    startedAttendingOn?: string;
+    attendsAnotherChurch?: boolean;
+  } = {},
+) {
   await lapseExpiredInterest(db);
 
   const [me] = await db
@@ -390,6 +398,9 @@ export async function expressInterest(db: Database, auth: AuthContext) {
       branchId: me.homeBranchId,
       status: 'waiting',
       expiresAt: sql`NOW() + ${`${MEMBERSHIP_INTEREST_WINDOW_DAYS} days`}::interval`,
+      preferredClassDay: data.preferredClassDay,
+      startedAttendingOn: data.startedAttendingOn,
+      attendsAnotherChurch: data.attendsAnotherChurch,
     })
     .returning();
 

@@ -64,3 +64,17 @@ export const recordConsentSchema = z.object({
 export const deleteAccountSchema = z.object({
   currentPassword: z.string().min(1, 'Password is required'),
 });
+
+// ── My children ───────────────────────────────────────────
+// Date of birth is required, not optional: the record is typed `child` and
+// every U16 protection keys off the age, so a child with no date of birth is
+// a minor the system cannot recognise as one.
+export const addMyChildSchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a YYYY-MM-DD date'),
+  gender: z.enum(['Male', 'Female']).optional(),
+  relationship: z
+    .enum(['Mother', 'Father', 'Grandparent', 'Guardian', 'Carer', 'Other'])
+    .optional(),
+});

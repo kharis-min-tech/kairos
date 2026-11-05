@@ -712,3 +712,116 @@ describe('GET /api/me/followups', () => {
     }
   });
 });
+
+// ── My children ────────────────────────────────────────────
+//
+// The route exists because under-16s cannot sign in and `POST /api/members`
+// needs `branch:write`, so a parent had no way to put their own children on
+// the record. These tests pin the two guardrails that make self-service safe:
+// the record must actually be a minor's, and a plain member must be able to
+// do it without any grant.
+
+describe('GET /api/me/children', () => {
+  it('returns 401 without auth', async () => {
+    const res = await app.request('/api/me/children');
+    expect(res.status).toBe(401);
+  });
+
+  it('needs no capability — a plain member reads their own children', async () => {
+    mockDb.select.mockReturnValue(chainTo([]));
+    const token = await signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+      branchId: branchA,
+    });
+    const res = await app.request('/api/me/children', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('POST /api/me/children', () => {
+  const body = (over: Record<string, unknown> = {}) =>
+    JSON.stringify({
+      firstName: 'Ada',
+      lastName: 'Bolu',
+      dateOfBirth: '2020-04-02',
+      ...over,
+    });
+
+  async function memberToken() {
+    return signTestToken({
+      systemRole: 'member',
+      memberId: TEST_IDS.memberId,
+      branchId: branchA,
+    });
+  }
+
+  it('returns 401 without auth', async () => {
+    const res = await app.request('/api/me/children', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body(),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a date of birth that is not a minor', async () => {
+    // The record is typed `child` and every U16 protection hangs off that, so
+    // an adult filed as one would be a minor the system cannot see.
+    const res = await app.request('/api/me/children', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${await memberToken()}`,
+      },
+      body: body({ dateOfBirth: '1990-01-01' }),
+    });
+    expect(res.status).toBe(400);
+    const parsed = (await res.json()) as { message: string };
+    expect(parsed.message).toMatch(/under 16/i);
+  });
+
+  it('requires a date of birth at all', async () => {
+    const res = await app.request('/api/me/children', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${await memberToken()}`,
+      },
+      body: JSON.stringify({ firstName: 'Ada', lastName: 'Bolu' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects a relationship outside the allowed set', async () => {
+    const res = await app.request('/api/me/children', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${await memberToken()}`,
+      },
+      body: body({ relationship: 'Stepmother' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('offers no way to claim a child who already exists', async () => {
+    // The dangerous operation is linking yourself as guardian to an existing
+    // child record. It is not exposed here on purpose — only creation is —
+    // so there is no route to assert against beyond its absence.
+    const res = await app.request(
+      `/api/me/children/${TEST_IDS.memberId}/guardian`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await memberToken()}`,
+        },
+        body: JSON.stringify({}),
+      },
+    );
+    expect(res.status).toBe(404);
+  });
+});

@@ -16,6 +16,7 @@ import { ChevronLeft, Building2, Users, Calendar } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
+  Button,
   Card,
   gradients,
   radii,
@@ -258,6 +259,7 @@ export default function MyDepartment() {
 function EmptyState() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const router = useRouter();
   return (
     <Card padding="md" style={styles.emptyCard}>
       <View style={styles.emptyIconTile}>
@@ -265,9 +267,15 @@ function EmptyState() {
       </View>
       <Text style={styles.emptyTitle}>You&apos;re not in a department yet</Text>
       <Text style={styles.emptyMeta}>
-        Join a ministry department (Worship, Ushering, Media, Children, …) via
-        your branch admin. Your team, lead, and rota will land here.
+        Browse the ministry departments (Worship, Ushering, Media, Children, …)
+        and apply to the one you want to serve in. Your team, lead, and rota
+        will land here.
       </Text>
+      <Button
+        label="Browse departments"
+        variant="secondary"
+        onPress={() => router.push('/departments')}
+      />
     </Card>
   );
 }

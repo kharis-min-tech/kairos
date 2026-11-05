@@ -44,6 +44,7 @@ export interface MemberFormValues {
   secondaryAddress: string;
   secondaryCity: string;
   secondaryPostalCode: string;
+  profession: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
   emergencyContactRelationship: string;
@@ -101,6 +102,7 @@ export function MemberForm({
   const [secondaryPostalCode, setSecondaryPostalCode] = useState(
     initial?.secondaryPostalCode ?? '',
   );
+  const [profession, setProfession] = useState(initial?.profession ?? '');
   const [emergencyContactName, setEmergencyContactName] = useState(
     initial?.emergencyContactName ?? '',
   );
@@ -164,6 +166,7 @@ export function MemberForm({
       ...(secondaryPostalCode.trim()
         ? { secondaryPostalCode: secondaryPostalCode.trim() }
         : {}),
+      ...(profession.trim() ? { profession: profession.trim() } : {}),
       ...(emergencyContactName.trim()
         ? { emergencyContactName: emergencyContactName.trim() }
         : {}),
@@ -295,6 +298,14 @@ export function MemberForm({
               setCity(v.city);
               setPostalCode(v.postalCode);
             }}
+          />
+
+          <FieldLabel label="Profession" />
+          <Input
+            value={profession}
+            onChangeText={setProfession}
+            autoCapitalize="words"
+            placeholder="e.g. Radiographer"
           />
         </Card>
 

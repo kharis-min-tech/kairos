@@ -444,18 +444,39 @@ describe('recordAttendance', () => {
   });
 });
 
-// ── selfCheckIn ────────────────────────────────────────────
+// ── self check-in (QR-verified — the only path) ────────────
+//
+// The honour-system `selfCheckIn` pass-through is gone: it wrote a row
+// indistinguishable from a verified one, so its existence made every
+// attendance row unverifiable. The window math, Late threshold, branch gate
+// and idempotency it used to be tested through all still apply — they live in
+// the shared core — so these tests drive them through the QR path instead,
+// with a genuinely signed token.
 
-describe('selfCheckIn', () => {
+describe('self check-in via a verified QR token', () => {
   // Times are all "now = 2026-05-24T09:15:00Z"; service starts 09:00.
   // With defaults (open 30 min before, close 90 after, late after 30) the
   // window is [08:30, 10:30] and status flips to Late after 09:30.
   const now = new Date('2026-05-24T09:15:00Z');
+  const QR_SECRET = 'test-self-check-in-qr-secret';
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(now);
   });
+
+  /**
+   * Check in the way a member actually does: scan the rotating desk code.
+   * The token is signed for the current bucket with the same secret the
+   * verifier uses, so this exercises the real verify step rather than
+   * stubbing past it.
+   */
+  async function checkInWithQr() {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { selfCheckInWithQrToken } = await import('./service');
+    const { token } = await signQrToken(QR_SECRET, serviceId);
+    return selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, QR_SECRET);
+  }
 
   const configRow = (overrides: Partial<{
     enabled: boolean;
@@ -481,8 +502,7 @@ describe('selfCheckIn', () => {
       [],          // no existing attendance row
     );
     setupInsert(undefined);
-    const { selfCheckIn } = await import('./service');
-    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    const r = await checkInWithQr();
     expect(r.status).toBe('Present');
     expect(r.alreadyCheckedIn).toBe(false);
   });
@@ -491,16 +511,14 @@ describe('selfCheckIn', () => {
     vi.setSystemTime(new Date('2026-05-24T09:45:00Z'));
     setupSelectSequence(configRow(), []);
     setupInsert(undefined);
-    const { selfCheckIn } = await import('./service');
-    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    const r = await checkInWithQr();
     expect(r.status).toBe('Late');
   });
 
   it('rejects when window has not opened yet', async () => {
     vi.setSystemTime(new Date('2026-05-24T08:00:00Z'));
     setupSelectSequence(configRow());
-    const { selfCheckIn } = await import('./service');
-    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+    await expect(checkInWithQr()).rejects.toMatchObject({
       statusCode: 403,
     });
   });
@@ -508,16 +526,14 @@ describe('selfCheckIn', () => {
   it('rejects when window has closed', async () => {
     vi.setSystemTime(new Date('2026-05-24T11:00:00Z'));
     setupSelectSequence(configRow());
-    const { selfCheckIn } = await import('./service');
-    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+    await expect(checkInWithQr()).rejects.toMatchObject({
       statusCode: 403,
     });
   });
 
   it('rejects when branch has self-check-in disabled', async () => {
     setupSelectSequence(configRow({ enabled: false }));
-    const { selfCheckIn } = await import('./service');
-    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+    await expect(checkInWithQr()).rejects.toMatchObject({
       statusCode: 403,
     });
   });
@@ -533,8 +549,7 @@ describe('selfCheckIn', () => {
       closeAfter: 90,
       lateAfter: 30,
     }]);
-    const { selfCheckIn } = await import('./service');
-    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+    await expect(checkInWithQr()).rejects.toMatchObject({
       statusCode: 403,
     });
   });
@@ -544,16 +559,14 @@ describe('selfCheckIn', () => {
       configRow(),
       [{ status: 'Present', arrivalTime: new Date('2026-05-24T09:05:00Z') }],
     );
-    const { selfCheckIn } = await import('./service');
-    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    const r = await checkInWithQr();
     expect(r.alreadyCheckedIn).toBe(true);
     expect(r.status).toBe('Present');
   });
 
   it('throws NotFound for an inactive or missing service', async () => {
     setupSelectSequence([]);
-    const { selfCheckIn } = await import('./service');
-    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+    await expect(checkInWithQr()).rejects.toMatchObject({
       statusCode: 404,
     });
   });
@@ -1225,5 +1238,42 @@ describe('selfCheckInWithQrToken', () => {
     const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
     expect(r.alreadyCheckedIn).toBe(true);
     expect(r.status).toBe('Present');
+  });
+});
+
+// ── The honour-system path is gone, not hidden ─────────────
+
+describe('the unverified self-check-in path', () => {
+  it('is no longer exported from the service', async () => {
+    // Removing the route alone would have been cosmetic: any client could
+    // still have called the service. The guarantee that every attendance row
+    // was witnessed depends on there being no way in without a token.
+    const service = await import('./service');
+    expect('selfCheckIn' in service).toBe(false);
+  });
+
+  it('refuses a check-in whose token was not signed with the real secret', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-24T09:15:00Z'));
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { selfCheckInWithQrToken } = await import('./service');
+    // Signed correctly, but by somebody who guessed the secret wrong — which
+    // is what a forged desk code amounts to.
+    const { token } = await signQrToken('not-the-real-secret', serviceId);
+    await expect(
+      selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, 'the-real-secret'),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('refuses a token minted for a different service', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-24T09:15:00Z'));
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { selfCheckInWithQrToken } = await import('./service');
+    const secret = 'shared-secret';
+    const { token } = await signQrToken(secret, otherBranchId);
+    await expect(
+      selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret),
+    ).rejects.toMatchObject({ statusCode: 403 });
   });
 });

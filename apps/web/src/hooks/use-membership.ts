@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type {
+  MembershipClassDay,
   CreateMembershipCohortRequest,
   UpdateMembershipCohortRequest,
   UpsertMembershipSessionRequest,
@@ -176,7 +177,13 @@ export function useSaveSession(cohortId: string) {
 export function useExpressInterest() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: async () => (await api.membership.interest.express()).data!,
+    mutationFn: async (
+      data: {
+        preferredClassDay?: MembershipClassDay;
+        startedAttendingOn?: string;
+        attendsAnotherChurch?: boolean;
+      } = {},
+    ) => (await api.membership.interest.express(data)).data!,
     onSuccess: invalidate,
   });
 }

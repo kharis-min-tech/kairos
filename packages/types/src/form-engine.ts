@@ -874,6 +874,29 @@ export const TESTIMONY_FORM: FormDefinition = {
 
 // ── Baby naming / dedication (share the same shell) ──────────────────
 
+/**
+ * Month options for the baby-ceremony preferences.
+ *
+ * Asked as a month rather than only a date because the ceremony is batched:
+ * leaders run naming and dedication services periodically, so "sometime in
+ * March" is the answer families actually have, and a specific date they pick
+ * unaided is usually wrong. Two choices, because the first is often full.
+ */
+const CEREMONY_MONTHS: { value: string; label: string }[] = [
+  { value: 'january', label: 'January' },
+  { value: 'february', label: 'February' },
+  { value: 'march', label: 'March' },
+  { value: 'april', label: 'April' },
+  { value: 'may', label: 'May' },
+  { value: 'june', label: 'June' },
+  { value: 'july', label: 'July' },
+  { value: 'august', label: 'August' },
+  { value: 'september', label: 'September' },
+  { value: 'october', label: 'October' },
+  { value: 'november', label: 'November' },
+  { value: 'december', label: 'December' },
+];
+
 function babyForm(
   formType: 'baby_naming' | 'baby_dedication',
   title: string,
@@ -973,9 +996,47 @@ function babyForm(
       },
       {
         kind: 'section',
+        id: 'godparents',
+        title: 'Godparents',
+        // Optional throughout: families often have not settled on godparents
+        // when they file, and a godparent is frequently not a member. Same
+        // pick-or-type shape as the parents above, so one who IS a member
+        // gets linked rather than retyped.
+        fields: [
+          {
+            id: 'godparentOneMemberId',
+            type: 'member',
+            label: 'Godparent',
+            placeholder: 'Search, or type their name if they’re not a member',
+            freeTextFieldId: 'godparentOneName',
+          },
+          {
+            id: 'godparentTwoMemberId',
+            type: 'member',
+            label: 'Second godparent',
+            placeholder: 'Search, or type their name if they’re not a member',
+            freeTextFieldId: 'godparentTwoName',
+          },
+        ],
+      },
+      {
+        kind: 'section',
         id: 'preferences',
         title: 'Preferences',
         fields: [
+          {
+            id: 'preferredMonthFirstChoice',
+            type: 'select',
+            label: 'Preferred month (first choice)',
+            options: CEREMONY_MONTHS,
+          },
+          {
+            id: 'preferredMonthSecondChoice',
+            type: 'select',
+            label: 'Preferred month (second choice)',
+            helpText: 'Used if the first choice is already full.',
+            options: CEREMONY_MONTHS,
+          },
           {
             id: preferredDateFieldId,
             type: 'date',
@@ -1006,6 +1067,215 @@ export const BABY_DEDICATION_FORM = babyForm(
   'Request a baby dedication.',
 );
 
+// ── Request for a signature ────────────────────────────────
+//
+// The church signing a letter for a solicitor, a school or a marriage. It
+// vouches for somebody, so unlike every other form it NEVER mints a shell
+// record: you cannot vouch for a person you hold no record of. An unmatched
+// request still files — the reviewer decides — but with no subject attached.
+//
+// The paper form asked whether the requester had completed Foundation Class.
+// That lives in the new-believer enrolment, so it is not asked. How long they
+// have been at Kharis IS asked: `members` carries no join date, so unlike the
+// class question, this is something we genuinely do not know.
+
+export const SIGNATURE_REQUEST_FORM: FormDefinition = {
+  formType: 'signature_request',
+  title: 'Request a signature',
+  description:
+    'Ask the church to sign or endorse a document. Bring the document itself to the office — this records the request so a pastor can review it.',
+  subjectLink: {
+    label: 'Find the person making the request',
+    helpText:
+      'Search by name or phone. The church can only vouch for someone it already holds a record of.',
+    linkedNote: 'Linked to an existing person. Their record will be used.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
+  success: {
+    title: 'Signature request submitted',
+    message:
+      'Your request has been recorded. A pastor will review it and the office will be in touch about the signed document.',
+  },
+  blocks: [
+    {
+      kind: 'section',
+      id: 'about-you',
+      title: 'About you',
+      fields: [
+        { id: 'firstName', type: 'text', label: 'First name', required: true },
+        { id: 'lastName', type: 'text', label: 'Last name', required: true },
+        { id: 'phone', type: 'tel', label: 'Phone', required: true },
+      ],
+    },
+    {
+      kind: 'section',
+      id: 'request',
+      title: 'The document',
+      fields: [
+        {
+          id: 'documentType',
+          type: 'select',
+          label: 'What kind of document is it?',
+          required: true,
+          placeholder: 'Choose a type',
+          options: [
+            { value: 'Letter from Solicitor', label: 'Letter from a solicitor' },
+            {
+              value: 'Letter from School or University',
+              label: 'Letter from a school or university',
+            },
+            { value: 'Marriage', label: 'Marriage' },
+            { value: 'Other', label: 'Other' },
+          ],
+        },
+        {
+          id: 'timeInKharis',
+          type: 'select',
+          label: 'How long have you been at Kharis?',
+          required: true,
+          placeholder: 'Choose a length of time',
+          options: [
+            { value: 'Under 6 months', label: 'Under 6 months' },
+            { value: '6-12 months', label: '6 to 12 months' },
+            { value: '1-2 years', label: '1 to 2 years' },
+            { value: '2-5 years', label: '2 to 5 years' },
+            { value: 'Over 5 years', label: 'Over 5 years' },
+          ],
+        },
+        {
+          id: 'reason',
+          type: 'textarea',
+          label: 'Why should the church sign this document?',
+          required: true,
+          placeholder:
+            'Briefly explain what the document is for and what it asks the church to confirm.',
+        },
+      ],
+    },
+  ],
+};
+
+// ── Marriage pack ──────────────────────────────────────────
+//
+// An enquiry from somebody intending to marry. The intended spouse is a
+// `member` field with a free-text fallback: a spouse already in the directory
+// becomes a reference the pastoral team can open, and one who is not is still
+// recorded by name rather than the form refusing them.
+
+export const MARRIAGE_PACK_FORM: FormDefinition = {
+  formType: 'marriage_pack',
+  title: 'Marriage pack',
+  description:
+    'Request the marriage pack. A pastor will be in touch to talk through the process and what happens next.',
+  subjectLink: {
+    label: 'Find the person requesting the pack',
+    helpText: 'Search by name or phone. Leave blank to create a new contact.',
+    linkedNote: 'Linked to an existing person. Their record will be used.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
+  success: {
+    title: 'Marriage pack requested',
+    message: 'Your request has been recorded. A pastor will be in touch with you both.',
+  },
+  blocks: [
+    {
+      kind: 'section',
+      id: 'about-you',
+      title: 'About you',
+      fields: [
+        { id: 'firstName', type: 'text', label: 'First name', required: true },
+        { id: 'lastName', type: 'text', label: 'Last name', required: true },
+        { id: 'phone', type: 'tel', label: 'Phone', required: true },
+        { id: 'email', type: 'email', label: 'Email' },
+      ],
+    },
+    {
+      kind: 'section',
+      id: 'intended',
+      title: 'Your intended spouse',
+      fields: [
+        {
+          id: 'spouseMemberId',
+          type: 'member',
+          label: 'Intended spouse',
+          freeTextFieldId: 'spouseName',
+          required: true,
+          helpText: 'Search for them if they are part of Kharis, or simply type their name.',
+        },
+        { id: 'spousePhone', type: 'tel', label: 'Their phone', required: true },
+        { id: 'spouseEmail', type: 'email', label: 'Their email' },
+      ],
+    },
+  ],
+};
+
+// ── K-group host ───────────────────────────────────────────
+//
+// An offer to host a K-group at home. The address IS the substance of this
+// form — it is where a group would meet, not a copy of the member's profile —
+// so it is asked even though `members` carries an address. The form can also
+// be filed on somebody's behalf, in which case there is no profile to read.
+
+export const KGROUP_HOST_FORM: FormDefinition = {
+  formType: 'kgroup_host',
+  title: 'Host a K-group',
+  description:
+    'Offer your home as a venue for a K-group. A coordinator will call before anything is arranged.',
+  subjectLink: {
+    label: 'Find the person offering to host',
+    helpText: 'Search by name or phone. Leave blank to create a new contact.',
+    linkedNote: 'Linked to an existing person. Their record will be used.',
+    prefill: { firstName: 'firstName', lastName: 'lastName', phone: 'phone' },
+  },
+  success: {
+    title: 'Thank you for offering to host',
+    message: 'Your offer has been recorded. A K-group coordinator will be in touch.',
+  },
+  blocks: [
+    {
+      kind: 'section',
+      id: 'about-you',
+      title: 'About you',
+      fields: [
+        { id: 'firstName', type: 'text', label: 'First name', required: true },
+        { id: 'lastName', type: 'text', label: 'Last name', required: true },
+        { id: 'phone', type: 'tel', label: 'Phone', required: true },
+        { id: 'email', type: 'email', label: 'Email' },
+      ],
+    },
+    {
+      kind: 'section',
+      id: 'venue',
+      title: 'The venue',
+      description: 'Where the group would meet.',
+      fields: [
+        { id: 'address', type: 'text', label: 'Address', required: true },
+        { id: 'city', type: 'text', label: 'City', required: true },
+        { id: 'postalCode', type: 'text', label: 'Postcode', required: true },
+        {
+          id: 'capacity',
+          type: 'select',
+          label: 'How many people could you host?',
+          required: true,
+          placeholder: 'Choose a number',
+          options: [
+            { value: '1-5', label: 'Up to 5' },
+            { value: '6-10', label: '6 to 10' },
+            { value: '11-15', label: '11 to 15' },
+            { value: '16+', label: 'More than 15' },
+          ],
+        },
+        {
+          id: 'notes',
+          type: 'textarea',
+          label: 'Anything a coordinator should know?',
+          placeholder: 'Parking, access, which evenings suit you, anything else.',
+        },
+      ],
+    },
+  ],
+};
+
 /**
  * Registry of declarative form definitions, keyed by `FormType`.
  *
@@ -1031,6 +1301,9 @@ export const FORM_DEFINITIONS: Record<FormType, FormDefinition> = {
   testimony: TESTIMONY_FORM,
   baby_naming: BABY_NAMING_FORM,
   baby_dedication: BABY_DEDICATION_FORM,
+  signature_request: SIGNATURE_REQUEST_FORM,
+  marriage_pack: MARRIAGE_PACK_FORM,
+  kgroup_host: KGROUP_HOST_FORM,
 };
 
 /** Every form type, in the order the forms index lists them. */

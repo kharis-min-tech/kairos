@@ -1,4 +1,4 @@
-import { eq, and, or, count, sql, exists, gte } from 'drizzle-orm';
+import { eq, and, or, count, sql, exists, gte, desc } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
@@ -876,6 +876,42 @@ export async function createJoinRequest(
   });
 
   return request!;
+}
+
+/**
+ * The caller's own fellowship applications, across every fellowship.
+ *
+ * `listJoinRequests` below is the leader's view and enforces leader-or-above,
+ * so a member had no way to read back a request they had just made. Mobile
+ * and web both worked around that with local component state, which meant
+ * reopening the app offered "request to join" again and the retry died on the
+ * duplicate-request conflict. This is the counterpart to
+ * `/api/departments/me/join-requests`.
+ *
+ * No scope check: the filter IS `memberId = auth.memberId`, so the caller can
+ * only ever see their own rows.
+ */
+export async function listMyJoinRequests(db: Database, auth: AuthContext) {
+  return db
+    .select({
+      id: fellowshipJoinRequests.id,
+      fellowshipId: fellowshipJoinRequests.fellowshipId,
+      memberId: fellowshipJoinRequests.memberId,
+      status: fellowshipJoinRequests.status,
+      notes: fellowshipJoinRequests.notes,
+      reviewedBy: fellowshipJoinRequests.reviewedBy,
+      reviewedAt: fellowshipJoinRequests.reviewedAt,
+      createdAt: fellowshipJoinRequests.createdAt,
+      updatedAt: fellowshipJoinRequests.updatedAt,
+      fellowshipName: fellowships.fellowshipName,
+      branchId: fellowships.branchId,
+      branchName: branches.branchName,
+    })
+    .from(fellowshipJoinRequests)
+    .innerJoin(fellowships, eq(fellowshipJoinRequests.fellowshipId, fellowships.id))
+    .innerJoin(branches, eq(fellowships.branchId, branches.id))
+    .where(eq(fellowshipJoinRequests.memberId, auth.memberId))
+    .orderBy(desc(fellowshipJoinRequests.createdAt));
 }
 
 export async function listJoinRequests(db: Database, auth: AuthContext, fellowshipId: string) {

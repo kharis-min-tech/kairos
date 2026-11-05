@@ -29,8 +29,21 @@ export const addDepartmentMemberSchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 
+// ── The Kingdom Service application ────────────────────────
+// The declaration and the printed signature are required, because an
+// undertaking the applicant can skip is not an undertaking. Neither the
+// acceptance time nor the signature date is taken from the client: both are
+// stamped server-side from one instant, so a signature cannot be backdated
+// and the two can never disagree.
+//
+// `profession` is collected here but stored on the member, not on the
+// request — see the note in 0062_forms_expansion.sql.
 export const createJoinRequestSchema = z.object({
   notes: z.string().max(500).optional(),
+  experience: z.string().max(2000).optional(),
+  profession: z.string().trim().min(1).max(150).optional(),
+  declarationAccepted: z.literal(true),
+  signatureName: z.string().trim().min(1).max(150),
 });
 
 export const listJoinRequestsQuerySchema = z.object({

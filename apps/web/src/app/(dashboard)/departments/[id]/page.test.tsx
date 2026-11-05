@@ -79,27 +79,27 @@ beforeEach(() => {
 });
 
 describe('DepartmentDetailPage — persona CTAs', () => {
-  it('admin sees the Members tab (no Request to Join CTA)', () => {
+  it('admin sees the Members tab (no Apply to Join CTA)', () => {
     auth = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
     render(<DepartmentDetailPage />, { wrapper });
     expect(screen.getByRole('tab', { name: /Members/i })).toBeDefined();
-    expect(screen.queryByRole('button', { name: /Request to Join/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Apply to Join/i })).toBeNull();
   });
-  it('non-member sees Request to Join + no privileged tabs', () => {
+  it('non-member sees Apply to Join + no privileged tabs', () => {
     auth = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     render(<DepartmentDetailPage />, { wrapper });
-    expect(screen.getByRole('button', { name: /Request to Join/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Apply to Join/i })).toBeDefined();
     expect(screen.queryByRole('tab', { name: /Members/i })).toBeNull();
     expect(screen.queryByRole('tab', { name: /Followups/i })).toBeNull();
     expect(screen.queryByRole('tab', { name: /Rota/i })).toBeNull();
   });
 
-  it('member-of-department sees the My Rota tab and NO Request to Join', () => {
+  it('member-of-department sees the My Rota tab and NO Apply to Join', () => {
     auth = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };
     members = [{ id: 'dm-1', memberId: 'm-1', memberFirstName: 'Me', memberLastName: 'Self', memberPhotoUrl: null, isActive: true, joinDate: '2026-01-01' }];
     render(<DepartmentDetailPage />, { wrapper });
     expect(screen.getByRole('tab', { name: 'My Rota' })).toBeDefined();
-    expect(screen.queryByRole('button', { name: /Request to Join/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Apply to Join/i })).toBeNull();
   });
 
   it('overview tab is rendered as role=tab with aria-selected', () => {

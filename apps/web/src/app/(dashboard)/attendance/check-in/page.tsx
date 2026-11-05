@@ -4,13 +4,12 @@ export const runtime = 'edge';
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Check, Clock, ScanLine } from 'lucide-react';
+import { ChevronLeft, Clock, ScanLine } from 'lucide-react';
 import { Button, Card, CardContent } from '@kairos/ui';
 import { formatShortDate } from '@kairos/core';
 import type { SelfCheckInCandidate, SelfCheckInResult } from '@kairos/types';
 import {
   useSelfCheckInCandidates,
-  useSelfCheckIn,
   useSelfCheckInQr,
 } from '@/hooks/use-attendance';
 import { QrScannerModal } from '@/components/qr-scanner-modal';
@@ -34,11 +33,15 @@ function parseCheckInQr(payload: string): { serviceId: string; token: string } |
 }
 
 /**
- * Member self-check-in page. Web parity for the mobile Check-in tab. Two paths:
- *   1. "I'm here" per open service — honour-system, hits `selfCheckIn`.
- *   2. "Scan QR" — opens the browser scanner, decodes the rotating admin QR,
- *      hits `selfCheckInQr` which verifies the HMAC then defers to the same
- *      window-math core.
+ * Member self-check-in page. Web parity for the mobile Check-in tab.
+ *
+ * ONE path: scan the rotating code on the check-in desk, which verifies the
+ * HMAC and then runs the shared window-math core.
+ *
+ * There used to be a second, "I'm here" — a tap that recorded you present
+ * from anywhere. It wrote a row indistinguishable from this one, so while it
+ * existed no attendance figure could be called verified. It is gone, along
+ * with the endpoint behind it.
  *
  * Non-open services are still rendered but disabled with an explainer so the
  * page never looks empty when there's a service today. See docs/self-check-in.md
@@ -46,7 +49,6 @@ function parseCheckInQr(payload: string): { serviceId: string; token: string } |
  */
 export default function SelfCheckInPage() {
   const candidates = useSelfCheckInCandidates();
-  const checkIn = useSelfCheckIn();
   const checkInQr = useSelfCheckInQr();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [result, setResult] = useState<SelfCheckInResult | null>(null);
@@ -57,17 +59,6 @@ export default function SelfCheckInPage() {
   const openingSoonRows = useMemo(() => rows.filter((r) => r.status === 'opens-soon'), [rows]);
   const closedRows = useMemo(() => rows.filter((r) => r.status === 'closed'), [rows]);
   const canCheckIn = openRows.length > 0;
-
-  async function handleTapCheckIn(serviceId: string) {
-    setError(null);
-    setResult(null);
-    try {
-      const r = await checkIn.mutateAsync(serviceId);
-      setResult(r);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Check-in failed. Please try again.');
-    }
-  }
 
   async function handleScannedQr(payload: string) {
     setScannerOpen(false);
@@ -86,7 +77,7 @@ export default function SelfCheckInPage() {
     }
   }
 
-  const pending = checkIn.isPending || checkInQr.isPending;
+  const pending = checkInQr.isPending;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -132,14 +123,14 @@ export default function SelfCheckInPage() {
         </div>
       ) : null}
 
-      {/* Scanner secondary CTA — visible whenever a window is open. */}
+      {/* The only way in, so it leads rather than sits beside a tap. */}
       <div className="flex flex-wrap items-center gap-3">
         <Button
-          variant="outline"
+          className="bg-[#5D3FD3] hover:bg-[#451ebb]"
           onClick={() => setScannerOpen(true)}
           disabled={!canCheckIn || pending}
         >
-          <ScanLine className="mr-1.5 h-4 w-4" /> Scan QR at the desk
+          <ScanLine className="mr-1.5 h-4 w-4" /> Scan the code at the desk
         </Button>
         {!canCheckIn && rows.length > 0 ? (
           <span className="text-xs text-muted-foreground">
@@ -172,13 +163,9 @@ export default function SelfCheckInPage() {
               key={s.serviceId}
               candidate={s}
               action={
-                <Button
-                  className="bg-[#5D3FD3] hover:bg-[#451ebb]"
-                  onClick={() => handleTapCheckIn(s.serviceId)}
-                  disabled={pending}
-                >
-                  <Check className="mr-1.5 h-4 w-4" /> I&apos;m here
-                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Scan the desk code to check in
+                </span>
               }
               badge={<StateBadge kind="open" />}
             />

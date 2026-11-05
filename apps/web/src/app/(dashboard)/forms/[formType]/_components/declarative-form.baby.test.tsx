@@ -238,15 +238,25 @@ describe('DeclarativeForm — baby forms', () => {
     });
   });
 
-  // The old shared card hardcoded id="member-search", so three person-finders on
-  // one page collided and the labels pointed at whichever won.
-  it('gives each of its three person-finders its own input', () => {
+  // The old shared card hardcoded id="member-search", so several person-finders
+  // on one page collided and the labels pointed at whichever won.
+  //
+  // The expected count is derived from the definition rather than written in:
+  // the naming form has grown person-finders twice now (both parents, then
+  // both godparents), and a hardcoded number only records the last time
+  // somebody updated it.
+  it('gives every person-finder its own input', () => {
     renderNaming();
+    const memberFieldCount =
+      BABY_NAMING_FORM.blocks.flatMap((b) => b.fields).filter((f) => f.type === 'member')
+        .length +
+      // Plus the subject-link finder at the top of the form.
+      1;
     const ids = screen
       .getAllByRole('combobox')
       .map((el) => el.getAttribute('id'))
       .filter((id): id is string => !!id);
-    expect(ids).toHaveLength(3);
-    expect(new Set(ids).size).toBe(3);
+    expect(ids).toHaveLength(memberFieldCount);
+    expect(new Set(ids).size).toBe(memberFieldCount);
   });
 });

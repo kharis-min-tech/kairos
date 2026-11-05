@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -34,6 +35,10 @@ import {
 import { formatShortDate } from '@kairos/core';
 import { CHURCH_SCOPE } from '@kairos/types';
 import { api } from '@/lib/api-client';
+import {
+  MembershipInterestSheet,
+  type MembershipInterestAnswers,
+} from '@/components/membership-interest-sheet';
 import { alert } from '@/lib/alert';
 import { useCapabilities } from '@/lib/capabilities';
 
@@ -70,6 +75,7 @@ export default function MembershipScreen() {
   // A fellowship or department leader gets the same panel narrowed to their
   // own people — the endpoint does the narrowing.
   const isGroupLeader = caps.has('fellowship:read') || caps.has('department:read');
+  const [interestOpen, setInterestOpen] = useState(false);
 
   const cohorts = useQuery({
     queryKey: ['membership', 'cohorts'],
@@ -90,9 +96,11 @@ export default function MembershipScreen() {
   });
 
   const express = useMutation({
-    mutationFn: async () => (await api.membership.interest.express()).data!,
+    mutationFn: async (answers: MembershipInterestAnswers) =>
+      (await api.membership.interest.express(answers)).data!,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['membership'] });
+      setInterestOpen(false);
       alert.info('You are on the list', 'A membership admin will place you in a cohort.');
     },
     onError: (e: unknown) =>
@@ -136,7 +144,7 @@ export default function MembershipScreen() {
           mine={mine.data}
           styles={styles}
           c={c}
-          onJoin={() => express.mutate()}
+          onJoin={() => setInterestOpen(true)}
           onLeave={() => withdrawInterest.mutate()}
           joining={express.isPending}
           leaving={withdrawInterest.isPending}
@@ -232,6 +240,13 @@ export default function MembershipScreen() {
           ))
         )}
       </ScrollView>
+
+      <MembershipInterestSheet
+        open={interestOpen}
+        submitting={express.isPending}
+        onClose={() => setInterestOpen(false)}
+        onSubmit={(answers) => express.mutate(answers)}
+      />
     </SafeAreaView>
   );
 }

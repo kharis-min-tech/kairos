@@ -40,6 +40,11 @@ export const members = pgTable('members', {
   // leave it null; admins can edit it via the member-profile UI.
   honorific: varchar('honorific', { length: 50 }),
   memberType: varchar('member_type', { length: 20 }).default('attendee').notNull(),
+  // Asked once on the Kingdom Service application. Kept on the member rather
+  // than inside that one join request so it stays queryable — "who here is a
+  // nurse / an electrician" is a question the church asks of the whole
+  // directory, not of one department's applicants.
+  profession: varchar('profession', { length: 150 }),
   // Task #33 P1: timestamp the member completed the 4-week membership class.
   // NULL = not a confirmed Member yet (provenance tag `memberType` is separate).
   // See docs/domain-model.md §0 for why this is the real Membership signal.

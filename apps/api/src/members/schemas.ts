@@ -14,6 +14,7 @@ export const updateMemberSchema = z.object({
   secondaryAddress: z.string().optional(),
   secondaryCity: z.string().max(100).optional(),
   secondaryPostalCode: z.string().max(20).optional(),
+  profession: z.string().max(150).optional(),
   emergencyContactName: z.string().max(150).optional(),
   emergencyContactPhone: z.string().max(20).optional(),
   emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),

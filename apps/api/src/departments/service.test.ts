@@ -607,6 +607,16 @@ describe('removeDepartmentMember', () => {
 
 // ── createJoinRequest ─────────────────────────────────────
 
+/**
+ * The smallest application the schema accepts. The declaration and the
+ * printed signature are mandatory, so the error-path tests still have to
+ * supply them to reach the check they are actually exercising.
+ */
+const VALID_APPLICATION = {
+  declarationAccepted: true,
+  signatureName: 'M Applicant',
+} as const;
+
 describe('createJoinRequest', () => {
   const sampleApplicant = {
     homeBranchId: branchId,
@@ -625,8 +635,86 @@ describe('createJoinRequest', () => {
       [{ email: memberAuth.email, firstName: 'M' }],
     );
     setupInsert([sampleJoinRequest]);
-    const result = await createJoinRequest(mockDb, memberAuth, branchDeptId, { notes: 'x' });
+    const result = await createJoinRequest(mockDb, memberAuth, branchDeptId, {
+      notes: 'x',
+      declarationAccepted: true,
+      signatureName: 'M Applicant',
+    });
     expect(result).toEqual(sampleJoinRequest);
+  });
+
+  it('stamps the declaration and signature server-side, from one instant', async () => {
+    setupSelectSequence(
+      [sampleBranchDept],
+      [sampleApplicant],
+      [],
+      [],
+      [{ value: 0 }],
+      [{ email: memberAuth.email, firstName: 'M' }],
+    );
+    setupInsert([sampleJoinRequest]);
+    setupUpdate();
+
+    await createJoinRequest(mockDb, memberAuth, branchDeptId, {
+      experience: 'Two years on the media desk',
+      declarationAccepted: true,
+      signatureName: 'M Applicant',
+    });
+
+    const insertChain = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!.value;
+    const values = insertChain.values.mock.calls[0]![0];
+
+    expect(values.experience).toBe('Two years on the media desk');
+    expect(values.signatureName).toBe('M Applicant');
+    expect(values.declarationAcceptedAt).toBeInstanceOf(Date);
+    expect(values.signatureDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // The whole point of stamping both from one `new Date()`: the day the
+    // declaration was accepted and the day it was signed cannot disagree.
+    expect(values.signatureDate).toBe(
+      (values.declarationAcceptedAt as Date).toISOString().slice(0, 10),
+    );
+  });
+
+  it('writes a supplied profession onto the member, not into the request', async () => {
+    setupSelectSequence(
+      [sampleBranchDept],
+      [sampleApplicant],
+      [],
+      [],
+      [{ value: 0 }],
+      [{ email: memberAuth.email, firstName: 'M' }],
+    );
+    setupInsert([sampleJoinRequest]);
+    setupUpdate();
+
+    await createJoinRequest(mockDb, memberAuth, branchDeptId, {
+      profession: 'Radiographer',
+      declarationAccepted: true,
+      signatureName: 'M Applicant',
+    });
+
+    const insertChain = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!.value;
+    expect(insertChain.values.mock.calls[0]![0]).not.toHaveProperty('profession');
+
+    const updateChain = (mockDb.update as ReturnType<typeof vi.fn>).mock.results[0]!.value;
+    expect(updateChain.set.mock.calls[0]![0]).toMatchObject({ profession: 'Radiographer' });
+  });
+
+  it('leaves the member row alone when no profession is supplied', async () => {
+    setupSelectSequence(
+      [sampleBranchDept],
+      [sampleApplicant],
+      [],
+      [],
+      [{ value: 0 }],
+      [{ email: memberAuth.email, firstName: 'M' }],
+    );
+    setupInsert([sampleJoinRequest]);
+    setupUpdate();
+
+    await createJoinRequest(mockDb, memberAuth, branchDeptId, VALID_APPLICATION);
+
+    expect(mockDb.update as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
   it('throws ForbiddenError when applicant is in a different branch', async () => {
@@ -635,28 +723,28 @@ describe('createJoinRequest', () => {
       [{ ...sampleApplicant, homeBranchId: 'other-branch' }],
     );
     await expect(
-      createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
+      createJoinRequest(mockDb, memberAuth, branchDeptId, VALID_APPLICATION),
     ).rejects.toThrow('You can only join departments in your own branch');
   });
 
   it('throws ConflictError when already a member', async () => {
     setupSelectSequence([sampleBranchDept], [sampleApplicant], [{ id: 'existing-dm' }]);
     await expect(
-      createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
+      createJoinRequest(mockDb, memberAuth, branchDeptId, VALID_APPLICATION),
     ).rejects.toThrow('You are already a member of this department');
   });
 
   it('throws ConflictError when pending request exists', async () => {
     setupSelectSequence([sampleBranchDept], [sampleApplicant], [], [sampleJoinRequest]);
     await expect(
-      createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
+      createJoinRequest(mockDb, memberAuth, branchDeptId, VALID_APPLICATION),
     ).rejects.toThrow('open application');
   });
 
   it('throws ConflictError when at max-departments cap', async () => {
     setupSelectSequence([sampleBranchDept], [sampleApplicant], [], [], [{ value: 2 }]);
     await expect(
-      createJoinRequest(mockDb, memberAuth, branchDeptId, {}),
+      createJoinRequest(mockDb, memberAuth, branchDeptId, VALID_APPLICATION),
     ).rejects.toThrow('already in 2 departments');
   });
 });
