@@ -236,20 +236,6 @@ export function useSelfCheckInCandidates() {
   });
 }
 
-export function useSelfCheckIn() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (serviceId: string) => {
-      const res = await api.attendance.selfCheckIn(serviceId);
-      return res.data!;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
-      qc.invalidateQueries({ queryKey: ['attendance', 'me'] });
-    },
-  });
-}
-
 export function useSelfCheckInQr() {
   const qc = useQueryClient();
   return useMutation({

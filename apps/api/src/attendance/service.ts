@@ -647,20 +647,18 @@ export interface SelfCheckInResult {
   alreadyCheckedIn: boolean;
 }
 
-export async function selfCheckIn(
-  db: Database,
-  auth: AuthContext,
-  serviceId: string,
-): Promise<SelfCheckInResult> {
-  return performSelfCheckIn(db, auth, serviceId);
-}
-
 /**
- * Shared self-check-in core — window math + idempotency + insert. Called by
- * the honour-system endpoint (`selfCheckIn`) AND by the QR verify endpoint
- * (`selfCheckInWithQrToken`), so the Late math only lives here. Do not
- * duplicate this logic in a new caller — refactor to hoist a step and
- * reuse it.
+ * Self-check-in core — window math + idempotency + insert.
+ *
+ * Deliberately NOT exported. It used to have a public pass-through,
+ * `selfCheckIn`, behind an honour-system endpoint that let a member record
+ * themselves present from anywhere. The row it wrote was indistinguishable
+ * from a QR-verified one, so its existence made every attendance row
+ * unverifiable. Both are gone.
+ *
+ * The only caller is `selfCheckInWithQrToken`, which proves the member was at
+ * the desk before it gets here. Any new caller must carry its own proof of
+ * presence, or record the lack of it in the row.
  */
 async function performSelfCheckIn(
   db: Database,

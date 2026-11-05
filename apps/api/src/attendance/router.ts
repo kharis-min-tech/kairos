@@ -36,7 +36,6 @@ import {
   getAttendanceByBranch,
   getAttendanceSummary,
   canRecordAttendance,
-  selfCheckIn,
   listSelfCheckInCandidates,
   getCohortDiff,
   getMyAttendance,
@@ -238,21 +237,18 @@ attendanceRouter.post(
   },
 );
 
-// Self check-in — signed-in member records their own attendance inside the
-// branch-configured window. See selfCheckIn service comment for the guardrails.
-attendanceRouter.post('/services/:id/self-check-in', async (c) => {
-  const auth = getAuth(c);
-  const result = await selfCheckIn(db, auth, c.req.param('id')!);
-  return c.json(
-    successResponse(
-      result,
-      result.alreadyCheckedIn
-        ? `Already checked in. Status: ${result.status}`
-        : `Checked in as ${result.status}`,
-    ),
-    result.alreadyCheckedIn ? 200 : 201,
-  );
-});
+// The honour-system self-check-in endpoint used to live here: a signed-in
+// member POSTed and was recorded present, from anywhere. It is gone.
+//
+// It wrote a row byte-identical to the QR-verified one — same `recordedBy`,
+// same status — so once both paths existed there was no way to tell a
+// verified attendance from an asserted one, and the whole dataset had to be
+// read as self-asserted. Attendance is now recorded only where somebody was
+// seen: the member scans the rotating desk code below, or an usher scans the
+// member's own code and records them through `recordAttendance`.
+//
+// If a fallback is ever wanted, it must be distinguishable in the data —
+// a column, not another endpoint writing the same row.
 
 // ── Rotating QR (admin displays, member scans) ────────────
 //

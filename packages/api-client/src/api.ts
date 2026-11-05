@@ -1584,10 +1584,9 @@ export function createApiClient(
         client.post<ApiResponse<RecordAttendanceResult>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`, data),
       listAttendance: (serviceId: string) =>
         client.get<ApiResponse<ServiceAttendanceRow[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`),
-      selfCheckIn: (serviceId: string) =>
-        client.post<ApiResponse<SelfCheckInResult>>(
-          `/api/attendance/services/${encodeURIComponent(serviceId)}/self-check-in`,
-        ),
+      // There is no unverified `selfCheckIn` any more. Attendance is recorded
+      // only where somebody was seen: the member scans the rotating desk code
+      // (`selfCheckInQr`), or an usher scans the member's code and records it.
       selfCheckInCandidates: () =>
         client.get<ApiResponse<SelfCheckInCandidate[]>>('/api/attendance/self-check-in/candidates'),
       // Rotating QR pair: admin polls `getQrToken`; member scan posts to `selfCheckInQr`.
