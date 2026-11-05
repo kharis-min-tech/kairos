@@ -12,7 +12,6 @@ import {
   renderDeclarationText,
 } from '@kairos/types';
 import {
-  captureDeclarationSchema,
   listDeclarationsQuerySchema,
   markInvalidSchema,
   matchDeclarationSchema,
@@ -23,7 +22,6 @@ import {
   withdrawMineSchema,
 } from './schemas';
 import {
-  captureDeclaration,
   declareMine,
   exportRegister,
   getDeclaration,
@@ -139,12 +137,6 @@ giftAidRouter.get('/', zValidator('query', listDeclarationsQuerySchema), async (
   const auth = getAuth(c);
   const result = await listDeclarations(db, auth, c.req.valid('query'));
   return c.json(successResponse(result));
-});
-
-giftAidRouter.post('/', zValidator('json', captureDeclarationSchema), async (c) => {
-  const auth = getAuth(c);
-  const result = await captureDeclaration(db, auth, c.req.valid('json'));
-  return c.json(successResponse(result), 201);
 });
 
 giftAidRouter.get('/:id', async (c) => {

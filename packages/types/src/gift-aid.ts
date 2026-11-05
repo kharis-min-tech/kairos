@@ -107,31 +107,25 @@ export const GIFT_AID_COVERAGE_LABEL: Record<GiftAidCoverage, string> = {
 // ── Channel ────────────────────────────────────────────────
 
 /**
- * How the declaration reached us. Drives what counts as the auditable
- * original: `online` keeps the stored submission, `paper` keeps a scan,
- * `verbal` keeps a recording or the written confirmation we sent.
+ * How the declaration reached us. Every declaration is made by the donor on
+ * one of our own forms, so there is one channel and the auditable original
+ * is always the stored submission: the wording agreed to, the time, and the
+ * device it came from.
+ *
+ * Kharis holds no paper declarations and is importing none, so there is
+ * deliberately no `paper`, `verbal` or `imported` channel. Adding one means
+ * adding, in the same change, the evidence that channel has to carry — a
+ * scan for paper, a sent written confirmation for verbal.
  */
 export const GiftAidChannel = {
   Online: 'online',
-  Paper: 'paper',
-  Verbal: 'verbal',
-  /** Migrated from a pre-Kairos register. Evidence lives outside Kairos. */
-  Imported: 'imported',
 } as const;
 export type GiftAidChannel = (typeof GiftAidChannel)[keyof typeof GiftAidChannel];
 
-export const GIFT_AID_CHANNEL_VALUES: readonly GiftAidChannel[] = [
-  GiftAidChannel.Online,
-  GiftAidChannel.Paper,
-  GiftAidChannel.Verbal,
-  GiftAidChannel.Imported,
-];
+export const GIFT_AID_CHANNEL_VALUES: readonly GiftAidChannel[] = [GiftAidChannel.Online];
 
 export const GIFT_AID_CHANNEL_LABEL: Record<GiftAidChannel, string> = {
   online: 'Online form',
-  paper: 'Paper form',
-  verbal: 'Verbal declaration',
-  imported: 'Imported register',
 };
 
 // ── Status ─────────────────────────────────────────────────
@@ -139,9 +133,8 @@ export const GIFT_AID_CHANNEL_LABEL: Record<GiftAidChannel, string> = {
 /**
  * Whether the declaration is in force as a tax document. Note what is NOT a
  * status: being unmatched to a Kairos member. A declaration made on the
- * pre-rollout form is in force the moment the donor makes it, exactly like a
- * paper form handed in at a service — HMRC does not care whether our CRM has
- * caught up. "Needs matching" is therefore `memberId === null`, a separate
+ * pre-rollout form is in force the moment the donor makes it — HMRC does not
+ * care whether our CRM has caught up. "Needs matching" is therefore `memberId === null`, a separate
  * axis, and conflating the two would have made every pre-rollout declaration
  * look unclaimable until an admin got to it.
  */
@@ -150,8 +143,8 @@ export const GiftAidStatus = {
   /** Withdrawn by the donor. Prospective only: past claims stand. */
   Cancelled: 'cancelled',
   /**
-   * Found not to meet HMRC's requirements (missing address, illegible scan,
-   * undeliverable written confirmation). Kept, never claimed on.
+   * Found not to meet HMRC's requirements: a missing or unusable address, or
+   * a donor who tells us they never made it. Kept, never claimed on.
    */
   Invalid: 'invalid',
 } as const;
@@ -315,8 +308,8 @@ export interface DeclarationTextInput {
 
 /**
  * The exact words a donor agrees to. THE one implementation: the public form
- * renders this, the API stores what this returns on the row, and the paper
- * form is typeset from it, so all three can never drift.
+ * renders this and the API stores what this returns on the row, so the two
+ * can never drift.
  *
  * Every element HMRC requires is here (see 3.6.2 and 3.6.7):
  *   - the charity is named
@@ -384,7 +377,6 @@ export interface GiftAidDeclaration extends GiftAidDeclarant {
   channel: GiftAidChannel;
   wordingVersion: string;
   declarationText: string;
-  evidenceUrl: string | null;
   declaredAt: string;
   capturedById: string | null;
   status: GiftAidStatus;
@@ -446,17 +438,6 @@ export interface PublicGiftAidDeclarationRequest extends GiftAidDeclarationReque
   branchId?: string;
 }
 
-/** Admin capture of a declaration made on paper, verbally, or elsewhere. */
-export interface CaptureGiftAidDeclarationRequest extends GiftAidDeclarantRequest {
-  memberId?: string;
-  branchId?: string;
-  channel: 'paper' | 'verbal' | 'imported';
-  /** The donor's date, not today's. ISO date or date-time. */
-  declaredAt: string;
-  evidenceUrl?: string;
-  writtenConfirmationSentAt?: string;
-}
-
 export interface RecordGiftAidWithdrawalRequest {
   method: GiftAidCancellationMethod;
   cancelledAt?: string;
@@ -467,7 +448,6 @@ export interface GiftAidListParams {
   page?: number;
   limit?: number;
   status?: GiftAidStatus;
-  channel?: GiftAidChannel;
   branchId?: string;
   search?: string;
   /** The review queue: declarations not yet linked to a member. */

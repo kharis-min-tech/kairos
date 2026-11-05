@@ -74,7 +74,6 @@ function setupUpdate(returning: unknown[] = []) {
 }
 
 import {
-  captureDeclaration,
   declareMine,
   exportRegister,
   getMyGiftAidStatus,
@@ -142,10 +141,8 @@ function row(overrides: Record<string, unknown> = {}) {
     channel: 'online',
     wordingVersion: GIFT_AID_WORDING_VERSION,
     declarationText: 'I want to Gift Aid all qualifying gifts...',
-    evidenceUrl: null,
     sourceIp: null,
     userAgent: null,
-    writtenConfirmationSentAt: null,
     declaredAt: new Date('2026-10-30T10:00:00Z'),
     capturedById: null,
     status: 'active',
@@ -350,51 +347,6 @@ describe('submitPublicDeclaration', () => {
 });
 
 // ── Admin ─────────────────────────────────────────────────
-
-describe('captureDeclaration', () => {
-  it('keeps the donor’s declaration date, not today’s', async () => {
-    setupSelects([]);
-    setupInsert([row({ channel: 'paper' })]);
-    const declaredAt = new Date('2025-03-09T00:00:00Z');
-    await captureDeclaration(mockDb, giftAidAdmin, {
-      ...declarantInput,
-      channel: 'paper',
-      declaredAt,
-      evidenceUrl: 'https://example.org/scan.pdf',
-    } as never);
-
-    const values = insertValues[0] as Record<string, unknown>;
-    expect(values['declaredAt']).toEqual(declaredAt);
-    expect(values['channel']).toBe('paper');
-    expect(values['evidenceUrl']).toBe('https://example.org/scan.pdf');
-    // Backdating runs from the donor's date, not from now.
-    expect(values['coversFrom']).toBe('2021-03-09');
-  });
-
-  it('rejects a declaration dated in the future', async () => {
-    const declaredAt = new Date(Date.now() + 86_400_000);
-    await expect(
-      captureDeclaration(mockDb, giftAidAdmin, {
-        ...declarantInput,
-        channel: 'paper',
-        declaredAt,
-        evidenceUrl: 'https://example.org/scan.pdf',
-      } as never),
-    ).rejects.toThrow(/future/);
-  });
-
-  it('refuses a second in-force declaration for the same member', async () => {
-    setupSelects([{ id: OTHER_MEMBER_ID, homeBranchId: OTHER_BRANCH_ID }], [row()]);
-    await expect(
-      captureDeclaration(mockDb, giftAidAdmin, {
-        ...declarantInput,
-        memberId: OTHER_MEMBER_ID,
-        channel: 'imported',
-        declaredAt: new Date('2025-01-01T00:00:00Z'),
-      } as never),
-    ).rejects.toThrow(/already has a Gift Aid declaration/);
-  });
-});
 
 describe('matchDeclaration', () => {
   it('links the member without touching the declared name or address', async () => {

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import {
   GIFT_AID_CANCELLATION_METHOD_VALUES,
-  GIFT_AID_CHANNEL_VALUES,
   GIFT_AID_COVERAGE_VALUES,
   GIFT_AID_HOUSE_MAX,
   GIFT_AID_NAME_MAX,
@@ -136,48 +135,6 @@ export const myDeclarationSchema = z
     enforceCoverageRules(value, ctx);
   });
 
-/**
- * Admin capture of a declaration made somewhere else: a paper form handed in
- * at a service, an imported pre-Kairos register row, or (once there is a UI
- * for it) a verbal declaration.
- *
- * `declaredAt` is accepted because the date the donor declared is not the
- * date an admin keyed it in, and the former is what HMRC cares about.
- */
-export const captureDeclarationSchema = z
-  .object({
-    ...declarantShape,
-    ...coverageShape,
-    memberId: z.string().uuid().optional(),
-    branchId: z.string().uuid().optional(),
-    channel: z.enum(['paper', 'verbal', 'imported']),
-    declaredAt: z.coerce.date(),
-    evidenceUrl: z.string().trim().url().optional(),
-    writtenConfirmationSentAt: z.coerce.date().optional(),
-  })
-  .superRefine((value, ctx) => {
-    enforceAddressRules(value, ctx);
-    enforceCoverageRules(value, ctx);
-    // A paper declaration's auditable original is the scan. Without it there
-    // is nothing to produce on an HMRC audit, so it is not optional.
-    if (value.channel === 'paper' && !value.evidenceUrl) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['evidenceUrl'],
-        message: 'Attach a scan of the signed paper form',
-      });
-    }
-    // A verbal declaration is not effective until the written record is sent
-    // (HMRC 3.6.3), so recording one without that date would overstate it.
-    if (value.channel === 'verbal' && !value.writtenConfirmationSentAt) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['writtenConfirmationSentAt'],
-        message: 'Record the date the written confirmation was sent to the donor',
-      });
-    }
-  });
-
 /** Withdrawal recorded by the donor themselves. Method is always 'online'. */
 export const withdrawMineSchema = z.object({
   notes: z.string().trim().max(1000).optional(),
@@ -204,7 +161,6 @@ export const listDeclarationsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(25),
   status: z.enum(GIFT_AID_STATUS_VALUES as [string, ...string[]]).optional(),
-  channel: z.enum(GIFT_AID_CHANNEL_VALUES as [string, ...string[]]).optional(),
   branchId: z.string().uuid().optional(),
   search: z.string().trim().max(100).optional(),
   /**
@@ -227,7 +183,6 @@ export const registerExportQuerySchema = z.object({
 
 export type PublicDeclarationInput = z.infer<typeof publicDeclarationSchema>;
 export type MyDeclarationInput = z.infer<typeof myDeclarationSchema>;
-export type CaptureDeclarationInput = z.infer<typeof captureDeclarationSchema>;
 export type RecordWithdrawalInput = z.infer<typeof recordWithdrawalSchema>;
 export type ListDeclarationsQuery = z.infer<typeof listDeclarationsQuerySchema>;
 export type RegisterExportQuery = z.infer<typeof registerExportQuerySchema>;

@@ -403,9 +403,9 @@ export default function GiftAidAdminPage() {
             <div className="space-y-3 rounded-lg border border-destructive/30 p-4">
               <p className="text-sm font-medium">Mark this declaration not valid</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Use this when the declaration does not meet HMRC&apos;s requirements: a missing
-                address, an illegible scan, or a written confirmation returned undeliverable. The
-                record is kept so we can show why nothing was claimed on it.
+                Use this when the declaration does not meet HMRC&apos;s requirements: an address
+                that is missing or cannot be used on a claim, or a donor who tells us they never
+                made it. The record is kept so we can show why nothing was claimed on it.
               </p>
               <Textarea
                 value={invalidReason}
