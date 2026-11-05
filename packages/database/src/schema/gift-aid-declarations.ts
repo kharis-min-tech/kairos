@@ -83,22 +83,13 @@ export const giftAidDeclarations = pgTable('gift_aid_declarations', {
   wordingVersion: varchar('wording_version', { length: 20 }).notNull(),
   /** The exact text the donor agreed to, as rendered at capture time. */
   declarationText: text('declaration_text').notNull(),
-  /** Scan of a paper form, or the generated PDF of an online submission. */
-  evidenceUrl: text('evidence_url'),
-  /** Captured for online submissions, as corroborating evidence of the act. */
+  /** Corroborating evidence of the act of declaring. */
   sourceIp: varchar('source_ip', { length: 45 }),
   userAgent: text('user_agent'),
-  /**
-   * Date a verbal declaration's written confirmation was sent. The
-   * declaration is not effective until it is, and the donor has 30 days from
-   * it in which cancellation is RETROSPECTIVE. Verbal capture has no UI yet;
-   * the column exists so the channel is not a lie when it does.
-   */
-  writtenConfirmationSentAt: timestamp('written_confirmation_sent_at'),
 
   /** When the donor made the declaration, which is not always when we typed it. */
   declaredAt: timestamp('declared_at').notNull().defaultNow(),
-  /** Null for self-service; the admin who keyed a paper or verbal one otherwise. */
+  /** Always null today: every declaration is made by the donor themselves. */
   capturedById: uuid('captured_by_id').references((): AnyPgColumn => members.id, {
     onDelete: 'set null',
   }),

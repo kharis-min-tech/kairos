@@ -19,7 +19,6 @@ vi.mock('./service', () => ({
   submitPublicDeclaration: vi.fn(),
   listDeclarations: vi.fn(),
   getDeclaration: vi.fn(),
-  captureDeclaration: vi.fn(),
   matchDeclaration: vi.fn(),
   recordWithdrawal: vi.fn(),
   markInvalid: vi.fn(),
@@ -245,21 +244,6 @@ describe('admin surface', () => {
     });
     expect(res.status).toBe(400);
     expect(service.recordWithdrawal).not.toHaveBeenCalled();
-  });
-
-  it('refuses to capture a paper declaration with no scan attached', async () => {
-    const token = await signTestToken();
-    const res = await app.request('/api/gift-aid', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...declarant,
-        channel: 'paper',
-        declaredAt: '2026-01-05',
-      }),
-    });
-    expect(res.status).toBe(400);
-    expect(service.captureDeclaration).not.toHaveBeenCalled();
   });
 
   it('matches a declaration to a member', async () => {

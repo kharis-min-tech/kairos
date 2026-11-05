@@ -20,7 +20,6 @@ import {
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
 import type {
-  CaptureDeclarationInput,
   ListDeclarationsQuery,
   MyDeclarationInput,
   PublicDeclarationInput,
@@ -75,7 +74,6 @@ function toDto(row: Row): GiftAidDeclaration {
     channel: row.channel as GiftAidChannel,
     wordingVersion: row.wordingVersion,
     declarationText: row.declarationText,
-    evidenceUrl: row.evidenceUrl,
     declaredAt: row.declaredAt.toISOString(),
     capturedById: row.capturedById,
     status: row.status as GiftAidStatus,
@@ -96,7 +94,7 @@ function toDateColumn(value: Date): string {
 
 // ── Insert shaping ────────────────────────────────────────────────────────
 //
-// One place builds the row, so every channel stores the same shape: the
+// One place builds the row, so every declaration stores the same shape: the
 // declaration TEXT comes from the shared renderer rather than from the
 // client, and the postcode is normalised to HMRC's claim format (capitals,
 // single space) at the boundary rather than at export time.
@@ -124,10 +122,8 @@ function buildInsert(
     memberId?: string | null;
     branchId?: string | null;
     capturedById?: string | null;
-    evidenceUrl?: string | null;
     sourceIp?: string | null;
     userAgent?: string | null;
-    writtenConfirmationSentAt?: Date | null;
   },
 ) {
   const coverage = input.coverage as GiftAidCoverage;
@@ -160,10 +156,8 @@ function buildInsert(
     channel: opts.channel,
     wordingVersion: GIFT_AID_WORDING_VERSION,
     declarationText,
-    evidenceUrl: opts.evidenceUrl ?? null,
     sourceIp: opts.sourceIp ?? null,
     userAgent: opts.userAgent ?? null,
-    writtenConfirmationSentAt: opts.writtenConfirmationSentAt ?? null,
     declaredAt: opts.declaredAt,
     capturedById: opts.capturedById ?? null,
     status: 'active' as const,
@@ -356,7 +350,6 @@ export async function listDeclarations(
 
   const conditions: SQL[] = [];
   if (query.status) conditions.push(eq(giftAidDeclarations.status, query.status));
-  if (query.channel) conditions.push(eq(giftAidDeclarations.channel, query.channel));
   if (query.branchId) conditions.push(eq(giftAidDeclarations.branchId, query.branchId));
   if (query.unmatched) conditions.push(isNull(giftAidDeclarations.memberId));
   if (query.search) {
@@ -410,62 +403,6 @@ export async function getDeclaration(
     .limit(1);
   if (!row) throw new NotFoundError('Gift Aid declaration');
   return toDto(row);
-}
-
-/**
- * Capture a declaration made elsewhere: a paper form handed in, an imported
- * pre-Kairos register row, or a verbal declaration whose written confirmation
- * has been sent.
- *
- * `declaredAt` is the donor's date, not today's, because that is the date the
- * claim rests on.
- */
-export async function captureDeclaration(
-  db: Database,
-  auth: AuthContext,
-  input: CaptureDeclarationInput,
-): Promise<GiftAidDeclaration> {
-  enforceGiftAidAdmin(auth);
-
-  if (input.declaredAt.getTime() > Date.now()) {
-    throw new ValidationError('A declaration cannot be dated in the future');
-  }
-
-  let branchId = input.branchId ?? null;
-  if (input.memberId) {
-    const [member] = await db
-      .select({ id: members.id, homeBranchId: members.homeBranchId })
-      .from(members)
-      .where(eq(members.id, input.memberId))
-      .limit(1);
-    if (!member) throw new NotFoundError('Member');
-
-    const existing = await findActiveForMember(db, input.memberId);
-    if (existing) {
-      throw new ConflictError(
-        'This member already has a Gift Aid declaration in force. Record a withdrawal of it first.',
-      );
-    }
-    branchId = branchId ?? member.homeBranchId;
-  }
-
-  const [created] = await db
-    .insert(giftAidDeclarations)
-    .values(
-      buildInsert(input, {
-        channel: input.channel,
-        declaredAt: input.declaredAt,
-        memberId: input.memberId ?? null,
-        branchId,
-        capturedById: auth.memberId,
-        evidenceUrl: input.evidenceUrl ?? null,
-        writtenConfirmationSentAt: input.writtenConfirmationSentAt ?? null,
-      }),
-    )
-    .returning();
-
-  if (!created) throw new ConflictError('Could not record the declaration');
-  return toDto(created);
 }
 
 /**

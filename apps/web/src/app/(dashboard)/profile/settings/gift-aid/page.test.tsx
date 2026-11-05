@@ -70,7 +70,6 @@ function declaration(over: Partial<GiftAidDeclaration> = {}): GiftAidDeclaration
     channel: 'online',
     wordingVersion: '2026-10-v1',
     declarationText: 'I want to Gift Aid...',
-    evidenceUrl: null,
     declaredAt: '2026-10-30T10:00:00.000Z',
     capturedById: null,
     status: 'active',

@@ -177,7 +177,6 @@ import type {
   GiftAidDeclaration,
   GiftAidDeclarationRequest,
   PublicGiftAidDeclarationRequest,
-  CaptureGiftAidDeclarationRequest,
   RecordGiftAidWithdrawalRequest,
   GiftAidDeclarationTextResponse,
   GiftAidListParams,
@@ -1711,7 +1710,6 @@ export function createApiClient(
         if (params?.page) qs.set('page', String(params.page));
         if (params?.limit) qs.set('limit', String(params.limit));
         if (params?.status) qs.set('status', params.status);
-        if (params?.channel) qs.set('channel', params.channel);
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.search) qs.set('search', params.search);
         if (params?.unmatched) qs.set('unmatched', 'true');
@@ -1729,10 +1727,6 @@ export function createApiClient(
 
       get: (id: string) =>
         client.get<ApiResponse<GiftAidDeclaration>>(`/api/gift-aid/${encodeURIComponent(id)}`),
-
-      /** Paper form handed in, imported register row, or verbal declaration. */
-      capture: (data: CaptureGiftAidDeclarationRequest) =>
-        client.post<ApiResponse<GiftAidDeclaration>>('/api/gift-aid', data),
 
       /** Attach an unmatched declaration to its member. Link only. */
       match: (id: string, memberId: string) =>
