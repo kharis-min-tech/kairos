@@ -356,6 +356,28 @@ describe('assignRole', () => {
       .rejects.toThrow('Member already has this role in this branch');
   });
 
+  // A revoked grant must not block granting the same role again the same
+  // day. `removeRole` is a soft delete, so the revoked row keeps its
+  // assigned_date, and a non-partial unique index on
+  // (member, role, scope, assigned_date) used to reject the second insert —
+  // the admin saw "This value already exists and must be unique" against a
+  // member whose roles list read "No roles assigned". Dropped in migration
+  // 0060; the service's own duplicate check already looks only at ACTIVE
+  // rows, which is the behaviour this pins.
+  it('grants a role again after it was revoked, on the same day', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId }],
+      [{ id: branchId }],
+      // The revoked row is inactive, so the duplicate check does not see it.
+      [],
+    );
+    setupInsert([{ id: roleAssignmentId, memberId, roleId, branchId, isActive: true }]);
+    await expect(
+      assignRole(mockDb, memberId, { roleId, branchId }, adminAuth),
+    ).resolves.toBeDefined();
+  });
+
   // ── Scope shape is derived from the role, not assumed ────
   //
   // This used to hardcode `scopeKind: 'branch'`, which was true of every role
