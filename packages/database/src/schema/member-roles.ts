@@ -28,7 +28,10 @@ export const memberRoles = pgTable('member_roles', {
   index('idx_member_roles_branch_id').on(table.branchId),
   index('idx_member_roles_is_active').on(table.isActive),
   index('idx_member_roles_scope').on(table.scopeKind, table.scopeId),
-  uniqueIndex('uq_member_roles_assignment').on(table.memberId, table.roleId, table.scopeKind, table.scopeId, table.assignedDate),
+  // One grant IN FORCE per (member, role, scope). Deliberately the only
+  // unique index here: a non-partial sibling keyed on assigned_date used to
+  // sit alongside it and made a revoke-then-regrant on the same day fail,
+  // because the revoked row keeps its assigned_date. Dropped in 0060.
   uniqueIndex('uq_member_roles_active_assignment')
     .on(table.memberId, table.roleId, table.scopeKind, table.scopeId)
     .where(sql`is_active = true`),
