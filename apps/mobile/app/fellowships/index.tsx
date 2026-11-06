@@ -250,12 +250,9 @@ export default function FellowshipsDirectory() {
                   {f.fellowshipName}
                 </Text>
                 <View style={styles.rowMetaLine}>
-                  <Badge label={f.fellowshipType} variant="primary" size="sm" />
-                  {f.branchName ? (
-                    <Text style={styles.rowMeta} numberOfLines={1}>
-                      {f.branchName}
-                    </Text>
-                  ) : null}
+                  <Text style={styles.rowMeta} numberOfLines={1}>
+                    {[f.fellowshipType, f.branchName].filter(Boolean).join(' · ')}
+                  </Text>
                 </View>
                 {(f.meetingDay || f.meetingTime) ? (
                   <View style={styles.scheduleLine}>

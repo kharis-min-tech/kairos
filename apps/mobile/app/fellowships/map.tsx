@@ -499,7 +499,6 @@ function SelectedCard({
             <X color={c.inkMuted} size={16} strokeWidth={1.5} />
           </Pressable>
         </View>
-        <Badge label={fellowship.fellowshipType} variant="primary" size="sm" />
         <Pressable onPress={onOpen} style={styles.openBtn}>
           <Text style={styles.openLabel}>Open fellowship →</Text>
         </Pressable>

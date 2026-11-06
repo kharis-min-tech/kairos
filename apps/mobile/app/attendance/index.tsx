@@ -161,10 +161,9 @@ function ServiceRow({
             <Text style={styles.rowTitle} numberOfLines={1}>
               {service.serviceTitle ?? service.serviceType}
             </Text>
-            <Badge label={service.serviceType} variant="primary" size="sm" />
           </View>
           <Text style={styles.rowMeta}>
-            {formatShortDate(service.serviceDate)} · {time}
+            {service.serviceType} · {formatShortDate(service.serviceDate)} · {time}
             {service.branchName ? ` · ${service.branchName}` : ''}
           </Text>
         </View>

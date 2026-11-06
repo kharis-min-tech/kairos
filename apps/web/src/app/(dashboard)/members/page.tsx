@@ -312,7 +312,7 @@ export default function MembersPage() {
                               </span>
                             ) : null}
                             {member.systemRole === 'admin' && (
-                              <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">
+                              <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                 Admin
                               </span>
                             )}

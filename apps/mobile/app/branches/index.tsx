@@ -164,12 +164,11 @@ export default function BranchesDirectory() {
                   <Text style={styles.rowName} numberOfLines={1}>
                     {b.branchName}
                   </Text>
-                  <Badge label={b.branchType} variant="primary" size="sm" />
                 </View>
                 <View style={styles.rowMetaLine}>
                   <MapPin color={c.inkFaded} size={12} strokeWidth={1.5} />
                   <Text style={styles.rowMeta} numberOfLines={1}>
-                    {[b.regionName, b.city].filter(Boolean).join(' · ') || '—'}
+                    {[b.branchType, b.regionName, b.city].filter(Boolean).join(' · ') || '—'}
                   </Text>
                 </View>
               </View>

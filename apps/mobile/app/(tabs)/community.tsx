@@ -181,13 +181,13 @@ function FellowshipsList({ search }: { search: string }) {
           onPress={() => router.push(`/fellowships/${item.id}`)}
           style={styles.row}
         >
-          <View style={styles.groupDot} />
           <View style={styles.rowText}>
             <View style={styles.rowTitleLine}>
               <Text style={styles.rowTitle}>{item.fellowshipName}</Text>
-              <Badge label={item.fellowshipType} variant="gold" size="sm" />
             </View>
-            <Text style={styles.rowMeta}>{item.branchName ?? '—'}</Text>
+            <Text style={styles.rowMeta}>
+              {[item.fellowshipType, item.branchName].filter(Boolean).join(' · ') || '—'}
+            </Text>
           </View>
           <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
         </Pressable>
@@ -239,7 +239,6 @@ function DepartmentsList({ search }: { search: string }) {
           onPress={() => router.push(`/departments/${item.id}`)}
           style={styles.row}
         >
-          <View style={[styles.groupDot, { backgroundColor: c.info }]} />
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>{item.departmentName}</Text>
             <Text style={styles.rowMeta}>{item.branchName ?? '—'}</Text>
@@ -332,12 +331,6 @@ function makeStyles(c: ThemeColors) {
     backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
-  },
-  groupDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: c.primary,
   },
   rowText: { flex: 1, gap: 2 },
   rowTitleLine: {
