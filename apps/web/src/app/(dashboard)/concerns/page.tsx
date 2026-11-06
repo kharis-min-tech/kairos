@@ -172,7 +172,7 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {
         className="block rounded-lg border border-border/60 bg-card p-4 transition-colors hover:border-[#5D3FD3]/40 hover:bg-muted/30"
       >
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/10 text-[#5D3FD3]">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-muted-foreground">
             <Icon className="h-4 w-4" strokeWidth={1.75} />
           </span>
           <div className="min-w-0 flex-1">

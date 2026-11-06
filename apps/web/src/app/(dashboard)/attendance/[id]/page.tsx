@@ -5,17 +5,10 @@ export const runtime = 'edge';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft, Users, QrCode } from 'lucide-react';
-import { Button, Card, CardContent, cn } from '@kairos/ui';
+import { Button, Card, CardContent } from '@kairos/ui';
 import { useService, useCanRecordAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
-import { ServiceType } from '@kairos/types';
 import { CheckInPanel } from '../_components/check-in-panel';
-
-const TYPE_BADGE: Record<string, string> = {
-  [ServiceType.Sunday]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
-  [ServiceType.Midweek]: 'bg-[#16A34A]/15 text-[#16A34A]',
-  [ServiceType.Special]: 'bg-[#f8b537]/20 text-[#a07720] dark:text-[#f8b537]',
-};
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
@@ -60,20 +53,13 @@ export default function CheckInPage() {
             <CardContent className="flex flex-wrap items-center justify-between gap-4 py-5">
               <div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                      TYPE_BADGE[service.serviceType],
-                    )}
-                  >
-                    {service.serviceType}
-                  </span>
                   <h1 className="text-xl font-bold text-foreground">
                     {service.serviceTitle || `${service.serviceType} Service`}
                   </h1>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {formatShortDate(service.serviceDate)} · {formatTime(service.serviceDate)}
+                  {service.serviceType} · {formatShortDate(service.serviceDate)} ·{' '}
+                  {formatTime(service.serviceDate)}
                   {service.preacherName ? ` · ${service.preacherName}` : ''}
                   {service.topic ? ` · ${service.topic}` : ''}
                 </p>

@@ -172,7 +172,7 @@ function BiometricToggle() {
   return (
     <Card padding="md" style={styles.linkCard}>
       <View style={styles.iconTile}>
-        <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
+        <Fingerprint color={c.inkFaded} size={18} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={styles.linkTitle}>Sign in with {cap.label}</Text>
@@ -208,7 +208,7 @@ function NavLink({
     <Pressable onPress={onPress}>
       <Card padding="md" style={styles.linkCard}>
         <View style={styles.iconTile}>
-          <Icon color={c.primary} size={18} strokeWidth={1.5} />
+          <Icon color={c.inkFaded} size={18} strokeWidth={1.5} />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={styles.linkTitle}>{title}</Text>
@@ -248,8 +248,6 @@ function makeStyles(c: ThemeColors) {
   iconTile: {
     width: 40,
     height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },

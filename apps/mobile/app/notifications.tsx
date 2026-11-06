@@ -1,12 +1,12 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Bell } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   spacing,
   typography,
-  radii,
   useThemedStyles,
   type ThemeColors,
   useColors,
@@ -32,14 +32,11 @@ export default function Notifications() {
       </View>
 
       <View style={styles.emptyBlock}>
-        <View style={styles.iconTile}>
-          <Bell color={c.primary} size={22} strokeWidth={1.5} />
-        </View>
-        <Text style={styles.emptyTitle}>Nothing here yet</Text>
-        <Text style={styles.emptyMeta}>
-          The in-app notifications feed lands once the notifications API is wired.
-          Web notifications continue to work in the meantime.
-        </Text>
+        <EmptyState
+          variant="screen"
+          title="Nothing here yet"
+          message="The in-app notifications feed lands once the notifications API is wired. Web notifications continue to work in the meantime."
+        />
       </View>
 
       <Card padding="md" style={styles.metaCard}>
@@ -72,23 +69,7 @@ function makeStyles(c: ThemeColors) {
   subTitle: { ...typography.screenTitle, color: c.ink },
   emptyBlock: {
     padding: spacing.xl,
-    alignItems: 'center',
     gap: spacing.md,
-  },
-  iconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   metaCard: {
     marginHorizontal: spacing.lg,

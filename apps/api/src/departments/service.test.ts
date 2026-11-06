@@ -256,6 +256,47 @@ describe('listBranchDepartments', () => {
     expect(result.meta.total).toBe(1);
   });
 
+  // ── Recruitment volume is leader information ──────────────
+  //
+  // Every signed-in member can list the departments in their branch, so a
+  // count left in the response body is readable from the network tab whether
+  // or not a screen draws it. Hiding it in the UI would not have fixed it.
+
+  it('strips the pending-applicant count for a plain member', async () => {
+    const row = { ...sampleBranchDept, pendingJoinRequestCount: 7 };
+    setupSelectSequence([row], [{ value: 1 }]);
+    const result = await listBranchDepartments(mockDb, memberAuth, { page: 1, limit: 20 });
+    expect(result.data[0]).not.toHaveProperty('pendingJoinRequestCount');
+    // The rest of the row still comes through; only the queue is withheld.
+    expect(result.data[0]).toMatchObject({ departmentName: 'Choir' });
+  });
+
+  it('keeps the count for the leader of that department', async () => {
+    // Per row, not per request: a lead needs their own queue on the list.
+    const row = { ...sampleBranchDept, pendingJoinRequestCount: 7 };
+    setupSelectSequence([row], [{ value: 1 }]);
+    const result = await listBranchDepartments(mockDb, leaderAuth, { page: 1, limit: 20 });
+    expect(result.data[0]).toHaveProperty('pendingJoinRequestCount', 7);
+  });
+
+  it('withholds the count from a leader of a DIFFERENT department', async () => {
+    const otherDept = {
+      ...sampleBranchDept,
+      id: 'another-branch-dept',
+      pendingJoinRequestCount: 7,
+    };
+    setupSelectSequence([otherDept], [{ value: 1 }]);
+    const result = await listBranchDepartments(mockDb, leaderAuth, { page: 1, limit: 20 });
+    expect(result.data[0]).not.toHaveProperty('pendingJoinRequestCount');
+  });
+
+  it('keeps the count for an admin', async () => {
+    const row = { ...sampleBranchDept, pendingJoinRequestCount: 7 };
+    setupSelectSequence([row], [{ value: 1 }]);
+    const result = await listBranchDepartments(mockDb, adminAuth, { page: 1, limit: 20 });
+    expect(result.data[0]).toHaveProperty('pendingJoinRequestCount', 7);
+  });
+
   it('scopes to branch for regular members', async () => {
     setupSelectSequence([], [{ value: 0 }]);
     const result = await listBranchDepartments(mockDb, memberAuth, { page: 1, limit: 20 });

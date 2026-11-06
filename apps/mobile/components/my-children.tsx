@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { View, Text, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Baby, UserPlus } from 'lucide-react-native';
+import { UserPlus } from 'lucide-react-native';
 import {
   Button,
   Card,
+  EmptyState,
   DatePicker,
   Input,
   radii,
@@ -87,15 +88,9 @@ export function MyChildren() {
       </View>
 
       {rows.length === 0 ? (
-        <Card padding="md" style={styles.emptyCard}>
-          <View style={styles.emptyIconTile}>
-            <Baby color={c.primary} size={22} strokeWidth={1.5} />
-          </View>
-          <Text style={styles.emptyTitle}>No children on your record</Text>
-          <Text style={styles.emptyMeta}>
-            Add them so they can be registered for the children&apos;s
-            department and checked in at services.
-          </Text>
+        <Card padding="md">
+          {/* No title: the section header above already says "My children". */}
+          <EmptyState message="Nobody added yet. Add a child so they can be registered for the children&apos;s department and checked in at services." />
         </Card>
       ) : (
         <Card padding="none" style={{ overflow: 'hidden' }}>
@@ -283,18 +278,6 @@ function makeStyles(c: ThemeColors) {
     },
     addRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     addLabel: { ...typography.meta, color: c.primary, fontWeight: '700' },
-    emptyCard: { alignItems: 'center', gap: spacing.xs },
-    emptyIconTile: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: 'rgba(93,63,211,0.1)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.xs,
-    },
-    emptyTitle: { ...typography.cardTitle, color: c.ink },
-    emptyMeta: { ...typography.body, color: c.inkMuted, textAlign: 'center' },
     childRow: {
       flexDirection: 'row',
       alignItems: 'center',

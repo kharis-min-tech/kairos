@@ -11,9 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
-  Badge,
+  EmptyState,
   Card,
   radii,
   spacing,
@@ -21,9 +21,11 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
-import type { FormSubmission, FormType } from '@kairos/types';
+import type { FormSubmission, FormSubmissionStatus, FormType } from '@kairos/types';
+import { FORM_SUBMISSION_STATUS_LABEL, isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
@@ -38,13 +40,6 @@ const FORM_LABEL: Record<string, string> = {
   signature_request: 'Signature request',
   marriage_pack: 'Marriage pack',
   kgroup_host: 'K-group host',
-};
-
-const STATUS_TONE: Record<string, 'primary' | 'gold' | 'success' | 'neutral'> = {
-  new: 'primary',
-  reviewed: 'gold',
-  converted: 'success',
-  dismissed: 'neutral',
 };
 
 const FORM_FILTERS: { key: FormType | 'all'; label: string }[] = [
@@ -175,14 +170,11 @@ export default function FormsSubmissions() {
         {rows.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <FileText color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>No submissions</Text>
-            <Text style={styles.emptyMeta}>
-              Nothing matches these filters yet.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="No submissions"
+              message="Nothing matches these filters yet."
+            />
           </Card>
         ) : (
           list.map((s) => <Row key={s.id} row={s} />)
@@ -195,26 +187,35 @@ export default function FormsSubmissions() {
 function Row({ row }: { row: FormSubmission }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const router = useRouter();
   const formLabel = FORM_LABEL[row.formType] ?? row.formType;
-  const statusTone = STATUS_TONE[row.status] ?? 'neutral';
   const subject = (row.payload as { firstName?: string; lastName?: string }) ?? {};
   const name = [subject.firstName, subject.lastName].filter(Boolean).join(' ') || 'Submission';
   return (
-    <Card padding="md" style={styles.row}>
+    // The chevron promised a detail view for a long time before there was one.
+    <Pressable
+      onPress={() => router.push(`/forms/submissions/${row.id}` as never)}
+      style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
+    >
+      <Card padding="md" style={styles.row}>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
           <Text style={styles.rowTitle} numberOfLines={1}>
             {name}
           </Text>
-          <Badge label={formLabel} variant="primary" size="sm" />
         </View>
         <Text style={styles.rowMeta}>
-          {row.branchName ?? 'Branch'} · {formatShortDate(row.createdAt as unknown as string)}
+          {formLabel} · {row.branchName ?? 'Branch'} ·{' '}
+          {formatShortDate(row.createdAt as unknown as string)}
         </Text>
       </View>
-      <Badge label={row.status} variant={statusTone} size="sm" />
+      <StatusText
+        label={FORM_SUBMISSION_STATUS_LABEL[row.status as FormSubmissionStatus] ?? row.status}
+        awaiting={isAwaitingAction('formSubmission', row.status)}
+      />
       <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
-    </Card>
+      </Card>
+    </Pressable>
   );
 }
 
@@ -270,22 +271,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
 });
 }
 

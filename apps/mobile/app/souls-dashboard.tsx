@@ -192,7 +192,7 @@ export default function SoulsDashboard() {
                 <StatTile
                   label="Due this week"
                   value={String(followUpsDueThisWeek)}
-                  tone={c.primary}
+                  tone={followUpsDueThisWeek > 0 ? c.gold : c.inkFaded}
                 />
               </View>
             </View>
@@ -384,7 +384,11 @@ function StatTile({
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
-    <View style={[styles.statTile, { borderLeftColor: tone }]}>
+    // No accent strip. The value is 30pt and already the message, so colouring
+    // it says everything the strip was saying and leaves one signal instead of
+    // three. `tone` is muted when there is nothing to act on, which means a
+    // colour on this screen always means somebody needs you.
+    <View style={styles.statTile}>
       <View style={styles.statTileHead}>
         {icon ? (
           <View style={[styles.statTileIcon, { backgroundColor: tone }]}>{icon}</View>
@@ -492,7 +496,6 @@ function makeStyles(c: ThemeColors) {
     backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.md,
-    borderLeftWidth: 3,
     gap: spacing.xs,
   },
   statTileHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

@@ -12,17 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Search, X, Plus, Calendar, Map as MapIcon } from 'lucide-react-native';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  UsersRound,
-  Plus,
-  Calendar,
-  Map as MapIcon,
-} from 'lucide-react-native';
-import {
+  EmptyState,
   Badge,
   Card,
   Input,
@@ -241,36 +233,29 @@ export default function FellowshipsDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <UsersRound color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No fellowships found</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}". Try a different query or clear filters.`
-                  : 'No fellowships in this scope. Tap + to create one.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No fellowships found"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}". Try a different query or clear filters.`
+                    : 'No fellowships in this scope. Tap + to create one.'
+                }
+              />
             </Card>
           ) : null
         }
         renderItem={({ item: f }) => (
           <Pressable onPress={() => router.push(`/fellowships/${f.id}`)} style={styles.rowWrap}>
             <Card padding="md" style={styles.rowCard}>
-              <View style={styles.rowIconTile}>
-                <UsersRound color={c.primary} size={18} strokeWidth={1.5} />
-              </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={styles.rowName} numberOfLines={1}>
                   {f.fellowshipName}
                 </Text>
                 <View style={styles.rowMetaLine}>
-                  <Badge label={f.fellowshipType} variant="primary" size="sm" />
-                  {f.branchName ? (
-                    <Text style={styles.rowMeta} numberOfLines={1}>
-                      {f.branchName}
-                    </Text>
-                  ) : null}
+                  <Text style={styles.rowMeta} numberOfLines={1}>
+                    {[f.fellowshipType, f.branchName].filter(Boolean).join(' · ')}
+                  </Text>
                 </View>
                 {(f.meetingDay || f.meetingTime) ? (
                   <View style={styles.scheduleLine}>
@@ -440,14 +425,6 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'center',
     gap: spacing.md,
   },
-  rowIconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rowName: {
     ...typography.body,
     color: c.ink,
@@ -472,25 +449,6 @@ function makeStyles(c: ThemeColors) {
   rowSubMeta: {
     ...typography.meta,
     color: c.inkFaded,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

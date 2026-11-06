@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CalendarClock, CalendarRange } from 'lucide-react';
+import { CalendarRange } from 'lucide-react';
 import { Badge, Card, CardContent, Label } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useMyRota } from '@/hooks/use-me';
@@ -143,9 +143,6 @@ export function MyRotaTab({ branchDepartmentId }: Props) {
                 className="flex items-start justify-between gap-3 rounded-lg border border-input/10 bg-card px-4 py-3"
               >
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
-                    <CalendarClock className="h-4 w-4" />
-                  </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium">
                       {formatServiceDate(row.serviceDate)}

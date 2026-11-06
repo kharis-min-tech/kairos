@@ -236,7 +236,7 @@ function StatTile({
 }) {
   const styles = useThemedStyles(makeStyles);
   return (
-    <View style={[styles.statTile, { borderLeftColor: tone }]}>
+    <View style={styles.statTile}>
       <Text style={[styles.statValue, { color: tone }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -287,7 +287,6 @@ function makeStyles(c: ThemeColors) {
       backgroundColor: c.card,
       borderRadius: radii.md,
       padding: spacing.sm,
-      borderLeftWidth: 3,
       gap: 2,
     },
     statValue: { fontSize: 20, fontWeight: '800' },

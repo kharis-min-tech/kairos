@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Clock, Check, TriangleAlert } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   Badge,
   Button,
@@ -169,9 +170,13 @@ export default function MembershipInterestScreen() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>
-              {status === 'waiting' ? 'Nobody is waiting' : `No ${status} entries`}
-            </Text>
+            <EmptyState
+              message={
+                status === 'waiting'
+                  ? 'Nobody is waiting.'
+                  : `No ${status} entries.`
+              }
+            />
           </View>
         ) : (
           rows.map((row) => {
@@ -324,8 +329,7 @@ function makeStyles(c: ThemeColors) {
       marginTop: 2,
     },
     metaText: { ...typography.meta, color: c.inkMuted, flexShrink: 1 },
-    empty: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xxl },
-    emptyTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
+    empty: { gap: spacing.xs, paddingVertical: spacing.xxl },
     actionBar: {
       gap: spacing.sm,
       padding: spacing.md,

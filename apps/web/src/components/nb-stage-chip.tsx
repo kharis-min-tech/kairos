@@ -12,28 +12,25 @@ const STAGE_LABELS: Record<string, string> = {
   integrated: 'Joined a Dept',
 };
 
-const STAGE_TONE: Record<string, string> = {
-  enrolled: 'bg-muted/60 text-muted-foreground',
-  'session-1': 'bg-sky-500/15 text-sky-700 dark:text-sky-400',
-  'session-2': 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400',
-  'session-3': 'bg-violet-500/15 text-violet-700 dark:text-violet-400',
-  'session-4': 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
-  completed: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-  integrated: 'bg-[#5D3FD3]/15 text-[#5D3FD3]',
-};
-
 /**
- * Small badge surfacing a member's current New Believers stage on a roster row.
- * Renders nothing when the stage is null (no active enrollment, or caller is not
- * privileged to see it).
+ * A member's current New Believers stage, on a roster row.
+ *
+ * A stage is a position in a pipeline, not a status: nobody is waiting on
+ * "Session 2", it is simply where someone has got to. It used to render as
+ * one of seven tinted chips, a sky-to-violet-to-gold rainbow that made a
+ * roster look like a legend for something, and the colours were in no order
+ * a reader could learn. The words already say it, so the words are all that
+ * is left.
+ *
+ * Renders nothing when the stage is null: no active enrollment, or a caller
+ * who is not privileged to see it.
  */
 export function NbStageChip({ stage }: NbStageChipProps) {
   if (!stage) return null;
   const label = STAGE_LABELS[stage] ?? stage;
-  const tone = STAGE_TONE[stage] ?? 'bg-muted/60 text-muted-foreground';
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}
+      className="whitespace-nowrap text-xs text-muted-foreground"
       title={`Current New Believers stage: ${label}`}
     >
       {label}

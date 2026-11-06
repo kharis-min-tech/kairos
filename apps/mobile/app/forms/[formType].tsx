@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Button,
   Card,
   DatePicker,
@@ -118,9 +119,14 @@ function NotFoundState({
         <View style={{ width: 24 }} />
       </View>
       <View style={styles.centered}>
-        <Text style={styles.emptyTitle}>{title}</Text>
-        <Text style={styles.emptyMessage}>{message}</Text>
-        <Button label="Back to forms" variant="primary" size="md" onPress={onBack} />
+        <EmptyState
+          variant="screen"
+          title={title}
+          message={message}
+          action={
+            <Button label="Back to forms" variant="primary" size="md" onPress={onBack} />
+          }
+        />
       </View>
     </SafeAreaView>
   );
@@ -1089,7 +1095,6 @@ function makeStyles(c: ThemeColors) {
     padding: spacing.lg,
     gap: spacing.md,
   },
-  emptyTitle: { ...typography.screenTitle, color: c.ink },
   emptyMessage: {
     ...typography.body,
     color: c.inkMuted,

@@ -61,14 +61,6 @@ const FELLOWSHIP_TYPES = [
   { label: 'KOC Colleges', value: FellowshipType.KharisOnCampusColleges },
 ];
 
-const TYPE_BADGE_COLORS: Record<string, string> = {
-  [FellowshipType.KGroups]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
-  [FellowshipType.KharisExpress]: 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
-  [FellowshipType.NewBreeds]: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  [FellowshipType.KharisOnCampus]: 'bg-sky-500/15 text-sky-600 dark:text-sky-400',
-  [FellowshipType.KharisOnCampusColleges]: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-};
-
 function FellowshipsContent() {
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
@@ -249,13 +241,13 @@ function FellowshipsContent() {
                       <CardTitle className="text-base leading-snug">
                         {fellowship.fellowshipName}
                       </CardTitle>
-                      <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        TYPE_BADGE_COLORS[fellowship.fellowshipType] ?? 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {fellowship.fellowshipType === FellowshipType.KGroups ? 'K-Groups' : fellowship.fellowshipType}
-                      </span>
                     </div>
-                    <CardDescription className="truncate">{fellowship.branchName}</CardDescription>
+                    {/* The type is a category, so it reads as words beside the
+                        branch rather than as one of five tinted pills. */}
+                    <CardDescription className="truncate">
+                      {fellowship.fellowshipType}
+                      {fellowship.branchName ? ` · ${fellowship.branchName}` : ''}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-1 text-sm text-muted-foreground">

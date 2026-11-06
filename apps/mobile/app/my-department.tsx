@@ -12,12 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Building2, Users, Calendar } from 'lucide-react-native';
+import { ChevronLeft, Users, Calendar } from 'lucide-react-native';
 import {
   Avatar,
   Badge,
   Button,
   Card,
+  EmptyState,
   gradients,
   radii,
   spacing,
@@ -86,7 +87,7 @@ export default function MyDepartment() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
-        {!mine.isLoading && departments.length === 0 ? <EmptyState /> : null}
+        {!mine.isLoading && departments.length === 0 ? <NoDepartment /> : null}
 
         {departments.length > 1 ? (
           <ScrollView
@@ -256,25 +257,23 @@ export default function MyDepartment() {
   );
 }
 
-function EmptyState() {
+function NoDepartment() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
   return (
-    <Card padding="md" style={styles.emptyCard}>
-      <View style={styles.emptyIconTile}>
-        <Building2 color={c.primary} size={22} strokeWidth={1.5} />
-      </View>
-      <Text style={styles.emptyTitle}>You&apos;re not in a department yet</Text>
-      <Text style={styles.emptyMeta}>
-        Browse the ministry departments (Worship, Ushering, Media, Children, …)
-        and apply to the one you want to serve in. Your team, lead, and rota
-        will land here.
-      </Text>
-      <Button
-        label="Browse departments"
-        variant="secondary"
-        onPress={() => router.push('/departments')}
+    <Card padding="md">
+      <EmptyState
+        variant="screen"
+        title="You&apos;re not in a department yet"
+        message="Browse the ministry departments and apply to the one you want to serve in. Your team, lead and rota will land here."
+        action={
+          <Button
+            label="Browse departments"
+            variant="secondary"
+            onPress={() => router.push('/departments')}
+          />
+        }
       />
     </Card>
   );
@@ -437,25 +436,6 @@ function makeStyles(c: ThemeColors) {
     ...typography.body,
     color: c.inkMuted,
     padding: spacing.md,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 });
 }

@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   Badge,
   Button,
@@ -177,11 +178,11 @@ export default function MyRota() {
           </View>
         ) : (
           !rota.isLoading && (
-            <Card padding="lg" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No upcoming duties</Text>
-              <Text style={styles.emptyMeta}>
-                Nothing scheduled in the next 180 days.
-              </Text>
+            <Card padding="lg">
+              <EmptyState
+                title="No upcoming duties"
+                message="Nothing scheduled in the next 180 days."
+              />
             </Card>
           )
         )}
@@ -395,10 +396,6 @@ function makeStyles(c: ThemeColors) {
     marginTop: spacing.md,
   },
   heroButton: { flex: 1, backgroundColor: 'rgba(255,255,255,0.14)' },
-
-  emptyCard: { alignItems: 'center', gap: spacing.xs },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: { ...typography.meta, color: c.inkMuted },
 
   section: { gap: spacing.sm },
   sectionTitle: { ...typography.eyebrow, color: c.inkMuted },

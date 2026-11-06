@@ -126,7 +126,7 @@ export default function MemberDetailPage() {
                     surface the Admin case as a chip. The confirmed-Member
                     status has its own dedicated card below. */}
                 {member.systemRole === 'admin' && (
-                  <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">
+                  <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                     Admin
                   </span>
                 )}
@@ -624,7 +624,7 @@ function FollowupHistoryRow({ row }: { row: MemberFollowupHistoryItem }) {
 
   return (
     <li className="flex gap-3 rounded-md border border-border/60 bg-muted/30 p-3">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/10 text-[#5D3FD3]">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-muted-foreground">
         <Icon className="h-4 w-4" strokeWidth={1.75} />
       </span>
       <div className="min-w-0 flex-1 space-y-1">

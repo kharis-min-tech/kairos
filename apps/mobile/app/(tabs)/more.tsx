@@ -216,12 +216,14 @@ export default function More() {
           <NavRow
             icon={Users}
             label="Dormant attendees"
+            show={canSeeAdminSection}
             onPress={() => router.push('/forms/attendees' as never)}
           />
           <NavRow icon={FileText} label="Fill a form" onPress={() => router.push('/forms')} />
           <NavRow
             icon={ClipboardList}
             label="Form submissions"
+            show={canSeeAdminSection}
             onPress={() => router.push('/forms/submissions' as never)}
           />
         </Section>
@@ -395,17 +397,27 @@ function NavRow({
   icon: Icon,
   label,
   onPress,
+  show = true,
 }: {
   icon: LucideIcon;
   label: string;
   onPress: () => void;
+  /**
+   * Whether the caller may reach the destination. Declared on the row rather
+   * than left to a ternary wrapped around it: two rows pointing at guarded
+   * pages were rendered for everyone, so a plain member tapped them and was
+   * bounced straight back. A gate that lives on the row cannot be forgotten
+   * as easily as one that lives around it.
+   */
+  show?: boolean;
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  if (!show) return null;
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.rowIcon}>
-        <Icon color={c.primary} size={18} strokeWidth={1.5} />
+        <Icon color={c.inkFaded} size={18} strokeWidth={1.5} />
       </View>
       <Text style={styles.rowLabel}>{label}</Text>
       <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
@@ -460,8 +472,6 @@ function makeStyles(c: ThemeColors) {
   rowIcon: {
     width: 32,
     height: 32,
-    borderRadius: radii.sm,
-    backgroundColor: 'rgba(93,63,211,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },

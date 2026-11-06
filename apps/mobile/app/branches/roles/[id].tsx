@@ -19,6 +19,7 @@ import {
   User as UserIcon,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Avatar,
   Badge,
   Card,
@@ -164,15 +165,11 @@ export default function BranchRoles() {
           </View>
 
           {activeAssignments.length === 0 && !assignments.isLoading ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <UserIcon color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No branch admins yet</Text>
-              <Text style={styles.emptyMeta}>
-                Tap the + in the header to promote a member. At least one Branch System
-                Admin per branch is recommended.
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No branch admins yet"
+                message="Tap the + in the header to promote a member. At least one Branch System Admin per branch is recommended."
+              />
             </Card>
           ) : (
             <Card padding="md" style={{ gap: spacing.xs }}>
@@ -302,25 +299,6 @@ function makeStyles(c: ThemeColors) {
     color: c.inkFaded,
     textAlign: 'center',
     marginTop: spacing.xs,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

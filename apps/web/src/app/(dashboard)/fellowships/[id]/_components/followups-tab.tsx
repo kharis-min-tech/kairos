@@ -13,6 +13,7 @@ import {
   CustomSelect,
   Label,
   TimeSelect,
+  StatusText,
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { MemberAvatar } from '@/components/member-avatar';
@@ -23,7 +24,7 @@ import {
   useFellowshipFollowups,
   useOverdueFellowshipFollowups,
 } from '@/hooks/use-fellowships';
-import { ContactMethod, ContactStatus } from '@kairos/types';
+import { ContactMethod, ContactStatus, isAwaitingAction } from '@kairos/types';
 import type {
   CreateFellowshipFollowupRequest,
   FellowshipMemberWithDetails,
@@ -38,15 +39,6 @@ function todayIso(): string {
   const day = String(today.getDate()).padStart(2, '0');
   return `${today.getFullYear()}-${month}-${day}`;
 }
-
-const STATUS_TONE: Record<string, string> = {
-  Successful: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  Interested: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  'No Answer': 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
-  'Call Back Later': 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
-  'Wrong Number': 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-  'Not Interested': 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-};
 
 interface FellowshipFollowupsTabProps {
   fellowshipId: string;
@@ -274,14 +266,11 @@ export function FellowshipFollowupsTab({
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-2">
                     <Badge variant="outline">{followup.contactMethod}</Badge>
-                    <span
-                      className={
-                        (STATUS_TONE[followup.contactStatus] ?? 'bg-muted text-foreground') +
-                        ' rounded-full px-2.5 py-0.5 text-[11px] font-medium'
-                      }
-                    >
-                      {followup.contactStatus}
-                    </span>
+                    <StatusText
+                      label={followup.contactStatus}
+                      awaiting={isAwaitingAction('contactOutcome', followup.contactStatus)}
+                      className="text-[11px]"
+                    />
                   </div>
                 </div>
                 {followup.notes && (

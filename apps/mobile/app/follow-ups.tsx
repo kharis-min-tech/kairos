@@ -21,6 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   spacing,
@@ -292,12 +293,14 @@ export default function FollowUps() {
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
               ) : (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>All caught up</Text>
-                  <Text style={styles.emptyMeta}>
-                    {filter === 'all'
-                      ? 'Nothing pending right now. Enjoy the quiet.'
-                      : 'Nothing in this filter.'}
-                  </Text>
+                  <EmptyState
+                    title="All caught up"
+                    message={
+                      filter === 'all'
+                        ? 'Nothing pending right now. Enjoy the quiet.'
+                        : 'Nothing in this filter.'
+                    }
+                  />
                 </View>
               )
             }
@@ -324,11 +327,10 @@ export default function FollowUps() {
               <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
             ) : (
               <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>Nothing here yet</Text>
-                <Text style={styles.emptyMeta}>
-                  Follow-ups you record (fellowship, department, mentor, and
-                  souls captured) will show up here.
-                </Text>
+                <EmptyState
+                  title="Nothing here yet"
+                  message="Follow-ups you record (fellowship, department, mentor, and souls captured) will show up here."
+                />
               </View>
             )
           }
@@ -395,7 +397,7 @@ function ActivityRow({
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.iconTile}>
-        <Icon color={c.primary} size={16} strokeWidth={1.5} />
+        <Icon color={c.inkFaded} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
@@ -448,7 +450,7 @@ function FollowupRow({
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.iconTile}>
-        <Icon color={c.primary} size={16} strokeWidth={1.5} />
+        <Icon color={c.inkFaded} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
@@ -524,11 +526,9 @@ function makeStyles(c: ThemeColors) {
     paddingBottom: spacing.xxl,
   },
   empty: {
-    alignItems: 'center',
     marginTop: spacing.xxl,
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.meta,
     color: c.inkMuted,
@@ -545,8 +545,6 @@ function makeStyles(c: ThemeColors) {
   iconTile: {
     width: 32,
     height: 32,
-    borderRadius: radii.sm,
-    backgroundColor: 'rgba(93,63,211,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },

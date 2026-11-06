@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, CalendarDays } from 'lucide-react';
-import { Button, Card, CardContent, CustomSelect, cn } from '@kairos/ui';
+import { Button, Card, CardContent, CustomSelect } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { useServices, useCanRecordAttendance } from '@/hooks/use-attendance';
 import { formatShortDate } from '@kairos/core';
@@ -16,12 +16,6 @@ const TYPE_OPTIONS = [
   { value: ServiceType.Midweek, label: 'Midweek' },
   { value: ServiceType.Special, label: 'Special' },
 ];
-
-const TYPE_BADGE: Record<string, string> = {
-  [ServiceType.Sunday]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
-  [ServiceType.Midweek]: 'bg-[#16A34A]/15 text-[#16A34A]',
-  [ServiceType.Special]: 'bg-[#f8b537]/20 text-[#a07720] dark:text-[#f8b537]',
-};
 
 export default function AttendanceServicesPage() {
   const { data: canRecordResult } = useCanRecordAttendance();
@@ -129,20 +123,12 @@ export default function AttendanceServicesPage() {
                 <CardContent className="flex items-center justify-between gap-4 py-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                          TYPE_BADGE[s.serviceType],
-                        )}
-                      >
-                        {s.serviceType}
-                      </span>
                       <span className="truncate font-medium text-foreground">
                         {s.serviceTitle || `${s.serviceType} Service`}
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {formatShortDate(s.serviceDate)}
+                      {s.serviceType} · {formatShortDate(s.serviceDate)}
                       {s.branchName ? ` · ${s.branchName}` : ''}
                       {s.topic ? ` · ${s.topic}` : ''}
                     </p>

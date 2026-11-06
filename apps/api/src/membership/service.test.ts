@@ -693,3 +693,42 @@ describe('withdrawal', () => {
     ).rejects.toThrow(/cannot be withdrawn/i);
   });
 });
+
+// ── The cohort list is admin-only, at the API ──────────────
+//
+// Both clients already gated this query on membership:admin, but the endpoint
+// did not: the signature took `_auth` and never looked at it, so the cohort
+// list with its enrolment and graduation counts was readable by any signed-in
+// member straight from the API. That is not something the UI could fix.
+
+describe('listCohorts access', () => {
+  it('refuses a plain member', async () => {
+    const { listCohorts } = await import('./service');
+    await expect(
+      listCohorts(mockDb, memberAuth, {}),
+    ).rejects.toThrow(/membership admin/i);
+  });
+
+  it('refuses a branch leader, who is not a membership admin', async () => {
+    // Membership cohorts are church-wide, so branch authority does not reach
+    // them. This is the reach-vs-domain rule, not an oversight.
+    const { listCohorts } = await import('./service');
+    await expect(
+      listCohorts(mockDb, branchLeaderAuth, {}),
+    ).rejects.toThrow(/membership admin/i);
+  });
+
+  it('allows a membership admin', async () => {
+    setupSelectSequence([], [{ value: 0 }]);
+    const { listCohorts } = await import('./service');
+    const result = await listCohorts(mockDb, membershipAdminAuth, {});
+    expect(result).toBeDefined();
+  });
+
+  it('allows a system admin', async () => {
+    setupSelectSequence([], [{ value: 0 }]);
+    const { listCohorts } = await import('./service');
+    const result = await listCohorts(mockDb, adminAuth, {});
+    expect(result).toBeDefined();
+  });
+});

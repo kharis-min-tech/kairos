@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
   Textarea,
+  StatusText,
 } from '@kairos/ui';
 import {
   CHURCH_SCOPE,
@@ -27,6 +28,7 @@ import {
   type GiftAidCancellationMethod,
   type GiftAidChannel,
   type GiftAidStatus,
+  isAwaitingAction,
 } from '@kairos/types';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useDebounced } from '@/hooks/use-debounced';
@@ -46,12 +48,6 @@ function formatDate(iso: string | null): string {
     month: 'short',
     year: 'numeric',
   });
-}
-
-function statusTone(status: GiftAidStatus): string {
-  if (status === 'active') return 'text-emerald-700 dark:text-emerald-400';
-  if (status === 'invalid') return 'text-destructive';
-  return 'text-muted-foreground';
 }
 
 /**
@@ -232,8 +228,12 @@ export default function GiftAidAdminPage() {
                     <TableCell className="text-xs">
                       {GIFT_AID_CHANNEL_LABEL[d.channel as GiftAidChannel]}
                     </TableCell>
-                    <TableCell className={`text-xs ${statusTone(d.status as GiftAidStatus)}`}>
-                      {GIFT_AID_STATUS_LABEL[d.status as GiftAidStatus]}
+                    <TableCell className="text-xs">
+                      <StatusText
+                        className="text-xs"
+                        label={GIFT_AID_STATUS_LABEL[d.status as GiftAidStatus]}
+                        awaiting={isAwaitingAction('giftAid', d.status)}
+                      />
                       {d.cancelledAt && (
                         <div className="text-muted-foreground">{formatDate(d.cancelledAt)}</div>
                       )}

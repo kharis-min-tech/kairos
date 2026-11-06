@@ -170,3 +170,17 @@ export function useArchiveVisitors() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['forms', 'visitors'] }),
   });
 }
+
+/**
+ * The caller's own submissions, across every branch.
+ *
+ * No visibility gate behind this: it filters on `submittedBy = me`, so it is a
+ * personal paper trail rather than a review surface. The endpoint and this
+ * client method both existed for months with nothing on web calling them.
+ */
+export function useMyFormSubmissions() {
+  return useQuery({
+    queryKey: ['forms', 'me', 'submissions'],
+    queryFn: async () => (await api.forms.mySubmissions()).data ?? [],
+  });
+}

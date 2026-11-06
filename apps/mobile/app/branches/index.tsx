@@ -11,16 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Search, X, Plus, MapPin } from 'lucide-react-native';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  Building2,
-  Plus,
-  MapPin,
-} from 'lucide-react-native';
-import {
+  EmptyState,
   Badge,
   Card,
   Input,
@@ -149,16 +142,15 @@ export default function BranchesDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <Building2 color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No branches</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}".`
-                  : 'No branches yet. Tap + to create one.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No branches"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}".`
+                    : 'No branches yet. Tap + to create one.'
+                }
+              />
             </Card>
           ) : null
         }
@@ -170,20 +162,16 @@ export default function BranchesDirectory() {
             style={styles.rowWrap}
           >
             <Card padding="md" style={styles.rowCard}>
-              <View style={styles.rowIconTile}>
-                <Building2 color={c.primary} size={18} strokeWidth={1.5} />
-              </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={styles.rowTitleLine}>
                   <Text style={styles.rowName} numberOfLines={1}>
                     {b.branchName}
                   </Text>
-                  <Badge label={b.branchType} variant="primary" size="sm" />
                 </View>
                 <View style={styles.rowMetaLine}>
                   <MapPin color={c.inkFaded} size={12} strokeWidth={1.5} />
                   <Text style={styles.rowMeta} numberOfLines={1}>
-                    {[b.regionName, b.city].filter(Boolean).join(' · ') || '—'}
+                    {[b.branchType, b.regionName, b.city].filter(Boolean).join(' · ') || '—'}
                   </Text>
                 </View>
               </View>
@@ -233,14 +221,6 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'center',
     gap: spacing.md,
   },
-  rowIconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rowTitleLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -255,25 +235,6 @@ function makeStyles(c: ThemeColors) {
   rowMeta: {
     ...typography.meta,
     color: c.inkMuted,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

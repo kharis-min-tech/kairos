@@ -20,6 +20,7 @@ import {
   CheckCircle2,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Button,
   Card,
   radii,
@@ -196,15 +197,11 @@ export default function RollcallFellowship() {
         ) : null}
 
         {!meetings.isLoading && rows.length === 0 ? (
-          <Card padding="md" style={styles.emptyCard}>
-            <View style={styles.emptyIconTile}>
-              <Calendar color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>No meetings yet</Text>
-            <Text style={styles.emptyMeta}>
-              Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take
-              the register.
-            </Text>
+          <Card padding="md">
+            <EmptyState
+              title="No meetings yet"
+              message="Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take the register."
+            />
           </Card>
         ) : null}
       </ScrollView>
@@ -300,25 +297,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
 });
 }
 

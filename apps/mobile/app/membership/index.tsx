@@ -23,6 +23,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   Badge,
   Button,
@@ -194,10 +195,10 @@ export default function MembershipScreen() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (cohorts.data ?? []).length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No cohorts yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create one from Interest pool to start admitting people.
-            </Text>
+            <EmptyState
+              title="No cohorts yet"
+              message="Create one from Interest pool to start admitting people."
+            />
           </View>
         ) : (
           (cohorts.data ?? []).map((co) => (
@@ -486,8 +487,6 @@ function makeStyles(c: ThemeColors) {
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     metaText: { ...typography.meta, color: c.inkMuted },
     outstanding: { ...typography.meta, color: c.inkFaded },
-    empty: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xxl },
-    emptyTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
-    emptyMeta: { ...typography.meta, color: c.inkMuted, textAlign: 'center' },
+    empty: { gap: spacing.xs, paddingVertical: spacing.xxl },
   });
 }

@@ -178,7 +178,7 @@ function SummaryTile({ label, value, tone }: { label: string; value: number; ton
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   return (
-    <View style={[styles.summaryTile, { borderLeftColor: tone }]}>
+    <View style={styles.summaryTile}>
       <Text style={[styles.summaryValue, { color: tone }]}>{value}</Text>
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
@@ -271,7 +271,6 @@ function makeStyles(c: ThemeColors) {
     backgroundColor: c.card,
     borderRadius: radii.md,
     padding: spacing.sm,
-    borderLeftWidth: 3,
     alignItems: 'flex-start',
   },
   summaryValue: { fontSize: 18, fontWeight: '800' },

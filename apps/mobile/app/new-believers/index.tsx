@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Check, Circle, CalendarClock } from 'lucide-react-native';
 import {
+  EmptyState,
   Avatar,
   Card,
   Badge,
@@ -110,14 +111,14 @@ export default function NewBelievers() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : (enrollments.data ?? []).length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>
-              {personalScope ? 'You’re not enrolled' : 'No active enrollments'}
-            </Text>
-            <Text style={styles.emptyMeta}>
-              {personalScope
-                ? 'Enrol in the New Believers class via your branch team to track your journey here.'
-                : 'New Believers you teach or mentor will appear here.'}
-            </Text>
+            <EmptyState
+              title={personalScope ? 'You’re not enrolled' : 'No active enrollments'}
+              message={
+                personalScope
+                  ? 'Enrol in the New Believers class via your branch team to track your journey here.'
+                  : 'New Believers you teach or mentor will appear here.'
+              }
+            />
           </View>
         ) : (
           (enrollments.data ?? []).map((e) => (
@@ -283,16 +284,8 @@ function makeStyles(c: ThemeColors) {
     gap: spacing.md,
   },
   empty: {
-    alignItems: 'center',
     marginTop: spacing.xxl,
     gap: spacing.xs,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    marginHorizontal: spacing.xl,
   },
 
   enrollmentCard: { gap: spacing.md },

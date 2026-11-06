@@ -16,8 +16,9 @@ import { alert } from '@/lib/alert';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Plus, Check, Map as MapIcon, Search } from 'lucide-react-native';
+import { ChevronLeft, Plus, Check, Search } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Button,
   Card,
@@ -154,12 +155,11 @@ export default function Regions() {
         }
         ListEmptyComponent={
           !regions.isLoading ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <MapIcon color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No regions yet</Text>
-              <Text style={styles.emptyMeta}>Tap + to create the first one.</Text>
+            <Card padding="md">
+              <EmptyState
+                title="No regions yet"
+                message="Tap + to create the first one."
+              />
             </Card>
           ) : null
         }
@@ -180,9 +180,6 @@ export default function Regions() {
               style={styles.rowWrap}
             >
               <Card padding="md" style={styles.rowCard}>
-                <View style={styles.rowIconTile}>
-                  <MapIcon color={c.primary} size={18} strokeWidth={1.5} />
-                </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text style={styles.rowName} numberOfLines={1}>
                     {r.regionName}
@@ -457,37 +454,10 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'center',
     gap: spacing.md,
   },
-  rowIconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rowName: { ...typography.body, color: c.ink, fontWeight: '600' },
   rowMeta: { ...typography.meta, color: c.inkMuted },
   rowRight: {
     alignItems: 'flex-end',
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.meta,

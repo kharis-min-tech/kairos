@@ -200,7 +200,7 @@ export default function RegionsPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base leading-snug">{region.regionName}</CardTitle>
-                    <span className="flex-shrink-0 rounded-full bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-[#a78bfa]">
+                    <span className="flex-shrink-0 text-xs text-muted-foreground">
                       {branchCount} branch{branchCount === 1 ? '' : 'es'}
                     </span>
                   </div>

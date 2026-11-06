@@ -11,8 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, UsersRound, ClipboardList } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   radii,
   spacing,
@@ -81,15 +82,11 @@ export default function RollcallLanding() {
         ) : null}
 
         {!fellowships.isLoading && rows.length === 0 ? (
-          <Card padding="md" style={styles.emptyCard}>
-            <View style={styles.emptyIconTile}>
-              <ClipboardList color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>No fellowships to lead</Text>
-            <Text style={styles.emptyMeta}>
-              Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders
-              and members alike can record attendance for their group.
-            </Text>
+          <Card padding="md">
+            <EmptyState
+              title="No fellowships to lead"
+              message="Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders and members alike can record attendance for their group."
+            />
           </Card>
         ) : null}
 
@@ -98,9 +95,6 @@ export default function RollcallLanding() {
             {rows.map((f) => (
               <Pressable key={f.id} onPress={() => router.push(`/rollcall/${f.id}`)}>
                 <Card padding="md" style={styles.rowCard}>
-                  <View style={styles.iconTile}>
-                    <UsersRound color={c.primary} size={18} strokeWidth={1.5} />
-                  </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.rowTitle} numberOfLines={1}>
                       {f.fellowshipName}
@@ -147,35 +141,8 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'center',
     gap: spacing.md,
   },
-  iconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
 });
 }
 

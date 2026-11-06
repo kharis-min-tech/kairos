@@ -17,11 +17,11 @@ import {
   ChevronRight,
   Search,
   X,
-  Users,
   Plus,
   ShieldCheck,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Avatar,
   Badge,
   Card,
@@ -238,16 +238,15 @@ export default function MembersDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <Users color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No members found</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}". Try a different name or email.`
-                  : 'Your directory is empty for this filter.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No members found"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}". Try a different name or email.`
+                    : 'Your directory is empty for this filter.'
+                }
+              />
             </Card>
           ) : null
         }
@@ -367,25 +366,6 @@ function makeStyles(c: ThemeColors) {
   rowName: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
   rowSubMeta: { ...typography.meta, color: c.inkFaded },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
   errorLine: {
     ...typography.body,
     color: c.danger,

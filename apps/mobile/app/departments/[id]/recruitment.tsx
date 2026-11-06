@@ -40,6 +40,7 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
+import { isAwaitingAction } from '@kairos/types';
 import type { DepartmentJoinRequestWithMember } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
@@ -53,19 +54,21 @@ const STAGE_LABELS: Record<Stage, string> = {
   all: 'All',
 };
 
-const STATUS_META: Record<
-  string,
-  { label: string; variant: 'neutral' | 'gold' | 'success' | 'danger' | 'primary' }
-> = {
-  applied: { label: 'Applied', variant: 'primary' },
-  interview_scheduled: { label: 'Interview scheduled', variant: 'primary' },
-  interviewed: { label: 'Interviewed', variant: 'gold' },
-  offered: { label: 'Offered', variant: 'gold' },
-  probation: { label: 'Probation', variant: 'gold' },
-  active: { label: 'Active', variant: 'success' },
-  rejected: { label: 'Rejected', variant: 'danger' },
-  withdrawn: { label: 'Withdrawn', variant: 'neutral' },
-  probation_failed: { label: 'Failed probation', variant: 'danger' },
+/*
+ * Labels only. Each of these was carrying a Badge variant too, five colours
+ * across nine stages, and nothing ever read it: the stage is a section
+ * heading here, so the colour was describing what the heading already said.
+ */
+const STAGE_LABEL: Record<string, string> = {
+  applied: 'Applied',
+  interview_scheduled: 'Interview scheduled',
+  interviewed: 'Interviewed',
+  offered: 'Offered',
+  probation: 'Probation',
+  active: 'Active',
+  rejected: 'Rejected',
+  withdrawn: 'Withdrawn',
+  probation_failed: 'Failed probation',
 };
 
 type ActionKind =
@@ -214,12 +217,17 @@ export default function DepartmentRecruitment() {
         {orderKeys.map((k) => {
           const rows = grouped[k];
           if (!rows || rows.length === 0) return null;
-          const meta = STATUS_META[k];
+          // Applied and Interviewed owe somebody a decision; the count says so.
+          const owed = isAwaitingAction('departmentJoinRequest', k);
           return (
             <View key={k} style={styles.stageBlock}>
               <View style={styles.stageHeader}>
-                <Text style={styles.stageTitle}>{meta?.label ?? k}</Text>
-                <Badge label={String(rows.length)} variant="neutral" size="sm" />
+                <Text style={styles.stageTitle}>{STAGE_LABEL[k] ?? k}</Text>
+                <Badge
+                  label={String(rows.length)}
+                  variant={owed ? 'gold' : 'neutral'}
+                  size="sm"
+                />
               </View>
               {rows.map((row) => (
                 <ApplicantCard

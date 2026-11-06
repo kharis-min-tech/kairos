@@ -23,7 +23,7 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import {
-  Badge,
+  EmptyState,
   Card,
   Input,
   radii,
@@ -32,8 +32,10 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
+import { isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
 const PAGE_SIZE = 25;
@@ -49,18 +51,6 @@ const STATUS_FILTERS = [
   'Lost Contact',
 ] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
-
-const STATUS_VARIANT: Record<
-  string,
-  'primary' | 'gold' | 'info' | 'success' | 'danger' | 'neutral'
-> = {
-  New: 'primary',
-  'Following Up': 'gold',
-  Interested: 'info',
-  Converted: 'success',
-  'Not Interested': 'danger',
-  'Lost Contact': 'neutral',
-};
 
 function useDebounced<T>(value: T, delay: number): T {
   const [v, setV] = useState(value);
@@ -247,16 +237,15 @@ export default function SoulsDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <Handshake color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No souls found</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}".`
-                  : 'No souls match this filter. Capture happens on the web or during outreach.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No souls found"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}".`
+                    : 'No souls match this filter. Capture happens on the web or during outreach.'
+                }
+              />
             </Card>
           ) : null
         }
@@ -268,10 +257,9 @@ export default function SoulsDirectory() {
                   <Text style={styles.rowName} numberOfLines={1}>
                     {s.firstName} {s.lastName}
                   </Text>
-                  <Badge
+                  <StatusText
                     label={s.status}
-                    variant={STATUS_VARIANT[s.status] ?? 'neutral'}
-                    size="sm"
+                    awaiting={isAwaitingAction('soul', s.status)}
                   />
                 </View>
                 <View style={styles.rowMetaLine}>
@@ -429,25 +417,6 @@ function makeStyles(c: ThemeColors) {
     ...typography.meta,
     color: c.inkFaded,
     marginTop: 2,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

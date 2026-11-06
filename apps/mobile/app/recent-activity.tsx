@@ -24,7 +24,6 @@ import type { LucideIcon } from 'lucide-react-native';
 import {
   Badge,
   Card,
-  colors,
   radii,
   spacing,
   typography,
@@ -38,28 +37,33 @@ import { api } from '@/lib/api-client';
 interface ActionVisual {
   Icon: LucideIcon;
   tone: string;
-  tint: string;
 }
 
-function actionVisual(action: AuditAction): ActionVisual {
+/**
+ * The icon tells you which kind of event it was; the colour is reserved for
+ * the ones worth stopping on. A successful sign-in is the overwhelming
+ * majority of this log, so it reads in plain ink and the failures stand out
+ * on their own rather than competing with a column of brand purple.
+ */
+function actionVisual(action: AuditAction, c: ThemeColors): ActionVisual {
   switch (action) {
-    case AuditAction.SigninSuccess:
-      return { Icon: ShieldCheck, tone: colors.primary, tint: 'rgba(93,63,211,0.1)' };
     case AuditAction.SigninFailure:
-      return { Icon: ShieldAlert, tone: colors.danger, tint: 'rgba(225,29,72,0.1)' };
-    case AuditAction.PasswordChange:
-      return { Icon: KeyRound, tone: colors.primary, tint: 'rgba(93,63,211,0.1)' };
-    case AuditAction.RoleGranted:
-      return { Icon: UserPlus, tone: colors.primary, tint: 'rgba(93,63,211,0.1)' };
+      return { Icon: ShieldAlert, tone: c.danger };
     case AuditAction.RoleRevoked:
-      return { Icon: UserMinus, tone: colors.danger, tint: 'rgba(225,29,72,0.1)' };
+      return { Icon: UserMinus, tone: c.danger };
+    case AuditAction.EmailChangeReverted:
+      return { Icon: MailWarning, tone: c.danger };
+    case AuditAction.SigninSuccess:
+      return { Icon: ShieldCheck, tone: c.inkFaded };
+    case AuditAction.PasswordChange:
+      return { Icon: KeyRound, tone: c.inkFaded };
+    case AuditAction.RoleGranted:
+      return { Icon: UserPlus, tone: c.inkFaded };
     case AuditAction.EmailChangeRequested:
     case AuditAction.EmailChangeConfirmed:
-      return { Icon: Mail, tone: colors.primary, tint: 'rgba(93,63,211,0.1)' };
-    case AuditAction.EmailChangeReverted:
-      return { Icon: MailWarning, tone: colors.danger, tint: 'rgba(225,29,72,0.1)' };
+      return { Icon: Mail, tone: c.inkFaded };
     default:
-      return { Icon: ShieldCheck, tone: 'rgba(120,120,128,0.5)', tint: 'rgba(120,120,128,0.1)' };
+      return { Icon: ShieldCheck, tone: c.inkVeryFaded };
   }
 }
 
@@ -130,13 +134,13 @@ export default function RecentActivity() {
         {activity.data && activity.data.entries.length > 0 ? (
           <Card padding="md">
             {activity.data.entries.map((entry, idx) => {
-              const { Icon, tone, tint } = actionVisual(entry.action);
+              const { Icon, tone } = actionVisual(entry.action, c);
               return (
                 <View
                   key={entry.id}
                   style={[styles.entryRow, idx > 0 ? styles.rowDivider : null]}
                 >
-                  <View style={[styles.iconTile, { backgroundColor: tint }]}>
+                  <View style={styles.iconTile}>
                     <Icon color={tone} size={16} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>

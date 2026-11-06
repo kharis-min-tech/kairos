@@ -23,6 +23,7 @@ import {
   CalendarPlus,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   Badge,
   Button,
@@ -236,8 +237,10 @@ function Roster({
   if (rows.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>Nobody admitted yet</Text>
-        <Text style={styles.metaText}>Admit people from the interest pool.</Text>
+        <EmptyState
+          title="Nobody admitted yet"
+          message="Admit people from the interest pool."
+        />
       </View>
     );
   }
@@ -336,11 +339,10 @@ function Sessions({
   if (sessions.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>No sessions scheduled</Text>
-        <Text style={styles.metaText}>
-          A cohort needs all four before anyone can graduate. Schedule them on the web
-          dashboard.
-        </Text>
+        <EmptyState
+          title="No sessions scheduled"
+          message="A cohort needs all four before anyone can graduate. Schedule them on the web dashboard."
+        />
       </View>
     );
   }
@@ -565,7 +567,7 @@ function Graduation({
   if (active.length === 0) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyTitle}>Nobody left to graduate</Text>
+        <EmptyState message="Nobody left to graduate." />
       </View>
     );
   }
@@ -726,8 +728,7 @@ function makeStyles(c: ThemeColors) {
       gap: spacing.xs,
     },
     metaText: { ...typography.meta, color: c.inkMuted, flexShrink: 1 },
-    empty: { alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xxl },
-    emptyTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
+    empty: { gap: spacing.xs, paddingVertical: spacing.xxl },
     register: {
       gap: spacing.sm,
       marginTop: spacing.xs,

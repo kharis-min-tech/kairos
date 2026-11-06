@@ -10,32 +10,24 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, FileText } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
-  Badge,
   Card,
+  EmptyState,
   radii,
   spacing,
   typography,
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
 // Titles live with the form definitions — this screen kept its own copy of
 // all six, which is the drift FORM_DEFINITIONS exists to prevent.
-import { FORM_DEFINITIONS } from '@kairos/types';
+import { FORM_DEFINITIONS, isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
-const STATUS_VARIANT: Record<
-  FormSubmissionStatus,
-  'primary' | 'gold' | 'success' | 'neutral'
-> = {
-  new: 'primary',
-  reviewed: 'gold',
-  converted: 'success',
-  dismissed: 'neutral',
-};
 
 const STATUS_LABEL: Record<FormSubmissionStatus, string> = {
   new: 'New',
@@ -117,15 +109,11 @@ export default function MyFormSubmissions() {
         ) : null}
 
         {submissions.data && rows.length === 0 ? (
-          <Card padding="md" style={styles.emptyCard}>
-            <View style={styles.emptyIconTile}>
-              <FileText color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>Nothing here yet</Text>
-            <Text style={styles.emptyMeta}>
-              When you fill out a form (welcome, baptism, testimony, etc.) it&apos;ll show up
-              here for you to reference.
-            </Text>
+          <Card padding="md">
+            <EmptyState
+              title="Nothing here yet"
+              message="Forms you fill in show up here so you can check back on them."
+            />
           </Card>
         ) : null}
 
@@ -137,19 +125,20 @@ export default function MyFormSubmissions() {
                 row.payload as unknown as Record<string, unknown> | undefined,
               );
               return (
-                <Card key={row.id} padding="md" style={styles.rowCard}>
-                  <View style={styles.rowIconTile}>
-                    <FileText color={c.primary} size={18} strokeWidth={1.5} />
-                  </View>
+                <Pressable
+                  key={row.id}
+                  onPress={() => router.push(`/forms/submissions/${row.id}` as never)}
+                  style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
+                >
+                <Card padding="md" style={styles.rowCard}>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={styles.rowTitleLine}>
                       <Text style={styles.rowTitle} numberOfLines={1}>
                         {title}
                       </Text>
-                      <Badge
+                      <StatusText
                         label={STATUS_LABEL[row.status]}
-                        variant={STATUS_VARIANT[row.status]}
-                        size="sm"
+                        awaiting={isAwaitingAction('formSubmission', row.status)}
                       />
                     </View>
                     <Text style={styles.rowSubject} numberOfLines={1}>
@@ -167,7 +156,9 @@ export default function MyFormSubmissions() {
                       ) : null}
                     </View>
                   </View>
+                  <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
                 </Card>
+                </Pressable>
               );
             })}
           </View>
@@ -208,14 +199,6 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'flex-start',
     gap: spacing.md,
   },
-  rowIconTile: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rowTitleLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -245,25 +228,6 @@ function makeStyles(c: ThemeColors) {
   rowMetaDot: {
     ...typography.meta,
     color: c.inkFaded,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 });
 }

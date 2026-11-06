@@ -11,17 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Search, X, Plus, MapPin, Calendar } from 'lucide-react-native';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  Heart,
-  Plus,
-  MapPin,
-  Calendar,
-} from 'lucide-react-native';
-import {
+  EmptyState,
   Badge,
   Card,
   Input,
@@ -209,25 +201,21 @@ export default function OutreachDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <Heart color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.emptyTitle}>No outreach programs</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}".`
-                  : 'No programs in this scope. Tap + to schedule one.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No outreach programs"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}".`
+                    : 'No programs in this scope. Tap + to schedule one.'
+                }
+              />
             </Card>
           ) : null
         }
         renderItem={({ item: p }) => (
           <Pressable onPress={() => router.push(`/outreach/${p.id}`)} style={styles.rowWrap}>
             <Card padding="md" style={styles.rowCard}>
-              <View style={styles.rowIconTile}>
-                <Heart color={c.primary} size={18} strokeWidth={1.5} />
-              </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <View style={styles.rowTitleLine}>
                   <Text style={styles.rowName} numberOfLines={1}>
@@ -336,14 +324,6 @@ function makeStyles(c: ThemeColors) {
     alignItems: 'center',
     gap: spacing.md,
   },
-  rowIconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   rowTitleLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,25 +348,6 @@ function makeStyles(c: ThemeColors) {
   rowSubMeta: {
     ...typography.meta,
     color: c.inkFaded,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

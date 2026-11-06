@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSoulsStore } from '@/stores/souls-store';
 import { useApi } from '@/hooks/useApi';
-import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge, CustomSelect, NumberStepper } from '@kairos/ui';
+import { Button, Input, Label, Textarea, Card, CardContent, CardHeader, CardTitle, Badge, CustomSelect, NumberStepper, StatusText } from '@kairos/ui';
+import { isAwaitingAction } from '@kairos/types';
 import { DateSelect } from '@/components/date-select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Phone, Mail, MapPin, User, Calendar, AlertCircle } from 'lucide-react';
@@ -271,9 +272,10 @@ export default function SoulDetailPage() {
           </h1>
           <p className="text-muted-foreground">Soul Details</p>
         </div>
-        <Badge variant={currentSoul.status === 'Converted' ? 'default' : 'secondary'}>
-          {currentSoul.status}
-        </Badge>
+        <StatusText
+          label={currentSoul.status}
+          awaiting={isAwaitingAction('soul', currentSoul.status)}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

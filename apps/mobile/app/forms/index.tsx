@@ -78,7 +78,7 @@ export default function FormsLanding() {
               <Pressable key={type} onPress={() => router.push(`/forms/${type}`)}>
                 <Card padding="md" style={styles.tileCard}>
                   <View style={styles.iconTile}>
-                    <Icon color={c.primary} size={22} strokeWidth={1.5} />
+                    <Icon color={c.inkFaded} size={22} strokeWidth={1.5} />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.tileTitle}>{definition.title}</Text>
@@ -128,8 +128,6 @@ function makeStyles(c: ThemeColors) {
   iconTile: {
     width: 44,
     height: 44,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },

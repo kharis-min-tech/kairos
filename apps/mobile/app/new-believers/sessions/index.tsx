@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Plus, ChevronRight, Calendar, MapPin, User } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   spacing,
@@ -115,11 +116,10 @@ export default function NewBelieverSessionsIndex() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No sessions yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create the first session to start taking attendance for your
-              New Believers class.
-            </Text>
+            <EmptyState
+              title="No sessions yet"
+              message="Create the first session to start taking attendance for your New Believers class."
+            />
           </View>
         ) : (
           <>
@@ -214,15 +214,7 @@ function makeStyles(c: ThemeColors) {
   },
   empty: {
     marginTop: spacing.xxl,
-    alignItems: 'center',
     gap: spacing.xs,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    paddingHorizontal: spacing.xl,
   },
   group: {
     gap: spacing.sm,

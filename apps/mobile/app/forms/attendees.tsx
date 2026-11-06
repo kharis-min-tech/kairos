@@ -11,8 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Users, Check, Archive } from 'lucide-react-native';
+import { ChevronLeft, Check, Archive } from 'lucide-react-native';
 import {
+  EmptyState,
   Avatar,
   Badge,
   Button,
@@ -120,14 +121,11 @@ export default function FormsAttendees() {
         {rows.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Users color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>All caught up</Text>
-            <Text style={styles.emptyMeta}>
-              No dormant attendees to review right now.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="All caught up"
+              message="No dormant attendees to review right now."
+            />
           </Card>
         ) : (
           list.map((a) => {
@@ -227,22 +225,6 @@ function makeStyles(c: ThemeColors) {
   checkOn: { backgroundColor: c.primary, borderColor: c.primary },
   name: { ...typography.body, color: c.ink, fontWeight: '600' },
   meta: { ...typography.meta, color: c.inkMuted },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
   footerBar: {
     position: 'absolute',
     left: 0,

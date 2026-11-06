@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Plus, Calendar } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   spacing,
@@ -101,14 +102,11 @@ export default function AttendanceServicesList() {
         {services.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Calendar color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>No services yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create the first service to start recording attendance.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="No services yet"
+              message="Create the first service to start recording attendance."
+            />
           </Card>
         ) : (
           <>
@@ -164,10 +162,9 @@ function ServiceRow({
             <Text style={styles.rowTitle} numberOfLines={1}>
               {service.serviceTitle ?? service.serviceType}
             </Text>
-            <Badge label={service.serviceType} variant="primary" size="sm" />
           </View>
           <Text style={styles.rowMeta}>
-            {formatShortDate(service.serviceDate)} · {time}
+            {service.serviceType} · {formatShortDate(service.serviceDate)} · {time}
             {service.branchName ? ` · ${service.branchName}` : ''}
           </Text>
         </View>
@@ -211,22 +208,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
 });
 }
 
