@@ -77,7 +77,11 @@ const navItems: NavItem[] = [
   {
     href: '/concerns',
     label: 'Concerns',
-    anyCapability: ['branch:write', 'safeguarding:read'],
+    // Mirrors the page's own rule exactly: it renders a welfare tab, a
+    // safeguarding tab, or both, and redirects when neither applies. This
+    // used to say `branch:write`, which a Branch Data Admin holds without
+    // either read, so they saw the link and were bounced straight back.
+    anyCapability: ['welfare:read', 'safeguarding:read'],
     section: 'People',
   },
   { href: '/follow-ups', label: 'Follow-ups', capability: 'branch:write', section: 'People' },
