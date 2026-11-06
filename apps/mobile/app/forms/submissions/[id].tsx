@@ -4,24 +4,23 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
 import {
-  Badge,
   Card,
   spacing,
   typography,
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
-import { FORM_DEFINITIONS, type FormType } from '@kairos/types';
+import {
+  FORM_DEFINITIONS,
+  FORM_SUBMISSION_STATUS_LABEL,
+  isAwaitingAction,
+  type FormSubmissionStatus,
+  type FormType,
+} from '@kairos/types';
 import { api } from '@/lib/api-client';
-
-const STATUS_TONE: Record<string, 'primary' | 'gold' | 'success' | 'neutral'> = {
-  new: 'primary',
-  reviewed: 'gold',
-  converted: 'success',
-  dismissed: 'neutral',
-};
 
 /**
  * One form submission, read back.
@@ -105,10 +104,12 @@ export default function SubmissionDetail() {
             <Card padding="md" style={{ gap: spacing.xs }}>
               <View style={styles.metaRow}>
                 <Text style={styles.formTitle}>{definition?.title ?? s.formType}</Text>
-                <Badge
-                  label={s.status}
-                  variant={STATUS_TONE[s.status] ?? 'neutral'}
-                  size="sm"
+                <StatusText
+                  label={
+                    FORM_SUBMISSION_STATUS_LABEL[s.status as FormSubmissionStatus] ??
+                    s.status
+                  }
+                  awaiting={isAwaitingAction('formSubmission', s.status)}
                 />
               </View>
               <Text style={styles.metaText}>
