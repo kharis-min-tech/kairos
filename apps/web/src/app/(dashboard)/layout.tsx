@@ -285,12 +285,22 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
       href={item.href}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+        // Exactly one item is ever active and it never changes meaning, so it
+        // says "you are here" with a dot in the gutter and heavier ink rather
+        // than a full-height bar plus a tinted panel. The gutter is reserved
+        // on every item so nothing shifts when the active one moves.
+        'relative flex items-center gap-3 rounded-lg py-2.5 pl-6 pr-3 text-sm font-medium transition-colors',
         isActive
-          ? 'border-l-2 border-[#5D3FD3] bg-primary/10 pl-[10px] text-foreground font-semibold'
-          : 'border-l-2 border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
+          ? 'font-semibold text-foreground'
+          : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
       )}
     >
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="absolute left-2 top-1/2 size-[5px] -translate-y-1/2 rounded-full bg-[#5D3FD3] dark:bg-[#a488ff]"
+        />
+      )}
       {NAV_ICONS[item.href]}
       {item.label}
       {item.badge && (
@@ -500,7 +510,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+          className="flex items-center gap-3 rounded-lg py-2.5 pl-6 pr-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />

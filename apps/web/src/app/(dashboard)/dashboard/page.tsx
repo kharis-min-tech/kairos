@@ -218,14 +218,18 @@ export default function DashboardPage() {
   const header = (
     <div className="flex items-start justify-between">
       <div>
-        <p className="text-xs text-muted-foreground">{today}</p>
+        {/* Role sits with the date, not in a badge. It never changes between
+            sessions and everybody has one, so it is context rather than
+            status — and a brand-coloured pill here competed with the things
+            below that genuinely want attention. */}
+        <p className="text-xs text-muted-foreground">
+          {today}
+          {roleLabel ? ` · ${roleLabel}` : ''}
+        </p>
         <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
           {user?.firstName ? `Good day, ${user.firstName}!` : 'Dashboard'}
         </h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-2">
-          <span className="inline-block rounded-full border border-[#5D3FD3]/40 bg-[#5D3FD3]/15 px-2.5 py-0.5 text-xs font-semibold text-[#5D3FD3] dark:text-[#a488ff]">
-            {roleLabel}
-          </span>
           <BranchScopePicker
             adminBranchIds={[...new Set([...bsaIds, ...bdaIds])]}
             allBranches={branches ?? []}
