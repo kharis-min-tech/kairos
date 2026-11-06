@@ -97,11 +97,25 @@ function championBranchIds(auth: AuthContext): string[] {
 
 // ── Cohorts ───────────────────────────────────────────────────────────────
 
+/**
+ * The cohort list, with its enrolment and graduation counts.
+ *
+ * Membership admins only. Somebody on the waiting list should not be sizing up
+ * intakes they cannot put themselves into: admission is the admin team's
+ * judgement call, not a queue position. Both clients already gated the query
+ * on that capability, but the endpoint did not, so the counts were readable by
+ * any signed-in member straight from the API. The `_auth` this used to take
+ * was the tell.
+ *
+ * A member's own cohort is reached through `getCohort` from their enrolment,
+ * which has its own check; this is the whole-programme view.
+ */
 export async function listCohorts(
   db: Database,
-  _auth: AuthContext,
+  auth: AuthContext,
   query: z.infer<typeof listCohortsQuerySchema>,
 ) {
+  enforceMembershipAdmin(auth);
   const page = query.page ?? 1;
   const limit = query.limit ?? 25;
 

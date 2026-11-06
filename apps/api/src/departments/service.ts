@@ -248,8 +248,32 @@ export async function listBranchDepartments(
     db.select({ value: count() }).from(branchDepartments).where(where),
   ]);
 
+  // Recruitment volume is leader information, so it is stripped per row rather
+  // than hidden in the UI. Every signed-in member can list the departments in
+  // their branch, and a count sitting in the response body is readable from the
+  // network tab whether or not a screen draws it.
+  //
+  // Per row, not per request: a department lead should still see their own
+  // queue in the list, and a branch admin sees all of them.
+  const visibleRows = rows.map((row) => {
+    const canSeeQueue =
+      authHasCapability(auth, 'branch:write', { kind: 'branch', id: row.branchId }) ||
+      authHasCapability(auth, 'department:write', {
+        kind: 'department',
+        id: row.id,
+        branchId: row.branchId,
+      });
+    if (canSeeQueue) return row;
+    // Deleted rather than set to undefined: the key should be absent, not
+    // present-and-empty, so nothing downstream reads it as "zero pending".
+    const withheld: Omit<typeof row, 'pendingJoinRequestCount'> &
+      Partial<Pick<typeof row, 'pendingJoinRequestCount'>> = { ...row };
+    delete withheld.pendingJoinRequestCount;
+    return withheld;
+  });
+
   return {
-    data: rows,
+    data: visibleRows,
     meta: {
       page: query.page,
       limit: query.limit,
