@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   radii,
   spacing,
@@ -83,11 +84,11 @@ export default function MissingMembersFullList() {
         {rows.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : data.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <Text style={styles.emptyTitle}>All accounted for</Text>
-            <Text style={styles.emptyMeta}>
-              Everyone attended in the last {services} services.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="All accounted for"
+              message={`Everyone attended in the last ${services} services.`}
+            />
           </Card>
         ) : (
           <>
@@ -205,13 +206,6 @@ function makeStyles(c: ThemeColors) {
   streakPillHot: { backgroundColor: c.danger },
   streakLabel: { fontSize: 13, fontWeight: '700', color: c.ink },
   streakLabelHot: { color: '#ffffff' },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
 });
 }
 

@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   spacing,
   typography,
@@ -31,11 +32,11 @@ export default function Notifications() {
       </View>
 
       <View style={styles.emptyBlock}>
-        <Text style={styles.emptyTitle}>Nothing here yet</Text>
-        <Text style={styles.emptyMeta}>
-          The in-app notifications feed lands once the notifications API is wired.
-          Web notifications continue to work in the meantime.
-        </Text>
+        <EmptyState
+          variant="screen"
+          title="Nothing here yet"
+          message="The in-app notifications feed lands once the notifications API is wired. Web notifications continue to work in the meantime."
+        />
       </View>
 
       <Card padding="md" style={styles.metaCard}>
@@ -68,15 +69,7 @@ function makeStyles(c: ThemeColors) {
   subTitle: { ...typography.screenTitle, color: c.ink },
   emptyBlock: {
     padding: spacing.xl,
-    alignItems: 'center',
     gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   metaCard: {
     marginHorizontal: spacing.lg,

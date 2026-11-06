@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import {
+  EmptyState,
   spacing,
   typography,
   radii,
@@ -81,10 +82,11 @@ export default function MyQr() {
           </View>
         ) : (
           <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>Sign in to see your QR</Text>
-            <Text style={styles.emptyMeta}>
-              Your personal check-in code lives with your account.
-            </Text>
+            <EmptyState
+              variant="screen"
+              title="Sign in to see your QR"
+              message="Your personal check-in code lives with your account."
+            />
           </View>
         )}
       </View>
@@ -154,11 +156,8 @@ function makeStyles(c: ThemeColors) {
       marginTop: spacing.sm,
     },
     emptyBlock: {
-      alignItems: 'center',
       gap: spacing.sm,
       padding: spacing.xl,
     },
-    emptyTitle: { ...typography.cardTitle, color: c.ink, textAlign: 'center' },
-    emptyMeta: { ...typography.body, color: c.inkMuted, textAlign: 'center' },
   });
 }

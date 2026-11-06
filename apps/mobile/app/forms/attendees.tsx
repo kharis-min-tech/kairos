@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Check, Archive } from 'lucide-react-native';
 import {
+  EmptyState,
   Avatar,
   Badge,
   Button,
@@ -120,11 +121,11 @@ export default function FormsAttendees() {
         {rows.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <Text style={styles.emptyTitle}>All caught up</Text>
-            <Text style={styles.emptyMeta}>
-              No dormant attendees to review right now.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="All caught up"
+              message="No dormant attendees to review right now."
+            />
           </Card>
         ) : (
           list.map((a) => {
@@ -224,13 +225,6 @@ function makeStyles(c: ThemeColors) {
   checkOn: { backgroundColor: c.primary, borderColor: c.primary },
   name: { ...typography.body, color: c.ink, fontWeight: '600' },
   meta: { ...typography.meta, color: c.inkMuted },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
   footerBar: {
     position: 'absolute',
     left: 0,

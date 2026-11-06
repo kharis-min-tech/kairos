@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Plus, Check, Search } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Button,
   Card,
@@ -154,9 +155,11 @@ export default function Regions() {
         }
         ListEmptyComponent={
           !regions.isLoading ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No regions yet</Text>
-              <Text style={styles.emptyMeta}>Tap + to create the first one.</Text>
+            <Card padding="md">
+              <EmptyState
+                title="No regions yet"
+                message="Tap + to create the first one."
+              />
             </Card>
           ) : null
         }
@@ -455,17 +458,6 @@ function makeStyles(c: ThemeColors) {
   rowMeta: { ...typography.meta, color: c.inkMuted },
   rowRight: {
     alignItems: 'flex-end',
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.meta,

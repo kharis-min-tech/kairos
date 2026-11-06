@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   radii,
   spacing,
@@ -169,11 +170,11 @@ export default function FormsSubmissions() {
         {rows.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <Text style={styles.emptyTitle}>No submissions</Text>
-            <Text style={styles.emptyMeta}>
-              Nothing matches these filters yet.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="No submissions"
+              message="Nothing matches these filters yet."
+            />
           </Card>
         ) : (
           list.map((s) => <Row key={s.id} row={s} />)
@@ -270,13 +271,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
 });
 }
 

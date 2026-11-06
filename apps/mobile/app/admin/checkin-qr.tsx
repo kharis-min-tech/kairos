@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, RefreshCw } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import {
+  EmptyState,
   spacing,
   typography,
   radii,
@@ -83,8 +84,10 @@ export default function AdminCheckinQr() {
       <View style={styles.body}>
         {!validServiceId ? (
           <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>No service in scope</Text>
-            <Text style={styles.emptyMeta}>Open a service from the desk first.</Text>
+            <EmptyState
+              title="No service in scope"
+              message="Open a service from the desk first."
+            />
           </View>
         ) : token.isLoading ? (
           <ActivityIndicator color={c.primary} />
@@ -176,7 +179,6 @@ function makeStyles(c: ThemeColors) {
       textAlign: 'center',
     },
     emptyBlock: {
-      alignItems: 'center',
       gap: spacing.sm,
       padding: spacing.xl,
     },

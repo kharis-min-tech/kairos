@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, UserPlus, UsersRound, Building2 } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   spacing,
   typography,
@@ -132,12 +133,14 @@ export default function Approvals() {
             <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>All caught up</Text>
-              <Text style={styles.emptyMeta}>
-                {filter === 'all'
-                  ? 'Nothing needs your approval right now.'
-                  : 'Nothing in this filter.'}
-              </Text>
+              <EmptyState
+                title="All caught up"
+                message={
+                  filter === 'all'
+                    ? 'Nothing needs your approval right now.'
+                    : 'Nothing in this filter.'
+                }
+              />
             </View>
           )
         }
@@ -230,12 +233,9 @@ function makeStyles(c: ThemeColors) {
     paddingBottom: spacing.xxl,
   },
   empty: {
-    alignItems: 'center',
     marginTop: spacing.xxl,
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: { ...typography.meta, color: c.inkMuted },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Search, X, Plus } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   Input,
@@ -228,13 +229,15 @@ export default function DepartmentsDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No departments found</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}". Try a different query or clear filters.`
-                  : 'No departments in this scope. Tap + to create one.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No departments found"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}". Try a different query or clear filters.`
+                    : 'No departments in this scope. Tap + to create one.'
+                }
+              />
             </Card>
           ) : null
         }
@@ -429,17 +432,6 @@ function makeStyles(c: ThemeColors) {
   rowSubMeta: {
     ...typography.meta,
     color: c.inkFaded,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

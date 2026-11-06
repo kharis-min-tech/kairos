@@ -21,6 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   spacing,
@@ -292,12 +293,14 @@ export default function FollowUps() {
                 <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
               ) : (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyTitle}>All caught up</Text>
-                  <Text style={styles.emptyMeta}>
-                    {filter === 'all'
-                      ? 'Nothing pending right now. Enjoy the quiet.'
-                      : 'Nothing in this filter.'}
-                  </Text>
+                  <EmptyState
+                    title="All caught up"
+                    message={
+                      filter === 'all'
+                        ? 'Nothing pending right now. Enjoy the quiet.'
+                        : 'Nothing in this filter.'
+                    }
+                  />
                 </View>
               )
             }
@@ -324,11 +327,10 @@ export default function FollowUps() {
               <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
             ) : (
               <View style={styles.empty}>
-                <Text style={styles.emptyTitle}>Nothing here yet</Text>
-                <Text style={styles.emptyMeta}>
-                  Follow-ups you record (fellowship, department, mentor, and
-                  souls captured) will show up here.
-                </Text>
+                <EmptyState
+                  title="Nothing here yet"
+                  message="Follow-ups you record (fellowship, department, mentor, and souls captured) will show up here."
+                />
               </View>
             )
           }
@@ -524,11 +526,9 @@ function makeStyles(c: ThemeColors) {
     paddingBottom: spacing.xxl,
   },
   empty: {
-    alignItems: 'center',
     marginTop: spacing.xxl,
     gap: spacing.xs,
   },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.meta,
     color: c.inkMuted,

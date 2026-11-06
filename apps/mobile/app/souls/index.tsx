@@ -23,6 +23,7 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   Input,
   radii,
@@ -236,13 +237,15 @@ export default function SoulsDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No souls found</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}".`
-                  : 'No souls match this filter. Capture happens on the web or during outreach.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No souls found"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}".`
+                    : 'No souls match this filter. Capture happens on the web or during outreach.'
+                }
+              />
             </Card>
           ) : null
         }
@@ -414,17 +417,6 @@ function makeStyles(c: ThemeColors) {
     ...typography.meta,
     color: c.inkFaded,
     marginTop: 2,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
+  EmptyState,
   Card,
   radii,
   spacing,
@@ -81,12 +82,11 @@ export default function RollcallLanding() {
         ) : null}
 
         {!fellowships.isLoading && rows.length === 0 ? (
-          <Card padding="md" style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No fellowships to lead</Text>
-            <Text style={styles.emptyMeta}>
-              Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders
-              and members alike can record attendance for their group.
-            </Text>
+          <Card padding="md">
+            <EmptyState
+              title="No fellowships to lead"
+              message="Fellowship attendance becomes available once you&apos;re assigned to a fellowship. Leaders and members alike can record attendance for their group."
+            />
           </Card>
         ) : null}
 
@@ -143,17 +143,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
 });
 }
 

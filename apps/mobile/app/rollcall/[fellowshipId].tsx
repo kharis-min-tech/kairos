@@ -20,6 +20,7 @@ import {
   CheckCircle2,
 } from 'lucide-react-native';
 import {
+  EmptyState,
   Button,
   Card,
   radii,
@@ -196,12 +197,11 @@ export default function RollcallFellowship() {
         ) : null}
 
         {!meetings.isLoading && rows.length === 0 ? (
-          <Card padding="md" style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No meetings yet</Text>
-            <Text style={styles.emptyMeta}>
-              Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take
-              the register.
-            </Text>
+          <Card padding="md">
+            <EmptyState
+              title="No meetings yet"
+              message="Tap &quot;Start today&apos;s meeting&quot; above to create the first one and take the register."
+            />
           </Card>
         ) : null}
       </ScrollView>
@@ -297,17 +297,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
 });
 }
 

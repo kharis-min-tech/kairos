@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Search, X, Plus, MapPin, Calendar } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   Input,
@@ -200,13 +201,15 @@ export default function OutreachDirectory() {
         }
         ListEmptyComponent={
           showEmpty ? (
-            <Card padding="md" style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No outreach programs</Text>
-              <Text style={styles.emptyMeta}>
-                {debouncedSearch
-                  ? `Nothing matched "${debouncedSearch}".`
-                  : 'No programs in this scope. Tap + to schedule one.'}
-              </Text>
+            <Card padding="md">
+              <EmptyState
+                title="No outreach programs"
+                message={
+                  debouncedSearch
+                    ? `Nothing matched "${debouncedSearch}".`
+                    : 'No programs in this scope. Tap + to schedule one.'
+                }
+              />
             </Card>
           ) : null
         }
@@ -345,17 +348,6 @@ function makeStyles(c: ThemeColors) {
   rowSubMeta: {
     ...typography.meta,
     color: c.inkFaded,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   errorLine: {
     ...typography.body,

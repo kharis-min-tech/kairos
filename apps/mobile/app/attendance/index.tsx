@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Plus, Calendar } from 'lucide-react-native';
 import {
+  EmptyState,
   Badge,
   Card,
   spacing,
@@ -101,11 +102,11 @@ export default function AttendanceServicesList() {
         {services.isLoading ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
-          <Card padding="lg" style={styles.empty}>
-            <Text style={styles.emptyTitle}>No services yet</Text>
-            <Text style={styles.emptyMeta}>
-              Create the first service to start recording attendance.
-            </Text>
+          <Card padding="lg">
+            <EmptyState
+              title="No services yet"
+              message="Create the first service to start recording attendance."
+            />
           </Card>
         ) : (
           <>
@@ -207,13 +208,6 @@ function makeStyles(c: ThemeColors) {
   },
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
-  empty: { alignItems: 'center', gap: spacing.xs },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-  },
 });
 }
 

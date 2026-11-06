@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Search, ScanLine, UserPlus, QrCode } from 'lucide-react-native';
 import {
+  EmptyState,
   Avatar,
   Badge,
   Button,
@@ -217,10 +218,10 @@ export default function AdminCheckin() {
 
       {!activeService ? (
         <View style={styles.emptyBlock}>
-          <Text style={styles.emptyTitle}>No service ready</Text>
-          <Text style={styles.emptyMeta}>
-            The check-in desk activates once a service is scheduled for today.
-          </Text>
+          <EmptyState
+            title="No service ready"
+            message="The check-in desk activates once a service is scheduled for today."
+          />
         </View>
       ) : (
         <FlatList
@@ -417,14 +418,7 @@ function makeStyles(c: ThemeColors) {
 
   emptyBlock: {
     padding: spacing.xl,
-    alignItems: 'center',
     gap: spacing.xs,
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
   },
   emptyText: {
     ...typography.body,
