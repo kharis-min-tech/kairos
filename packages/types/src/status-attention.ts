@@ -1,6 +1,10 @@
 import {
+  ContactStatus,
   DepartmentJoinRequestStatus,
   FormSubmissionStatus,
+  RotaAssignmentStatus,
+  RotaSwapRequestStatus,
+  SoulStatus,
 } from './enums';
 import { GiftAidStatus } from './gift-aid';
 import type { MembershipInterestStatus } from './membership';
@@ -38,6 +42,30 @@ export const STATUS_AWAITING_ACTION = {
   giftAid: [GiftAidStatus.Invalid],
   /** Waiting means nobody has admitted them to a cohort yet. */
   membershipInterest: ['waiting'] as MembershipInterestStatus[],
+  /**
+   * A new soul is one nobody has contacted. That is the gap a leader is
+   * scanning for. Following Up already has an owner working it, and the
+   * remaining four say where the conversation got to.
+   */
+  soul: [SoulStatus.New],
+  /**
+   * The two outcomes that owe the person a second attempt. The other four
+   * close the contact: successful, interested, wrong number and not
+   * interested are all records of a call that is over.
+   */
+  contactOutcome: [ContactStatus.NoAnswer, ContactStatus.CallBackLater],
+  /**
+   * Both of these leave a slot unmanned, which is the one thing a rota
+   * owner needs to spot. Assigned, Confirmed and Swapped are covered, and
+   * the instance statuses (draft, published, completed, cancelled) describe
+   * where the rota got to rather than a hole in it.
+   */
+  rotaAssignment: [RotaAssignmentStatus.Open, RotaAssignmentStatus.Declined],
+  /**
+   * A pending swap owes the department leader an approve-or-reject, the same
+   * shape as an untriaged submission. Approved and rejected are both done.
+   */
+  rotaSwapRequest: [RotaSwapRequestStatus.Pending],
 } as const;
 
 export type StatusDomain = keyof typeof STATUS_AWAITING_ACTION;

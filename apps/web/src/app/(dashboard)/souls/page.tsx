@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useApi } from '@/hooks/useApi';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, CustomSelect } from '@kairos/ui';
+import { isAwaitingAction } from '@kairos/types';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Users, Check, ChevronDown } from 'lucide-react';
 import { useBranches } from '@/hooks/use-branches';
@@ -259,7 +260,18 @@ function KanbanColumn({
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">{status}</CardTitle>
-            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">{count}</span>
+            {/* A dot on every card would only repeat the column heading it sits
+                under, so the count carries it: souls nobody has contacted yet. */}
+            <span
+              className={
+                'inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold ' +
+                (isAwaitingAction('soul', status) && count > 0
+                  ? 'bg-[#f8b537]/20 text-[#8a6100] dark:text-[#f8b537]'
+                  : 'bg-foreground/10 text-foreground/60')
+              }
+            >
+              {count}
+            </span>
           </div>
         </CardHeader>
         <CardContent

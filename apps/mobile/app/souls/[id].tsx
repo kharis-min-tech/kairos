@@ -34,8 +34,10 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
+import { isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
 const STATUSES = [
@@ -47,18 +49,6 @@ const STATUSES = [
   'Lost Contact',
 ] as const;
 type Status = (typeof STATUSES)[number];
-
-const STATUS_VARIANT: Record<
-  string,
-  'primary' | 'gold' | 'info' | 'success' | 'danger' | 'neutral'
-> = {
-  New: 'primary',
-  'Following Up': 'gold',
-  Interested: 'info',
-  Converted: 'success',
-  'Not Interested': 'danger',
-  'Lost Contact': 'neutral',
-};
 
 export default function SoulDetail() {
   const styles = useThemedStyles(makeStyles);
@@ -214,10 +204,9 @@ export default function SoulDetail() {
             >
               <Avatar size="lg" firstName={s.firstName} lastName={s.lastName} />
               <View style={styles.heroBadgeRow}>
-                <Badge
+                <StatusText
                   label={s.status}
-                  variant={STATUS_VARIANT[s.status] ?? 'neutral'}
-                  size="sm"
+                  awaiting={isAwaitingAction('soul', s.status)}
                 />
                 {s.isOverdue ? (
                   <View style={styles.heroBadgePillRed}>

@@ -23,7 +23,6 @@ import {
   AlertCircle,
 } from 'lucide-react-native';
 import {
-  Badge,
   Card,
   Input,
   radii,
@@ -32,8 +31,10 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
+import { isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
 const PAGE_SIZE = 25;
@@ -49,18 +50,6 @@ const STATUS_FILTERS = [
   'Lost Contact',
 ] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
-
-const STATUS_VARIANT: Record<
-  string,
-  'primary' | 'gold' | 'info' | 'success' | 'danger' | 'neutral'
-> = {
-  New: 'primary',
-  'Following Up': 'gold',
-  Interested: 'info',
-  Converted: 'success',
-  'Not Interested': 'danger',
-  'Lost Contact': 'neutral',
-};
 
 function useDebounced<T>(value: T, delay: number): T {
   const [v, setV] = useState(value);
@@ -265,10 +254,9 @@ export default function SoulsDirectory() {
                   <Text style={styles.rowName} numberOfLines={1}>
                     {s.firstName} {s.lastName}
                   </Text>
-                  <Badge
+                  <StatusText
                     label={s.status}
-                    variant={STATUS_VARIANT[s.status] ?? 'neutral'}
-                    size="sm"
+                    awaiting={isAwaitingAction('soul', s.status)}
                   />
                 </View>
                 <View style={styles.rowMetaLine}>

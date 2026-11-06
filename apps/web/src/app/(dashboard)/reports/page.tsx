@@ -12,8 +12,9 @@ import { useDepartmentMembers, useDepartmentJoinRequests, useDepartmentFollowups
 import { useDepartmentAttendance, useMyAttendance } from '@/hooks/use-attendance';
 import { useMyLeadership } from '@/hooks/use-me';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger, TabsContent } from '@kairos/ui';
+import { Card, CardContent, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger, TabsContent, StatusText } from '@kairos/ui';
 import type { MeLeadershipFellowship, MeLeadershipDepartment, MemberDashboardStats, FellowshipMeeting, Soul } from '@kairos/types';
+import { isAwaitingAction } from '@kairos/types';
 import {
   BarChart,
   Bar,
@@ -321,12 +322,11 @@ function MemberSoulsTab() {
                         <td className="py-2 font-medium">{soul.firstName} {soul.lastName}</td>
                         <td className="py-2 text-muted-foreground text-xs">{soul.phone ?? soul.email ?? '—'}</td>
                         <td className="py-2">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            soul.status === 'Converted' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
-                            soul.status === 'Following Up' ? 'bg-primary/10 text-primary' :
-                            soul.status === 'Interested' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
-                            'bg-muted text-muted-foreground'
-                          }`}>{soul.status}</span>
+                          <StatusText
+                            label={soul.status}
+                            awaiting={isAwaitingAction('soul', soul.status)}
+                            className="text-[10px]"
+                          />
                         </td>
                         <td className="py-2 text-muted-foreground text-xs">{soul.createdAt ? new Date(soul.createdAt).toLocaleDateString() : '—'}</td>
                       </tr>
@@ -414,12 +414,11 @@ function MemberSoulsTab() {
                     <p className="text-sm font-medium">{soul.firstName} {soul.lastName}</p>
                     <p className="text-xs text-muted-foreground">{soul.phone ?? soul.email ?? 'No contact'}</p>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                    soul.status === 'Converted' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
-                    soul.status === 'Following Up' ? 'bg-primary/10 text-primary' :
-                    soul.status === 'Interested' ? 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]' :
-                    'bg-muted text-muted-foreground'
-                  }`}>{soul.status}</span>
+                  <StatusText
+                    label={soul.status}
+                    awaiting={isAwaitingAction('soul', soul.status)}
+                    className="text-[10px]"
+                  />
                 </div>
               ))}
             </div>

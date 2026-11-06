@@ -15,8 +15,9 @@ import {
   NumberStepper,
   Textarea,
   TimeSelect,
-  Badge,
+  StatusText,
 } from '@kairos/ui';
+import { isAwaitingAction } from '@kairos/types';
 import { DateSelect } from '@/components/date-select';
 import { MemberAvatar } from '@/components/member-avatar';
 import {
@@ -55,18 +56,6 @@ const WEEKDAYS = [
   { value: '5', label: 'Friday' },
   { value: '6', label: 'Saturday' },
 ];
-
-const STATUS_TONE: Record<string, string> = {
-  Draft: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300',
-  Published: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  Completed: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
-  Cancelled: 'bg-rose-500/15 text-destructive',
-  Assigned: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
-  Confirmed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  Declined: 'bg-rose-500/15 text-destructive',
-  Swapped: 'bg-[#f8b537]/15 text-[#9a6b04] dark:text-[#f8b537]',
-  Open: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300',
-};
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -453,10 +442,8 @@ function ScheduleRow({
           </div>
         )}
 
-        {/* Status */}
-        <Badge className={`${STATUS_TONE[instance.status] ?? ''} flex-shrink-0 rounded-sm`}>
-          {instance.status}
-        </Badge>
+        {/* Where the rota got to. Nothing here is a job, so nothing is marked. */}
+        <StatusText label={instance.status} className="flex-shrink-0" />
       </button>
       {expanded && (
         <CardContent className="border-t pt-4">
@@ -691,7 +678,10 @@ function InstanceDetail({
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge className={`${STATUS_TONE[a.status] ?? ''} rounded-sm`}>{a.status}</Badge>
+                <StatusText
+                  label={a.status}
+                  awaiting={isAwaitingAction('rotaAssignment', a.status)}
+                />
                 {canManage && (
                   <CustomSelect
                     value={a.memberId ?? ''}
@@ -1417,19 +1407,11 @@ function SwapsSection({
                         )}
                       </div>
                     </div>
-                    <Badge
-                      className={`${
-                        STATUS_TONE[
-                          r.status === 'pending'
-                            ? 'Draft'
-                            : r.status === 'approved'
-                              ? 'Confirmed'
-                              : 'Declined'
-                        ] ?? ''
-                      } rounded-sm capitalize`}
-                    >
-                      {r.status}
-                    </Badge>
+                    <StatusText
+                      label={r.status}
+                      awaiting={isAwaitingAction('rotaSwapRequest', r.status)}
+                      className="capitalize"
+                    />
                   </div>
                   {r.reason && (
                     <blockquote className="border-l-2 border-zinc-300 bg-zinc-50 px-3 py-2 text-xs italic text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800/50 dark:text-zinc-300">

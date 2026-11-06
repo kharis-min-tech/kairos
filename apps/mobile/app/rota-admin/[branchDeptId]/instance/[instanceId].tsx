@@ -22,7 +22,6 @@ import {
 } from 'lucide-react-native';
 import {
   Avatar,
-  Badge,
   Button,
   Card,
   radii,
@@ -31,23 +30,17 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
 import type {
   RotaAssignmentWithDetails,
   RotaPoolMemberWithDetails,
 } from '@kairos/types';
+import { isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { alert } from '@/lib/alert';
-
-const STATUS_TONE: Record<string, 'primary' | 'success' | 'gold' | 'danger' | 'neutral'> = {
-  Assigned: 'primary',
-  Confirmed: 'success',
-  Declined: 'danger',
-  Swapped: 'gold',
-  Open: 'neutral',
-};
 
 export default function RotaInstanceDetail() {
   const styles = useThemedStyles(makeStyles);
@@ -233,11 +226,7 @@ export default function RotaInstanceDetail() {
                     </Text>
                   </View>
                 </View>
-                <Badge
-                  label={status ?? 'Draft'}
-                  variant={status === 'Published' ? 'success' : 'gold'}
-                  size="sm"
-                />
+                <StatusText label={status ?? 'Draft'} />
               </View>
 
               <View style={styles.actionRow}>
@@ -326,7 +315,6 @@ function AssignmentRow({
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
-  const tone = STATUS_TONE[row.status] ?? 'neutral';
   return (
     <Card padding="md" style={styles.assignRow}>
       <View style={styles.roleTile}>
@@ -347,7 +335,10 @@ function AssignmentRow({
               <Text style={styles.memberName} numberOfLines={1}>
                 {row.memberFirstName} {row.memberLastName}
               </Text>
-              <Badge label={row.status} variant={tone} size="sm" />
+              <StatusText
+                label={row.status}
+                awaiting={isAwaitingAction('rotaAssignment', row.status)}
+              />
             </View>
           </View>
         ) : (
