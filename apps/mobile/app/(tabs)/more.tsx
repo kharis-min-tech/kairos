@@ -417,7 +417,7 @@ function NavRow({
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.rowIcon}>
-        <Icon color={c.primary} size={18} strokeWidth={1.5} />
+        <Icon color={c.inkFaded} size={18} strokeWidth={1.5} />
       </View>
       <Text style={styles.rowLabel}>{label}</Text>
       <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
@@ -472,8 +472,6 @@ function makeStyles(c: ThemeColors) {
   rowIcon: {
     width: 32,
     height: 32,
-    borderRadius: radii.sm,
-    backgroundColor: 'rgba(93,63,211,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },

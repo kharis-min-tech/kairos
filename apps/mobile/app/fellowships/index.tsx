@@ -12,16 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  UsersRound,
-  Plus,
-  Calendar,
-  Map as MapIcon,
-} from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Search, X, Plus, Calendar, Map as MapIcon } from 'lucide-react-native';
 import {
   Badge,
   Card,
@@ -254,9 +245,6 @@ export default function FellowshipsDirectory() {
         renderItem={({ item: f }) => (
           <Pressable onPress={() => router.push(`/fellowships/${f.id}`)} style={styles.rowWrap}>
             <Card padding="md" style={styles.rowCard}>
-              <View style={styles.rowIconTile}>
-                <UsersRound color={c.primary} size={18} strokeWidth={1.5} />
-              </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={styles.rowName} numberOfLines={1}>
                   {f.fellowshipName}
@@ -436,14 +424,6 @@ function makeStyles(c: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  rowIconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   rowName: {
     ...typography.body,

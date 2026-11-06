@@ -167,8 +167,8 @@ function ApprovalRow({
 
   return (
     <Pressable onPress={onPress} style={styles.row}>
-      <View style={[styles.iconTile, { backgroundColor: 'rgba(93,63,211,0.1)' }]}>
-        <Icon color={c.primary} size={16} strokeWidth={1.5} />
+      <View style={styles.iconTile}>
+        <Icon color={c.inkFaded} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>

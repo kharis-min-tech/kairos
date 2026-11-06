@@ -179,8 +179,8 @@ ${sections}
 
         <Card padding="md" style={styles.actionCard}>
           <View style={styles.actionHeader}>
-            <View style={[styles.iconTile, { backgroundColor: 'rgba(93,63,211,0.1)' }]}>
-              <Download color={c.primary} size={18} strokeWidth={1.5} />
+            <View style={styles.iconTile}>
+              <Download color={c.inkFaded} size={18} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.actionTitle}>Export my data</Text>
@@ -202,7 +202,7 @@ ${sections}
 
         <Card padding="md" style={styles.actionCard}>
           <View style={styles.actionHeader}>
-            <View style={[styles.iconTile, { backgroundColor: 'rgba(225,29,72,0.1)' }]}>
+            <View style={styles.iconTile}>
               <Trash2 color={c.danger} size={18} strokeWidth={1.5} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>

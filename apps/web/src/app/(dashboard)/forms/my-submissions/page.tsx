@@ -4,7 +4,7 @@ export const runtime = 'edge';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, FileText } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Badge, Card, CardContent, EmptyState } from '@kairos/ui';
 import { FORM_DEFINITIONS, type FormSubmission, type FormType } from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
@@ -123,9 +123,6 @@ function SubmissionRow({
           aria-expanded={expanded}
           className="flex w-full items-center gap-3 p-4 text-left hover:bg-muted/40"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#5D3FD3]/10">
-            <FileText className="size-4 text-[#5D3FD3]" />
-          </span>
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2">
               <span className="truncate text-sm font-medium">

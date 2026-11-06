@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, UsersRound } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
   Card,
   radii,
@@ -95,9 +95,6 @@ export default function RollcallLanding() {
             {rows.map((f) => (
               <Pressable key={f.id} onPress={() => router.push(`/rollcall/${f.id}`)}>
                 <Card padding="md" style={styles.rowCard}>
-                  <View style={styles.iconTile}>
-                    <UsersRound color={c.primary} size={18} strokeWidth={1.5} />
-                  </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.rowTitle} numberOfLines={1}>
                       {f.fellowshipName}
@@ -149,14 +146,6 @@ function makeStyles(c: ThemeColors) {
   emptyCard: {
     alignItems: 'center',
     gap: spacing.md,
-  },
-  iconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {

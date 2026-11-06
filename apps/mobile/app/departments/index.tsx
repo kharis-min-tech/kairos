@@ -12,14 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  Building2,
-  Plus,
-} from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Search, X, Plus } from 'lucide-react-native';
 import {
   Badge,
   Card,
@@ -248,9 +241,6 @@ export default function DepartmentsDirectory() {
         renderItem={({ item: d }) => (
           <Pressable onPress={() => router.push(`/departments/${d.id}`)} style={styles.rowWrap}>
             <Card padding="md" style={styles.rowCard}>
-              <View style={styles.rowIconTile}>
-                <Building2 color={c.primary} size={18} strokeWidth={1.5} />
-              </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={styles.rowName} numberOfLines={1}>
                   {d.departmentName}
@@ -420,14 +410,6 @@ function makeStyles(c: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  rowIconTile: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   rowName: {
     ...typography.body,

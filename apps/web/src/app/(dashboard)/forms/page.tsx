@@ -53,7 +53,7 @@ export default function FormsLandingPage() {
             <Link key={type} href={`/forms/${type}`} className="group">
               <Card className="h-full transition-shadow hover:shadow-ambient">
                 <CardContent className="flex h-full flex-col gap-3 py-6">
-                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
+                  <span className="inline-flex h-12 w-12 items-center justify-center text-muted-foreground">
                     {FORM_ICONS[type]}
                   </span>
                   <div className="flex-1">
@@ -87,7 +87,7 @@ export default function FormsLandingPage() {
               <Link href="/forms/submissions" className="group">
                 <Card className="transition-shadow hover:shadow-ambient">
                   <CardContent className="flex items-center gap-4 py-5">
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
+                    <span className="inline-flex h-11 w-11 items-center justify-center text-muted-foreground">
                       <ClipboardList className="h-5 w-5" />
                     </span>
                     <div className="flex-1">
@@ -104,7 +104,7 @@ export default function FormsLandingPage() {
               <Link href="/forms/attendees" className="group">
                 <Card className="transition-shadow hover:shadow-ambient">
                   <CardContent className="flex items-center gap-4 py-5">
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-[#5D3FD3]">
+                    <span className="inline-flex h-11 w-11 items-center justify-center text-muted-foreground">
                       <Archive className="h-5 w-5" />
                     </span>
                     <div className="flex-1">

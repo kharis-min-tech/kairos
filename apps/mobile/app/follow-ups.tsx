@@ -395,7 +395,7 @@ function ActivityRow({
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.iconTile}>
-        <Icon color={c.primary} size={16} strokeWidth={1.5} />
+        <Icon color={c.inkFaded} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
@@ -448,7 +448,7 @@ function FollowupRow({
   return (
     <Pressable onPress={onPress} style={styles.row}>
       <View style={styles.iconTile}>
-        <Icon color={c.primary} size={16} strokeWidth={1.5} />
+        <Icon color={c.inkFaded} size={16} strokeWidth={1.5} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
@@ -545,8 +545,6 @@ function makeStyles(c: ThemeColors) {
   iconTile: {
     width: 32,
     height: 32,
-    borderRadius: radii.sm,
-    backgroundColor: 'rgba(93,63,211,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },

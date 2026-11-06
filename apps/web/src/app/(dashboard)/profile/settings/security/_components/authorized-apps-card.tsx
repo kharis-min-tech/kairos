@@ -85,7 +85,7 @@ export function AuthorizedAppsCard() {
                 {app.clientLogoUrl ? (
                   <img src={app.clientLogoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
                 ) : (
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#5D3FD3]/10 text-sm font-semibold text-[#5D3FD3]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-sm font-semibold text-muted-foreground">
                     {app.clientName.charAt(0).toUpperCase()}
                   </div>
                 )}

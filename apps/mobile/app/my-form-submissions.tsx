@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, FileText, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
   Badge,
   Card,
@@ -140,9 +140,6 @@ export default function MyFormSubmissions() {
                   style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
                 >
                 <Card padding="md" style={styles.rowCard}>
-                  <View style={styles.rowIconTile}>
-                    <FileText color={c.primary} size={18} strokeWidth={1.5} />
-                  </View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={styles.rowTitleLine}>
                       <Text style={styles.rowTitle} numberOfLines={1}>
@@ -211,14 +208,6 @@ function makeStyles(c: ThemeColors) {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.md,
-  },
-  rowIconTile: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   rowTitleLine: {
     flexDirection: 'row',

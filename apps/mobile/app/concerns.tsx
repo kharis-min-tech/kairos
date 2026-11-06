@@ -174,7 +174,7 @@ function ConcernRow({ row }: { row: ConcernInboxItem }) {
       <Card padding="md" style={{ gap: spacing.sm }}>
         <View style={styles.rowTop}>
           <View style={styles.iconTile}>
-            <Icon color={c.primary} size={14} strokeWidth={1.5} />
+            <Icon color={c.inkFaded} size={14} strokeWidth={1.5} />
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={styles.memberName} numberOfLines={1}>
@@ -267,8 +267,6 @@ function makeStyles(c: ThemeColors) {
     iconTile: {
       width: 28,
       height: 28,
-      borderRadius: 14,
-      backgroundColor: 'rgba(93,63,211,0.10)',
       alignItems: 'center',
       justifyContent: 'center',
     },
