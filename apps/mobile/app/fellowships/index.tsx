@@ -242,9 +242,6 @@ export default function FellowshipsDirectory() {
         ListEmptyComponent={
           showEmpty ? (
             <Card padding="md" style={styles.emptyCard}>
-              <View style={styles.emptyIconTile}>
-                <UsersRound color={c.primary} size={22} strokeWidth={1.5} />
-              </View>
               <Text style={styles.emptyTitle}>No fellowships found</Text>
               <Text style={styles.emptyMeta}>
                 {debouncedSearch
@@ -476,14 +473,6 @@ function makeStyles(c: ThemeColors) {
   emptyCard: {
     alignItems: 'center',
     gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {

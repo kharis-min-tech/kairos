@@ -1,12 +1,11 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Bell } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import {
   Card,
   spacing,
   typography,
-  radii,
   useThemedStyles,
   type ThemeColors,
   useColors,
@@ -32,9 +31,6 @@ export default function Notifications() {
       </View>
 
       <View style={styles.emptyBlock}>
-        <View style={styles.iconTile}>
-          <Bell color={c.primary} size={22} strokeWidth={1.5} />
-        </View>
         <Text style={styles.emptyTitle}>Nothing here yet</Text>
         <Text style={styles.emptyMeta}>
           The in-app notifications feed lands once the notifications API is wired.
@@ -74,14 +70,6 @@ function makeStyles(c: ThemeColors) {
     padding: spacing.xl,
     alignItems: 'center',
     gap: spacing.md,
-  },
-  iconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {

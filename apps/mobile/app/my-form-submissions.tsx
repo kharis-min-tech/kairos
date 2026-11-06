@@ -14,6 +14,7 @@ import { ChevronLeft, FileText, ChevronRight } from 'lucide-react-native';
 import {
   Badge,
   Card,
+  EmptyState,
   radii,
   spacing,
   typography,
@@ -117,15 +118,11 @@ export default function MyFormSubmissions() {
         ) : null}
 
         {submissions.data && rows.length === 0 ? (
-          <Card padding="md" style={styles.emptyCard}>
-            <View style={styles.emptyIconTile}>
-              <FileText color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
-            <Text style={styles.emptyTitle}>Nothing here yet</Text>
-            <Text style={styles.emptyMeta}>
-              When you fill out a form (welcome, baptism, testimony, etc.) it&apos;ll show up
-              here for you to reference.
-            </Text>
+          <Card padding="md">
+            <EmptyState
+              title="Nothing here yet"
+              message="Forms you fill in show up here so you can check back on them."
+            />
           </Card>
         ) : null}
 
@@ -252,25 +249,6 @@ function makeStyles(c: ThemeColors) {
   rowMetaDot: {
     ...typography.meta,
     color: c.inkFaded,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 });
 }

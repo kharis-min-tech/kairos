@@ -12,12 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Calendar, MapPin, Users, UsersRound } from 'lucide-react-native';
+import { ChevronLeft, Calendar, MapPin, UsersRound } from 'lucide-react-native';
 import {
   Button,
   Avatar,
   Badge,
   Card,
+  EmptyState,
   gradients,
   radii,
   spacing,
@@ -106,7 +107,7 @@ export default function MyFellowship() {
         ) : null}
 
         {!list.isLoading && fellowships.length === 0 ? (
-          <EmptyState />
+          <NoFellowship />
         ) : null}
 
         {fellowships.length > 1 ? (
@@ -274,25 +275,23 @@ export default function MyFellowship() {
   );
 }
 
-function EmptyState() {
+function NoFellowship() {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
   const router = useRouter();
   return (
-    <Card padding="md" style={styles.emptyCard}>
-      <View style={styles.emptyIconTile}>
-        <Users color={c.primary} size={22} strokeWidth={1.5} />
-      </View>
-      <Text style={styles.emptyTitle}>You&apos;re not in a fellowship yet</Text>
-      <Text style={styles.emptyMeta}>
-        Find a fellowship near you and ask to join. The leader reviews each
-        request. Once you are in, your fellowship details, members, and
-        upcoming meetings show up here.
-      </Text>
-      <Button
-        label="Find a fellowship"
-        variant="secondary"
-        onPress={() => router.push('/fellowships')}
+    <Card padding="md">
+      <EmptyState
+        variant="screen"
+        title="You&apos;re not in a fellowship yet"
+        message="Find a fellowship near you and ask to join. The leader reviews each request, and once you are in, its details, members and upcoming meetings show up here."
+        action={
+          <Button
+            label="Find a fellowship"
+            variant="secondary"
+            onPress={() => router.push('/fellowships')}
+          />
+        }
       />
     </Card>
   );
@@ -451,25 +450,6 @@ function makeStyles(c: ThemeColors) {
     ...typography.body,
     color: c.inkMuted,
     padding: spacing.md,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 });
 }

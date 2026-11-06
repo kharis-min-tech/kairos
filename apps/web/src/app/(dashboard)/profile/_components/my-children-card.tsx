@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { UserPlus, Baby } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import {
   Button,
   Card,
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
   CustomSelect,
+  EmptyState,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -72,16 +73,7 @@ export function MyChildrenCard() {
             <div className="h-12 animate-pulse rounded-lg bg-muted/40" />
           </div>
         ) : (children ?? []).length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-6 text-center">
-            <span className="flex size-11 items-center justify-center rounded-full bg-[#5D3FD3]/10">
-              <Baby className="size-5 text-[#5D3FD3]" />
-            </span>
-            <p className="text-sm font-medium text-foreground">No children on your record</p>
-            <p className="max-w-sm text-xs text-muted-foreground">
-              Add them here so they can be registered for the children&apos;s
-              department and checked in at services.
-            </p>
-          </div>
+          <EmptyState message="Nobody added yet. Add a child so they can be registered for the children's department and checked in at services." />
         ) : (
           <ul className="divide-y divide-border/60">
             {(children ?? []).map((child) => (

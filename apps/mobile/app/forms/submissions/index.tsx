@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
   Badge,
   Card,
@@ -176,9 +176,6 @@ export default function FormsSubmissions() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : list.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <FileText color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
             <Text style={styles.emptyTitle}>No submissions</Text>
             <Text style={styles.emptyMeta}>
               Nothing matches these filters yet.
@@ -278,15 +275,6 @@ function makeStyles(c: ThemeColors) {
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
   empty: { alignItems: 'center', gap: spacing.xs },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
   emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,

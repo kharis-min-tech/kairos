@@ -102,9 +102,6 @@ export default function AttendanceServicesList() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : rows.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Calendar color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
             <Text style={styles.emptyTitle}>No services yet</Text>
             <Text style={styles.emptyMeta}>
               Create the first service to start recording attendance.
@@ -212,15 +209,6 @@ function makeStyles(c: ThemeColors) {
   rowTitle: { ...typography.body, color: c.ink, fontWeight: '600', flex: 1 },
   rowMeta: { ...typography.meta, color: c.inkMuted },
   empty: { alignItems: 'center', gap: spacing.xs },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
   emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,

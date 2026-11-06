@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, UserX } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import {
   Card,
   radii,
@@ -84,9 +84,6 @@ export default function MissingMembersFullList() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : data.length === 0 ? (
           <Card padding="lg" style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <UserX color={c.primary} size={22} strokeWidth={1.5} />
-            </View>
             <Text style={styles.emptyTitle}>All accounted for</Text>
             <Text style={styles.emptyMeta}>
               Everyone attended in the last {services} services.
@@ -209,15 +206,6 @@ function makeStyles(c: ThemeColors) {
   streakLabel: { fontSize: 13, fontWeight: '700', color: c.ink },
   streakLabelHot: { color: '#ffffff' },
   empty: { alignItems: 'center', gap: spacing.xs },
-  emptyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
   emptyTitle: { ...typography.cardTitle, color: c.ink },
   emptyMeta: {
     ...typography.body,

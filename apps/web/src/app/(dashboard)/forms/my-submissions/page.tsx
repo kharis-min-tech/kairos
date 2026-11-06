@@ -5,7 +5,7 @@ export const runtime = 'edge';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, FileText } from 'lucide-react';
-import { Badge, Card, CardContent } from '@kairos/ui';
+import { Badge, Card, CardContent, EmptyState } from '@kairos/ui';
 import { FORM_DEFINITIONS, type FormSubmission, type FormType } from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
 import { useMyFormSubmissions } from '@/hooks/use-forms';
@@ -56,17 +56,11 @@ export default function MyFormSubmissionsPage() {
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-            <span className="flex size-11 items-center justify-center rounded-full bg-[#5D3FD3]/10">
-              <FileText className="size-5 text-[#5D3FD3]" />
-            </span>
-            <p className="text-sm font-medium">Nothing submitted yet</p>
-            <p className="max-w-sm text-xs text-muted-foreground">
-              Forms you fill in will appear here so you can check back on them.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          variant="screen"
+          title="Nothing submitted yet"
+          message="Forms you fill in will appear here so you can check back on them."
+        />
       ) : (
         <div className="space-y-3">
           {rows.map((row) => (

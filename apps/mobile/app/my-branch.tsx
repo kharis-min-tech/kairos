@@ -21,6 +21,7 @@ import {
   Badge,
   Button,
   Card,
+  EmptyState,
   gradients,
   radii,
   spacing,
@@ -122,7 +123,7 @@ export default function MyBranch() {
           <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xxl }} />
         ) : null}
 
-        {!branches.isLoading && !home ? <EmptyState /> : null}
+        {!branches.isLoading && !home ? <NoHomeBranch /> : null}
 
         {secondary ? (
           <View style={styles.chipsRow}>
@@ -457,19 +458,13 @@ function ContactRow({
   );
 }
 
-function EmptyState() {
-  const styles = useThemedStyles(makeStyles);
-  const c = useColors();
+function NoHomeBranch() {
   return (
-    <Card padding="md" style={styles.emptyCard}>
-      <View style={styles.emptyIconTile}>
-        <Map color={c.primary} size={22} strokeWidth={1.5} />
-      </View>
-      <Text style={styles.emptyTitle}>No home branch set</Text>
-      <Text style={styles.emptyMeta}>
-        Set your home branch from your profile, or ask an admin to set one for
-        you.
-      </Text>
+    <Card padding="md">
+      <EmptyState
+        title="No home branch set"
+        message="Set your home branch from your profile, or ask an admin to set one for you."
+      />
     </Card>
   );
 }
@@ -620,25 +615,6 @@ function makeStyles(c: ThemeColors) {
     ...typography.body,
     color: c.ink,
     fontWeight: '600',
-  },
-  emptyCard: {
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  emptyIconTile: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.lg,
-    backgroundColor: 'rgba(93,63,211,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: { ...typography.cardTitle, color: c.ink },
-  emptyMeta: {
-    ...typography.body,
-    color: c.inkMuted,
-    textAlign: 'center',
-    lineHeight: 20,
   },
 
   settingRow: {
