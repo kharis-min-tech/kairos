@@ -195,12 +195,18 @@ export default function FormsSubmissions() {
 function Row({ row }: { row: FormSubmission }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const router = useRouter();
   const formLabel = FORM_LABEL[row.formType] ?? row.formType;
   const statusTone = STATUS_TONE[row.status] ?? 'neutral';
   const subject = (row.payload as { firstName?: string; lastName?: string }) ?? {};
   const name = [subject.firstName, subject.lastName].filter(Boolean).join(' ') || 'Submission';
   return (
-    <Card padding="md" style={styles.row}>
+    // The chevron promised a detail view for a long time before there was one.
+    <Pressable
+      onPress={() => router.push(`/forms/submissions/${row.id}` as never)}
+      style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
+    >
+      <Card padding="md" style={styles.row}>
       <View style={{ flex: 1, gap: 2 }}>
         <View style={styles.rowTitleLine}>
           <Text style={styles.rowTitle} numberOfLines={1}>
@@ -214,7 +220,8 @@ function Row({ row }: { row: FormSubmission }) {
       </View>
       <Badge label={row.status} variant={statusTone} size="sm" />
       <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
-    </Card>
+      </Card>
+    </Pressable>
   );
 }
 

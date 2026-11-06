@@ -226,7 +226,7 @@ export default function FellowshipDetail() {
       qc.invalidateQueries({ queryKey: ['fellowships', id] });
       alert.info(
         'Request sent',
-        'The K-Group leader will review it and you will hear back.',
+        'The fellowship leader will review it and you will hear back.',
       );
     },
     onError: (err) =>
@@ -339,7 +339,7 @@ export default function FellowshipDetail() {
 
             {showJoin ? (
               <Card padding="md" style={{ gap: spacing.sm }}>
-                <Text style={styles.joinTitle}>Join this K-Group</Text>
+                <Text style={styles.joinTitle}>Join this fellowship</Text>
                 <Text style={styles.joinMeta}>
                   Ask to join and the leader will review your request. You will
                   hear back once they have decided.

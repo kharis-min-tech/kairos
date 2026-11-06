@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, FileText } from 'lucide-react-native';
+import { ChevronLeft, FileText, ChevronRight } from 'lucide-react-native';
 import {
   Badge,
   Card,
@@ -137,7 +137,12 @@ export default function MyFormSubmissions() {
                 row.payload as unknown as Record<string, unknown> | undefined,
               );
               return (
-                <Card key={row.id} padding="md" style={styles.rowCard}>
+                <Pressable
+                  key={row.id}
+                  onPress={() => router.push(`/forms/submissions/${row.id}` as never)}
+                  style={({ pressed }) => (pressed ? { opacity: 0.85 } : null)}
+                >
+                <Card padding="md" style={styles.rowCard}>
                   <View style={styles.rowIconTile}>
                     <FileText color={c.primary} size={18} strokeWidth={1.5} />
                   </View>
@@ -167,7 +172,9 @@ export default function MyFormSubmissions() {
                       ) : null}
                     </View>
                   </View>
+                  <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
                 </Card>
+                </Pressable>
               );
             })}
           </View>

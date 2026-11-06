@@ -1151,6 +1151,18 @@ export async function getSubmission(db: Database, auth: AuthContext, id: string)
     .where(eq(formSubmissions.id, id))
     .limit(1);
   if (!row) throw new NotFoundError('Form submission');
+
+  // Your own submission is yours to read back, whatever tier the form sits in.
+  // The visibility tiers below decide who may REVIEW other people's
+  // submissions; they were never meant to stop somebody seeing what they
+  // themselves filled in. Without this, a member could list their own
+  // submissions and then be refused every one of them, which is why neither
+  // client had a detail screen to open.
+  //
+  // Checked before the branch scope on purpose: a member who has since moved
+  // branches still submitted it.
+  if (row.submittedBy && row.submittedBy === auth.memberId) return row;
+
   enforceBranchScope(auth, row.branchId);
 
   const visible = await getVisibleFormTypes(db, auth, row.branchId);

@@ -285,12 +285,12 @@ function EmptyState() {
       </View>
       <Text style={styles.emptyTitle}>You&apos;re not in a fellowship yet</Text>
       <Text style={styles.emptyMeta}>
-        Find a K-Group near you and ask to join — the leader reviews each
+        Find a fellowship near you and ask to join. The leader reviews each
         request. Once you are in, your fellowship details, members, and
         upcoming meetings show up here.
       </Text>
       <Button
-        label="Find a K-Group"
+        label="Find a fellowship"
         variant="secondary"
         onPress={() => router.push('/fellowships')}
       />

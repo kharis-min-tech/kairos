@@ -1220,6 +1220,45 @@ describe('getSubmission', () => {
     expect(row.id).toBe(submissionId);
   });
 
+  it('lets a member read back a submission they made themselves', async () => {
+    // The visibility tiers decide who may review OTHER people's submissions.
+    // They were never meant to stop somebody opening what they filled in, and
+    // doing so left members with a list they could not open a single row of.
+    setupSelectSequence([
+      { id: submissionId, branchId, formType: 'testimony', submittedBy: memberAuth.memberId },
+    ]);
+    const { getSubmission } = await import('./service');
+    const row = await getSubmission(mockDb, memberAuth, submissionId);
+    expect(row.id).toBe(submissionId);
+  });
+
+  it('still forbids a member reading somebody ELSE\'s submission of the same type', async () => {
+    // The carve-out is `submittedBy === me`, not "any member may read".
+    setupSelectSequence(
+      [{ id: submissionId, branchId, formType: 'testimony', submittedBy: 'someone-else' }],
+      ...visNone(),
+    );
+    const { getSubmission } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(getSubmission(mockDb, memberAuth, submissionId)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+  });
+
+  it('does not treat a submission with no submitter as anybody\'s own', async () => {
+    // Walk-in captures have a null submittedBy. A null on both sides must not
+    // compare equal and hand the row to an arbitrary member.
+    setupSelectSequence(
+      [{ id: submissionId, branchId, formType: 'testimony', submittedBy: null }],
+      ...visNone(),
+    );
+    const { getSubmission } = await import('./service');
+    const { ForbiddenError } = await import('@kairos/utils');
+    await expect(
+      getSubmission(mockDb, { ...memberAuth, memberId: null as unknown as string }, submissionId),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
   it('forbids a plain member with no dept membership', async () => {
     setupSelectSequence([{ id: submissionId, branchId, formType: 'altar_call' }], ...visNone());
     const { getSubmission } = await import('./service');
