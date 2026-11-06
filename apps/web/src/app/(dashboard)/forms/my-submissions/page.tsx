@@ -5,16 +5,26 @@ export const runtime = 'edge';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { Badge, Card, CardContent, EmptyState } from '@kairos/ui';
-import { FORM_DEFINITIONS, type FormSubmission, type FormType } from '@kairos/types';
+import { Card, CardContent, EmptyState, StatusText } from '@kairos/ui';
+import {
+  FORM_DEFINITIONS,
+  isAwaitingAction,
+  type FormSubmission,
+  type FormType,
+} from '@kairos/types';
 import { formatShortDate } from '@kairos/core';
 import { useMyFormSubmissions } from '@/hooks/use-forms';
 
-const STATUS_META: Record<string, { label: string; className: string }> = {
-  new: { label: 'Received', className: 'bg-[#5D3FD3]/10 text-[#5D3FD3]' },
-  reviewed: { label: 'Reviewed', className: 'bg-[#f8b537]/20 text-[#7a5a00]' },
-  converted: { label: 'Actioned', className: 'bg-emerald-500/15 text-emerald-700' },
-  dismissed: { label: 'Closed', className: 'bg-muted text-muted-foreground' },
+/*
+ * Deliberately not the triage labels from @kairos/types. A member is being
+ * told what happened to the form they sent, not what job it is: "Received"
+ * rather than "New", "Actioned" rather than "Converted".
+ */
+const STATUS_LABEL: Record<string, string> = {
+  new: 'Received',
+  reviewed: 'Reviewed',
+  converted: 'Actioned',
+  dismissed: 'Closed',
 };
 
 /**
@@ -87,10 +97,7 @@ function SubmissionRow({
   onToggle: () => void;
 }) {
   const definition = FORM_DEFINITIONS[row.formType as FormType];
-  const status = STATUS_META[row.status] ?? {
-    label: row.status,
-    className: 'bg-muted text-muted-foreground',
-  };
+  const statusLabel = STATUS_LABEL[row.status] ?? row.status;
   const payload = (row.payload ?? {}) as unknown as Record<string, unknown>;
   // Member ids are plumbing; the typed name sits beside them under its own key.
   const entries = Object.entries(payload).filter(([k]) => !/MemberId$/.test(k));
@@ -128,7 +135,10 @@ function SubmissionRow({
               <span className="truncate text-sm font-medium">
                 {definition?.title ?? row.formType}
               </span>
-              <Badge className={status.className}>{status.label}</Badge>
+              <StatusText
+                label={statusLabel}
+                awaiting={isAwaitingAction('formSubmission', row.status)}
+              />
             </span>
             <span className="block text-xs text-muted-foreground">
               {formatShortDate(row.createdAt as unknown as string)}

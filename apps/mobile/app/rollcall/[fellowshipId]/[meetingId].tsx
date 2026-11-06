@@ -40,7 +40,9 @@ import type {
   FellowshipMeetingAttendance,
   FellowshipMemberWithDetails,
   RecordAttendanceRequest,
+  NewBelieverStageValue,
 } from '@kairos/types';
+import { NEW_BELIEVER_STAGE_LABEL } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { alert } from '@/lib/alert';
 import {
@@ -468,7 +470,12 @@ export default function RollcallMeeting() {
                     {item.memberFirstName} {item.memberLastName}
                   </Text>
                   {item.nbStage ? (
-                    <Badge label={item.nbStage} variant="gold" size="sm" />
+                    <Text style={styles.memberMeta}>
+                      New Believer ·{' '}
+                      {NEW_BELIEVER_STAGE_LABEL[
+                        item.nbStage as NewBelieverStageValue
+                      ] ?? item.nbStage}
+                    </Text>
                   ) : null}
                 </View>
               </View>
@@ -711,6 +718,7 @@ function makeStyles(c: ThemeColors) {
     flex: 1,
   },
   memberName: { ...typography.body, color: c.ink, fontWeight: '500' },
+  memberMeta: { ...typography.meta, color: c.inkMuted },
   statusPill: {
     minWidth: 92,
     paddingHorizontal: spacing.md,

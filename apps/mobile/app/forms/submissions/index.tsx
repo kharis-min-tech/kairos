@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
-  Badge,
   Card,
   radii,
   spacing,
@@ -21,9 +20,11 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import { formatShortDate } from '@kairos/core';
-import type { FormSubmission, FormType } from '@kairos/types';
+import type { FormSubmission, FormSubmissionStatus, FormType } from '@kairos/types';
+import { FORM_SUBMISSION_STATUS_LABEL, isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
@@ -38,13 +39,6 @@ const FORM_LABEL: Record<string, string> = {
   signature_request: 'Signature request',
   marriage_pack: 'Marriage pack',
   kgroup_host: 'K-group host',
-};
-
-const STATUS_TONE: Record<string, 'primary' | 'gold' | 'success' | 'neutral'> = {
-  new: 'primary',
-  reviewed: 'gold',
-  converted: 'success',
-  dismissed: 'neutral',
 };
 
 const FORM_FILTERS: { key: FormType | 'all'; label: string }[] = [
@@ -194,7 +188,6 @@ function Row({ row }: { row: FormSubmission }) {
   const c = useColors();
   const router = useRouter();
   const formLabel = FORM_LABEL[row.formType] ?? row.formType;
-  const statusTone = STATUS_TONE[row.status] ?? 'neutral';
   const subject = (row.payload as { firstName?: string; lastName?: string }) ?? {};
   const name = [subject.firstName, subject.lastName].filter(Boolean).join(' ') || 'Submission';
   return (
@@ -209,13 +202,16 @@ function Row({ row }: { row: FormSubmission }) {
           <Text style={styles.rowTitle} numberOfLines={1}>
             {name}
           </Text>
-          <Badge label={formLabel} variant="primary" size="sm" />
         </View>
         <Text style={styles.rowMeta}>
-          {row.branchName ?? 'Branch'} · {formatShortDate(row.createdAt as unknown as string)}
+          {formLabel} · {row.branchName ?? 'Branch'} ·{' '}
+          {formatShortDate(row.createdAt as unknown as string)}
         </Text>
       </View>
-      <Badge label={row.status} variant={statusTone} size="sm" />
+      <StatusText
+        label={FORM_SUBMISSION_STATUS_LABEL[row.status as FormSubmissionStatus] ?? row.status}
+        awaiting={isAwaitingAction('formSubmission', row.status)}
+      />
       <ChevronRight color={c.inkVeryFaded} size={16} strokeWidth={1.5} />
       </Card>
     </Pressable>

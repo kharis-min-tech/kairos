@@ -6,13 +6,13 @@ import {
   CustomSelect,
   Card,
   CardContent,
-  Badge,
   Table,
   TableHeader,
   TableBody,
   TableHead,
   TableRow,
   TableCell,
+  StatusText,
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
 import { Download } from 'lucide-react';
@@ -22,9 +22,14 @@ import {
   useExportFormSubmissions,
   useMyFormCapabilities,
 } from '@/hooks/use-forms';
-import { STATUS_META, STATUS_OPTIONS, subjectName } from '../_lib/form-meta';
+import { STATUS_OPTIONS, subjectName } from '../_lib/form-meta';
 import { ReviewDrawer } from './_components/review-drawer';
-import { FORM_DEFINITIONS, FORM_TYPES } from '@kairos/types';
+import {
+  FORM_DEFINITIONS,
+  FORM_SUBMISSION_STATUS_LABEL,
+  FORM_TYPES,
+  isAwaitingAction,
+} from '@kairos/types';
 import type { FormSubmission, FormType, FormSubmissionStatus } from '@kairos/types';
 
 export default function SubmissionsPage() {
@@ -182,7 +187,6 @@ export default function SubmissionsPage() {
                 const payload = s.payload as unknown as Record<string, unknown>;
                 const anonymous =
                   s.formType === 'testimony' && payload.shareAnonymously === true;
-                const statusMeta = STATUS_META[s.status];
                 return (
                   <TableRow
                     key={s.id}
@@ -199,7 +203,7 @@ export default function SubmissionsPage() {
                     <TableCell>{FORM_DEFINITIONS[s.formType].title}</TableCell>
                     <TableCell>
                       {s.branchName ? (
-                        <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-xs font-medium text-[#5D3FD3]">
+                        <span className="text-xs text-muted-foreground">
                           {s.branchName}
                         </span>
                       ) : (
@@ -207,7 +211,10 @@ export default function SubmissionsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={statusMeta.className}>{statusMeta.label}</Badge>
+                      <StatusText
+                        label={FORM_SUBMISSION_STATUS_LABEL[s.status]}
+                        awaiting={isAwaitingAction('formSubmission', s.status)}
+                      />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatShortDate(s.createdAt)}

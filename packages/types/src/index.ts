@@ -11,3 +11,4 @@ export * from './consent';
 export * from './membership';
 export * from './media';
 export * from './gift-aid';
+export * from './status-attention';

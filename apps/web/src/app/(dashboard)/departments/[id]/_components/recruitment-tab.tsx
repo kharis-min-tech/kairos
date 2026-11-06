@@ -40,6 +40,7 @@ import {
   useRejectDepartmentJoinRequest,
   useEvaluateDepartmentProbation,
 } from '@/hooks/use-departments';
+import { isAwaitingAction } from '@kairos/types';
 import type {
   DepartmentJoinRequestWithMember,
   MemberWithBranch,
@@ -71,15 +72,6 @@ const STAGE_LABELS: Record<string, string> = {
   rejected: 'Rejected',
   withdrawn: 'Withdrawn',
   probation_failed: 'Probation Failed',
-};
-
-// Stage accent colours used for the dot beside the candidate name
-const STAGE_DOT: Record<OpenStatus, string> = {
-  applied: 'bg-slate-400',
-  interview_scheduled: 'bg-sky-500',
-  interviewed: 'bg-amber-500',
-  offered: 'bg-[#f8b537]',
-  probation: 'bg-emerald-500',
 };
 
 type SortKey = 'date_added' | 'name' | 'last_activity';
@@ -493,6 +485,10 @@ function RecruitmentColumn({
   onOpenDetail,
 }: ColumnProps) {
   const { setNodeRef, isOver, active } = useDroppable({ id: status });
+  // Applied and Interviewed are the two columns that owe somebody a decision.
+  // Marking the count once says that; a dot on every card in the column only
+  // repeats the heading it is already sitting under.
+  const owed = isAwaitingAction('departmentJoinRequest', status);
   const activeRequest = active?.data.current as RecruitmentDragRequest | undefined;
   const dropRule = getRecruitmentDropRule(activeRequest, status);
   const isValidDropTarget = isOver && dropRule.allowed;
@@ -507,7 +503,14 @@ function RecruitmentColumn({
             <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
               {title}
             </CardTitle>
-            <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">
+            <span
+              className={
+                'inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold ' +
+                (owed && requests.length > 0
+                  ? 'bg-[#f8b537]/20 text-[#8a6100] dark:text-[#f8b537]'
+                  : 'bg-foreground/10 text-foreground/60')
+              }
+            >
               {requests.length}
             </span>
           </div>
@@ -683,11 +686,10 @@ function CandidateCard({
       aria-label={onOpenDetail ? `View details for ${r.memberFirstName} ${r.memberLastName}` : undefined}
     >
       <CardContent className="p-3">
-        {/* Zone 1 — identity + stage dot */}
+        {/* Zone 1 — identity */}
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <span className={'inline-block h-2 w-2 rounded-full flex-shrink-0 ' + STAGE_DOT[status]} />
               <p className="font-semibold leading-tight">
                 {r.memberFirstName} {r.memberLastName}
               </p>
@@ -834,17 +836,14 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 
 function DetailSection({
   title,
-  dot,
   children,
 }: {
   title: string;
-  dot?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        {dot && <span className={'inline-block h-2 w-2 rounded-full ' + dot} />}
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {title}
         </h3>
@@ -864,8 +863,6 @@ function CandidateDetailDialog({
   onClose: () => void;
 }) {
   const fullName = `${r.memberFirstName} ${r.memberLastName}`;
-  const status = r.status as OpenStatus;
-  const dot = STAGE_DOT[status];
   const interviewer1 = r.interviewerOneFirstName
     ? `${r.interviewerOneFirstName} ${r.interviewerOneLastName ?? ''}`.trim()
     : null;
@@ -878,7 +875,6 @@ function CandidateDetailDialog({
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {dot && <span className={'inline-block h-2.5 w-2.5 rounded-full ' + dot} />}
             {fullName}
             <span className="ml-2 rounded-full bg-[#f0f0f3] px-2 py-0.5 text-xs font-medium text-muted-foreground dark:bg-white/[0.06]">
               {STAGE_LABELS[r.status] ?? r.status}

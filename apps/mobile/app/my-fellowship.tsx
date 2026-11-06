@@ -27,6 +27,7 @@ import {
   type ThemeColors,
   useColors,
 } from '@kairos/ui-native';
+import { NEW_BELIEVER_STAGE_LABEL, type NewBelieverStageValue } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 
@@ -236,7 +237,12 @@ export default function MyFellowship() {
                           {m.memberFirstName} {m.memberLastName}
                         </Text>
                         {m.nbStage ? (
-                          <Text style={styles.memberMeta}>New Believer · {m.nbStage}</Text>
+                          <Text style={styles.memberMeta}>
+                            New Believer ·{' '}
+                            {NEW_BELIEVER_STAGE_LABEL[
+                              m.nbStage as NewBelieverStageValue
+                            ] ?? m.nbStage}
+                          </Text>
                         ) : null}
                       </View>
                     </Pressable>

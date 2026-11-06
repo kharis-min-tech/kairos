@@ -12,7 +12,6 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import {
-  Badge,
   Card,
   EmptyState,
   radii,
@@ -21,22 +20,14 @@ import {
   useThemedStyles,
   type ThemeColors,
   useColors,
+  StatusText,
 } from '@kairos/ui-native';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
 // Titles live with the form definitions — this screen kept its own copy of
 // all six, which is the drift FORM_DEFINITIONS exists to prevent.
-import { FORM_DEFINITIONS } from '@kairos/types';
+import { FORM_DEFINITIONS, isAwaitingAction } from '@kairos/types';
 import { api } from '@/lib/api-client';
 
-const STATUS_VARIANT: Record<
-  FormSubmissionStatus,
-  'primary' | 'gold' | 'success' | 'neutral'
-> = {
-  new: 'primary',
-  reviewed: 'gold',
-  converted: 'success',
-  dismissed: 'neutral',
-};
 
 const STATUS_LABEL: Record<FormSubmissionStatus, string> = {
   new: 'New',
@@ -145,10 +136,9 @@ export default function MyFormSubmissions() {
                       <Text style={styles.rowTitle} numberOfLines={1}>
                         {title}
                       </Text>
-                      <Badge
+                      <StatusText
                         label={STATUS_LABEL[row.status]}
-                        variant={STATUS_VARIANT[row.status]}
-                        size="sm"
+                        awaiting={isAwaitingAction('formSubmission', row.status)}
                       />
                     </View>
                     <Text style={styles.rowSubject} numberOfLines={1}>

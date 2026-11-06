@@ -6,6 +6,8 @@ export { AddressAutofillGroup } from './components/address-autofill';
 export type { AddressAutofillValue, AddressAutofillGroupProps } from './components/address-autofill';
 export { EmptyState } from './components/empty-state';
 export type { EmptyStateProps } from './components/empty-state';
+export { StatusText } from './components/status-text';
+export type { StatusTextProps } from './components/status-text';
 export { Checkbox } from './components/checkbox';
 export type { CheckboxProps } from './components/checkbox';
 export { Label } from './components/label';

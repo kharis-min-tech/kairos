@@ -102,6 +102,24 @@ export const NewBelieverStage = {
 } as const;
 export type NewBelieverStageValue = (typeof NewBelieverStage)[keyof typeof NewBelieverStage];
 export const NEW_BELIEVER_STAGES = Object.values(NewBelieverStage) as NewBelieverStageValue[];
+
+/**
+ * A stage as a person reads it.
+ *
+ * A stage is a position in a pipeline, not a status: nobody is waiting on
+ * "Session 2". Screens render these as plain text. The raw value was being
+ * shown on two mobile rosters, so somebody saw the literal string
+ * "session-1" beside a member's name.
+ */
+export const NEW_BELIEVER_STAGE_LABEL: Record<NewBelieverStageValue, string> = {
+  enrolled: 'Enrolled',
+  'session-1': 'Session 1',
+  'session-2': 'Session 2',
+  'session-3': 'Session 3',
+  'session-4': 'Session 4',
+  completed: 'Completed',
+  integrated: 'Joined a department',
+};
 // ── Departments ────────────────────────────────────────────
 
 export const DepartmentJoinRequestStatus = {
@@ -228,6 +246,20 @@ export const FormSubmissionStatus = {
 } as const;
 export type FormSubmissionStatus =
   (typeof FormSubmissionStatus)[keyof typeof FormSubmissionStatus];
+
+/**
+ * How a submission's status reads to the people who triage them.
+ *
+ * Members see different words on their own submissions ("Received",
+ * "Actioned"), because they are being told what happened to their form, not
+ * what job it is. That map stays on the member screen.
+ */
+export const FORM_SUBMISSION_STATUS_LABEL: Record<FormSubmissionStatus, string> = {
+  new: 'New',
+  reviewed: 'Reviewed',
+  converted: 'Converted',
+  dismissed: 'Dismissed',
+};
 
 // ── Service Attendance ─────────────────────────────────────
 

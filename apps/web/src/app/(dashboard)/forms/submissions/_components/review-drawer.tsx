@@ -13,11 +13,16 @@ import {
   CustomSelect,
   Textarea,
   Badge,
+  StatusText,
 } from '@kairos/ui';
 import { formatShortDate } from '@kairos/core';
 import { useUpdateFormSubmission } from '@/hooks/use-forms';
-import { STATUS_META, STATUS_OPTIONS } from '../../_lib/form-meta';
-import { FORM_DEFINITIONS } from '@kairos/types';
+import { STATUS_OPTIONS } from '../../_lib/form-meta';
+import {
+  FORM_DEFINITIONS,
+  FORM_SUBMISSION_STATUS_LABEL,
+  isAwaitingAction,
+} from '@kairos/types';
 import type { FormSubmission, FormSubmissionStatus } from '@kairos/types';
 
 interface ReviewDrawerProps {
@@ -107,10 +112,7 @@ function MemberRefValue({ id }: { id: string }) {
       >
         Open member record
       </Link>
-      <Badge
-        variant="outline"
-        className="border-[#5D3FD3]/25 bg-[#5D3FD3]/10 text-[#5D3FD3]"
-      >
+      <Badge variant="outline" className="text-muted-foreground">
         Directory member
       </Badge>
     </span>
@@ -135,7 +137,6 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
   const isTestimony = submission.formType === 'testimony';
   const anonymous = isTestimony && payload.shareAnonymously === true;
   const definition = FORM_DEFINITIONS[submission.formType];
-  const statusMeta = STATUS_META[submission.status];
 
   // Hide submitter identity for anonymous testimonies.
   const hiddenKeys = anonymous ? new Set(['firstName', 'lastName', 'phone']) : new Set<string>();
@@ -156,7 +157,10 @@ export function ReviewDrawer({ submission, open, onOpenChange }: ReviewDrawerPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {definition.title}
-            <Badge className={statusMeta.className}>{statusMeta.label}</Badge>
+            <StatusText
+              label={FORM_SUBMISSION_STATUS_LABEL[submission.status]}
+              awaiting={isAwaitingAction('formSubmission', submission.status)}
+            />
           </DialogTitle>
           <DialogDescription>
             Submitted {formatShortDate(submission.createdAt)}

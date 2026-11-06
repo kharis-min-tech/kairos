@@ -2,6 +2,7 @@ export { Button } from './Button';
 export { Input } from './Input';
 export { Card } from './Card';
 export { EmptyState } from './EmptyState';
+export { StatusText } from './StatusText';
 export { Badge } from './Badge';
 export { ProgressBar } from './ProgressBar';
 export { Avatar } from './Avatar';

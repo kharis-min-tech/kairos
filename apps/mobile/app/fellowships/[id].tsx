@@ -46,6 +46,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import type { FellowshipJoinRequestWithMember } from '@kairos/types';
+import { NEW_BELIEVER_STAGE_LABEL, type NewBelieverStageValue } from '@kairos/types';
 import { api } from '@/lib/api-client';
 import { useCapabilities } from '@/lib/capabilities';
 import { useAuthStore } from '@/store/auth';
@@ -545,7 +546,12 @@ export default function FellowshipDetail() {
                         </Text>
                       </View>
                       {m.nbStage ? (
-                        <Badge label={m.nbStage} variant="gold" size="sm" />
+                        <Text style={styles.memberMeta} numberOfLines={1}>
+                          New Believer ·{' '}
+                          {NEW_BELIEVER_STAGE_LABEL[
+                            m.nbStage as NewBelieverStageValue
+                          ] ?? m.nbStage}
+                        </Text>
                       ) : null}
                     </Pressable>
                   ))}
@@ -845,6 +851,7 @@ function makeStyles(c: ThemeColors) {
     padding: spacing.md,
   },
   memberName: { ...typography.body, color: c.ink },
+  memberMeta: { ...typography.meta, color: c.inkMuted },
   longPressHint: {
     ...typography.meta,
     color: c.inkFaded,
