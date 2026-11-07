@@ -329,6 +329,15 @@ export async function issueAuthenticatedSession(
   member: typeof members.$inferSelect,
   secrets: AuthSecrets,
 ): Promise<{ tokens: AuthTokens; member: MemberProfile }> {
+  // Last line of defence: every sign-in door funnels through here — password
+  // login, the OAuth callback and the OAuth confirm-link exchange. `login()`
+  // rejects a deactivated member earlier with a friendlier message; the OAuth
+  // paths carried no account-state checks at all, so without this guard a
+  // deactivated member could sign straight back in via a linked provider.
+  if (!member.isActive) {
+    throw new ForbiddenError('This account has been deactivated.');
+  }
+
   const [authority, grants] = await Promise.all([
     resolveBranchAdminAuthority(db, member.id),
     resolveGrants(db, member.id),
@@ -388,6 +397,14 @@ export async function login(
   const valid = await verifyPassword(password, member.passwordHash);
   if (!valid) {
     throw new UnauthorizedError('Invalid email or password');
+  }
+
+  // Deactivation is the control used when someone leaves or is suspended, so
+  // it has to end access, not just hide the row. Checked ahead of the other
+  // state checks because it is the most decisive: telling a deactivated
+  // member their email is unverified would send them down the wrong path.
+  if (!member.isActive) {
+    throw new ValidationError('Your account has been deactivated. Please contact an administrator.');
   }
 
   if (!member.emailVerified) {

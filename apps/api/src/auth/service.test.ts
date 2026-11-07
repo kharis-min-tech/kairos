@@ -352,6 +352,33 @@ describe('login', () => {
       .rejects.toThrow('pending approval');
   });
 
+  it('should reject a deactivated member (isActive false)', async () => {
+    // Deactivation is how a leaver or a suspension is handled. Login checked
+    // emailVerified / approvalStatus / minor but never isActive, so a
+    // deactivated account kept working credentials indefinitely.
+    const { login } = await import('./service');
+
+    const hashed = await hashPassword('MyPassword1!');
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, isActive: false }]);
+    setupUpdateChain();
+
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
+      .rejects.toThrow('deactivated');
+  });
+
+  it('rejects a deactivated member even when every other state check passes', async () => {
+    // Guards the choke point itself: issueAuthenticatedSession is shared with
+    // the OAuth callback and the OAuth confirm-link exchange, neither of which
+    // ran any account-state check of its own.
+    const { issueAuthenticatedSession } = await import('./service');
+
+    await expect(issueAuthenticatedSession(
+      mockDb,
+      { ...baseMember, isActive: false } as never,
+      TEST_SECRETS,
+    )).rejects.toThrow('deactivated');
+  });
+
   it('should reject a minor (memberType child) from signing in', async () => {
     const { login } = await import('./service');
 
