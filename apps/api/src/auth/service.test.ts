@@ -3,6 +3,19 @@ import { SignJWT, jwtVerify } from 'jose';
 import { hashPassword } from '@kairos/utils';
 import type { AuthSecrets } from '../lib/auth-secrets';
 
+// `isMailerLive()` reads the AWS creds off the environment, which vitest never
+// binds — so without this hook every test runs down the "mailer not live"
+// branch and the production behaviour (plaintext tokens withheld from the
+// response) would never be exercised. Flip `mailerState.live` to assert it.
+const mailerState = vi.hoisted(() => ({ live: false }));
+vi.mock('@kairos/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@kairos/utils')>();
+  return {
+    ...actual,
+    isMailerLive: () => mailerState.live,
+  };
+});
+
 const TEST_SECRETS: AuthSecrets = {
   accessSecret: 'dev-secret-change-me',
   refreshSecret: 'dev-refresh-secret-change-me',
@@ -115,6 +128,7 @@ const baseMember = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mailerState.live = false;
 });
 
 describe('signup', () => {
@@ -509,6 +523,26 @@ describe('forgotPassword', () => {
 
     const result = await forgotPassword(mockDb, 'nope@example.com');
     expect(result.resetToken).toBe('');
+  });
+
+  it('withholds the plaintext reset token once the mailer is live', async () => {
+    // POST /api/auth/forgot-password is unauthenticated. Returning the reset
+    // token in its body made any member's email address sufficient to take
+    // over their account. Once the mailer is bound, email is the only path.
+    mailerState.live = true;
+    const { forgotPassword } = await import('./service');
+
+    setupSelectChain([{ id: baseMember.id, email: baseMember.email, firstName: baseMember.firstName }]);
+    setupUpdateChain();
+
+    const result = await forgotPassword(mockDb, 'john@example.com');
+
+    expect(result.resetToken).toBeUndefined();
+    // The token is still minted and persisted — only the response omits it.
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith(expect.objectContaining({
+      passwordResetToken: expect.any(String),
+    }));
   });
 });
 

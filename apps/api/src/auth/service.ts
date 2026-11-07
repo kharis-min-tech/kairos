@@ -520,7 +520,7 @@ export async function verifyEmail(db: Database, token: string): Promise<void> {
     .where(eq(members.id, matched.id));
 }
 
-export async function forgotPassword(db: Database, email: string): Promise<{ resetToken: string }> {
+export async function forgotPassword(db: Database, email: string): Promise<{ resetToken?: string }> {
   const [member] = await db
     .select({ id: members.id, email: members.email, firstName: members.firstName })
     .from(members)
@@ -546,8 +546,15 @@ export async function forgotPassword(db: Database, email: string): Promise<{ res
 
   await sendPasswordResetEmail(member.email, resetLink, member.firstName);
 
-  // Return plain token for local dev easy testing — omit in production
-  return { resetToken: plainToken };
+  // Only return the plaintext reset token when the mailer is NOT live (local
+  // dev without SES creds) — same gate as the signup verification token
+  // above. POST /api/auth/forgot-password is unauthenticated, so returning
+  // this in staging/prod made any member's email address sufficient to take
+  // over their account: request a reset, read the token out of the response,
+  // POST it to /reset-password. The email is the only delivery path once the
+  // mailer is bound.
+  const mailerLive = isMailerLive();
+  return { ...(mailerLive ? {} : { resetToken: plainToken }) };
 }
 
 export async function resetPassword(db: Database, token: string, newPassword: string): Promise<void> {
