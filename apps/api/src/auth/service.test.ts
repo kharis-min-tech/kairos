@@ -539,8 +539,9 @@ describe('forgotPassword', () => {
     setupSelectChain([{ id: baseMember.id, email: baseMember.email }]);
 
     const result = await forgotPassword(mockDb, 'john@example.com');
+    // Mailer isn't live in tests, so the local-dev token is still returned.
     expect(result.resetToken).toBeDefined();
-    expect(result.resetToken.length).toBeGreaterThan(0);
+    expect(result.resetToken?.length ?? 0).toBeGreaterThan(0);
   });
 
   it('should return empty token for non-existent email (no enumeration)', async () => {
