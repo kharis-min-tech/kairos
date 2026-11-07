@@ -11,7 +11,7 @@ import {
   branches,
 } from '@kairos/database';
 import type { AuthContext, FormType } from '@kairos/types';
-import { FormType as FormTypeEnum } from '@kairos/types';
+import { FormType as FormTypeEnum, isMinorMember } from '@kairos/types';
 import {
   NotFoundError,
   ForbiddenError,
@@ -572,6 +572,14 @@ async function submitFormByType(
  * through `member_guardians`. Interest/source live in the payload only (no auto join in
  * v1). Status stays `new` — never auto-converted.
  */
+/**
+ * How the first-time-visitor subject was resolved. `'linked'` (an explicit id)
+ * and `'matched'` (the phone safety-net) are both PRE-EXISTING members;
+ * `'minted'` means this submission created the record. Only `'minted'` may
+ * receive a guardian link — see (d-ii) in `submitFirstTimeVisitor`.
+ */
+type SubjectOrigin = 'linked' | 'matched' | 'minted';
+
 async function submitFirstTimeVisitor(
   db: Database,
   auth: AuthContext,
@@ -581,11 +589,25 @@ async function submitFirstTimeVisitor(
 ) {
   const under16 = isVisitorUnder16(payload as Record<string, unknown>);
   let subjectMemberId: string | null = null;
+  // Where the subject came from. 'linked' and 'matched' are both PRE-EXISTING
+  // members; only 'minted' was created by this submission. The guardian write
+  // at (d-ii) keys off this and nothing else.
+  let subjectOrigin: SubjectOrigin | null = null;
+  // The stored age facts for a pre-existing subject, read off the row the
+  // lookup already fetched (see Check D below). Null for a minted subject,
+  // which has no stored record to consult — it IS the record.
+  let storedSubject: { memberType: string | null; dateOfBirth: string | null } | null = null;
 
   if (body.subjectMemberId) {
     // (a) explicit selection — must exist and be in the caller's branch
     const [subject] = await db
-      .select({ id: members.id, branchId: members.homeBranchId })
+      .select({
+        id: members.id,
+        branchId: members.homeBranchId,
+        // Widened for Check D rather than re-queried: the row is already here.
+        memberType: members.memberType,
+        dateOfBirth: members.dateOfBirth,
+      })
       .from(members)
       .where(eq(members.id, body.subjectMemberId))
       .limit(1);
@@ -594,10 +616,20 @@ async function submitFirstTimeVisitor(
       throw new ForbiddenError('You can only link to members in your branch');
     }
     subjectMemberId = subject.id;
+    subjectOrigin = 'linked';
+    storedSubject = { memberType: subject.memberType, dateOfBirth: subject.dateOfBirth };
   } else if (payload.phone && payload.phone.trim().length > 0) {
-    // (b) phone safety-net — active member in branch with exact phone match
+    // (b) phone safety-net — active member in branch with exact phone match.
+    //     This resolves a pre-existing member too, on the phone number alone,
+    //     so it is just as much a guardian-attachment vector as (a): any gate
+    //     keyed only on body.subjectMemberId would leave the hole open.
     const [byPhone] = await db
-      .select({ id: members.id })
+      .select({
+        id: members.id,
+        // Widened for Check D rather than re-queried, as in (a).
+        memberType: members.memberType,
+        dateOfBirth: members.dateOfBirth,
+      })
       .from(members)
       .where(
         and(
@@ -610,6 +642,8 @@ async function submitFirstTimeVisitor(
 
     if (byPhone) {
       subjectMemberId = byPhone.id;
+      subjectOrigin = 'matched';
+      storedSubject = { memberType: byPhone.memberType, dateOfBirth: byPhone.dateOfBirth };
     } else {
       // (c) phone unique index is GLOBAL — bail with a Conflict before the INSERT
       //     would hit the constraint as a raw 500.
@@ -626,6 +660,24 @@ async function submitFirstTimeVisitor(
     }
   }
 
+  // Check D — a pre-existing subject's age comes from the stored record, never
+  // from the payload. The payload's answer about somebody else's age is a third
+  // party's assertion; where it contradicts the record, refuse instead of
+  // acting on either. An under-16 claim over a stored adult is the
+  // adult-targeting variant of the guardian-attachment attack, and it is worth
+  // refusing outright because a guardian link over an adult grants read AND
+  // write on their health record.
+  //
+  // The inverse mismatch (payload says 16+, stored row is a minor) is harmless:
+  // no guardian write happens either way, so it is accepted as submitted.
+  // A greeter correctly linking an existing child gets isMinorMember === true
+  // here and sails through.
+  if (storedSubject && under16 && !isMinorMember(storedSubject)) {
+    throw new ValidationError(
+      'The person you linked is recorded as 16 or over. Unlink them to record a new under-16 visitor, or ask an admin to correct their date of birth.',
+    );
+  }
+
   // (d) no match — mint the visitor/child shell
   if (!subjectMemberId) {
     subjectMemberId = await createMemberShell(db, branchId, {
@@ -638,17 +690,41 @@ async function submitFirstTimeVisitor(
       email: payload.email,
       memberType: under16 ? 'child' : 'visitor',
     });
+    subjectOrigin = 'minted';
   }
 
-  // (d-ii) link the under-16 subject to the guardian the form insisted on.
+  // (d-ii) link the under-16 subject to the guardian the form insisted on —
+  // but ONLY when this submission created the subject.
   //
   // The schema refuses the submission without a guardian for an under-16
-  // visitor, and until now that answer went into the payload and nowhere else:
-  // the child was minted, the guardian was demanded, and no record survived of
-  // who they were. Anything that later asks "who is responsible for this
-  // child" — the safeguarding review page, minor-record access — would have
-  // said nobody.
-  if (under16 && payload.guardianMemberId) {
+  // visitor, and that answer needs somewhere to live: anything that later asks
+  // "who is responsible for this child" — the safeguarding review page,
+  // minor-record access — would otherwise say nobody.
+  //
+  // Gated on `subjectOrigin === 'minted'` because a guardian link is itself the
+  // access-control decision for a child's record: being a linked guardian is
+  // what grants the unredacted member row and read/write on the health record
+  // (apps/api/src/members/service.ts:130). This route is open to any
+  // authenticated member — correctly, since ordinary members legitimately
+  // submit this form — so writing a link against a subject the submission did
+  // not create would let any member claim another family's child.
+  //
+  // That is the rule /api/me/children already states in the codebase's own
+  // words, at apps/api/src/me/service.ts:1004-1017: a parent MAY create a
+  // child and be recorded as its guardian, because they are the source of the
+  // data and self-asserted guardianship over a record they just made carries
+  // no real risk; a parent may NOT link themselves to a child that already
+  // exists, because that is the actual attack surface and it stays with the
+  // admins who can verify it. This block was the only path in the API that
+  // wrote a guardian row against a pre-existing member.
+  //
+  // A pre-existing subject is still ACCEPTED — the submission is a legitimate
+  // front-desk capture and only the guardian mutation is refused. The
+  // submitted guardian fields stay in the payload verbatim and the row carries
+  // `guardianLinkPending`, so a human can confirm the claim. Holding
+  // unverified claims is what the triage queue is for.
+  let guardianLinked = false;
+  if (subjectOrigin === 'minted' && under16 && payload.guardianMemberId) {
     const [guardian] = await db
       .select({ id: members.id })
       .from(members)
@@ -664,8 +740,20 @@ async function submitFirstTimeVisitor(
     // and stays in the payload only — there is nobody to link to.
     if (guardian) {
       await linkGuardians(db, subjectMemberId, [{ memberId: guardian.id, isPrimary: true }]);
+      guardianLinked = true;
     }
   }
+
+  // A guardian MEMBER was named and no link was written → a human has to look
+  // at it. Two ways to get here: the subject pre-existed (refused above), or
+  // the subject was minted but the named member did not resolve in this branch
+  // — a stale or cross-branch pick that would otherwise vanish silently.
+  //
+  // A typed-only guardianName is deliberately NOT pending: pick-or-type exists
+  // because a visiting child's guardian is often not in the directory, so an
+  // unresolvable name is the designed normal case, and there is no member to
+  // confirm a link against.
+  const guardianLinkPending = under16 && !!payload.guardianMemberId && !guardianLinked;
 
   // (e) mint a child shell per entry, linked to the subject as its guardian
   const childMemberIds: string[] = [];
@@ -687,8 +775,13 @@ async function submitFirstTimeVisitor(
 
   // (f) record the submission — linked but NOT converted. Minted child ids are
   //     persisted on the payload so the triage drawer can surface them; the
-  //     guardian links live in member_guardians.
-  const enrichedPayload = { ...payload, childMemberIds };
+  //     guardian links live in member_guardians. The submitted guardian fields
+  //     ride along untouched: a withheld link is still a claim worth keeping.
+  const enrichedPayload = {
+    ...payload,
+    childMemberIds,
+    ...(guardianLinkPending ? { guardianLinkPending: true } : {}),
+  };
 
   const [row] = await db
     .insert(formSubmissions)
@@ -698,13 +791,17 @@ async function submitFirstTimeVisitor(
       submittedBy: auth.memberId,
       subjectMemberId,
       payload: enrichedPayload,
+      // 'new' already means "a human must look at this" — a pending guardian
+      // link needs no separate status.
       status: 'new',
       linkedEntityType: 'member',
       linkedEntityId: subjectMemberId,
       ...consentFields(auth, body),
     })
     .returning();
-  return row!;
+  // Surfaced on the response so the client can explain what was and was not
+  // recorded. The sentence itself belongs to FORM_DEFINITIONS, not the API.
+  return { ...row!, guardianLinkPending };
 }
 
 // ── Baptism / testimony / baby: shared insert ──────────────
