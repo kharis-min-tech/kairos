@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
+import { authMiddleware, requireRole, requireCapability, requireAnyCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
 import { getAuthSecrets } from '../lib/auth-secrets';
 import { successResponse } from '@kairos/utils';
@@ -57,12 +57,57 @@ membersRouter.get('/me', async (c) => {
 
 // ── Members CRUD ───────────────────────────────────────────
 
-membersRouter.get('/', zValidator('query', listMembersQuerySchema), async (c) => {
-  const auth = getAuth(c);
-  const query = c.req.valid('query');
-  const result = await listMembers(db, auth, query);
-  return c.json(successResponse(result));
-});
+/**
+ * The directory is leadership reading. It carried `authMiddleware` and nothing
+ * else, so a brand-new self-registered member with no grant at all could page
+ * it — and a row is the whole contact record: email, phone, address, and
+ * emergency contact name / phone / relationship. Both clients already gate the
+ * /members page on `branch:write`, so the surface they offer was far narrower
+ * than the surface the server allowed.
+ *
+ * Unscoped on purpose, two ways:
+ *
+ *  - `requireCapability`'s scopeFn is synchronous and gets no database, so it
+ *    can only name a target the URL already carries. A list route has no
+ *    target id, so there is nothing correct for it to return here. Deriving a
+ *    scope from `getAuth(c).branchId` would be wrong in a second way:
+ *    `getActiveBranchId` returns `secondaryBranchId` when the member is at
+ *    their secondary branch, so a BranchAdmin who had toggled branches would
+ *    be refused their own directory.
+ *  - So this asks only "does this caller hold a directory-shaped capability at
+ *    all", and `listMembers` keeps the row-level narrowing it already does:
+ *    anyone without `branch:read` sees only their own branch, and minors stay
+ *    behind the safeguarding redaction.
+ *
+ * The list is every grant with a real reason to read the roll — branch admins
+ * and the approval queue, fellowship and department leaders picking members
+ * into their group, the membership-class programme, the new-believers team
+ * choosing a mentor, and safeguarding. A caller with no grant has a legitimate
+ * need to *reference* a person (a form's "Who invited you?"), and that is
+ * already served by the purpose-built, minimal `GET /api/forms/member-search`
+ * — not by the directory.
+ */
+membersRouter.get(
+  '/',
+  requireAnyCapability(
+    'branch:read',
+    'signup:approve',
+    'fellowship:read',
+    'department:read',
+    'membership:admin',
+    'membership:branch:read',
+    'newbelievers:mentor',
+    'newbelievers:teach',
+    'safeguarding:read',
+  ),
+  zValidator('query', listMembersQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const query = c.req.valid('query');
+    const result = await listMembers(db, auth, query);
+    return c.json(successResponse(result));
+  },
+);
 
 membersRouter.post('/', requireCapability('branch:write'), zValidator('json', createMemberSchema), async (c) => {
   const auth = getAuth(c);

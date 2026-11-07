@@ -2,13 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signTestToken, TEST_IDS } from '../test-helpers';
 
 // RBAC Phase 1: authMiddleware now calls resolveGrants on every request.
-// Router tests use partial-mock DBs, so we stub the resolver to return [].
-// Service-level capability behavior is covered by grants.test.ts.
+// Router tests use partial-mock DBs, so the resolver is stubbed — but
+// configurably, because GET /api/members is gated on a real capability now and
+// a test has to be able to hand a caller the grant that carries it.
+const { resolveGrantsMock } = vi.hoisted(() => ({
+  resolveGrantsMock: vi.fn(async (): Promise<unknown[]> => []),
+}));
+
 vi.mock('../lib/grants', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/grants')>();
   return {
     ...actual,
-    resolveGrants: vi.fn(async () => []),
+    resolveGrants: resolveGrantsMock,
   };
 });
 
@@ -87,8 +92,16 @@ const pendingMember = {
   isActive: true,
 };
 
+/** Hand the next request a single grant. */
+function grant(role: string, kind: 'branch' | 'fellowship' | 'department' | 'church', id: string) {
+  resolveGrantsMock.mockResolvedValueOnce([
+    { role, scope: { kind, id }, branchId: TEST_IDS.branchId },
+  ]);
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
+  resolveGrantsMock.mockResolvedValue([]);
 });
 
 // ── GET /api/members/me ────────────────────────────────────
@@ -117,6 +130,66 @@ describe('GET /api/members/me', () => {
 // ── GET /api/members ───────────────────────────────────────
 
 describe('GET /api/members', () => {
+  it('should return 401 without auth', async () => {
+    const res = await app.request('/api/members?page=1&limit=20');
+    expect(res.status).toBe(401);
+  });
+
+  it('refuses a plain member with no grant — a row is the whole contact record', async () => {
+    // This route carried authMiddleware and nothing else, so any authenticated
+    // account — including a brand-new self-registered member — could page the
+    // directory, complete with email, phone, address and emergency contacts.
+    // A caller with no grant who needs to reference a person uses the minimal
+    // GET /api/forms/member-search instead.
+    // Rows are mocked deliberately: without the gate this request answers 200
+    // with the roll, so the 403 below is the gate and not a mock running dry.
+    mockDb.select
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([sampleMember]))
+      .mockReturnValue(chainTo([{ count: 1 }]));
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(403);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it('allows a fellowship leader — they pick members into their fellowship', async () => {
+    // The gate must not over-tighten to branch admins: group leaders, the
+    // new-believers team, the membership programme and safeguarding all read
+    // the roll legitimately. The service keeps the row-level branch narrowing.
+    grant('FellowshipLeader', 'fellowship', TEST_IDS.fellowshipId);
+    // A non-branch:read caller also drives the safeguarding lookups, so give
+    // every select a chain rather than counting them.
+    mockDb.select
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([sampleMember]))
+      .mockReturnValue(chainTo([{ count: 1 }]));
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+  });
+
+  it('allows a branch admin', async () => {
+    grant('BranchAdmin', 'branch', TEST_IDS.branchId);
+    chainToParallel([sampleMember]);
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(200);
+  });
+
   it('should return paginated members for admin', async () => {
     chainToParallel([sampleMember]);
 
