@@ -1197,6 +1197,56 @@ describe('getMember — minor redaction', () => {
       expect(result?.allergies).toBe('Peanuts');
     });
 
+    // The two cases the resolvers' short-circuits would have broken. Both
+    // `getViewerSafeguardingBranches` and `getViewerGuardedMemberIds` used to
+    // return an EMPTY set to any `branch:read` holder — "they see everything
+    // anyway, so the query is pointless". Narrowing the bypass makes that
+    // assumption false, and had those short-circuits been left testing
+    // `branch:read`, the guardian and Lead fallbacks below could never have
+    // fired for a branch admin. They now short-circuit on
+    // `systemRole === 'admin'`, the only viewer for whom it is still true.
+    it('a branch admin of A who is a GUARDIAN of a child in B still reads it', async () => {
+      const guardianAlsoBranchAdmin = {
+        ...memberAuth,
+        memberId: guardianId,
+        branchId: otherBranchId,
+        grants: [
+          {
+            role: 'BranchAdmin' as const,
+            scope: { kind: 'branch' as const, id: otherBranchId },
+            branchId: otherBranchId,
+          },
+        ],
+      };
+      // selects: member row, SG-Lead branches (none), guarded members (hit),
+      // health record.
+      setupSelectSequence([minorSubject], [], [{ memberId: 'minor-1' }], [healthRecord]);
+
+      const result = await getHealthRecord(mockDb, 'minor-1', guardianAlsoBranchAdmin);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a branch admin of A who is a SAFEGUARDING LEAD for B still reads it', async () => {
+      const leadAlsoBranchAdmin = {
+        ...memberAuth,
+        memberId: '000-sg-badmin',
+        branchId: otherBranchId,
+        grants: [
+          {
+            role: 'BranchAdmin' as const,
+            scope: { kind: 'branch' as const, id: otherBranchId },
+            branchId: otherBranchId,
+          },
+        ],
+      };
+      // selects: member row, SG-Lead branches (includes the child's branch),
+      // guarded members (none), health record.
+      setupSelectSequence([minorSubject], [{ branchId }], [], [healthRecord]);
+
+      const result = await getHealthRecord(mockDb, 'minor-1', leadAlsoBranchAdmin);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
     it('a Safeguarding Lead for a DIFFERENT branch is still refused', async () => {
       setupSelectSequence([minorSubject], [{ branchId: otherBranchId }], []);
 
