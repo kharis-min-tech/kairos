@@ -132,6 +132,64 @@ describe('GET /api/members', () => {
   });
 });
 
+// ── POST /api/members/import ───────────────────────────────
+
+describe('POST /api/members/import', () => {
+  it('should return 401 without auth', async () => {
+    const res = await app.request('/api/members/import', { method: 'POST' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a request with no file at the validator', async () => {
+    // This route carried no zValidator at all — the handler hand-rolled the
+    // only check there was and the service trusted every CSV cell.
+    const res = await app.request('/api/members/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: new FormData(),
+    });
+
+    expect(res.status).toBe(400);
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty file at the validator', async () => {
+    const form = new FormData();
+    form.append('file', new File([''], 'members.csv', { type: 'text/csv' }));
+
+    const res = await app.request('/api/members/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: form,
+    });
+
+    expect(res.status).toBe(400);
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects an oversized upload before parsing a single row', async () => {
+    // Nothing bounded the upload: the handler read the whole body into a
+    // string and split it on newlines, however large it was.
+    const form = new FormData();
+    const row = 'Jane,Doe,jane@test.com\n';
+    form.append(
+      'file',
+      new File(['firstName,lastName,email\n' + row.repeat(250_000)], 'members.csv', {
+        type: 'text/csv',
+      }),
+    );
+
+    const res = await app.request('/api/members/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: form,
+    });
+
+    expect(res.status).toBe(400);
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+});
+
 // ── GET /api/members/:id ───────────────────────────────────
 
 describe('GET /api/members/:id', () => {

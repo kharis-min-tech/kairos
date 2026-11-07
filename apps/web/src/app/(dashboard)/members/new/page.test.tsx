@@ -37,11 +37,19 @@ beforeEach(() => {
 });
 
 describe('AddMemberPage — persona', () => {
-  it('admin sees full role selector with pastor/admin options', () => {
+  it('offers an admin no way to set the system role on create', () => {
+    // The API no longer accepts `systemRole` on POST /api/members — the route
+    // is gated on `branch:write`, not on admin, so the field was a path to
+    // minting a global admin. Leaving the selector in place would have let an
+    // admin set it, get a 201, and believe the promotion took.
     authState = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
     render(<AddMemberPage />, { wrapper });
-    expect(screen.getByLabelText('System Role')).toBeDefined();
-    expect(screen.getByText(/Promote new admins or pastors/i)).toBeDefined();
+    const field = screen.getByLabelText('System Role') as HTMLInputElement;
+    expect(field.tagName).toBe('INPUT');
+    expect(field.disabled).toBe(true);
+    expect(field.value).toBe('Member');
+    expect(screen.queryByText(/Promote new admins or pastors/i)).toBeNull();
+    expect(screen.getByText(/Users & Roles/i)).toBeDefined();
   });
   it('member is redirected away', async () => {
     authState = { user: { id: 'm-1', systemRole: 'member' }, activeRole: 'member' };

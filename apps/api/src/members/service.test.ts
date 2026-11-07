@@ -651,6 +651,66 @@ describe('createMember', () => {
     await expect(createMember(mockDb, createInput, adminAuth))
       .rejects.toThrow('A member with this phone number already exists');
   });
+
+  it('never writes a caller-supplied systemRole — always inserts "member"', async () => {
+    // POST /api/members is gated on `branch:write`, not on admin. While the
+    // create path wrote `input.systemRole` through, anyone who could add a
+    // member could mint a fully-approved global admin and read its generated
+    // password out of the 201.
+    setupSelectSequence([], []);
+    setupInsert([createdMember]);
+
+    await createMember(
+      mockDb,
+      // The field is gone from the type; a hand-rolled body could still
+      // carry it, so prove the insert ignores it.
+      { ...createInput, systemRole: 'admin' } as never,
+      adminAuth,
+    );
+
+    const inserted = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!
+      .value.values.mock.calls[0]![0] as Record<string, unknown>;
+    expect(inserted['systemRole']).toBe('member');
+  });
+
+  it('refuses to create into a branch the caller has no authority over', async () => {
+    // Nothing used to compare `homeBranchId` against the caller's grants, so
+    // a BranchAdmin for one branch could write members into any other by
+    // naming its id — directly, or a cell at a time through the CSV import.
+    const branchAdmin = {
+      ...memberAuth,
+      branchId: 'branch-a',
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: 'branch-a' },
+          branchId: 'branch-a',
+        },
+      ],
+    };
+
+    await expect(createMember(mockDb, { ...createInput, homeBranchId: branchId }, branchAdmin))
+      .rejects.toThrow('You cannot create members in this branch');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('allows a branch admin to create into their own branch', async () => {
+    const branchAdmin = {
+      ...memberAuth,
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: branchId },
+          branchId,
+        },
+      ],
+    };
+    setupSelectSequence([], []);
+    setupInsert([createdMember]);
+
+    const result = await createMember(mockDb, createInput, branchAdmin);
+    expect(result.member).toEqual(createdMember);
+  });
 });
 
 // ── reactivateMember ──────────────────────────────────────
@@ -799,6 +859,70 @@ describe('importMembers', () => {
     expect(result.imported).toBe(1);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('email already exists');
+  });
+
+  it('ignores a systemRole column instead of obeying it', async () => {
+    // `row['systemRole']` went straight into the insert, so an importer could
+    // mint admins in bulk with no schema in the way. The column is tolerated
+    // (exportMembersCsv emits it, so the round trip has to work) but carries
+    // no authority.
+    const csv = `firstName,lastName,email,systemRole
+Jane,Doe,jane@test.com,admin`;
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+
+    const result = await importMembers(mockDb, csv, adminAuth);
+
+    expect(result.imported).toBe(1);
+    expect(result.errors).toHaveLength(0);
+    const inserted = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!
+      .value.values.mock.calls[0]![0] as Record<string, unknown>;
+    expect(inserted['systemRole']).toBe('member');
+  });
+
+  it('refuses rows naming a branch the importer has no authority over', async () => {
+    // `homeBranchId: row['homeBranchId'] || auth.branchId` trusted the cell,
+    // so an importer could write members into ANY branch by naming its id.
+    const branchAdmin = {
+      ...memberAuth,
+      branchId: '220e8400-0000-0000-0000-00000000000a',
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: '220e8400-0000-0000-0000-00000000000a' },
+          branchId: '220e8400-0000-0000-0000-00000000000a',
+        },
+      ],
+    };
+    const csv = `firstName,lastName,email,homeBranchId
+Jane,Doe,jane@test.com,${branchId}`;
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+
+    const result = await importMembers(mockDb, csv, branchAdmin);
+
+    expect(result.imported).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('cannot create members in this branch');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed row rather than passing the cell through', async () => {
+    // The route carried no validator at all, so shapes were never checked.
+    const csv = `firstName,lastName,email,homeBranchId,gender
+Jane,Doe,not-an-email,not-a-uuid,Martian`;
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+
+    const result = await importMembers(mockDb, csv, adminAuth);
+
+    expect(result.imported).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('Row 2');
+    expect(result.errors[0]).toContain('email is not a valid email address');
+    expect(result.errors[0]).toContain('homeBranchId must be a branch UUID');
+    expect(result.errors[0]).toContain('gender must be Male or Female');
+    expect(mockDb.insert).not.toHaveBeenCalled();
   });
 });
 

@@ -318,7 +318,11 @@ export interface CreateMemberRequest {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRelationship?: string;
-  systemRole?: SystemRole;
+  // No `systemRole` here, deliberately. It used to be accepted from the
+  // request body on POST /api/members, which is gated on `branch:write`
+  // rather than on admin — so anyone who could add a member could mint a
+  // fully-approved global admin and read its generated password back out of
+  // the response. Authority comes from grants in `member_roles` only.
 }
 
 export interface CreateMemberResponse {

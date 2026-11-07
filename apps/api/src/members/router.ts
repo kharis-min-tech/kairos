@@ -14,6 +14,7 @@ import {
   unguardedMinorsQuerySchema,
   reviewMinorSchema,
   setMembershipClassSchema,
+  importMembersFormSchema,
 } from './schemas';
 import {
   listMembers,
@@ -70,17 +71,22 @@ membersRouter.post('/', requireCapability('branch:write'), zValidator('json', cr
   return c.json(successResponse(result, 'Member created'), 201);
 });
 
-membersRouter.post('/import', requireCapability('branch:write'), async (c) => {
-  const auth = getAuth(c);
-  const body = await c.req.parseBody();
-  const file = body['file'];
-  if (!file || typeof file === 'string') {
-    return c.json({ success: false, message: 'CSV file is required' }, 400);
-  }
-  const text = await (file as File).text();
-  const result = await importMembers(db, text, auth);
-  return c.json(successResponse(result, 'Import complete'), 201);
-});
+// This route had no validator at all — the handler hand-rolled the only
+// check there was (file present and not a string). zValidator now owns the
+// upload's shape, and `importMembers` validates each CSV row against
+// `importMemberRowSchema` before it reaches the insert.
+membersRouter.post(
+  '/import',
+  requireCapability('branch:write'),
+  zValidator('form', importMembersFormSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { file } = c.req.valid('form');
+    const text = await file.text();
+    const result = await importMembers(db, text, auth);
+    return c.json(successResponse(result, 'Import complete'), 201);
+  },
+);
 
 membersRouter.get('/export', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);

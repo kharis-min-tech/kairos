@@ -24,6 +24,7 @@ import {
   randomTokenHex,
   logger,
 } from '@kairos/utils';
+import { importMemberRowSchema } from './schemas';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'admin') return;
@@ -885,12 +886,22 @@ export async function createMember(
     emergencyContactName?: string;
     emergencyContactPhone?: string;
     emergencyContactRelationship?: string;
-    systemRole?: string;
+    // No `systemRole`. It is never taken from caller input — see
+    // `createMemberSchema`. Global admin comes from a grant, not a form field.
   },
   auth: AuthContext,
 ) {
   if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can create members');
+  }
+
+  // The route gate is capability-wide, not branch-bound, and nothing here
+  // used to look at `homeBranchId` — so a BranchAdmin for one branch could
+  // write members into any other by naming its id (directly, or a cell at a
+  // time through the CSV import). Platform admins short-circuit this inside
+  // `authHasCapability`.
+  if (!authHasCapability(auth, 'branch:write', { kind: 'branch', id: input.homeBranchId })) {
+    throw new ForbiddenError('You cannot create members in this branch');
   }
 
   // Check for existing email
@@ -939,7 +950,9 @@ export async function createMember(
       passwordHash,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: input.systemRole ?? 'member',
+      // Always 'member'. The only other value is 'admin', and that is a
+      // grant decision made on the roles surface, never a create-form field.
+      systemRole: 'member',
       // Phase 2: admin-add lands as an attendee; the admin must explicitly
       // mark the membership class as completed afterwards. This matches
       // self-signup behaviour — neither path auto-confers Member status.
@@ -1432,6 +1445,18 @@ function parseCSVLine(line: string): string[] {
   return values;
 }
 
+/**
+ * CSV gives absent values as empty strings. Drop them so Zod's `.optional()`
+ * applies rather than failing an empty cell against `.uuid()` / `.email()`.
+ */
+function stripBlanks(row: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (v !== '') out[k] = v;
+  }
+  return out;
+}
+
 export async function importMembers(
   db: Database,
   csvText: string,
@@ -1455,28 +1480,42 @@ export async function importMembers(
         row[h] = values[idx] ?? '';
       });
 
-      if (!row['firstName'] || !row['lastName'] || !row['email']) {
-        errors.push(`Row ${i + 1}: firstName, lastName, and email are required`);
+      // Every cell used to go through untouched — the route carried no
+      // validator and the service read `row['systemRole']` and
+      // `row['homeBranchId']` straight into the insert. Validate the row
+      // against the same shape rules the single-create route enforces, and
+      // report failures per row so one bad line doesn't sink the file.
+      const parsed = importMemberRowSchema.safeParse(stripBlanks(row));
+      if (!parsed.success) {
+        errors.push(`Row ${i + 1}: ${parsed.error.issues.map((is) => is.message).join('; ')}`);
         continue;
       }
+      const data = parsed.data;
 
       await createMember(
         db,
         {
-          firstName: row['firstName']!,
-          lastName: row['lastName']!,
-          email: row['email']!,
-          homeBranchId: row['homeBranchId'] || auth.branchId,
-          phone: row['phone'] || undefined,
-          gender: (row['gender'] as 'Male' | 'Female') || undefined,
-          dateOfBirth: row['dateOfBirth'] || undefined,
-          middleName: row['middleName'] || undefined,
-          address: row['address'] || undefined,
-          city: row['city'] || undefined,
-          emergencyContactName: row['emergencyContactName'] || undefined,
-          emergencyContactPhone: row['emergencyContactPhone'] || undefined,
-          emergencyContactRelationship: row['emergencyContactRelationship'] || undefined,
-          systemRole: row['systemRole'] || undefined,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          // A blank column still falls back to the importer's own branch.
+          // A named one is honoured only if they have authority over it —
+          // `createMember` checks, and throws into the per-row catch below.
+          homeBranchId: data.homeBranchId ?? auth.branchId,
+          ...(data.phone ? { phone: data.phone } : {}),
+          ...(data.gender ? { gender: data.gender } : {}),
+          ...(data.dateOfBirth ? { dateOfBirth: data.dateOfBirth } : {}),
+          ...(data.middleName ? { middleName: data.middleName } : {}),
+          ...(data.address ? { address: data.address } : {}),
+          ...(data.city ? { city: data.city } : {}),
+          ...(data.postalCode ? { postalCode: data.postalCode } : {}),
+          ...(data.emergencyContactName ? { emergencyContactName: data.emergencyContactName } : {}),
+          ...(data.emergencyContactPhone ? { emergencyContactPhone: data.emergencyContactPhone } : {}),
+          ...(data.emergencyContactRelationship
+            ? { emergencyContactRelationship: data.emergencyContactRelationship }
+            : {}),
+          // No systemRole. A `systemRole` column in the CSV is ignored, not
+          // obeyed — it used to let an importer mint admins in bulk.
         },
         auth,
       );
