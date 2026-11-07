@@ -181,7 +181,14 @@ describe('GET /api/members', () => {
 
   it('allows a branch admin', async () => {
     grant('BranchAdmin', 'branch', TEST_IDS.branchId);
-    chainToParallel([sampleMember]);
+    // Four selects, not two: the safeguarding resolvers short-circuit only for
+    // a platform admin now, so a branch admin drives them too. Give every
+    // select a chain rather than counting them.
+    mockDb.select
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo([sampleMember]))
+      .mockReturnValue(chainTo([{ count: 1 }]));
 
     const res = await app.request('/api/members?page=1&limit=20', {
       headers: { Authorization: `Bearer ${memberToken}` },

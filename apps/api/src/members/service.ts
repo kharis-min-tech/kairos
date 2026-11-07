@@ -66,7 +66,13 @@ async function getViewerSafeguardingBranches(
   db: Database,
   auth: AuthContext,
 ): Promise<Set<string>> {
-  if (authHasCapability(auth, 'branch:read')) {
+  // Platform admins only. This short-circuit is a query optimisation for
+  // viewers who bypass the gate unconditionally, and since the bypass below
+  // became branch-scoped, that is exactly `systemRole === 'admin'`. It used to
+  // test `branch:read` unscoped, which returned an EMPTY set to every branch
+  // admin — so a branch admin who also held a Safeguarding Lead grant would
+  // have been denied their own lead branches the moment the bypass narrowed.
+  if (auth.systemRole === 'admin') {
     return new Set();
   }
   const rows = await db
@@ -100,7 +106,11 @@ async function getViewerGuardedMemberIds(
   db: Database,
   auth: AuthContext,
 ): Promise<Set<string>> {
-  if (authHasCapability(auth, 'branch:read')) {
+  // Platform admins only — same reasoning as the branches resolver above.
+  // Testing `branch:read` unscoped here emptied the set for every branch
+  // admin, which would deny a branch admin access to their OWN child's
+  // record once the bypass became branch-scoped.
+  if (auth.systemRole === 'admin') {
     return new Set();
   }
   const rows = await db
@@ -117,8 +127,23 @@ async function getViewerGuardedMemberIds(
 
 /**
  * In-memory safeguarding-access check given a pre-resolved capability set.
- * True when the viewer is admin/pastor, the member's guardian, or holds an
- * active Safeguarding Lead role scoped to the member's home branch.
+ * True when the viewer administers the member's OWN branch, is one of the
+ * member's guardians, or holds an active Safeguarding Lead role scoped to the
+ * member's home branch.
+ *
+ * The capability check is scoped to the subject deliberately. It used to pass
+ * no scope, and unscoped `branch:read` is true for any holder on ANY branch —
+ * so a BranchAdmin or BranchDataAdmin of one branch could read and write any
+ * child's unredacted record, and their health record, across the whole
+ * church. `loadMemberForSafeguarding` does not pre-filter by the viewer's
+ * branch (correctly: a guardian's active branch may differ from their
+ * child's), so this check was the only thing standing there.
+ *
+ * Who still gets through: a platform admin (`matchesCapability` short-circuits
+ * on `systemRole === 'admin'` before scope is read), a guardian (the
+ * `guardedMemberIds` path), a Safeguarding Lead for the child's branch (the
+ * `safeguardingBranches` path), and a church-scoped SafeguardingHead (a church
+ * grant satisfies a branch target — the matcher is asymmetric by design).
  */
 function hasSafeguardingAccessWith(
   auth: AuthContext,
@@ -126,7 +151,9 @@ function hasSafeguardingAccessWith(
   safeguardingBranches: Set<string>,
   guardedMemberIds: Set<string>,
 ): boolean {
-  if (authHasCapability(auth, 'branch:read')) return true;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: member.homeBranchId })) {
+    return true;
+  }
   // ANY active guardian, not "the" guardian — that is the whole point of 0056.
   if (guardedMemberIds.has(member.id)) return true;
   return safeguardingBranches.has(member.homeBranchId);
@@ -141,7 +168,12 @@ async function hasSafeguardingAccess(
   auth: AuthContext,
   member: SafeguardingSubject,
 ): Promise<boolean> {
-  if (authHasCapability(auth, 'branch:read')) return true;
+  // Platform admins skip both lookups; everyone else is decided by the scoped
+  // check in `hasSafeguardingAccessWith`. This early return carried the same
+  // unscoped `branch:read` test as that function and had to be narrowed with
+  // it, or the detail and health-record paths would keep the church-wide hole
+  // the list path no longer has.
+  if (auth.systemRole === 'admin') return true;
   const [branches, guarded] = await Promise.all([
     getViewerSafeguardingBranches(db, auth),
     getViewerGuardedMemberIds(db, auth),

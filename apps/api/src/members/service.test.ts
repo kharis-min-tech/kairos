@@ -1121,6 +1121,90 @@ describe('getMember — minor redaction', () => {
     expect(result.email).toBeNull();
   });
 
+  // ── B7: the safeguarding bypass is branch-scoped ───────────────
+  //
+  // `hasSafeguardingAccessWith` opened with an UNSCOPED
+  // `authHasCapability(auth, 'branch:read')`, which is true for any holder on
+  // ANY branch. `loadMemberForSafeguarding` deliberately does not pre-filter
+  // by the viewer's branch (a guardian's active branch may differ from their
+  // child's), so that check was the only thing standing between a single
+  // branch's admin and every child's health record in the church.
+  describe('getHealthRecord — branch-scoped safeguarding gate', () => {
+    const healthRecord = { memberId: 'minor-1', allergies: 'Peanuts', isActive: true };
+    const minorSubject = {
+      id: 'minor-1',
+      homeBranchId: branchId,
+      memberType: 'member',
+      dateOfBirth: '2016-01-01',
+    };
+
+    function branchAdminFor(targetBranchId: string) {
+      return {
+        ...memberAuth,
+        memberId: '000-badmin',
+        branchId: targetBranchId,
+        grants: [
+          {
+            role: 'BranchAdmin' as const,
+            scope: { kind: 'branch' as const, id: targetBranchId },
+            branchId: targetBranchId,
+          },
+        ],
+      };
+    }
+
+    it('REMOVED: a branch admin of another branch can no longer read it', async () => {
+      // selects: member row, viewer SG-Lead branches, viewer guarded members.
+      // The record select is never reached.
+      setupSelectSequence([minorSubject], [], []);
+
+      await expect(getHealthRecord(mockDb, 'minor-1', branchAdminFor(otherBranchId)))
+        .rejects.toThrow('You do not have safeguarding access to this member');
+    });
+
+    it("a branch admin of the child's OWN branch still reads it", async () => {
+      setupSelectSequence([minorSubject], [], [], [healthRecord]);
+
+      const result = await getHealthRecord(mockDb, 'minor-1', branchAdminFor(branchId));
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a platform admin still reads it', async () => {
+      // systemRole === 'admin' short-circuits before scope is read, and skips
+      // both viewer lookups.
+      setupSelectSequence([minorSubject], [healthRecord]);
+
+      const result = await getHealthRecord(mockDb, 'minor-1', adminAuth);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a guardian active in a DIFFERENT branch still reads it', async () => {
+      // The guardian path is branch-independent. It is fed by a resolver that
+      // used to return an empty set to every branch:read holder, so narrowing
+      // the bypass without narrowing that short-circuit too would have locked
+      // a branch admin out of their own child's record.
+      const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
+      setupSelectSequence([minorSubject], [], [{ memberId: 'minor-1' }], [healthRecord]);
+
+      const result = await getHealthRecord(mockDb, 'minor-1', crossBranchGuardian);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it("a Safeguarding Lead for the child's branch still reads it", async () => {
+      setupSelectSequence([minorSubject], [{ branchId }], [], [healthRecord]);
+
+      const result = await getHealthRecord(mockDb, 'minor-1', sgLeadSameBranchAuth);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a Safeguarding Lead for a DIFFERENT branch is still refused', async () => {
+      setupSelectSequence([minorSubject], [{ branchId: otherBranchId }], []);
+
+      await expect(getHealthRecord(mockDb, 'minor-1', sgLeadOtherBranchAuth))
+        .rejects.toThrow('You do not have safeguarding access to this member');
+    });
+  });
+
   it('admin sees a non-minor record unredacted', async () => {
     const adult = { ...minorMember, dateOfBirth: '1980-01-01', memberType: 'member' };
     setupSelect([adult]);
