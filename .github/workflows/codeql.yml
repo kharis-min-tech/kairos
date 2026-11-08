@@ -1,0 +1,60 @@
+name: CodeQL
+
+# Static analysis (the SAST half of the SAST/DAST audit item). CodeQL scans the
+# whole monorepo as one JavaScript/TypeScript database — API, web, mobile and
+# packages — and publishes findings to the repository's Security tab.
+#
+# The weekly schedule matters as much as the per-PR run: CodeQL ships new
+# queries continuously, so a codebase that has not changed can still acquire
+# findings. Without the cron those only surface on the next unrelated PR.
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging]
+  schedule:
+    # Mondays 04:17 UTC. Off the hour on purpose — scheduled Actions queue
+    # behind everyone else's on-the-hour crons.
+    - cron: '17 4 * * 1'
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege, matching ci.yml's habit. `security-events: write` is the only
+# elevated scope CodeQL needs — it is what publishes the SARIF to the Security
+# tab. `actions: read` lets the analysis read workflow run metadata on private
+# repositories; `contents: read` is the checkout.
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: CodeQL (javascript-typescript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # `security-and-quality` adds maintainability queries that would bury
+          # the security findings this gate exists for. `security-extended`
+          # keeps the scope to security, one tier above the default.
+          queries: security-extended
+
+      # No build step. For JavaScript/TypeScript, CodeQL extracts from source,
+      # and `autobuild` on this monorepo would try to drive turbo for no gain.
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
