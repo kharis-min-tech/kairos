@@ -109,10 +109,20 @@ export async function linkGuardians(
   if (seen.size === 0) return;
 
   const links = [...seen.values()];
-  const primaryIndex = Math.max(
-    links.findIndex((g) => g.isPrimary === true),
-    0,
-  );
+  // Whoever the caller marked primary; else the first link, but ONLY when no
+  // caller said anything about primacy at all.
+  //
+  // An explicit `isPrimary: false` has to survive. The guardian-attach endpoint
+  // adds a second or third guardian to a child who already has a primary, and
+  // `uq_member_guardians_primary` (one primary per member) would refuse a
+  // second — which `onConflictDoNothing` below then swallows, so the link would
+  // silently fail to be written while the request reported success. Defaulting
+  // a lone link to primary is right when minting a record (a baby with two
+  // named parents needs one of them to be the first contact) and wrong when
+  // adding to a record that already has one.
+  const explicitPrimary = links.findIndex((g) => g.isPrimary === true);
+  const anyoneSpoke = links.some((g) => g.isPrimary !== undefined);
+  const primaryIndex = explicitPrimary >= 0 ? explicitPrimary : anyoneSpoke ? -1 : 0;
 
   await db
     .insert(memberGuardians)

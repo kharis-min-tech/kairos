@@ -13,7 +13,7 @@ function createChain(result: unknown = []) {
   const chain: Record<string, unknown> = {};
   const methods = [
     'select', 'from', 'where', 'innerJoin', 'leftJoin', 'orderBy', 'limit', 'offset',
-    'insert', 'values', 'returning',
+    'insert', 'values', 'returning', 'onConflictDoNothing',
     'update', 'set',
   ];
   for (const m of methods) {
@@ -58,6 +58,60 @@ function setupInsert(result: unknown) {
 
 function setupUpdate(result: unknown = undefined) {
   (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => createChain(result));
+}
+
+// ── Tracked insert / update ────────────────────────────────
+// The guardian-link tests assert on what was WRITTEN, not just what came back:
+// whether a row was marked primary, whether an unlink deactivated rather than
+// deleted, and whether an audit row carried the actor and the subject. These
+// capture the arguments; `setupInsert` / `setupUpdate` above are left alone so
+// the existing tests keep their behaviour.
+let insertValuesArgs: unknown[];
+let updateSetArgs: unknown[];
+
+function setupInsertTracked(...results: unknown[]) {
+  insertValuesArgs = [];
+  let idx = 0;
+  (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(() => {
+    const r = results[idx] ?? results[results.length - 1] ?? [];
+    idx++;
+    const chain = createChain(r);
+    chain.values = vi.fn((arg: unknown) => {
+      insertValuesArgs.push(arg);
+      return chain;
+    });
+    return chain;
+  });
+}
+
+function setupUpdateTracked(...results: unknown[]) {
+  updateSetArgs = [];
+  let idx = 0;
+  (mockDb.update as ReturnType<typeof vi.fn>).mockImplementation(() => {
+    const r = results[idx] ?? results[results.length - 1] ?? [];
+    idx++;
+    const chain = createChain(r);
+    chain.set = vi.fn((arg: unknown) => {
+      updateSetArgs.push(arg);
+      return chain;
+    });
+    return chain;
+  });
+}
+
+/** The audit row is whichever tracked insert carried an `action`. */
+function auditRow(): Record<string, unknown> | undefined {
+  return insertValuesArgs.find(
+    (a): a is Record<string, unknown> =>
+      typeof a === 'object' && a !== null && !Array.isArray(a) && 'action' in a,
+  );
+}
+
+/** The guardian-link rows — `linkGuardians` inserts an ARRAY. */
+function guardianLinkRows(): Array<Record<string, unknown>> {
+  return insertValuesArgs
+    .filter((a): a is Array<Record<string, unknown>> => Array.isArray(a))
+    .flat();
 }
 
 // ── Fixtures ──────────────────────────────────────────────
@@ -1757,5 +1811,374 @@ describe('listUnguardedMinors', () => {
     setupSelect([unguardedRow]);
     const result = await listUnguardedMinors(mockDb, sgHeadAuth, { branchId });
     expect(result).toHaveLength(1);
+  });
+});
+
+// ── Guardian links: attach / detach ────────────────────────
+//
+// The resolution path for the unguarded-minors list. Before this existed the
+// list reported a safeguarding problem nobody could act on: the only writes to
+// member_guardians were `createMemberShell` (always a brand-new member) and the
+// first-time-visitor form (gated to subjects it minted itself).
+//
+// The gate is `safeguarding:write` scoped to the SUBJECT's home branch, because
+// writing the link IS the access-control decision — `hasHealthRecordAccess`
+// grants on `guardedMemberIds.has(member.id)`. These tests prove the gate, and
+// prove the ACCESS the link confers rather than merely the row.
+describe('attachGuardian / detachGuardian', () => {
+  const childId = 'child-guardian-1';
+  const linkId = 'link-1';
+
+  /** The subject as loaded by `loadGuardianLinkSubject` — a protected minor. */
+  const childSubject = {
+    id: childId,
+    homeBranchId: branchId,
+    memberType: 'child',
+    dateOfBirth: '2016-01-01',
+    isActive: true,
+  };
+  /** An adult, eligible to carry responsibility. */
+  const adultGuardian = {
+    id: guardianId,
+    memberType: 'member',
+    dateOfBirth: '1990-01-01',
+    isActive: true,
+  };
+  const newLinkRow = {
+    id: linkId,
+    memberId: childId,
+    guardianMemberId: guardianId,
+    relationship: 'Mother',
+    isPrimary: false,
+    isActive: true,
+  };
+
+  /** Selects for a clean attach: subject, guardian, no existing link, new link. */
+  function armAttach(subject: unknown = childSubject, guardian: unknown = adultGuardian) {
+    setupSelectSequence([subject], [guardian], [], [newLinkRow]);
+    setupInsertTracked([], []);
+    setupUpdateTracked([]);
+  }
+
+  it('lets a Safeguarding Lead for the subject branch attach a guardian', async () => {
+    armAttach();
+    const { attachGuardian } = await import('./service');
+    const link = await attachGuardian(mockDb, sgLeadSameBranchAuth, childId, {
+      guardianMemberId: guardianId,
+      relationship: 'Mother',
+    });
+
+    const rows = guardianLinkRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      memberId: childId,
+      guardianMemberId: guardianId,
+      relationship: 'Mother',
+    });
+    expect(link?.id).toBe(linkId);
+  });
+
+  it('grants the new guardian safeguarding access to the child', async () => {
+    // The row is not the point — the access is. Once the link is active,
+    // `getViewerGuardedMemberIds` returns the child for that guardian and the
+    // health record opens, with no grant of any kind on the caller.
+    armAttach();
+    const { attachGuardian, getHealthRecord } = await import('./service');
+    await attachGuardian(mockDb, sgLeadSameBranchAuth, childId, {
+      guardianMemberId: guardianId,
+    });
+
+    // select 1: the child. select 2: the guardianship prefetch, now returning
+    // the link attachGuardian just wrote. select 3: the health record.
+    setupSelectSequence(
+      [{ ...minorMember, id: childId, homeBranchId: branchId, memberType: 'child' }],
+      [{ memberId: childId }],
+      [{ memberId: childId, medicalConditions: 'Asthma' }],
+    );
+    const record = await getHealthRecord(mockDb, childId, guardianAuth);
+    expect(record?.medicalConditions).toBe('Asthma');
+  });
+
+  it('refuses a BranchAdmin of the subject own branch — the point of the gate', async () => {
+    // A BranchAdmin holds `branch:write` and may edit the member, but branch
+    // administration is not safeguarding standing: handing out sight of a
+    // child's health record is not an administrative act.
+    setupSelectSequence([childSubject]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, branchAdminSameBranchAuth, childId, { guardianMemberId: guardianId }),
+    ).rejects.toThrow('need safeguarding access');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('refuses a Safeguarding Lead who covers a different branch', async () => {
+    setupSelectSequence([childSubject]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadOtherBranchAuth, childId, { guardianMemberId: guardianId }),
+    ).rejects.toThrow('need safeguarding access');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('lets a platform admin attach', async () => {
+    armAttach();
+    const { attachGuardian } = await import('./service');
+    const link = await attachGuardian(mockDb, adminAuth, childId, {
+      guardianMemberId: guardianId,
+    });
+    expect(link?.id).toBe(linkId);
+  });
+
+  it('lets a church-scoped SafeguardingHead attach in any branch', async () => {
+    // A church grant satisfies a branch target; the reverse never holds.
+    armAttach();
+    const { attachGuardian } = await import('./service');
+    const link = await attachGuardian(mockDb, sgHeadAuth, childId, {
+      guardianMemberId: guardianId,
+    });
+    expect(link?.id).toBe(linkId);
+  });
+
+  it('refuses making a member their own guardian', async () => {
+    // linkGuardians drops self-links silently, so without this the request
+    // would report success for a row it never wrote.
+    setupSelectSequence([childSubject]);
+    setupInsertTracked([]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadSameBranchAuth, childId, { guardianMemberId: childId }),
+    ).rejects.toThrow('cannot be their own guardian');
+    expect(guardianLinkRows()).toHaveLength(0);
+  });
+
+  it('refuses a guardian who is themselves under 16', async () => {
+    // One child must not become responsible for another, and the link would
+    // hand them sight of that child's health record.
+    armAttach(childSubject, {
+      id: 'kid-2',
+      memberType: 'child',
+      dateOfBirth: '2017-01-01',
+      isActive: true,
+    });
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadSameBranchAuth, childId, { guardianMemberId: 'kid-2' }),
+    ).rejects.toThrow('under 16 cannot be a guardian');
+    expect(guardianLinkRows()).toHaveLength(0);
+  });
+
+  it('refuses attaching a guardian to an adult subject', async () => {
+    // hasHealthRecordAccess does not check minor status, so an adult subject
+    // would let a safeguarding holder give a third party standing access to an
+    // adult member's health record.
+    setupSelectSequence([
+      {
+        id: 'adult-1',
+        homeBranchId: branchId,
+        memberType: 'member',
+        dateOfBirth: '1988-01-01',
+        isActive: true,
+      },
+    ]);
+    setupInsertTracked([]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadSameBranchAuth, 'adult-1', { guardianMemberId: guardianId }),
+    ).rejects.toThrow('under 16');
+    expect(guardianLinkRows()).toHaveLength(0);
+  });
+
+  it('refuses re-linking a guardian who is already active', async () => {
+    // onConflictDoNothing would make this a silent no-op reported as success.
+    setupSelectSequence([childSubject], [adultGuardian], [{ id: linkId }]);
+    setupInsertTracked([]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadSameBranchAuth, childId, { guardianMemberId: guardianId }),
+    ).rejects.toThrow('already an active guardian');
+    expect(guardianLinkRows()).toHaveLength(0);
+  });
+
+  it('allows a guardian whose home branch differs from the child', async () => {
+    // Deliberate: guardian access is branch-independent so a parent who
+    // attends another branch still reaches their own child. Authority is
+    // checked on the SUBJECT's branch, which is the record being opened up.
+    armAttach(childSubject, { ...adultGuardian, homeBranchId: otherBranchId });
+    const { attachGuardian } = await import('./service');
+    const link = await attachGuardian(mockDb, sgLeadSameBranchAuth, childId, {
+      guardianMemberId: guardianId,
+    });
+    expect(link?.id).toBe(linkId);
+  });
+
+  it('does not mark a non-primary attach as primary', async () => {
+    // linkGuardians defaults a LONE link to primary, which is right when
+    // minting a record and wrong here: uq_member_guardians_primary would
+    // refuse a second primary and onConflictDoNothing would swallow the miss,
+    // losing the link while reporting success.
+    armAttach();
+    const { attachGuardian } = await import('./service');
+    await attachGuardian(mockDb, sgLeadSameBranchAuth, childId, {
+      guardianMemberId: guardianId,
+    });
+    expect(guardianLinkRows()[0]).toMatchObject({ isPrimary: false });
+    // No demotion was needed, so nothing was updated.
+    expect(updateSetArgs).toHaveLength(0);
+  });
+
+  it('demotes the existing primary when the new link claims primary', async () => {
+    armAttach();
+    const { attachGuardian } = await import('./service');
+    await attachGuardian(mockDb, sgLeadSameBranchAuth, childId, {
+      guardianMemberId: guardianId,
+      isPrimary: true,
+    });
+    // The standing primary is demoted rather than letting the unique index
+    // reject the insert. The old link stays active — only primacy moves.
+    expect(updateSetArgs).toHaveLength(1);
+    expect(updateSetArgs[0]).toMatchObject({ isPrimary: false });
+    expect(guardianLinkRows()[0]).toMatchObject({ isPrimary: true });
+  });
+
+  it('writes a guardian_linked audit row naming the actor and the subject', async () => {
+    armAttach();
+    const { attachGuardian } = await import('./service');
+    await attachGuardian(mockDb, sgLeadSameBranchAuth, childId, {
+      guardianMemberId: guardianId,
+      relationship: 'Mother',
+    });
+
+    const row = auditRow();
+    expect(row).toBeDefined();
+    expect(row).toMatchObject({
+      actorMemberId: sgLeadSameBranchAuth.memberId,
+      action: 'guardian_linked',
+      outcome: 'success',
+      targetType: 'member_guardian',
+      targetId: linkId,
+    });
+    expect(row!['metadata']).toMatchObject({
+      guardedMemberId: childId,
+      guardianMemberId: guardianId,
+      branchId,
+      relationship: 'Mother',
+    });
+  });
+
+  // ── Unlink ───────────────────────────────────────────────
+
+  it('deactivates the link rather than deleting it', async () => {
+    // Grant resolution filters on isActive, so flipping the flag is what
+    // revokes access — and destroying the record of who once had sight of a
+    // child's data is the opposite of what a safeguarding audit needs.
+    setupSelectSequence([childSubject], [{ id: linkId, isPrimary: true }]);
+    setupUpdateTracked([{ id: linkId, isActive: false }]);
+    setupInsertTracked([]);
+    const { detachGuardian } = await import('./service');
+    const result = await detachGuardian(mockDb, sgLeadSameBranchAuth, childId, guardianId);
+
+    expect(updateSetArgs).toHaveLength(1);
+    expect(updateSetArgs[0]).toMatchObject({ isActive: false, isPrimary: false });
+    expect(result).toMatchObject({ id: linkId, isActive: false });
+  });
+
+  it('leaves the former guardian without access once unlinked', async () => {
+    setupSelectSequence([childSubject], [{ id: linkId, isPrimary: true }]);
+    setupUpdateTracked([{ id: linkId, isActive: false }]);
+    setupInsertTracked([]);
+    const { detachGuardian, getHealthRecord } = await import('./service');
+    await detachGuardian(mockDb, sgLeadSameBranchAuth, childId, guardianId);
+
+    // The guardianship prefetch now returns nothing for them — the deactivated
+    // row is filtered out — and the former guardian holds no grant.
+    setupSelectSequence(
+      [{ ...minorMember, id: childId, homeBranchId: branchId, memberType: 'child' }],
+      [],
+    );
+    await expect(getHealthRecord(mockDb, childId, guardianAuth)).rejects.toThrow(
+      'do not have safeguarding access',
+    );
+  });
+
+  it('writes a guardian_unlinked audit row', async () => {
+    setupSelectSequence([childSubject], [{ id: linkId, isPrimary: true }]);
+    setupUpdateTracked([{ id: linkId, isActive: false }]);
+    setupInsertTracked([]);
+    const { detachGuardian } = await import('./service');
+    await detachGuardian(mockDb, sgLeadSameBranchAuth, childId, guardianId);
+
+    const row = auditRow();
+    expect(row).toMatchObject({
+      actorMemberId: sgLeadSameBranchAuth.memberId,
+      action: 'guardian_unlinked',
+      outcome: 'success',
+      targetType: 'member_guardian',
+      targetId: linkId,
+    });
+    expect(row!['metadata']).toMatchObject({
+      guardedMemberId: childId,
+      guardianMemberId: guardianId,
+      wasPrimary: true,
+    });
+  });
+
+  it('refuses an unlink from a caller without safeguarding write on that branch', async () => {
+    setupSelectSequence([childSubject]);
+    const { detachGuardian } = await import('./service');
+    await expect(
+      detachGuardian(mockDb, branchAdminSameBranchAuth, childId, guardianId),
+    ).rejects.toThrow('need safeguarding access');
+    expect(mockDb.update).not.toHaveBeenCalled();
+  });
+
+  it('404s when there is no active link to remove', async () => {
+    setupSelectSequence([childSubject], []);
+    setupUpdateTracked([]);
+    const { detachGuardian } = await import('./service');
+    await expect(
+      detachGuardian(mockDb, sgLeadSameBranchAuth, childId, guardianId),
+    ).rejects.toThrow('Guardian link not found');
+    expect(updateSetArgs).toHaveLength(0);
+  });
+
+  it('unlinks from an adult subject, unlike attach', async () => {
+    // Asymmetric on purpose: a link that should not exist — over an adult, or
+    // left by older data — has to be removable, and refusing on the subject's
+    // age would strand exactly the rows most worth removing.
+    setupSelectSequence(
+      [
+        {
+          id: 'adult-1',
+          homeBranchId: branchId,
+          memberType: 'member',
+          dateOfBirth: '1988-01-01',
+          isActive: true,
+        },
+      ],
+      [{ id: linkId, isPrimary: false }],
+    );
+    setupUpdateTracked([{ id: linkId, isActive: false }]);
+    setupInsertTracked([]);
+    const { detachGuardian } = await import('./service');
+    const result = await detachGuardian(mockDb, sgLeadSameBranchAuth, 'adult-1', guardianId);
+    expect(result).toMatchObject({ isActive: false });
+  });
+
+  it('404s on an inactive subject', async () => {
+    setupSelectSequence([{ ...childSubject, isActive: false }]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadSameBranchAuth, childId, { guardianMemberId: guardianId }),
+    ).rejects.toThrow('Member not found');
+  });
+
+  it('404s on a guardian who does not exist', async () => {
+    setupSelectSequence([childSubject], []);
+    setupInsertTracked([]);
+    const { attachGuardian } = await import('./service');
+    await expect(
+      attachGuardian(mockDb, sgLeadSameBranchAuth, childId, { guardianMemberId: 'nobody' }),
+    ).rejects.toThrow('Guardian not found');
+    expect(guardianLinkRows()).toHaveLength(0);
   });
 });
