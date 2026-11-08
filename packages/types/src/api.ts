@@ -377,8 +377,36 @@ export interface MinorProtectionFlags {
   redacted: boolean;
 }
 
-/** A member list row (with branch name) carrying minor-protection flags. */
-export type MemberWithBranchProtected = MemberWithBranch & MinorProtectionFlags;
+/**
+ * The fields a directory row carries whoever is asking.
+ *
+ * `GET /api/members` serves two shapes. A caller holding one of the directory
+ * capabilities gets the whole record; a caller holding none — an ordinary
+ * member browsing the Community tab — gets only this core. The endpoint used
+ * to send every field to every authenticated caller, so a brand-new
+ * self-registered member could page their branch's roll complete with email,
+ * phone, address and emergency contacts. These are the fields the
+ * member-facing surfaces actually display.
+ */
+export interface MemberDirectoryCore extends MinorProtectionFlags {
+  id: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  homeBranchId: string;
+  branchName: string;
+  memberType: MemberType;
+}
+
+/**
+ * A member list row carrying minor-protection flags.
+ *
+ * Everything beyond {@link MemberDirectoryCore} is optional because it is
+ * withheld from callers without a directory capability — absent, not null, so
+ * a reader cannot mistake "not sent to you" for "not recorded".
+ */
+export type MemberWithBranchProtected = MemberDirectoryCore &
+  Partial<Omit<MemberWithBranch, keyof MemberDirectoryCore>>;
 
 /** A member detail object carrying minor-protection flags. */
 export type MemberDetailProtected = MemberWithBranch & MinorProtectionFlags;

@@ -78,8 +78,11 @@ const sampleMember = {
   photoUrl: null,
   emergencyContactName: null,
   emergencyContactPhone: null,
+  emergencyContactRelationship: null,
   approvalStatus: 'approved',
   systemRole: 'member',
+  // The directory query always selects memberType; the projection keys off it.
+  memberType: 'member',
   emailVerified: true,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -135,40 +138,30 @@ describe('GET /api/members', () => {
     expect(res.status).toBe(401);
   });
 
-  it('refuses a plain member with no grant — a row is the whole contact record', async () => {
-    // This route carried authMiddleware and nothing else, so any authenticated
-    // account — including a brand-new self-registered member — could page the
-    // directory, complete with email, phone, address and emergency contacts.
-    // A caller with no grant who needs to reference a person uses the minimal
-    // GET /api/forms/member-search instead.
-    // Rows are mocked deliberately: without the gate this request answers 200
-    // with the roll, so the 403 below is the gate and not a mock running dry.
+  /** Selects for a non-admin caller: guardianships, then rows, then count. */
+  function mockDirectoryRows(rows: unknown[]) {
     mockDb.select
       .mockReturnValueOnce(chainTo([]))
-      .mockReturnValueOnce(chainTo([]))
-      .mockReturnValueOnce(chainTo([sampleMember]))
-      .mockReturnValue(chainTo([{ count: 1 }]));
+      .mockReturnValueOnce(chainTo(rows))
+      .mockReturnValue(chainTo([{ count: rows.length }]));
+  }
 
-    const res = await app.request('/api/members?page=1&limit=20', {
-      headers: { Authorization: `Bearer ${memberToken}` },
-    });
+  // The contact fields the directory must never hand to a caller with no
+  // directory capability. Asserted as ABSENT KEYS rather than undefined
+  // values, so a future `...row` spread cannot quietly put them back.
+  const WITHHELD = [
+    'email', 'phone', 'address', 'city', 'postalCode', 'dateOfBirth',
+    'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship',
+    'systemRole',
+  ];
 
-    expect(res.status).toBe(403);
-    expect(mockDb.select).not.toHaveBeenCalled();
-  });
-
-  it('allows a fellowship leader — they pick members into their fellowship', async () => {
-    // The gate must not over-tighten to branch admins: group leaders, the
-    // new-believers team, the membership programme and safeguarding all read
-    // the roll legitimately. The service keeps the row-level branch narrowing.
-    grant('FellowshipLeader', 'fellowship', TEST_IDS.fellowshipId);
-    // A non-branch:read caller also drives the safeguarding lookups, so give
-    // every select a chain rather than counting them.
-    mockDb.select
-      .mockReturnValueOnce(chainTo([]))
-      .mockReturnValueOnce(chainTo([]))
-      .mockReturnValueOnce(chainTo([sampleMember]))
-      .mockReturnValue(chainTo([{ count: 1 }]));
+  it('serves a plain member with no grant, but WITHOUT the contact fields', async () => {
+    // The route carried authMiddleware and nothing else, so any authenticated
+    // account — including a brand-new self-registered member — paged the roll
+    // with every row's email, phone, address, date of birth and all three
+    // emergency contact fields. It still answers them, because the mobile
+    // Community tab is an ordinary member-facing browse; it answers with less.
+    mockDirectoryRows([sampleMember]);
 
     const res = await app.request('/api/members?page=1&limit=20', {
       headers: { Authorization: `Bearer ${memberToken}` },
@@ -176,25 +169,54 @@ describe('GET /api/members', () => {
 
     expect(res.status).toBe(200);
     const body = await res.json() as any;
-    expect(body.success).toBe(true);
+    const row = body.data.data[0];
+
+    for (const field of WITHHELD) {
+      expect(Object.keys(row)).not.toContain(field);
+    }
+    // And what the browse surfaces actually display is all there.
+    expect(row.id).toBe(sampleMember.id);
+    expect(row.firstName).toBe('Emma');
+    expect(row.lastName).toBe('Thompson');
+    expect(row.branchName).toBe('Kharis London Central');
+    expect(row).toHaveProperty('photoUrl');
+    expect(row).toHaveProperty('memberType');
+    expect(row).toHaveProperty('isMinor');
+    expect(row).toHaveProperty('redacted');
   });
 
-  it('allows a branch admin', async () => {
-    grant('BranchAdmin', 'branch', TEST_IDS.branchId);
-    // Four selects, not two: the safeguarding resolvers short-circuit only for
-    // a platform admin now, so a branch admin drives them too. Give every
-    // select a chain rather than counting them.
-    mockDb.select
-      .mockReturnValueOnce(chainTo([]))
-      .mockReturnValueOnce(chainTo([]))
-      .mockReturnValueOnce(chainTo([sampleMember]))
-      .mockReturnValue(chainTo([{ count: 1 }]));
+  it('serves a fellowship leader the full row', async () => {
+    // The projection must not over-tighten to branch admins: group leaders,
+    // the new-believers team, the membership programme and safeguarding all
+    // read the roll legitimately.
+    grant('FellowshipLeader', 'fellowship', TEST_IDS.fellowshipId);
+    mockDirectoryRows([sampleMember]);
 
     const res = await app.request('/api/members?page=1&limit=20', {
       headers: { Authorization: `Bearer ${memberToken}` },
     });
 
     expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.data.data[0].email).toBe('emma@kairos.local');
+    expect(body.data.data[0].phone).toBe('+441234567891');
+  });
+
+  it('serves a branch admin of the subject branch the full row', async () => {
+    grant('BranchAdmin', 'branch', TEST_IDS.branchId);
+    mockDirectoryRows([sampleMember]);
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    const row = body.data.data[0];
+    for (const field of WITHHELD) {
+      expect(Object.keys(row)).toContain(field);
+    }
+    expect(row.emergencyContactName).toBeDefined();
   });
 
   it('should return paginated members for admin', async () => {

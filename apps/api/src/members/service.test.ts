@@ -1175,6 +1175,15 @@ const sgHeadAuth = viewer('000-sg-head', otherBranchId, [
 const branchPastorAuth = viewer('000-pastor', branchId, [
   { role: 'BranchPastor', scope: { kind: 'branch', id: branchId }, branchId },
 ]);
+/**
+ * A fellowship leader. `fellowship:read` is a directory capability, so they
+ * receive full rows — but they hold no `branch:read`, so a minor's fields in
+ * those rows are still nulled by redaction. The one caller for whom in-list
+ * minor protection is observable rather than moot.
+ */
+const fellowshipLeaderAuth = viewer('000-fl-dir', branchId, [
+  { role: 'FellowshipLeader', scope: { kind: 'branch', id: branchId }, branchId },
+]);
 /** BranchAdmin of the child's own branch: directory yes, health record no. */
 const branchAdminSameBranchAuth = viewer('000-badmin-same', branchId, [
   { role: 'BranchAdmin', scope: { kind: 'branch', id: branchId }, branchId },
@@ -1415,12 +1424,13 @@ describe('getMember — minor redaction', () => {
 });
 
 describe('listMembers — minor redaction', () => {
-  it('redacts in-list minors for an unrelated in-branch leader', async () => {
+  it('redacts in-list minors for a fellowship leader (full row, nulled fields)', async () => {
+    // A fellowship leader gets full rows but holds no `branch:read`, so the
+    // minor's sensitive fields come back NULL inside an otherwise full row.
+    // selects: members they guard → none; rows; count.
     const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01' };
-    // select 1: members they guard → none; 2: rows; 3: count. The separate
-    // Safeguarding-Lead branch lookup is gone — it is a capability now.
     setupSelectSequence([], [minorMember, adult], [{ count: 2 }]);
-    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    const result = await listMembers(mockDb, fellowshipLeaderAuth, { page: 1, limit: 20 });
     const minorRow = result.data.find((m) => m.id === 'minor-1')!;
     const adultRow = result.data.find((m) => m.id === 'adult-1')!;
     expect(minorRow.isMinor).toBe(true);
@@ -1433,12 +1443,27 @@ describe('listMembers — minor redaction', () => {
   });
 
   it('does not redact for a guardian viewing their own child in the list', async () => {
-    // 1: the members they guard → this child; 2: rows; 3: count
+    // A guardian who also leads a fellowship: the guardian path wins the
+    // redaction verdict, and the directory capability earns the full row.
+    const guardianWithGrant = { ...fellowshipLeaderAuth, memberId: guardianId };
     setupSelectSequence([{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
-    const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
+    const result = await listMembers(mockDb, guardianWithGrant, { page: 1, limit: 20 });
     const minorRow = result.data[0]!;
     expect(minorRow.redacted).toBe(false);
     expect(minorRow.email).toBe('kid@test.com');
+  });
+
+  it('a guardian with NO grant sees their child unredacted but still core-only', async () => {
+    // The projection and the redaction are independent: `redacted` is false
+    // because they are the guardian, and the contact fields are absent because
+    // they hold no directory capability. Their child's full record is one tap
+    // away on the detail endpoint, which the guardian path also admits.
+    setupSelectSequence([{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
+    const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+    expect(row['redacted']).toBe(false);
+    expect(Object.keys(row)).not.toContain('email');
+    expect(row['firstName']).toBe('Tiny');
   });
 
   it('admin sees all list rows unredacted without a capability prefetch', async () => {
@@ -1446,6 +1471,95 @@ describe('listMembers — minor redaction', () => {
     const result = await listMembers(mockDb, adminAuth, { page: 1, limit: 20 });
     expect(result.data[0]!.redacted).toBe(false);
     expect(result.data[0]!.email).toBe('kid@test.com');
+  });
+
+  // ── Least privilege by projection ─────────────────────────────
+  //
+  // GET /api/members had no authorization at all, and a row was the whole
+  // contact record. Gating the endpoint closed that and took the mobile
+  // Community tab's People segment with it — a member-facing browse showing
+  // nothing but an avatar, a name and a branch. So the narrowing is by FIELD:
+  // the rows a member can reach are unchanged, the fields they carry are not.
+  const WITHHELD_FROM_MEMBERS = [
+    'email', 'phone', 'address', 'city', 'postalCode', 'dateOfBirth',
+    'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship',
+    'systemRole',
+  ];
+
+  it('withholds the contact fields from a caller holding no directory capability', async () => {
+    const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01', memberType: 'member' };
+    setupSelectSequence([], [adult], [{ count: 1 }]);
+
+    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+
+    // Absent KEYS, not undefined values — so a future `...row` spread cannot
+    // quietly reintroduce them, and no reader can mistake "not sent to you"
+    // for "not recorded".
+    for (const field of WITHHELD_FROM_MEMBERS) {
+      expect(Object.keys(row)).not.toContain(field);
+    }
+    expect(row).toEqual({
+      id: 'adult-1',
+      firstName: 'Tiny',
+      lastName: 'Tot',
+      photoUrl: null,
+      homeBranchId: branchId,
+      branchName: 'Lagos Branch',
+      memberType: 'member',
+      isMinor: false,
+      redacted: false,
+    });
+  });
+
+  it('serves the full row to a branch admin of the subject branch', async () => {
+    const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01', memberType: 'member' };
+    setupSelectSequence([], [adult], [{ count: 1 }]);
+
+    const result = await listMembers(mockDb, branchAdminSameBranchAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+
+    for (const field of WITHHELD_FROM_MEMBERS) {
+      expect(Object.keys(row)).toContain(field);
+    }
+    expect(row['email']).toBe('kid@test.com');
+    expect(row['emergencyContactName']).toBe('Mum');
+  });
+
+  it('redacts a minor UNDER the projection for a caller without directory access', async () => {
+    // Minor protection runs first and its verdict travels with the core, so a
+    // member browsing the roll still learns a row is a protected minor — they
+    // simply never had the fields redaction would have nulled.
+    setupSelectSequence([], [minorMember], [{ count: 1 }]);
+
+    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+
+    expect(row['isMinor']).toBe(true);
+    expect(row['redacted']).toBe(true);
+    for (const field of WITHHELD_FROM_MEMBERS) {
+      expect(Object.keys(row)).not.toContain(field);
+    }
+  });
+
+  it('still narrows a member to their own branch — the projection widened nobody', async () => {
+    setupSelectSequence([], [], [{ count: 0 }]);
+    await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+
+    // The rows query is the second select. Walk its `where` for the caller's
+    // branch id: the branch condition is still applied for a caller without
+    // `branch:read`.
+    const strings: string[] = [];
+    const seen = new Set<unknown>();
+    const walk = (v: unknown) => {
+      if (typeof v === 'string') strings.push(v);
+      else if (v && typeof v === 'object' && !seen.has(v)) {
+        seen.add(v);
+        Object.values(v as Record<string, unknown>).forEach(walk);
+      }
+    };
+    walk((mockDb.select as ReturnType<typeof vi.fn>).mock.results[1]!.value.where.mock.calls[0]![0]);
+    expect(strings).toContain(branchId);
   });
 });
 

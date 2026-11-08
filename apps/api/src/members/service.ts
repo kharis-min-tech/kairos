@@ -5,10 +5,11 @@ import { members, memberRoles, memberGuardians, roles, branches, fellowshipMembe
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD, CHURCH_SCOPE_ID, RoleScopeKind } from '@kairos/types';
+import type { Capability } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
-import { authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
+import { authHasAnyCapability, authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent } from '../audit/service';
@@ -147,6 +148,81 @@ function hasDirectoryAccess(
 ): boolean {
   if (hasHealthRecordAccess(auth, member, guardedMemberIds)) return true;
   return authHasCapability(auth, 'branch:read', { kind: 'branch', id: member.homeBranchId });
+}
+
+/**
+ * The capabilities that earn a FULL directory row.
+ *
+ * Every grant with a real reason to read the roll: branch admins and the
+ * approval queue, fellowship and department leaders picking members into their
+ * group, the membership-class programme, the new-believers team choosing a
+ * mentor, and safeguarding. Mirrored in `apps/mobile/lib/capabilities.ts`,
+ * which gates the dedicated leader-facing directory screen.
+ */
+const DIRECTORY_CAPABILITIES = [
+  'branch:read',
+  'signup:approve',
+  'fellowship:read',
+  'department:read',
+  'membership:admin',
+  'membership:branch:read',
+  'newbelievers:mentor',
+  'newbelievers:teach',
+  'safeguarding:read',
+] as const satisfies readonly Capability[];
+
+/**
+ * The only fields a caller without a directory capability receives.
+ *
+ * An allowlist, not a blocklist: a field added to the query later is withheld
+ * by default rather than leaking until someone notices. These are exactly what
+ * the member-facing browse surfaces display — an avatar, a name, and the
+ * branch underneath it.
+ */
+const DIRECTORY_CORE_FIELDS = [
+  'id',
+  'firstName',
+  'lastName',
+  'photoUrl',
+  'homeBranchId',
+  'branchName',
+  'memberType',
+  // Minor protection is applied BEFORE the projection and its verdict is part
+  // of the contract, so these two travel with the core.
+  'isMinor',
+  'redacted',
+] as const;
+
+/**
+ * Narrow a directory row to the core when the caller holds no directory
+ * capability.
+ *
+ * `GET /api/members` had no authorization at all: any authenticated account,
+ * including a brand-new self-registered member, could page the roll and every
+ * row carried email, phone, address, date of birth and all three emergency
+ * contact fields. Gating the whole endpoint would have closed the leak and
+ * taken the mobile Community tab's People segment with it, because that is an
+ * ordinary member-facing browse. Least privilege by projection instead: the
+ * rows a member can reach are unchanged, the fields they carry are not.
+ *
+ * Withheld fields are ABSENT from the object rather than set to null, so no
+ * reader can confuse "not sent to you" with "not recorded".
+ */
+type DirectoryCoreKey = (typeof DIRECTORY_CORE_FIELDS)[number];
+
+/** Core fields stay required; everything else becomes optional. */
+type ProjectedRow<T> = Partial<T> & Pick<T, Extract<keyof T, DirectoryCoreKey>>;
+
+function projectDirectoryRow<T extends Record<string, unknown>>(
+  row: T,
+  full: boolean,
+): ProjectedRow<T> {
+  if (full) return row;
+  const core = {} as Record<string, unknown>;
+  for (const field of DIRECTORY_CORE_FIELDS) {
+    if (field in row) core[field] = row[field];
+  }
+  return core as ProjectedRow<T>;
 }
 
 /**
@@ -307,8 +383,16 @@ export async function listMembers(
     db.select({ count: count() }).from(members).where(where),
   ]);
 
+  // Decided once per request, not per row: does this caller have any business
+  // reading the roll in full? The row-level branch narrowing above is
+  // unchanged either way — this governs which FIELDS come back, not which rows.
+  const fullRows = authHasAnyCapability(auth, ...DIRECTORY_CAPABILITIES);
+
   const data = rows.map((row) =>
-    applyMinorProtection(row, hasDirectoryAccess(auth, row, guardedMemberIds)),
+    projectDirectoryRow(
+      applyMinorProtection(row, hasDirectoryAccess(auth, row, guardedMemberIds)),
+      fullRows,
+    ),
   );
 
   return {
