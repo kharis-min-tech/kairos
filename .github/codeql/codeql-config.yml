@@ -1,0 +1,43 @@
+# CodeQL scan configuration.
+#
+# Kept as a file rather than inline workflow inputs so the reasoning for each
+# exclusion lives next to it. Everything here narrows WHAT IS SCANNED; the
+# query suite itself is set in `codeql.yml` (`security-extended`).
+
+name: Kairos CodeQL config
+
+queries:
+  - uses: security-extended
+
+paths-ignore:
+  # Test files. A security query firing on test code is noise by construction:
+  # nothing here is reachable by a user, and the inputs are fixtures the test
+  # itself wrote. The first scan of this repository produced exactly one such
+  # finding — `js/incomplete-sanitization` on a line building a CSS selector
+  # with `.replace(/\//g, '\\/')` to find a Tailwind class — and triaging that
+  # by hand every week is how a security tab stops being read.
+  #
+  # The trade, stated rather than hidden: a real flaw in a test helper is now
+  # invisible to CodeQL. That is acceptable because test code does not ship —
+  # `apps/mobile/__tests__/routes-dir-contains-only-routes.test.ts` exists
+  # specifically to keep it that way for the one bundler that swept it in.
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '**/__tests__/**'
+  - '**/__mocks__/**'
+
+  # Generated and vendored output. Not authored here, and a finding in it is
+  # actionable only by changing the generator or the dependency — which is what
+  # the npm-audit gate and Dependabot are for.
+  - '**/node_modules/**'
+  - '**/.next/**'
+  - '**/dist/**'
+  - '**/build/**'
+  - 'packages/database/drizzle/meta/**'
+
+  # End-to-end flows. Maestro YAML and the e2e drivers drive a browser or a
+  # device on purpose, so "user-controlled" is the entire point of the code.
+  - 'e2e/**'
+  - '**/maestro/**'
