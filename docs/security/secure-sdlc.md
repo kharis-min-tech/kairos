@@ -122,6 +122,62 @@ Said plainly, because a document that implies otherwise is worse than useless:
 > (repository setting, not yet confirmed enabled), and a lint rule banning
 > `sql.raw` outside a small allowlist (§4.7).
 
+### The accepted criticals
+
+**"The npm audit gate is green" needs one qualification, because on its own the
+sentence is misleading.** The gate is green *against a baseline*, and that
+baseline — `.github/npm-audit-baseline.json`, generated 8 November 2026 — holds
+**124 accepted advisories, of which 5 are critical**. It exists so CI can fire
+on a *new* advisory rather than on the standing backlog of a monorepo this size,
+which is the right design. But a register that records "Next.js: Unauthenticated
+Remote Code Execution, accepted" with no rationale beside it is a finding in its
+own right, and an auditor reading it should escalate.
+
+So here is the rationale, checked rather than assumed. **All five are
+unreachable in this deployment, and none of the reasoning depends on the
+advisory being wrong.**
+
+| Advisory | Package | Why it does not reach production here |
+|---|---|---|
+| `GHSA-2464-fhr4-w9xw` (SVG) | `next` | Both are in the **Image Optimization API**, i.e. `/_next/image`. That endpoint **does not exist in this deployment**: `curl` returns **404 on both `kairos.kharis.org` and `staging.kairos.kharis.org`**. `@cloudflare/next-on-pages` does not ship the Next.js image optimizer, and `next/image` is imported **zero times** anywhere in `apps/web`. There is no code path to reach. |
+| `GHSA-2xp9-vwfh-vxw4` (AVIF) | `next` | As above — same endpoint, same 404. |
+| `GHSA-p293-qw3h-jr36` | `next` | **Windows-hosted servers only.** The API runs on Cloudflare Workers and the web app on Cloudflare Pages; there is no Windows host anywhere in the stack. |
+| `GHSA-5gmw-xhrv-c9v3`, `GHSA-85c8-ppgw-ccpr` | `tinypool` | Reached only via `vitest` — the test runner. It is a dev dependency and appears in no deployed bundle. Exploiting it requires already being able to run the test suite, which means already having the repository. |
+| `GHSA-pqg4-j6r4-53mv` | `shell-quote` | Reached via `drizzle-kit → gel` (a local CLI) and `react-native → react-devtools-core` (dev only). Neither ships. |
+
+**Two things follow, and neither is "do nothing".**
+
+**The Next.js advisories should still be patched**, because unreachable is a
+property of today's configuration, not a property of the dependency. The moment
+someone adds a `next/image` tag, two unauthenticated RCEs become live and
+nothing in CI will say so — the gate is already green on them. The fixes are
+`15.5.24` for the AVIF and Windows advisories and **above `15.5.27`** for the
+SVG one; `15.5.22` is installed.
+
+**That upgrade is not free, and the reason is worth recording.**
+`@cloudflare/next-on-pages@1.13.16` declares a peer range of
+`>=14.3.0 && <=15.5.2`, so the installed `15.5.22` **already violates it** and
+`npm ls` reports `invalid`. Moving further from the supported range to fix an
+unreachable vulnerability, days before a pilot, trades a real deployment risk
+for a theoretical one. **Recommended: schedule the Next.js upgrade together
+with a `next-on-pages` version that supports it, after the pilot is stable, and
+treat "nobody adds `next/image` before then" as the compensating control** —
+which is weak, because it depends on a person remembering. A lint rule banning
+`next/image` imports would make it an enforced control instead, and belongs with
+the `sql.raw` rule above.
+
+> **DECISION NEEDED: when the Next.js upgrade happens, and whether to enforce the
+> `next/image` ban in the meantime.**
+> **Recommended:** add the lint rule now (cheap, and it makes the compensating
+> control real), and schedule the framework upgrade for after the pilot
+> stabilises, paired with a `next-on-pages` release that supports the target
+> version.
+> **Trade-off:** the lint rule forbids a standard Next.js feature, which will
+> surprise whoever next wants an optimised image. The rule's message should say
+> why and point here. Deferring the upgrade means the repository carries three
+> accepted critical advisories for longer, which has to be explained every time
+> somebody reads the register.
+
 ### The agent workflow, treated as part of the lifecycle
 
 Much of this codebase is written by coding agents under the conventions in
