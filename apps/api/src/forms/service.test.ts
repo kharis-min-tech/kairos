@@ -1151,6 +1151,293 @@ describe('submitForm — first_time_visitor', () => {
   });
 });
 
+// ── submitForm: first_time_visitor — guardian self-attachment ─────────────
+//
+// A guardian link is not bookkeeping: being a linked guardian is itself what
+// grants the unredacted member row and read/write access to a minor's health
+// record (members/service.ts:130). POST /api/forms/:formType/submit is open to
+// any authenticated member — correctly, because ordinary members legitimately
+// submit this form — so the guardian write has to carry the authorisation
+// decision itself.
+//
+// The rule, already stated for /api/me/children at me/service.ts:1004-1017: a
+// parent MAY create a child and be recorded as its guardian; a parent may NOT
+// link themselves to a child that already exists. These tests pin that rule on
+// the one path in the API that could write a guardian row against a
+// pre-existing member.
+describe('submitForm — first_time_visitor: guardian self-attachment', () => {
+  const guardianId = 'aa0e8400-0000-0000-0000-00000000000a';
+  const victimPhone = '07700900123';
+
+  /**
+   * `linkGuardians` inserts an ARRAY of {memberId, guardianMemberId, …} rows,
+   * where member shells and submissions are single objects. Finding guardian
+   * writes by shape rather than by index means these assertions cannot be
+   * fooled by a change in insert ordering.
+   */
+  function guardianLinkInserts(): Array<Record<string, unknown>> {
+    return insertValuesArgs
+      .filter((a): a is Array<Record<string, unknown>> => Array.isArray(a))
+      .flat()
+      .filter((r) => typeof r === 'object' && r !== null && 'guardianMemberId' in r);
+  }
+
+  /** submitForm's return is a union across form types; only this form sets the flag. */
+  function pending(result: unknown): boolean | undefined {
+    return (result as { guardianLinkPending?: boolean }).guardianLinkPending;
+  }
+
+  // The attack payload: a plain member naming an existing child as the subject
+  // and THEMSELVES (memberAuth.memberId) as that child's primary guardian.
+  const selfAsGuardian = {
+    firstName: 'Ada',
+    lastName: 'Okoro',
+    dateOfBirth: '2014-01-01',
+    isUnder16: 'Yes' as const,
+    guardianName: 'Mary Okoro',
+    guardianPhone: '07999000111',
+    guardianRelationship: 'Mother',
+    guardianMemberId: memberId,
+  };
+
+  // The victim as stored: a real, pre-existing child record.
+  const storedChild = {
+    id: subjectId,
+    branchId,
+    memberType: 'child',
+    dateOfBirth: '2014-01-01',
+  };
+
+  const adultVisitor = {
+    firstName: 'Tunde',
+    lastName: 'Bakare',
+    dateOfBirth: '1990-01-01',
+    isUnder16: 'No' as const,
+    email: 'tunde@example.com',
+    phone: '07123456789',
+  };
+
+  it('writes no guardian row when the subject is an explicit pre-existing member', async () => {
+    setupSelectSequence([storedChild]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    setupUpdate();
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      subjectMemberId: subjectId,
+      payload: selfAsGuardian,
+    });
+
+    // The whole point: no member_guardians row, so the caller gains no access
+    // to the child's unredacted record or health record.
+    expect(guardianLinkInserts()).toHaveLength(0);
+    expect(insertValuesArgs).toHaveLength(1); // the submission and nothing else
+
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    const payload = submission.payload as Record<string, unknown>;
+    // The claim is held, not discarded — that is what the triage queue is for.
+    expect(payload.guardianMemberId).toBe(memberId);
+    expect(payload.guardianName).toBe('Mary Okoro');
+    expect(payload.guardianLinkPending).toBe(true);
+    expect(submission.status).toBe('new');
+    expect(pending(result)).toBe(true);
+  });
+
+  it('writes no guardian row when the subject was matched by phone alone', async () => {
+    // No subjectMemberId anywhere in the request: the victim's phone number on
+    // its own resolves them as the subject via the (b) safety-net. A fix keyed
+    // only on body.subjectMemberId would leave this route wide open, so this is
+    // the test that keeps the regression from coming back.
+    setupSelectSequence([{ id: subjectId, memberType: 'child', dateOfBirth: '2014-01-01' }]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    setupUpdate();
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      payload: { ...selfAsGuardian, phone: victimPhone },
+    });
+
+    expect(guardianLinkInserts()).toHaveLength(0);
+    expect(insertValuesArgs).toHaveLength(1);
+
+    const submission = insertValuesArgs[0] as Record<string, unknown>;
+    expect(submission.subjectMemberId).toBe(subjectId);
+    expect((submission.payload as Record<string, unknown>).guardianLinkPending).toBe(true);
+    expect(pending(result)).toBe(true);
+  });
+
+  it('rejects an under-16 submission that links a subject recorded as an adult', async () => {
+    // The adult-targeting variant. A guardian link over an adult is worse than
+    // over a child: getMember still refuses adults, but the health record does
+    // not — it would hand over read AND write.
+    setupSelectSequence([
+      { id: subjectId, branchId, memberType: 'visitor', dateOfBirth: '1990-01-01' },
+    ]);
+    setupInsert([{ id: submissionId }]); // arm + reset tracking; should never be hit
+    const { submitForm } = await import('./service');
+    const { ValidationError } = await import('@kairos/utils');
+    await expect(
+      submitForm(mockDb, memberAuth, 'first_time_visitor', {
+        subjectMemberId: subjectId,
+        payload: selfAsGuardian,
+      })
+    ).rejects.toBeInstanceOf(ValidationError);
+    expect(insertValuesArgs).toHaveLength(0);
+    expect(guardianLinkInserts()).toHaveLength(0);
+  });
+
+  it('still links the guardian when this submission minted the subject', async () => {
+    // The legitimate path, and the reason the gate is on origin rather than on
+    // the route: a genuine new under-16 visitor must still get their guardian.
+    // The under-16 payload carries no phone, so the safety-net lookups are
+    // skipped and the only select is the (d-ii) guardian lookup.
+    setupSelectSequence([{ id: guardianId }]);
+    setupInsert(
+      [{ id: subjectId }], //                 the minted child shell
+      [], //                                  the guardian link
+      [{ id: submissionId, status: 'new' }], // the submission
+    );
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      payload: { ...selfAsGuardian, guardianMemberId: guardianId },
+    });
+
+    const shell = insertValuesArgs[0] as Record<string, unknown>;
+    expect(shell.memberType).toBe('child');
+
+    const links = guardianLinkInserts();
+    expect(links).toHaveLength(1);
+    expect(links[0]).toMatchObject({
+      memberId: subjectId,
+      guardianMemberId: guardianId,
+      isPrimary: true,
+    });
+
+    // Nothing is pending — the link was written.
+    expect(pending(result)).toBe(false);
+    const submission = insertValuesArgs[2] as Record<string, unknown>;
+    expect((submission.payload as Record<string, unknown>).guardianLinkPending).toBeUndefined();
+  });
+
+  it('accepts a greeter linking an existing child, holding the guardian link as pending', async () => {
+    // An honest greeter hits the same path as the attacker and it is not their
+    // fault, so the submission is ACCEPTED. Only the guardian mutation is
+    // refused, and the response says so rather than failing silently.
+    setupSelectSequence([storedChild]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      subjectMemberId: subjectId,
+      payload: { ...selfAsGuardian, guardianMemberId: guardianId },
+    });
+
+    expect(result.id).toBe(submissionId);
+    expect(pending(result)).toBe(true);
+    expect(guardianLinkInserts()).toHaveLength(0);
+  });
+
+  it('does not mutate the memberType of a pre-existing subject', async () => {
+    // The payload's claim about somebody else's age must not rewrite their
+    // record. A stored child stays a child; nothing is recomputed.
+    setupSelectSequence([storedChild]);
+    setupInsert([{ id: submissionId, status: 'new' }]);
+    setupUpdate();
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      subjectMemberId: subjectId,
+      payload: selfAsGuardian,
+    });
+    expect(updateSetArgs).toHaveLength(0);
+  });
+
+  it('still mints and links children[] when the subject is pre-existing', async () => {
+    // The direction asymmetry, pinned so the fix is not over-applied: a
+    // guardian row grants the GUARDIAN sight of the MEMBER. Naming a
+    // pre-existing adult as guardian of a child this submission just invented
+    // discloses nothing about anybody, so it stays allowed — unlike naming
+    // yourself guardian of a child that already exists.
+    const childId = '880e8400-0000-0000-0000-000000000008';
+    setupSelectSequence([{ id: subjectId, memberType: 'member', dateOfBirth: '1990-01-01' }]);
+    setupInsert(
+      [{ id: childId }], //                   the minted child shell
+      [], //                                  its guardian link
+      [{ id: submissionId, status: 'new' }], // the submission
+    );
+    const { submitForm } = await import('./service');
+    await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      payload: {
+        ...adultVisitor,
+        broughtChildren: true,
+        children: [{ firstName: 'Kid', lastName: 'Bakare', dateOfBirth: '2020-01-01' }],
+      },
+    });
+
+    const links = guardianLinkInserts();
+    expect(links).toHaveLength(1);
+    expect(links[0]).toMatchObject({
+      memberId: childId, //          the freshly minted child
+      guardianMemberId: subjectId, // the pre-existing adult who brought them
+      isPrimary: true,
+    });
+  });
+
+  // ── Check A: the self-report and the date of birth must agree ───────────
+  //
+  // `isVisitorUnder16` ORs the two, which is right for deciding which fields to
+  // demand and wrong as a basis for a record: an adult who ticks "under 16" is
+  // minted as memberType 'child', which makes isMinorMember true
+  // unconditionally and files an adult as a protected minor with a guardian
+  // they nominated themselves.
+  it('rejects an under-16 self-report whose date of birth says 16 or over', async () => {
+    setupInsert([{ id: submissionId }]); // arm + reset tracking; should never be hit
+    const { submitForm } = await import('./service');
+    const { ValidationError } = await import('@kairos/utils');
+    // The adult-as-minor mint: every other under-16 requirement is satisfied,
+    // so the ONLY thing that can reject this is Check A. Asserting on the
+    // `isUnder16` path keeps the test from passing on some unrelated issue.
+    const err = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      payload: { ...selfAsGuardian, dateOfBirth: '1990-01-01' },
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ValidationError);
+    expect((err as Error).message).toMatch(/^isUnder16: /);
+    // Nothing minted, nothing linked, no submission row.
+    expect(insertValuesArgs).toHaveLength(0);
+    expect(guardianLinkInserts()).toHaveLength(0);
+  });
+
+  it('rejects an over-16 self-report whose date of birth says under 16', async () => {
+    setupInsert([{ id: submissionId }]); // arm + reset tracking; should never be hit
+    const { submitForm } = await import('./service');
+    const { ValidationError } = await import('@kairos/utils');
+    // The mirror. Guardian fields are present so the under-16 branch's own
+    // requirements are met and Check A is again the only possible rejection —
+    // `adultVisitor`'s contact-only shape would have tripped those instead.
+    const err = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      payload: { ...selfAsGuardian, isUnder16: 'No' as const, dateOfBirth: '2014-01-01' },
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ValidationError);
+    expect((err as Error).message).toMatch(/^isUnder16: /);
+    expect(insertValuesArgs).toHaveLength(0);
+  });
+
+  it('leaves a DOB-derived under-16 alone when no self-report was given', async () => {
+    // Check A contradicts only an EXPLICIT isUnder16. With the flag absent the
+    // date of birth speaks for itself, which is the path the form relies on.
+    setupSelectSequence([{ id: guardianId }]);
+    setupInsert([{ id: subjectId }], [], [{ id: submissionId, status: 'new' }]);
+    const { submitForm } = await import('./service');
+    const result = await submitForm(mockDb, memberAuth, 'first_time_visitor', {
+      payload: {
+        ...selfAsGuardian,
+        isUnder16: undefined,
+        dateOfBirth: '2015-06-01',
+        guardianMemberId: guardianId,
+      },
+    });
+    expect((insertValuesArgs[0] as Record<string, unknown>).memberType).toBe('child');
+    expect(guardianLinkInserts()).toHaveLength(1);
+    expect(pending(result)).toBe(false);
+  });
+});
+
 // ── listSubmissions ───────────────────────────────────────
 describe('listSubmissions', () => {
   it('returns rows for a leader scoped to their branch', async () => {

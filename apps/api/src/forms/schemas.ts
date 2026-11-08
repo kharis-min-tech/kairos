@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { evaluateCondition, FORM_TYPES, type FormType } from '@kairos/types';
+import { evaluateCondition, FORM_TYPES, isMinorMember, type FormType } from '@kairos/types';
 
 // ── Form type enum ─────────────────────────────────────────
 // Derived from FORM_TYPES, not retyped. This was a hand-kept copy that said
@@ -218,6 +218,34 @@ export const firstTimeVisitorPayloadSchema = z
   })
   .superRefine((v, ctx) => {
     const under16 = isVisitorUnder16(v as Record<string, unknown>);
+
+    // The self-report and the date of birth have to agree before anything is
+    // written. `isVisitorUnder16` ORs them, which is right for deciding which
+    // fields to demand but wrong as a basis for a record: an adult who ticks
+    // "I am under 16" is minted as `memberType: 'child'`, and that makes
+    // `isMinorMember` true unconditionally — filing an adult as a protected
+    // minor with a guardian they nominated themselves.
+    //
+    // `isMinorMember` from @kairos/types is the one definition of 16
+    // (packages/types/src/minor.ts); never re-derive the age here. Only an
+    // explicit self-report is contradicted — an absent `isUnder16` leaves the
+    // DOB to speak for itself, which is the DOB-derived path the form relies on.
+    if (v.isUnder16 === 'Yes' && !isMinorMember({ dateOfBirth: v.dateOfBirth })) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['isUnder16'],
+        message:
+          "Your date of birth says you are 16 or over. Untick 'I am under 16', or correct the date of birth.",
+      });
+    }
+    if (v.isUnder16 === 'No' && isMinorMember({ dateOfBirth: v.dateOfBirth })) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['isUnder16'],
+        message:
+          "Your date of birth says you are under 16. Tick 'I am under 16', or correct the date of birth.",
+      });
+    }
 
     if (under16) {
       // Guardian carries the contact burden; contact fields relaxed.

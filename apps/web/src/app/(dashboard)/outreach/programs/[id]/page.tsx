@@ -61,7 +61,10 @@ interface UnregisteredMember {
   lastName: string;
   branchName?: string;
   homeBranchId?: string;
-  isActive: boolean;
+  // Optional because the directory withholds it from a caller holding no
+  // directory capability. Absent means active: the list endpoint only returns
+  // active members unless you explicitly ask for pending ones.
+  isActive?: boolean;
 }
 
 export default function ProgramDetailPage() {
@@ -172,7 +175,7 @@ export default function ProgramDetailPage() {
         // For branch-specific programs: show only members from that branch
         const unregistered = allMembers.filter(
           (member: UnregisteredMember) => {
-            const isActive = member.isActive;
+            const isActive = member.isActive !== false;
             const notRegistered = !registeredIds.has(member.id);
             const branchMatch = isOpenToAllBranches || member.homeBranchId === branchId;
             
