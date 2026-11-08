@@ -31,10 +31,12 @@ export default function PrivacyPage() {
           Regulation (UK GDPR) and the Data Protection Act 2018.
         </p>
         <p>
-          Kharis Church is the <strong>data controller</strong> for personal
-          data processed in Kairos. If you have any questions about this
-          notice, or you want to exercise any of the rights described below,
-          please contact us at{' '}
+          Kharis Ministries, operating as Kharis Church, is the{' '}
+          <strong>data controller</strong> for personal data processed in
+          Kairos. Kharis Ministries is registered with the Information
+          Commissioner&rsquo;s Office under reference ZB659958. If you have any
+          questions about this notice, or you want to exercise any of the
+          rights described below, please contact us at{' '}
           <a
             href="mailto:privacy@kharis.org"
             className="font-medium text-[#5D3FD3] hover:underline"
