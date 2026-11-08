@@ -1,0 +1,61 @@
+name: Dependency audit
+
+# The dependency-vulnerability half of the SAST/DAST audit item.
+#
+# Two steps, deliberately split:
+#
+#   1. A full `npm audit` report, never blocking. This is the thing a human
+#      reads when they want the current picture.
+#   2. The gate, blocking. It holds the line at high+critical and compares
+#      against .github/npm-audit-baseline.json, so it is green today and goes
+#      red the moment a NEW high or critical advisory enters the lockfile.
+#
+# Why not plain `npm audit --audit-level=high`? Because it cannot pass here
+# today, and neither can `--audit-level=critical --omit=dev`. See the header of
+# .github/scripts/audit-gate.mjs for the full reasoning and the blocking
+# advisories. Picking a threshold low enough to pass would mean gating on
+# nothing; this gates on the delta instead.
+#
+# The weekly run is the point of the schedule: advisories get published against
+# dependencies that have not changed, so a repo with no PRs still needs asking.
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging]
+  schedule:
+    # Mondays 05:17 UTC, after the CodeQL cron.
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm audit` resolves advisories from the lockfile and the registry; it
+      # does not need node_modules, so there is no `npm ci` here. That keeps
+      # this workflow fast enough to be worth running on every PR.
+
+      - name: Audit report (advisory, never fails the build)
+        run: npm audit || true
+
+      - name: Gate on new high and critical advisories
+        env:
+          AUDIT_LEVEL: high
+        run: node .github/scripts/audit-gate.mjs
