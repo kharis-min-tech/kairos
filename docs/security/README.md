@@ -42,11 +42,12 @@ recommended value and the trade-off, but **the recommendation is not a
 decision**, and none of them should be cited as settled policy until someone
 with the authority to decide has done so.
 
-There were **45 such markers** across these documents, covering 43 distinct
-decisions — two appear in more than one file because they are a prerequisite for
-both. Each document collects its own at the end, and a few further
-recommendations appear only in those collected lists where they were too small
-to interrupt the text for.
+There were **45 such markers** when these documents were drafted on 8 November
+2026, covering 43 distinct decisions — two appeared in more than one file
+because they were a prerequisite for both. **Nine have since closed**, leaving
+**36 open**, and the closures are struck through in place rather than deleted,
+because the order things were decided in is itself audit evidence. Each document
+collects its own at the end.
 
 **Six have since closed with real answers**, and the documents record them
 rather than still asking:

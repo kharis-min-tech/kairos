@@ -93,17 +93,34 @@ Said plainly, because a document that implies otherwise is worse than useless:
   was no `SECURITY.md`, no threat model and no incident runbook in the
   repository.
 
-> **DECISION NEEDED: which automated security gates to add, and in what order.**
-> **Recommended, cheapest first:** (1) Dependabot with grouped weekly PRs —
-> configuration only, no CI time; (2) GitHub secret scanning with push
-> protection enabled at the repository level; (3) CodeQL on the default setup
-> for JavaScript/TypeScript, which catches a meaningful share of the injection
-> and access-control classes in §4; (4) a lint rule banning `sql.raw` outside a
-> small allowlist (see §4.7).
-> **Trade-off:** each adds CI time and, more importantly, noise. Dependabot on a
-> monorepo this size will open a lot of PRs, and a security gate everyone learns
-> to ignore is worse than none. Grouped updates and a monthly triage slot are
-> the mitigation.
+> **~~DECISION NEEDED: which automated security gates to add, and in what
+> order.~~ MOSTLY CLOSED 8 November 2026.** Shipped: **Dependabot** with grouped
+> updates; **CodeQL** — not the default setup but the `security-extended` suite,
+> on every pull request, on every push to `main` and `staging`, and weekly on a
+> schedule (the schedule matters because CodeQL ships new queries continuously,
+> so an unchanged codebase can still acquire findings); and an **npm audit**
+> gate failing on high or critical.
+>
+> **The noise trade-off this marker predicted turned out to be real, and the
+> mitigation is configuration rather than discipline.** CodeQL's first
+> `security-extended` run produced seven results. Three were genuine and are
+> fixed — a stored XSS reachable by naming a fellowship, an open redirect after
+> sign-in, and a duplicate of the first. One was a CSS selector in a test file.
+> Rather than dismiss that by hand every week, `.github/codeql/codeql-config.yml`
+> excludes test files, generated output and the e2e drivers, with the trade
+> stated in the file: a real flaw in a test helper is now invisible to CodeQL,
+> which is acceptable because test code does not ship.
+>
+> **CodeQL is deliberately NOT a required check yet.** A first scan on a
+> never-scanned codebase produces a backlog, and promoting it to required before
+> that backlog is cleared is how a gate gets bypassed by habit. It is promoted
+> once a scan comes back clean. The npm-audit gate is the opposite case —
+> verified green and firing only on *new* high or critical advisories — so that
+> one should be made required immediately; required is what gives it teeth.
+>
+> **Still open from this list:** GitHub secret scanning with push protection
+> (repository setting, not yet confirmed enabled), and a lint rule banning
+> `sql.raw` outside a small allowlist (§4.7).
 
 ### The agent workflow, treated as part of the lifecycle
 

@@ -586,20 +586,20 @@ still unlawful processing.
 
 Two residual items, both small:
 
-> **DECISION NEEDED: retrieve PlanetScale's sub-processor list.**
-> Cloudflare's and Mapbox's were retrieved; PlanetScale's was not — and
-> PlanetScale holds all 55 tables including the health and safeguarding records.
-> Article 28(2) makes sub-processor awareness the controller's business: a
-> processor may not engage another without authorisation, and a controller cannot
-> object to what it has not seen.
-> **Recommended:** retrieve it and add the row to `ropa.md` §3.
-> **Trade-off:** none.
+> **~~DECISION NEEDED: retrieve PlanetScale's sub-processor list.~~ CLOSED
+> 8 November 2026.** Retrieved from `planetscale.com/legal/subprocessors` and
+> recorded in `ropa.md` §3. The Article 28 evidence set is now complete for all
+> four processors. It raised two new questions of its own — a five-calendar-day
+> objection window, and sub-processors that are almost entirely US entities —
+> both carried in `ropa.md` §3 and §4 rather than closed here.
 
-> **DECISION NEEDED: correct the notice's processor list — remove Sentry, add Mapbox.**
-> Narrowed from the earlier version of this marker now the DPAs are held. Sentry
-> is named and receives nothing; Mapbox receives address fragments and is not
-> named. Note that enabling Logpush, which `incident-response.md` §9 recommends,
-> would add a fifth processor and reopen both this row and the §10 evidence set.
+> **~~DECISION NEEDED: correct the notice's processor list — remove Sentry, add
+> Mapbox.~~ CLOSED 8 November 2026.** Sentry removed, Mapbox added and described
+> accurately. Four further false statements in the same notice were corrected in
+> the same change: a 90-day deletion nothing performed, a cookie that did not
+> exist for the purpose claimed, an age threshold contradicting the code, and an
+> unqualified claim that PlanetScale stores everything in the UK/EEA. The notice
+> and `ropa.md` §3 now agree.
 
 ---
 
@@ -625,14 +625,11 @@ head start, but a ROPA needs more per purpose: the categories of data subjects
 and personal data, the recipients, any third-country transfers, the retention
 periods, and a description of the security measures.
 
-> **DECISION NEEDED: produce a ROPA.**
-> **Recommended:** build it from material that already exists rather than from a
-> template — the purposes and bases from §2, the data categories and retention
-> from `data-retention.md` §2, the recipients from §10, and the security
-> measures from §9. That is most of a ROPA already written; it needs assembling
-> into the Article 30(1) structure, not researching.
-> **Trade-off:** a ROPA has to be maintained. Tying it to `data-retention.md`
-> §2, which is already organised per data type, is what stops it rotting.
+> **~~DECISION NEEDED: produce a ROPA.~~ CLOSED 8 November 2026 — drafted.**
+> `ropa.md` holds the Article 30 record: six processing activities with lawful
+> bases, recipients, processors, transfers, retention and security measures,
+> assembled from the material this document and `data-retention.md` already
+> carried. **Drafted, not adopted** — it takes the same signature as the DPIA.
 
 ### Article 35 — DPIA
 
@@ -645,22 +642,18 @@ it. The scale is small, but "large-scale" is not the only trigger, and the ICO
 screening criteria are met on at least three counts: special-category data,
 vulnerable data subjects, and new technology.
 
-> **DECISION NEEDED: commission a DPIA before the pilot processes real member data.**
-> **Recommended: yes, and before the pilot — this is the highest-priority item in this document.**
-> It is also the cheapest it will ever be: the pilot is one branch with
-> structural seeding only and no member import, so a DPIA now describes an
-> intended system rather than auditing a live one, and its mitigations can be
-> built rather than retrofitted.
-> The DPIA should take as its inputs: the processing description from §2, the
-> necessity and proportionality argument from the LIA in §2, the risk assessment
-> in `secure-sdlc.md` §4, and the retention position in `data-retention.md`.
-> It should reach a conclusion on the children's-data risks in particular: the
-> unauthenticated profile-photo URLs, the unscrubbed health records surviving
-> erasure, and the absence of any retention enforcement on safeguarding records.
-> **Trade-off:** a DPIA that identifies a high residual risk the church cannot
-> mitigate obliges consultation with the ICO under Article 36. That is a real
-> possibility for the profile-photo issue and is a reason to fix it first, not a
-> reason to delay the DPIA.
+> **DECISION NEEDED: get the DPIA consulted on and SIGNED before the pilot
+> processes real member data. Drafted 8 November 2026; this is now the single
+> remaining gate on the pilot.**
+> The assessment exists — `dpia.md` describes the processing, scores nine risks
+> against defects that actually existed in this codebase, and takes its inputs
+> from §2 here, the LIA, `secure-sdlc.md` §4 and `data-retention.md`. What
+> remains is not drafting but **people work**: Article 35(2) advice from the DPO
+> is mandatory because one is designated, and Article 35(9) consultation with
+> parents and guardians has not happened.
+> **Recommended: treat this as the pilot's go/no-go.** Processing that begins
+> without it cannot be made lawful retrospectively, which is what separates it
+> from every other item in this document.
 
 ---
 
@@ -693,14 +686,17 @@ an Article 33 notification would have to say the scope is unknown.
 This also means the notice's §9 claim that administration access is
 "audit-logged" is not accurate as written.
 
-> **DECISION NEEDED: add `member_exported` and `member_updated` audit actions before the pilot.**
-> **Recommended: yes.** Without them the Article 33 assessment defaults to the
-> conservative answer on no evidence, which means over-notifying the ICO and
-> being unable to tell affected families what happened.
-> **Trade-off:** `audit_log.action` has a database CHECK constraint, so new
-> actions need a migration as well as two call sites — roughly half a day. It
-> also expands the audit log's own retention question (`data-retention.md` §2),
-> since read events are far higher-volume than role grants.
+> **~~DECISION NEEDED: add `member_exported` and `member_updated` audit actions
+> before the pilot.~~ CLOSED 8 November 2026 — and it was four actions across
+> three export paths, not two.** `member_updated` for edits to a member record;
+> `member_exported`, `submissions_exported` and `donor_register_exported` for
+> the directory, forms and Gift Aid register exports respectively. All three
+> export paths previously wrote nothing. Migration 0064 widened
+> `audit_log_action_check`, without which every insert would have failed
+> silently. None of the actions records field values, member ids or donor
+> details, which also answers the retention concern this marker raised: the rows
+> are small and bounded, and `member_viewed` was deliberately not added because
+> a row per read is an access log rather than an audit log.
 
 ---
 

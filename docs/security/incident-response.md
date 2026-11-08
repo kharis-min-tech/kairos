@@ -157,14 +157,26 @@ These are not quibbles; each one changes what an investigation can conclude.
 > own — see `ropa.md` §3. Better detection costs a processor; make that trade
 > deliberately.
 
-> **DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules are configured at the edge.**
-> Still genuinely unknown — WAF rules are dashboard configuration and leave no
-> trace in the repository, unlike the Logpush flag. Nothing in the codebase or in
-> `wrangler.jsonc` rate-limits anything.
-> **Recommended:** confirm before the pilot, and if there are none, add them at
-> the edge rather than in Hono — the edge stops the request before it costs
-> Worker CPU, which is the whole point against the argon2id amplification path
-> in `secure-sdlc.md` §4.6.
+> **~~DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules are
+> configured at the edge.~~ ANSWERED 8 November 2026: there are none, and
+> creating them is deliberately deferred.**
+> Confirmed rather than assumed. Nothing in the codebase or `wrangler.jsonc`
+> rate-limits anything, and no edge rules exist.
+> **The rules are now fully specified** in `waf-rate-limiting.md`, derived from
+> the real route surface, as Cloudflare edge rules rather than in-Hono counters —
+> the Worker binds Hyperdrive and nothing else, so there is nowhere to keep a
+> counter, and the `http_ratelimit` phase runs *before* the Worker, which is the
+> whole point against the argon2id amplification path in `secure-sdlc.md` §4.6.
+> **Deferred by decision, not oversight:** the zone is on the Cloudflare Free
+> plan, and the church's position is to create these rules at the production
+> rollout rather than pay for them against synthetic staging traffic. **This is
+> the only Fail on the cyber-security checklist that is deferred rather than
+> outstanding**, and it is flagged in that document for the cyber team to
+> challenge if they disagree.
+> **What remains, therefore, is not a question but a task with a trigger:**
+> create the rules when production takes real traffic. Until then login,
+> forgot-password and the OIDC token endpoint are unthrottled, and detection of
+> a credential-stuffing run depends on §2's absent alerting.
 
 > **~~DECISION NEEDED: add `member_exported` and `member_updated` to the audit
 > taxonomy before the pilot.~~ CLOSED 8 November 2026 — implemented.**
