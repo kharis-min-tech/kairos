@@ -1,6 +1,6 @@
 # Security and data protection
 
-Written for the pre-release cyber-security review, 2026-11-08. Eight documents
+Written for the pre-release cyber-security review, 2026-11-08. Nine documents
 covering the questions that are about the **organisation** rather than the
 software, which is why code fixes alone could not close them.
 
@@ -16,6 +16,7 @@ PlanetScale dashboard setting, or a commitment only the church can make.
 | [Backup and recovery](backup-recovery.md) | What PlanetScale provides, what still needs confirming in the console, and the restore procedure — including why `db:bootstrap` cannot simply be re-run after a restore. |
 | [Secure SDLC](secure-sdlc.md) | The lifecycle as it actually operates — branch protection, the four-command gate, the agent workflow — plus a threat model using the vulnerability classes a real review found here as worked examples. |
 | [Regulatory mapping](regulatory-mapping.md) | UK GDPR obligation by obligation, mapped to where it is met, partly met, or not met. Confirms PCI DSS is out of scope and says why. |
+| [WAF rate limiting](waf-rate-limiting.md) | The rate-limiting rules to create by hand in the Cloudflare dashboard, derived from the actual route surface. Edge rules rather than in-Worker counters, because the Worker binds Hyperdrive and nothing else — there is nowhere to keep a counter. |
 
 ## The two statutory records
 
@@ -41,7 +42,7 @@ recommended value and the trade-off, but **the recommendation is not a
 decision**, and none of them should be cited as settled policy until someone
 with the authority to decide has done so.
 
-There are **45 such markers** across the eight documents, covering 43 distinct
+There were **45 such markers** across these documents, covering 43 distinct
 decisions — two appear in more than one file because they are a prerequisite for
 both. Each document collects its own at the end, and a few further
 recommendations appear only in those collected lists where they were too small
@@ -55,7 +56,9 @@ rather than still asking:
 - The **controller is Kharis Ministries**, ICO registration **ZB659958**,
   renewing **12 February 2027**. "Kharis Church" is the operating name — one
   body, two names, so there is no Article 26 or 28 question between them. The
-  privacy notice has been corrected to match, on a branch with no PR yet.
+  privacy notice has been corrected to match — merged as #76 and deployed to
+  staging on 8 November 2026. Other statements in that notice are still wrong
+  and are tracked separately.
 - **All four processor DPAs are held**, retrieved 8 November 2026, with versions
   recorded in `ropa.md` §3. That closes Article 28 *evidence* and nothing else.
 - **Logpush is confirmed not enabled**, so Axiom is not a processor and the
@@ -68,24 +71,36 @@ Two of those answers raised sharper questions than they settled — the evidence
 window, and PlanetScale's missing sub-processor list — so they appear in the
 lists rather than disappearing from them.
 
-**The four things to do first**, if the list is read as a backlog:
+**What has since shipped.** This section opened as a four-item backlog. Three
+of the four are done, and the record is kept rather than quietly edited,
+because the order things were fixed in is itself audit evidence.
 
-1. **Get the DPIA consulted on and signed** (`dpia.md` §2 and §6). It is
-   drafted and the controller is now settled, so what remains is people work:
+1. **Get the DPIA consulted on and signed** (`dpia.md` §2 and §6) — **still
+   open, and now the only genuine pilot gate in this document set.** It is
+   drafted and the controller is settled, so what remains is people work:
    **Article 35(2) advice from the DPO is mandatory**, because one is
    designated, and Article 35(9) consultation with parents and guardians has not
    happened. Adopting the ROPA follows the same signature.
-2. **Make the JWT signing secrets fail closed** (`key-management.md` §1). The
-   only item in this set that is a live vulnerability rather than a missing
-   control, and it is not on either remediation PR.
+2. ~~**Make the JWT signing secrets fail closed**~~ (`key-management.md` §1) —
+   **done 8 November 2026.** All three fail-open secrets, including
+   `SELF_CHECK_IN_QR_SECRET`, now resolve through `lib/secret-env.ts` and throw
+   rather than fall back to a value committed to this repository. §1 of that
+   document records why the fix did not take the shape it first recommended.
 3. **Add `member_exported` and `member_updated` audit actions**
-   (`incident-response.md` §2). Without them a data-exfiltration incident
-   cannot be scoped, so the Article 33 assessment has no evidence to work from —
-   and `dpia.md` §6 cannot honestly conclude that detection is adequate.
-4. **Merge and deploy the two open remediation PRs** — #71
-   (`fix/security-blockers-round-1`) and #72 (`fix/guardian-attachment`). Both
-   target `staging`, so production is three gates away. Until then the three
-   highest-scored risks in `dpia.md` §4 are live.
+   (`incident-response.md` §2) — **still open.** Without them a
+   data-exfiltration incident cannot be scoped, so the Article 33 assessment has
+   no evidence to work from, and `dpia.md` §6 cannot honestly conclude that
+   detection is adequate. Note that adding an action value also needs a
+   migration widening `audit_log_action_check`, or the insert fails silently —
+   see `backup-recovery.md` §3.
+4. ~~**Merge and deploy the remediation PRs**~~ — **done 8 November 2026.**
+   #71 (`fix/security-blockers-round-1`), #72 (`fix/guardian-attachment`), #73
+   (`feat/guardian-confirm-link`, carrying migration 0063), #74
+   (`ci/security-gates`), #75 (`docs/security-policies`) and #76
+   (`fix/privacy-controller-identity`) are all merged to `staging` and deployed.
+   **Production is still behind `staging`**, so the fixes are one gate from the
+   pilot, not zero.
+
 
 ## Related
 

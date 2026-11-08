@@ -1,4 +1,5 @@
 import type { Context } from 'hono';
+import { readSetting, requireSecret } from './secret-env';
 
 export interface AuthSecrets {
   accessSecret: string;
@@ -23,26 +24,14 @@ const DEFAULT_ACCESS_EXPIRY = '15m';
 // Override with JWT_REFRESH_EXPIRY.
 const DEFAULT_REFRESH_EXPIRY = '365d';
 
-function readEnv(c: Context | undefined, key: string): string | undefined {
-  if (c) {
-    const env = (c as { env?: unknown }).env;
-    if (env && typeof env === 'object') {
-      const v = (env as Record<string, unknown>)[key];
-      if (typeof v === 'string' && v.length > 0) return v;
-    }
-  }
-  if (typeof process !== 'undefined' && process.env) {
-    const v = process.env[key];
-    if (typeof v === 'string' && v.length > 0) return v;
-  }
-  return undefined;
-}
-
 export function getAuthSecrets(c?: Context): AuthSecrets {
+  // The two signing secrets have no usable default — see `secret-env.ts` for
+  // why they fail closed rather than fail safe. The two expiries are ordinary
+  // settings and keep their defaults.
   return {
-    accessSecret: readEnv(c, 'JWT_SECRET') ?? 'dev-secret-change-me',
-    refreshSecret: readEnv(c, 'JWT_REFRESH_SECRET') ?? 'dev-refresh-secret-change-me',
-    accessTokenExpiry: readEnv(c, 'JWT_ACCESS_EXPIRY') ?? DEFAULT_ACCESS_EXPIRY,
-    refreshTokenExpiry: readEnv(c, 'JWT_REFRESH_EXPIRY') ?? DEFAULT_REFRESH_EXPIRY,
+    accessSecret: requireSecret(c, 'JWT_SECRET', 'dev-secret-change-me'),
+    refreshSecret: requireSecret(c, 'JWT_REFRESH_SECRET', 'dev-refresh-secret-change-me'),
+    accessTokenExpiry: readSetting(c, 'JWT_ACCESS_EXPIRY', DEFAULT_ACCESS_EXPIRY),
+    refreshTokenExpiry: readSetting(c, 'JWT_REFRESH_EXPIRY', DEFAULT_REFRESH_EXPIRY),
   };
 }

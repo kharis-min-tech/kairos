@@ -34,42 +34,70 @@ codebase states the correct principle in its own words. `apps/api/src/oauth-serv
 
 > That is the safe failure: nothing silently signs with a well-known key.
 
-**Three secrets violate that principle, and two of them are the session keys.**
+**Three secrets violated that principle, and two of them were the session keys.
+All three were closed on 8 November 2026** — the table records both states,
+because an auditor reading this needs to know what was wrong as well as what is
+now true.
 
 | Secret | Behaviour when unbound | Verdict |
 |---|---|---|
 | `OAUTH_SIGNING_KEY` | `keys.ts:65` generates a per-process ephemeral ES256 keypair. Tokens signed in one isolate do not verify in the next, so the failure is loud and self-limiting. | **Correct.** This is the model. |
 | `CF_IMAGES_TOKEN` (+ account id/hash) | `media/router.ts:65-70` returns 503 `MEDIA_NOT_CONFIGURED`. | **Correct — fails closed.** |
 | OAuth provider secrets (`GOOGLE_*`, `MICROSOFT_*`, `APPLE_*`) | That provider's `/start` returns 501. | **Correct — fails closed.** |
-| `JWT_SECRET` | `lib/auth-secrets.ts:43` substitutes a hardcoded string literal committed to this repository. **No environment check.** | **Fails open.** |
-| `JWT_REFRESH_SECRET` | `lib/auth-secrets.ts:44`, same. | **Fails open.** |
-| `SELF_CHECK_IN_QR_SECRET` | `attendance/router.ts:72` substitutes a hardcoded literal. The library layer *does* refuse an empty secret (`self-check-in-qr.ts:67`), but the router never passes empty — it passes the literal, so that guard is unreachable. The comment at `:70-71` claims "Worker deploys will emit a warning if it's missing"; **nothing in the codebase implements such a warning.** | **Fails open.** |
+| `JWT_SECRET` | **Was:** `lib/auth-secrets.ts:43` substituted a hardcoded string literal committed to this repository, with no environment check. **Now:** `requireSecret` throws. | **Fixed — fails closed.** |
+| `JWT_REFRESH_SECRET` | **Was:** `lib/auth-secrets.ts:44`, same. **Now:** `requireSecret` throws. | **Fixed — fails closed.** |
+| `SELF_CHECK_IN_QR_SECRET` | **Was:** `attendance/router.ts:72` substituted a hardcoded literal. The library layer *did* refuse an empty secret (`self-check-in-qr.ts:67`), but the router never passed empty — it passed the literal, so that guard was unreachable. The comment claimed "Worker deploys will emit a warning if it's missing"; nothing implemented such a warning. **Now:** `requireSecret` throws, and the stale comment is gone. | **Fixed — fails closed.** |
 
-The consequence of the first two is not subtle: a production Worker deployed
-with `JWT_SECRET` unbound or misspelled signs and verifies real session tokens
-with a key that is public to anyone who can read the repository. Because
+The consequence of the first two was not subtle: a production Worker deployed
+with `JWT_SECRET` unbound or misspelled would sign and verify real session
+tokens with a key that is public to anyone who can read the repository. Because
 `signAccessToken` (`apps/api/src/auth/service.ts:89-96`) serialises the whole
 `AuthContext` into the payload, and because `matchesCapability`
 (`packages/types/src/rbac.ts:183`) returns `true` unconditionally for
-`systemRole === 'admin'`, a forged token is a full administrative compromise of
+`systemRole === 'admin'`, a forged token was a full administrative compromise of
 every branch.
 
-This is already a known finding being fixed on a separate branch. It is
-restated here because key management is exactly where it belongs, and because
-the remediation is a policy requirement, not a code preference:
+### How it was closed, and why not the way this document first recommended
 
-> **DECISION NEEDED: adopt "fail closed in production" as a binding rule, and decide how production is detected.**
-> **Recommended:** `getAuthSecrets` and `readQrSecret` throw on startup when the
-> secret is unbound and the runtime is not local development. The detection
-> signal matters because Workers has no `NODE_ENV`: the options are a new
-> non-secret `ENVIRONMENT` var in `wrangler.jsonc` (explicit, one more thing to
-> forget), or treating the presence of the `HYPERDRIVE` binding as the signal
-> (automatic, since local dev uses `DATABASE_URL` instead).
-> **Recommended: the explicit `ENVIRONMENT` var**, because an implicit signal is
-> how this class of bug happens in the first place.
-> **Trade-off:** a hard throw turns a silent weakness into a total outage if a
-> secret is ever lost. That is the correct trade for a signing key and should be
-> stated plainly to whoever runs the deploy.
+`apps/api/src/lib/secret-env.ts` now owns secret resolution for all three.
+`requireSecret(c, key, devDefault)` returns the environment value if present,
+returns `devDefault` **only** where it can positively prove the process is not
+deployed, and otherwise throws. Every caller is per-request, so the failure is a
+500 on that request rather than a Worker that will not boot.
+
+This document originally recommended adding an explicit non-secret
+`ENVIRONMENT` var to `wrangler.jsonc` as the detection signal, and rejected
+implicit detection on the grounds that "an implicit signal is how this class of
+bug happens in the first place". **That recommendation was not followed, and the
+reasoning that rejected implicit detection is the reason why.**
+
+An `ENVIRONMENT` var is a value that must be *present and correct* for the check
+to be strict. Forget it in a new environment and the code reads "not
+production" — so the var that exists to make the system fail closed is itself a
+thing that fails open when forgotten. The detection used instead inverts the
+default:
+
+- `isLocalOrTest()` is an **allowlist**. It returns true only for
+  `process.env.VITEST` (set by the test runner alone) or `NODE_ENV` of exactly
+  `test` or `development`.
+- `src/server.ts` — the Node entry, which wrangler never deploys — sets
+  `NODE_ENV ??= 'development'` for itself. The declaration lives in the only
+  file that can honestly make it.
+- A deployed Worker reports neither signal, so it is strict **by default**. If
+  the detection logic is ever broken, dropped, or ported to a new runtime, the
+  failure direction is a refusal to serve, not a silent public key.
+
+**Trade-off, unchanged and stated plainly to whoever runs the deploy:** a hard
+throw turns a silent weakness into a total outage if a signing secret is ever
+lost. That is the correct trade for a signing key. All three secrets were
+verified bound in both the production and staging Workers before this shipped
+(`wrangler secret list`, 8 November 2026), so the change could not take either
+environment down on deploy.
+
+`secret-env.test.ts` holds the proof, including the case that actually matters:
+the tests strip `VITEST` and set `NODE_ENV=production` to assert the deployed
+path throws, because a test written under Vitest without that would pass whether
+the fix existed or not.
 
 ---
 
@@ -302,47 +330,19 @@ What *is* committed, and should be understood as deliberate:
 
 | Location | Name | Note |
 |---|---|---|
-| `.env.example:1-3` | `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET` | Placeholders |
+| `.env.example` | `DATABASE_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `SELF_CHECK_IN_QR_SECRET` | Placeholders for local development only |
 | `docker-compose.yml:9-10` | `POSTGRES_USER`, `POSTGRES_PASSWORD` | Both literally `kairos`; local Docker only |
 | `docker-compose.demo.yml:16-17, 37-39` | Postgres credentials, `DATABASE_URL`, both JWT secrets | Throwaway demo stack. A committed demo signing key is fine **only** because the demo stack is never reachable from production. |
-| `apps/api/src/lib/auth-secrets.ts:43-44` | `JWT_SECRET`, `JWT_REFRESH_SECRET` fallbacks | **Not placeholders — live code paths.** See §1. |
-| `apps/api/src/attendance/router.ts:72` | `SELF_CHECK_IN_QR_SECRET` fallback | Same. |
+| `apps/api/src/lib/auth-secrets.ts` | `JWT_SECRET`, `JWT_REFRESH_SECRET` dev defaults | **Were live code paths; now unreachable once deployed.** Passed to `requireSecret`, which returns them only under the test runner or a declared `development`. See §1. |
+| `apps/api/src/attendance/router.ts` | `SELF_CHECK_IN_QR_SECRET` dev default | Same. |
 
-The three in-code fallbacks are the only entries in this table that matter.
-A committed placeholder in `.env.example` is documentation; a committed fallback
-inside `getAuthSecrets` is a production signing key waiting for one
-misconfiguration.
-
-### Secret hygiene gaps found while building this inventory
-
-- **`OAUTH_SIGNING_KEY` is documented nowhere** — not in `wrangler.jsonc`'s
-  checklist, not in `interface Env`, not in `docs/`. It is the highest-value key
-  in the system and the only record of it is the comment at
-  `oauth-server/keys.ts:16-22`. Generate it with
-  `node apps/api/scripts/generate-oauth-key.mjs` — **not** via `npm run`, which
-  prints a banner into the secret, a mistake already made and fixed once.
-- `.env.example` covers 5 of roughly 50 environment variables. There is no
-  `.dev.vars.example` anywhere, and no `apps/api/.env.example` despite
-  `BETTER_AUTH_SETUP.md:172` instructing the reader to create `apps/api/.env`.
-- `APPLE_NATIVE_SERVICES_ID` is documented as an EAS secret to create
-  (`BETTER_AUTH_SETUP.md:198`) and is **read by no code**. Stale.
-- `PORTAL_URL` (`membership/service.ts:634`) duplicates `FRONTEND_URL`'s job
-  under a second name, is set nowhere, and falls back to a hardcoded URL.
-- `apps/api/entrypoint.sh:19` runs `drizzle-kit migrate`, contradicting the
-  `db:bootstrap`-only rule that `docs/commands.md` states as applying to every
-  environment. Not a secrets issue, but it is the one surviving non-bootstrap
-  migration path and it matters for recovery — see `backup-recovery.md`.
-
-> **DECISION NEEDED: adopt a named, reviewed secret inventory as the source of truth.**
-> **Recommended:** a `.dev.vars.example` listing every Worker-read name with a
-> one-line purpose and an empty value, committed, plus a CI step that fails if a
-> name read via `readEnv` is absent from it. That turns this document's §2 from a
-> point-in-time audit into something that cannot silently rot.
-> **Trade-off:** the check needs a tiny AST or grep script and will produce false
-> positives on dynamic key names. There are none today.
-
----
-
+The three in-code dev defaults were the only entries in this table that ever
+mattered. A committed placeholder in `.env.example` is documentation; a
+committed fallback that a deployed Worker could reach was a public signing key.
+Since 8 November 2026 they are documentation too — `requireSecret` cannot return
+them from a deployed environment, and `secret-env.test.ts` asserts that
+directly. They are kept rather than deleted so local development and the test
+suite need no secret provisioning.
 ## 7. On compromise
 
 The severity ladder and notification duties are in `incident-response.md`; this
@@ -387,12 +387,17 @@ investigation effort goes:
 
 ## 8. Open decisions, collected
 
-1. Adopt "fail closed in production", and choose how production is detected (§1).
+1. ~~Adopt "fail closed in production", and choose how production is detected~~
+   — **CLOSED 8 November 2026.** Implemented as a positive allowlist in
+   `lib/secret-env.ts` rather than the `ENVIRONMENT` var this document first
+   recommended; §1 records why the recommendation was overruled.
 2. Implement JWKS key overlap before any OIDC relying party goes live (§4).
 3. Name the holders of each secret class and cap Cloudflare account access (§5).
 4. Confirm the SES IAM policy is scoped to `ses:SendEmail` on one configuration
    set (§5).
 5. Adopt a committed, CI-checked secret inventory (§6).
 
-Items 1 and 3 should not wait. Item 1 is the only one on this list that is
-currently a live vulnerability rather than a missing control.
+Item 3 should not wait. With item 1 closed, **nothing on this list is a live
+vulnerability** — the remainder are missing controls and unnamed
+responsibilities, which is a materially different posture from the one this
+document opened with.
