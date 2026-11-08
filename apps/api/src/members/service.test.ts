@@ -2182,3 +2182,174 @@ describe('attachGuardian / detachGuardian', () => {
     expect(guardianLinkRows()).toHaveLength(0);
   });
 });
+
+// ── Audit coverage for member data access ─────────────────
+//
+// These close the gap `docs/security/incident-response.md` §2 named: a
+// data-exfiltration or tampering incident could not be scoped, because
+// neither the CSV export nor a member edit left any trace. UK GDPR Article 33
+// allows 72 hours to decide whether a breach needs reporting, and that
+// decision needs to know who touched what.
+//
+// They also guard the opposite failure. An audit log that copies field values
+// out of `members` becomes a second store of the same personal data, under a
+// different retention period and a different access gate — so these assert on
+// what is NOT recorded as much as on what is.
+
+describe('audit coverage for member data access', () => {
+  describe('member_updated', () => {
+    it('records who changed whose record, and which fields', async () => {
+      setupSelect([{ id: memberId, phone: '000-original' }]);
+      setupUpdateTracked([{ ...sampleMemberFull, phone: '999-new' }]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await updateMember(mockDb, memberId, { phone: '999-new', city: 'Lagos' }, adminAuth);
+
+      const row = auditRow();
+      expect(row).toBeDefined();
+      expect(row?.['action']).toBe('member_updated');
+      expect(row?.['outcome']).toBe('success');
+      expect(row?.['actorMemberId']).toBe(adminAuth.memberId);
+      expect(row?.['targetType']).toBe('member');
+      expect(row?.['targetId']).toBe(memberId);
+      // Sorted, so the assertion does not depend on payload key order.
+      expect((row?.['metadata'] as Record<string, unknown>)['fields']).toEqual(['city', 'phone']);
+    });
+
+    it('never records the field values, only their names', async () => {
+      setupSelect([{ id: memberId, phone: '000-original' }]);
+      setupUpdateTracked([{ ...sampleMemberFull, phone: '07700900123' }]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await updateMember(
+        mockDb,
+        memberId,
+        { phone: '07700900123', emergencyContactName: 'Jane Doe' },
+        adminAuth,
+      );
+
+      // The whole metadata blob, serialised, must not leak the personal data.
+      const serialised = JSON.stringify(auditRow()?.['metadata']);
+      expect(serialised).not.toContain('07700900123');
+      expect(serialised).not.toContain('Jane Doe');
+      expect(serialised).toContain('emergencyContactName');
+      expect(serialised).toContain('phone');
+    });
+
+    it('records a self-edit too, marked as one', async () => {
+      // The admin-edit NOTIFICATION stays silent on self-edits by design. The
+      // audit trail must not — "the member did it themselves" is a finding, not
+      // a reason to write nothing.
+      setupSelect([{ id: memberId, phone: '000-original' }]);
+      setupUpdateTracked([{ ...sampleMemberFull, phone: '999-new' }]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await updateMember(mockDb, memberId, { phone: '999-new' }, memberAuth);
+
+      const row = auditRow();
+      expect(row?.['action']).toBe('member_updated');
+      expect((row?.['metadata'] as Record<string, unknown>)['selfEdit']).toBe(true);
+      expect(row?.['actorMemberId']).toBe(memberId);
+    });
+
+    it('marks an admin edit as not a self-edit', async () => {
+      setupSelect([{ id: memberId, phone: '000-original' }]);
+      setupUpdateTracked([{ ...sampleMemberFull, phone: '999-new' }]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await updateMember(mockDb, memberId, { phone: '999-new' }, adminAuth);
+
+      expect((auditRow()?.['metadata'] as Record<string, unknown>)['selfEdit']).toBe(false);
+    });
+
+    it('writes no audit row when the member does not exist', async () => {
+      // The update never happened, so there is nothing to record. A row here
+      // would be a false positive in a breach investigation.
+      setupSelect([]);
+      setupUpdateTracked([]);
+      setupInsertTracked([]);
+
+      await expect(updateMember(mockDb, memberId, { phone: '999' }, adminAuth)).rejects.toThrow(
+        'Member not found',
+      );
+      expect(auditRow()).toBeUndefined();
+    });
+  });
+
+  describe('member_exported', () => {
+    const csvRow = {
+      firstName: 'John', lastName: 'Doe', email: 'john@test.com', phone: '123456',
+      gender: 'Male', dateOfBirth: null, address: null, city: 'Lagos',
+      branchName: 'Lagos Branch', membershipDate: '2024-01-01',
+      emergencyContactName: null, emergencyContactPhone: null,
+      emergencyContactRelationship: null, systemRole: 'member', approvalStatus: 'approved',
+    };
+
+    it('records the export, with the row count and an all-branches scope for an admin', async () => {
+      setupSelect([csvRow, csvRow]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await exportMembersCsv(mockDb, adminAuth);
+
+      const row = auditRow();
+      expect(row).toBeDefined();
+      expect(row?.['action']).toBe('member_exported');
+      expect(row?.['actorMemberId']).toBe(adminAuth.memberId);
+      expect(row?.['targetType']).toBe('member_directory');
+      const meta = row?.['metadata'] as Record<string, unknown>;
+      expect(meta['rowCount']).toBe(2);
+      expect(meta['scope']).toBe('all_branches');
+      expect(meta['format']).toBe('csv');
+    });
+
+    it('names the granted branches for a non-admin, so the blast radius is on the row', async () => {
+      setupSelectSequence([csvRow], []);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await exportMembersCsv(mockDb, branchAdminSameBranchAuth);
+
+      const meta = auditRow()?.['metadata'] as Record<string, unknown>;
+      expect(meta['scope']).toBe('granted_branches');
+      expect(meta['branchIds']).toEqual([branchId]);
+    });
+
+    it('records an empty export, because a zero-row pull is still a pull', async () => {
+      setupSelect([]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await exportMembersCsv(mockDb, adminAuth);
+
+      expect((auditRow()?.['metadata'] as Record<string, unknown>)['rowCount']).toBe(0);
+    });
+
+    it('never records which members were in the file', async () => {
+      // Listing the ids would make the audit row a map of the breach rather
+      // than a description of it.
+      setupSelect([csvRow]);
+      setupInsertTracked([{ id: 'audit-1' }]);
+
+      await exportMembersCsv(mockDb, adminAuth);
+
+      const serialised = JSON.stringify(auditRow()?.['metadata']);
+      expect(serialised).not.toContain('john@test.com');
+      expect(serialised).not.toContain('John');
+      expect(serialised).not.toContain('Doe');
+    });
+
+    it('writes no audit row when the caller is refused the export', async () => {
+      setupInsertTracked([]);
+      await expect(exportMembersCsv(mockDb, fellowshipLeaderAuth)).rejects.toThrow(
+        'You have no branch to export',
+      );
+      expect(auditRow()).toBeUndefined();
+    });
+  });
+
+  it('declares both actions in AUDIT_ACTIONS, so the settings screen can label them', async () => {
+    const { AUDIT_ACTIONS: actions, AUDIT_ACTION_LABEL: labels } = await import('@kairos/types');
+    expect(actions).toContain('member_updated');
+    expect(actions).toContain('member_exported');
+    expect(labels['member_updated']).toBeTruthy();
+    expect(labels['member_exported']).toBeTruthy();
+  });
+});

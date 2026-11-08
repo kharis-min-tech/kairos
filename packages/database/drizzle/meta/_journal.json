@@ -449,6 +449,13 @@
       "when": 1793200000000,
       "tag": "0063_audit_log_guardian_actions",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1793250000000,
+      "tag": "0064_audit_log_member_data_actions",
+      "breakpoints": true
     }
   ]
 }

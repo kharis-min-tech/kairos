@@ -511,6 +511,7 @@ export async function updateMember(
   memberId: string,
   input: Record<string, unknown>,
   auth: AuthContext,
+  ctx?: RequestContext,
 ) {
   enforceMemberAccess(auth, memberId);
 
@@ -591,6 +592,33 @@ export async function updateMember(
         }
       }
     }
+
+    // Who changed whose record, and which fields. Article 33 needs this to
+    // scope a tampering or exfiltration incident; without it there is no way
+    // to tell an admin correcting a typo from one quietly rewriting a
+    // safeguarding contact. Recorded for every update, self-edits included,
+    // with `selfEdit` marking which is which — the notification above is
+    // deliberately silent on self-edits, but the audit trail must not be.
+    //
+    // `fields` is the sorted key list of the update, never the values. The
+    // values are already in `members`; duplicating them here would put
+    // personal data in a second table with a different retention period and a
+    // different access gate, which is a data-protection problem of its own.
+    //
+    // Awaited for the same reason as the guardian events: a deferred write on
+    // a per-request Postgres client loses the row.
+    await recordAuditEvent(db, {
+      actorMemberId: auth.memberId,
+      action: AuditAction.MemberUpdated,
+      outcome: AuditOutcome.Success,
+      targetType: 'member',
+      targetId: memberId,
+      metadata: {
+        fields: Object.keys(safeInput).sort(),
+        selfEdit: auth.memberId === memberId,
+      },
+      ...(ctx && { ctx }),
+    });
 
     return updated;
   } catch (err) {
@@ -1895,7 +1923,11 @@ function branchesCallerCanWrite(auth: AuthContext): string[] {
   );
 }
 
-export async function exportMembersCsv(db: Database, auth: AuthContext): Promise<string> {
+export async function exportMembersCsv(
+  db: Database,
+  auth: AuthContext,
+  ctx?: RequestContext,
+): Promise<string> {
   let scopeCondition: SQL | undefined;
   if (auth.systemRole !== 'admin') {
     const writable = branchesCallerCanWrite(auth);
@@ -1952,6 +1984,33 @@ export async function exportMembersCsv(db: Database, auth: AuthContext): Promise
     headers.join(','),
     ...redacted.map((r) => headers.map((h) => escapeCSV((r as Record<string, unknown>)[h])).join(',')),
   ];
+
+  // A bulk read of the directory is the single highest-value exfiltration path
+  // in the system — one request, every member the caller can reach, children
+  // included. Article 33 gives 72 hours to decide whether a breach needs
+  // reporting, and that decision needs to know who pulled the file and how
+  // much of it. Before this, the export left no trace whatsoever.
+  //
+  // Awaited, not deferred: the Postgres client is per-request inside an
+  // AsyncLocalStorage scope, so a `ctx.waitUntil` write either throws or does
+  // I/O on a socket the request no longer owns, and the row vanishes.
+  //
+  // The metadata counts rows and names the scope. It deliberately does not
+  // record WHICH members, nor any field value — that would make the audit log
+  // a second copy of the directory under a different retention period.
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.MemberExported,
+    outcome: AuditOutcome.Success,
+    targetType: 'member_directory',
+    metadata: {
+      rowCount: redacted.length,
+      scope: auth.systemRole === 'admin' ? 'all_branches' : 'granted_branches',
+      ...(auth.systemRole === 'admin' ? {} : { branchIds: branchesCallerCanWrite(auth) }),
+      format: 'csv',
+    },
+    ...(ctx && { ctx }),
+  });
 
   return lines.join('\n');
 }

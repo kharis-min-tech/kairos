@@ -22,7 +22,8 @@ import { createEnrollmentInternal } from '../new-believers/service';
 import { createMemberShell, linkGuardians, type GuardianLink } from '../lib/member-shell';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
-import { NotificationEventType } from '@kairos/types';
+import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
+import { recordAuditEvent, type RequestContext } from '../audit/service';
 
 const FORM_TYPE_LABELS: Record<string, string> = {
   first_time_visitor: 'first-time visitor',
@@ -1408,6 +1409,7 @@ export async function exportSubmissionsToCSV(
   db: Database,
   auth: AuthContext,
   query: ExportSubmissionsQuery,
+  ctx?: RequestContext,
 ): Promise<string> {
   const branchId = resolveScopedBranchId(auth, query.branchId);
   const visible = await getVisibleFormTypes(db, auth, branchId);
@@ -1468,6 +1470,32 @@ export async function exportSubmissionsToCSV(
     });
     lines.push([...base, ...projected].map(escapeCSV).join(','));
   }
+
+  // The second of the two bulk-export paths, and it had the same gap the
+  // member export did: a leader could pull every submission of a form type and
+  // leave no trace in `audit_log`. Form submissions carry first-timer contact
+  // details, baby-dedication records naming children and their parents, and
+  // testimonies — so scoping a leak of this file matters as much as the
+  // directory.
+  //
+  // Awaited, not deferred: the Postgres client is per-request inside an
+  // AsyncLocalStorage scope, so a `ctx.waitUntil` write loses the row.
+  //
+  // Counts and names the slice, never the submissions themselves — the same
+  // rule as the member export, for the same reason.
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.SubmissionsExported,
+    outcome: AuditOutcome.Success,
+    targetType: 'form_submissions',
+    metadata: {
+      rowCount: rows.length,
+      formType: query.formType,
+      ...(branchId ? { branchId } : { scope: 'all_branches' }),
+      format: 'csv',
+    },
+    ...(ctx && { ctx }),
+  });
 
   return lines.join('\n');
 }

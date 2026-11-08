@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, getAuth } from '../middleware/auth';
 import { db } from '../db';
+import { extractRequestContext } from '../audit/context';
 import { successResponse } from '@kairos/utils';
 import {
   submitFormSchema,
@@ -75,7 +76,12 @@ formsRouter.get(
   zValidator('query', exportSubmissionsQuerySchema),
   async (c) => {
     const auth = getAuth(c);
-    const csv = await exportSubmissionsToCSV(db, auth, c.req.valid('query'));
+    const csv = await exportSubmissionsToCSV(
+      db,
+      auth,
+      c.req.valid('query'),
+      extractRequestContext(c),
+    );
     const formType = c.req.valid('query').formType;
     c.header('Content-Type', 'text/csv');
     c.header('Content-Disposition', `attachment; filename="forms-${formType}-export.csv"`);

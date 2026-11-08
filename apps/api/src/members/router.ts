@@ -118,7 +118,8 @@ membersRouter.post(
 
 membersRouter.get('/export', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);
-  const csv = await exportMembersCsv(db, auth);
+  // extractRequestContext so the audit row carries the IP the file left to.
+  const csv = await exportMembersCsv(db, auth, extractRequestContext(c));
   return new Response(csv, {
     headers: {
       'Content-Type': 'text/csv',
@@ -176,7 +177,13 @@ membersRouter.get('/:id', async (c) => {
 
 membersRouter.patch('/:id', zValidator('json', updateMemberSchema), async (c) => {
   const auth = getAuth(c);
-  const member = await updateMember(db, c.req.param('id'), c.req.valid('json'), auth);
+  const member = await updateMember(
+    db,
+    c.req.param('id'),
+    c.req.valid('json'),
+    auth,
+    extractRequestContext(c),
+  );
   return c.json(successResponse(member));
 });
 

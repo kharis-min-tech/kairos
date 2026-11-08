@@ -72,8 +72,9 @@ window, and PlanetScale's missing sub-processor list — so they appear in the
 lists rather than disappearing from them.
 
 **What has since shipped.** This section opened as a four-item backlog. Three
-of the four are done, and the record is kept rather than quietly edited,
-because the order things were fixed in is itself audit evidence.
+of the four are done and the fourth is a people task, so **no item on it is a
+code change any more.** The record is kept rather than quietly edited, because
+the order things were fixed in is itself audit evidence.
 
 1. **Get the DPIA consulted on and signed** (`dpia.md` §2 and §6) — **still
    open, and now the only genuine pilot gate in this document set.** It is
@@ -86,13 +87,15 @@ because the order things were fixed in is itself audit evidence.
    `SELF_CHECK_IN_QR_SECRET`, now resolve through `lib/secret-env.ts` and throw
    rather than fall back to a value committed to this repository. §1 of that
    document records why the fix did not take the shape it first recommended.
-3. **Add `member_exported` and `member_updated` audit actions**
-   (`incident-response.md` §2) — **still open.** Without them a
-   data-exfiltration incident cannot be scoped, so the Article 33 assessment has
-   no evidence to work from, and `dpia.md` §6 cannot honestly conclude that
-   detection is adequate. Note that adding an action value also needs a
-   migration widening `audit_log_action_check`, or the insert fails silently —
-   see `backup-recovery.md` §3.
+3. ~~**Add `member_exported` and `member_updated` audit actions**~~
+   (`incident-response.md` §2) — **done 8 November 2026**, plus
+   `submissions_exported` for the forms export, which had the same defect.
+   Migration 0064 widened `audit_log_action_check`, without which the inserts
+   would have failed silently. Both bulk-export paths and every member edit now
+   leave a trail; none of them records field values or member ids, so the audit
+   log does not become a second copy of the data it describes. `member_viewed`
+   was considered and rejected — a row per read is an access log, not an audit
+   log.
 4. ~~**Merge and deploy the remediation PRs**~~ — **done 8 November 2026.**
    #71 (`fix/security-blockers-round-1`), #72 (`fix/guardian-attachment`), #73
    (`feat/guardian-confirm-link`, carrying migration 0063), #74
