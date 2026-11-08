@@ -75,16 +75,40 @@ should be treated as one — see §3.
 
 These are not quibbles; each one changes what an investigation can conclude.
 
-- **The audit log cannot answer a data-access question.** There are no
-  `member_updated`, `member_viewed` or `member_exported` action types, and the
-  CSV export routes (`apps/api/src/members/router.ts:85`,
-  `apps/api/src/forms/router.ts:74`) write no audit row. **A branch admin can
-  export the entire member directory and leave no trace in `audit_log`.** Under
-  Article 33 the questions are "whose data, how much, and was it taken" — and
-  the audit log cannot answer any of them. The request logger would show a
-  `GET /api/members/export` with a `memberId`, but only inside Workers Logs'
-  short retention window (see below), and the authoritative security log does
-  not cover it at all.
+- **The audit log could not answer a data-access question. Partly closed on
+  8 November 2026.** There were no `member_updated`, `member_viewed` or
+  `member_exported` action types, and the CSV export wrote no audit row at all,
+  so **a branch admin could export the entire member directory and leave no
+  trace in `audit_log`.**
+
+  `member_updated` and `member_exported` now exist (migration 0064), and both
+  `updateMember` and `exportMembersCsv` record them. The export row carries the
+  actor, the IP, the row count and the branch scope; the update row carries the
+  actor, the subject and the names of the fields touched. **Neither carries
+  field values or member ids** — deliberately, because an audit log holding the
+  data would be a second copy of it under a different retention period, which
+  enlarges the breach it exists to describe.
+
+  **All three bulk-export paths are now audited**, each with its own action
+  rather than a shared one, because each carries a different population and an
+  investigator filtering the log should not have to read `targetType` to tell
+  the files apart:
+
+  | Action | Path | Why it is separate |
+  |---|---|---|
+  | `member_exported` | `GET /api/members/export` | The directory — every member the caller can reach, children included |
+  | `submissions_exported` | `GET /api/forms/submissions/export` | First-timer contact details, baby-dedication records naming children and their parents, testimonies |
+  | `donor_register_exported` | `GET /api/gift-aid/register` and `/register.csv` | Donor names and **home addresses**, which the directory export does not carry; HMRC-facing evidence with its own six-year retention |
+
+  The Gift Aid one matters disproportionately: it is the path the
+  cyber-security checklist asks about by name — "who exported or accessed
+  donor/giving data" — and it was the last of the three still writing nothing.
+
+  **One gap remains, deliberately.** `member_viewed` does not exist and is not
+  planned: a row per directory read would be an access log rather than an audit
+  log, and the volume would bury the events that matter. Reads stay in the
+  request log, with its short retention — which is the argument for Logpush
+  below, not for a `member_viewed` action.
 - **No alerting.** Nothing pages anyone. No threshold alert on sign-in failures,
   no alarm on export volume, no Cloudflare notification configured in the repo.
   Detection is entirely either a member complaining or someone happening to look.
@@ -133,22 +157,36 @@ These are not quibbles; each one changes what an investigation can conclude.
 > own — see `ropa.md` §3. Better detection costs a processor; make that trade
 > deliberately.
 
-> **DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules are configured at the edge.**
-> Still genuinely unknown — WAF rules are dashboard configuration and leave no
-> trace in the repository, unlike the Logpush flag. Nothing in the codebase or in
-> `wrangler.jsonc` rate-limits anything.
-> **Recommended:** confirm before the pilot, and if there are none, add them at
-> the edge rather than in Hono — the edge stops the request before it costs
-> Worker CPU, which is the whole point against the argon2id amplification path
-> in `secure-sdlc.md` §4.6.
+> **~~DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules are
+> configured at the edge.~~ ANSWERED 8 November 2026: there are none, and
+> creating them is deliberately deferred.**
+> Confirmed rather than assumed. Nothing in the codebase or `wrangler.jsonc`
+> rate-limits anything, and no edge rules exist.
+> **The rules are now fully specified** in `waf-rate-limiting.md`, derived from
+> the real route surface, as Cloudflare edge rules rather than in-Hono counters —
+> the Worker binds Hyperdrive and nothing else, so there is nowhere to keep a
+> counter, and the `http_ratelimit` phase runs *before* the Worker, which is the
+> whole point against the argon2id amplification path in `secure-sdlc.md` §4.6.
+> **Deferred by decision, not oversight:** the zone is on the Cloudflare Free
+> plan, and the church's position is to create these rules at the production
+> rollout rather than pay for them against synthetic staging traffic. **This is
+> the only Fail on the cyber-security checklist that is deferred rather than
+> outstanding**, and it is flagged in that document for the cyber team to
+> challenge if they disagree.
+> **What remains, therefore, is not a question but a task with a trigger:**
+> create the rules when production takes real traffic. Until then login,
+> forgot-password and the OIDC token endpoint are unthrottled, and detection of
+> a credential-stuffing run depends on §2's absent alerting.
 
-> **DECISION NEEDED: add `member_exported` and `member_updated` to the audit taxonomy before the pilot.**
-> **Recommended: yes.** Without them, a data-exfiltration incident cannot be
-> scoped, which means the Article 33 assessment in §4 defaults to the
-> conservative answer — notify — on no evidence.
-> **Trade-off:** `audit_log.action` has a database CHECK constraint, so new
-> action types need a migration as well as the two call sites. It is roughly a
-> half-day of work and it is the highest-value half-day on this list.
+> **~~DECISION NEEDED: add `member_exported` and `member_updated` to the audit
+> taxonomy before the pilot.~~ CLOSED 8 November 2026 — implemented.**
+> Both actions exist, migration 0064 widened the CHECK constraint, and the two
+> call sites record them. `members/service.test.ts` asserts both the presence of
+> the rows and the absence of field values from them.
+> The forms export and the Gift Aid register, which had the same defect, were
+> closed in the same change as `submissions_exported` and
+> `donor_register_exported`. All three bulk-export paths now leave a trail, and
+> none of them records field values, member ids or donor details.
 
 ---
 
@@ -504,8 +542,11 @@ also evidences that the plan is tested.
    processor — see `ropa.md` §3.
 3. Confirm whether Cloudflare WAF rate-limiting rules exist at the edge (§2) —
    still genuinely unknown, unlike Logpush.
-4. Add `member_exported` and `member_updated` to the audit taxonomy before the
-   pilot (§2).
+4. ~~Add `member_exported` and `member_updated` to the audit taxonomy before the
+   pilot~~ — **CLOSED 8 November 2026**, together with `submissions_exported`
+   and `donor_register_exported` for the forms and Gift Aid exports, which had
+   the same defect (§2). All three bulk-export paths now leave a trail; none
+   records field values, member ids or donor details.
 5. Confirm the DPO is reachable at a weekend, since the 72-hour clock does not
    pause (§4). *The question of who decides is settled: the DPO decides, and the
    Incident Lead cannot override.*

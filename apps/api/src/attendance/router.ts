@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireAnyCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
+import { requireSecret } from '../lib/secret-env';
 import { successResponse } from '@kairos/utils';
 import {
   createServiceSchema,
@@ -50,26 +51,20 @@ import {
 
 /**
  * Reads SELF_CHECK_IN_QR_SECRET from the Worker env binding (production /
- * staging) or process.env (local Node dev). Mirrors `getAuthSecrets` in
- * lib/auth-secrets.ts so the two secret-fetching flows stay uniform.
+ * staging) or process.env (local Node dev). Shares `requireSecret` with
+ * `lib/auth-secrets.ts` so the two secret-fetching flows stay uniform — and so
+ * both fail closed rather than falling back to a committed default.
+ *
+ * This secret signs the self-check-in QR token. A public fallback would let
+ * anyone mint a token that marks any member present at any service, so it has
+ * no usable default outside local development.
  *
  * Set the secret with:
  *   wrangler secret put SELF_CHECK_IN_QR_SECRET
  *   wrangler secret put --env staging SELF_CHECK_IN_QR_SECRET
  */
 function readQrSecret(c: Context): string {
-  const env = (c as { env?: unknown }).env;
-  if (env && typeof env === 'object') {
-    const v = (env as Record<string, unknown>)['SELF_CHECK_IN_QR_SECRET'];
-    if (typeof v === 'string' && v.length > 0) return v;
-  }
-  if (typeof process !== 'undefined' && process.env) {
-    const v = process.env['SELF_CHECK_IN_QR_SECRET'];
-    if (typeof v === 'string' && v.length > 0) return v;
-  }
-  // Dev fallback keeps local integration cheap; production MUST set the secret
-  // (Worker deploys will emit a warning if it's missing).
-  return 'dev-self-check-in-qr-secret';
+  return requireSecret(c, 'SELF_CHECK_IN_QR_SECRET', 'dev-self-check-in-qr-secret');
 }
 
 export const attendanceRouter = new Hono();

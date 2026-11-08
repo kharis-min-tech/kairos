@@ -49,8 +49,10 @@ jobs:
           languages: javascript-typescript
           # `security-and-quality` adds maintainability queries that would bury
           # the security findings this gate exists for. `security-extended`
-          # keeps the scope to security, one tier above the default.
-          queries: security-extended
+          # keeps the scope to security, one tier above the default — it is set
+          # in the config file alongside the path exclusions, so the whole scope
+          # of the scan is described in one place.
+          config-file: ./.github/codeql/codeql-config.yml
 
       # No build step. For JavaScript/TypeScript, CodeQL extracts from source,
       # and `autobuild` on this monorepo would try to drive turbo for no gain.

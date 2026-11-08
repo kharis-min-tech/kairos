@@ -93,17 +93,90 @@ Said plainly, because a document that implies otherwise is worse than useless:
   was no `SECURITY.md`, no threat model and no incident runbook in the
   repository.
 
-> **DECISION NEEDED: which automated security gates to add, and in what order.**
-> **Recommended, cheapest first:** (1) Dependabot with grouped weekly PRs —
-> configuration only, no CI time; (2) GitHub secret scanning with push
-> protection enabled at the repository level; (3) CodeQL on the default setup
-> for JavaScript/TypeScript, which catches a meaningful share of the injection
-> and access-control classes in §4; (4) a lint rule banning `sql.raw` outside a
-> small allowlist (see §4.7).
-> **Trade-off:** each adds CI time and, more importantly, noise. Dependabot on a
-> monorepo this size will open a lot of PRs, and a security gate everyone learns
-> to ignore is worse than none. Grouped updates and a monthly triage slot are
-> the mitigation.
+> **~~DECISION NEEDED: which automated security gates to add, and in what
+> order.~~ MOSTLY CLOSED 8 November 2026.** Shipped: **Dependabot** with grouped
+> updates; **CodeQL** — not the default setup but the `security-extended` suite,
+> on every pull request, on every push to `main` and `staging`, and weekly on a
+> schedule (the schedule matters because CodeQL ships new queries continuously,
+> so an unchanged codebase can still acquire findings); and an **npm audit**
+> gate failing on high or critical.
+>
+> **The noise trade-off this marker predicted turned out to be real, and the
+> mitigation is configuration rather than discipline.** CodeQL's first
+> `security-extended` run produced seven results. Three were genuine and are
+> fixed — a stored XSS reachable by naming a fellowship, an open redirect after
+> sign-in, and a duplicate of the first. One was a CSS selector in a test file.
+> Rather than dismiss that by hand every week, `.github/codeql/codeql-config.yml`
+> excludes test files, generated output and the e2e drivers, with the trade
+> stated in the file: a real flaw in a test helper is now invisible to CodeQL,
+> which is acceptable because test code does not ship.
+>
+> **CodeQL is deliberately NOT a required check yet.** A first scan on a
+> never-scanned codebase produces a backlog, and promoting it to required before
+> that backlog is cleared is how a gate gets bypassed by habit. It is promoted
+> once a scan comes back clean. The npm-audit gate is the opposite case —
+> verified green and firing only on *new* high or critical advisories — so that
+> one should be made required immediately; required is what gives it teeth.
+>
+> **Still open from this list:** GitHub secret scanning with push protection
+> (repository setting, not yet confirmed enabled), and a lint rule banning
+> `sql.raw` outside a small allowlist (§4.7).
+
+### The accepted criticals
+
+**"The npm audit gate is green" needs one qualification, because on its own the
+sentence is misleading.** The gate is green *against a baseline*, and that
+baseline — `.github/npm-audit-baseline.json`, generated 8 November 2026 — holds
+**124 accepted advisories, of which 5 are critical**. It exists so CI can fire
+on a *new* advisory rather than on the standing backlog of a monorepo this size,
+which is the right design. But a register that records "Next.js: Unauthenticated
+Remote Code Execution, accepted" with no rationale beside it is a finding in its
+own right, and an auditor reading it should escalate.
+
+So here is the rationale, checked rather than assumed. **All five are
+unreachable in this deployment, and none of the reasoning depends on the
+advisory being wrong.**
+
+| Advisory | Package | Why it does not reach production here |
+|---|---|---|
+| `GHSA-2464-fhr4-w9xw` (SVG) | `next` | Both are in the **Image Optimization API**, i.e. `/_next/image`. That endpoint **does not exist in this deployment**: `curl` returns **404 on both `kairos.kharis.org` and `staging.kairos.kharis.org`**. `@cloudflare/next-on-pages` does not ship the Next.js image optimizer, and `next/image` is imported **zero times** anywhere in `apps/web`. There is no code path to reach. |
+| `GHSA-2xp9-vwfh-vxw4` (AVIF) | `next` | As above — same endpoint, same 404. |
+| `GHSA-p293-qw3h-jr36` | `next` | **Windows-hosted servers only.** The API runs on Cloudflare Workers and the web app on Cloudflare Pages; there is no Windows host anywhere in the stack. |
+| `GHSA-5gmw-xhrv-c9v3`, `GHSA-85c8-ppgw-ccpr` | `tinypool` | Reached only via `vitest` — the test runner. It is a dev dependency and appears in no deployed bundle. Exploiting it requires already being able to run the test suite, which means already having the repository. |
+| `GHSA-pqg4-j6r4-53mv` | `shell-quote` | Reached via `drizzle-kit → gel` (a local CLI) and `react-native → react-devtools-core` (dev only). Neither ships. |
+
+**Two things follow, and neither is "do nothing".**
+
+**The Next.js advisories should still be patched**, because unreachable is a
+property of today's configuration, not a property of the dependency. The moment
+someone adds a `next/image` tag, two unauthenticated RCEs become live and
+nothing in CI will say so — the gate is already green on them. The fixes are
+`15.5.24` for the AVIF and Windows advisories and **above `15.5.27`** for the
+SVG one; `15.5.22` is installed.
+
+**That upgrade is not free, and the reason is worth recording.**
+`@cloudflare/next-on-pages@1.13.16` declares a peer range of
+`>=14.3.0 && <=15.5.2`, so the installed `15.5.22` **already violates it** and
+`npm ls` reports `invalid`. Moving further from the supported range to fix an
+unreachable vulnerability, days before a pilot, trades a real deployment risk
+for a theoretical one. **Recommended: schedule the Next.js upgrade together
+with a `next-on-pages` version that supports it, after the pilot is stable, and
+treat "nobody adds `next/image` before then" as the compensating control** —
+which is weak, because it depends on a person remembering. A lint rule banning
+`next/image` imports would make it an enforced control instead, and belongs with
+the `sql.raw` rule above.
+
+> **DECISION NEEDED: when the Next.js upgrade happens, and whether to enforce the
+> `next/image` ban in the meantime.**
+> **Recommended:** add the lint rule now (cheap, and it makes the compensating
+> control real), and schedule the framework upgrade for after the pilot
+> stabilises, paired with a `next-on-pages` release that supports the target
+> version.
+> **Trade-off:** the lint rule forbids a standard Next.js feature, which will
+> surprise whoever next wants an optimised image. The rule's message should say
+> why and point here. Deferring the upgrade means the repository carries three
+> accepted critical advisories for longer, which has to be explained every time
+> somebody reads the register.
 
 ### The agent workflow, treated as part of the lifecycle
 

@@ -180,14 +180,16 @@ safeguarding authority, a court, or a UK regulator.
 
 ## 3. Processors
 
-**Four processors. This list differs deliberately from the published privacy
-notice, which is wrong in two ways: it names Sentry, which receives nothing, and
-it omits Mapbox, which receives personal data.**
+**Four processors. This list and the published privacy notice now agree.** The
+notice was wrong in two ways — it named Sentry, which receives nothing, and
+omitted Mapbox, which receives personal data. Both were corrected on
+8 November 2026, so this table is no longer a deliberate divergence from what
+members are told.
 
 | Processor | Role | Personal data it receives | Region | Article 28 evidence held |
 |---|---|---|---|---|
 | **Cloudflare, Inc.** | Pages (web), Worker (API), Hyperdrive (DB gateway), **Images** (profile photos), Workers Logs | Everything in transit; **profile photographs at rest, including children's**; request logs carrying `memberId`, `branchId`, `activeRole`, path and status | UK/EU edge — **but confirm where Cloudflare Images stores at rest** | **Yes.** Customer DPA **v6.4, 3 April 2026**. Sub-processor list retrieved 8 Nov 2026. |
-| **PlanetScale, Inc.** | Postgres — the primary datastore | **All 55 tables, including health and safeguarding records** | AWS eu-west-2 (London) | **Yes.** Customer DPA, **last updated 15 October 2026**. **Sub-processor list not retrieved** — see below. |
+| **PlanetScale, Inc.** | Postgres — the primary datastore | **All 55 tables, including health and safeguarding records** | Primary store AWS eu-west-2 (London); **sub-processors almost entirely US** — see §4 | **Yes.** Customer DPA, **last updated 15 October 2026**. Sub-processor list retrieved 8 Nov 2026 (published 14 March 2025). |
 | **Amazon Web Services, Inc.** | SES transactional email | Recipient name and email; email body content, which includes **children's names** in aging-out notifications | eu-west-2 | **Yes.** GDPR DPA incorporated into the **AWS Service Terms §1.14.1**, with the UK GDPR and Swiss addenda at **§1.14.4** and the June 2021 SCCs included. |
 | **Mapbox** | Address autofill and map rendering, on web and mobile | **Partial address strings as a member types them**, plus coordinates. Not named in the privacy notice. | Confirm — likely US | **Yes.** Customer DPA **1 April 2025**. Sub-processor list retrieved 8 Nov 2026. |
 | **Expo / EAS** | Mobile app builds | Build artefacts and source. **No member data** — arguably not a processor of personal data at all | US | Not required on that basis |
@@ -202,6 +204,7 @@ repository, in OneDrive under `Tech/`, as:
 | Cloudflare | `ikharis_cloudflare_customer_dpa-v6.4_april_3_2026.pdf` | Customer DPA v6.4, 3 April 2026 |
 | Cloudflare | `ikharis_cloudflare_subprocessors.pdf` | sub-processor list, retrieved 8 Nov 2026 |
 | PlanetScale | `ikharis_planetscale_customer_dpa_october_15_2026.pdf` | DPA last updated 15 October 2026 |
+| PlanetScale | `ikharis_planetscale_subprocessors.pdf` | sub-processor list, retrieved 8 Nov 2026 (page dated 14 March 2025) |
 | Mapbox | `ikharis_mapbox_customer_dpa_april_1_2025.pdf` | DPA 1 April 2025 |
 | Mapbox | `ikharis_mapbox_subprocessors.pdf` | sub-processor list, retrieved 8 Nov 2026 |
 | AWS | `ikharis_aws_customer_dpa.pdf` + `ikharis_aws_service_terms.pdf` | DPA at Service Terms §1.14.1; UK GDPR and Swiss addenda at §1.14.4 |
@@ -229,17 +232,43 @@ documents.
 > all of which remain open. A complete set of DPAs over unlawful processing is
 > still unlawful processing.
 
-> **DECISION NEEDED: retrieve PlanetScale's sub-processor list.**
-> Cloudflare's and Mapbox's were retrieved; PlanetScale's was not, and
-> PlanetScale is the processor holding **all 55 tables, including the health and
-> safeguarding records**. Article 28(2) makes sub-processor awareness the
-> controller's business — a processor may not engage another without the
-> controller's authorisation, and the controller cannot object to what it has
-> not seen.
-> **Recommended:** retrieve it and add a row above. Small, and it closes the one
-> asymmetry in an otherwise complete set.
-> **Trade-off:** none. The only reason it is a marker rather than an action is
-> that it is not this document's to perform.
+> **~~DECISION NEEDED: retrieve PlanetScale's sub-processor list.~~ CLOSED
+> 8 November 2026 — retrieved.** Published at
+> `planetscale.com/legal/subprocessors`, referenced from DPA clause 4.1. It
+> closes the one asymmetry in the Article 28 evidence set, and it raised two
+> things that were not visible before. Both are recorded below rather than
+> treated as settled.
+
+**What PlanetScale's sub-processor list establishes.** Twenty entities, of which
+the ones that matter for this record are **Amazon Web Services** (data hosting),
+**Google LLC** (data hosting and internal infrastructure), **ClickHouse**
+(hosting and analytics), **Datadog** and **Sentry** (application monitoring),
+**Panther Labs** (security information management), and **Okta** / **WorkOS**
+(identity). The remainder are PlanetScale's own sales, support and billing
+tooling — Salesforce, Zendesk, Slack, Stripe, Koala, ClearFeed, Fivetran,
+SendGrid/Segment, GitHub, Vercel, Pusher — which process PlanetScale's customer
+relationship with Kharis Ministries, not member data.
+
+> **DECISION NEEDED: the sub-processor objection window is five calendar days, not thirty.**
+> DPA clause 4.3 gives the controller **five calendar days** from notice to
+> object in writing to a new sub-processor, on reasonable data-protection
+> grounds; if the objection is not resolved, PlanetScale "may, at its option,
+> remove the Subprocessor or suspend or terminate the Agreement." Five days is
+> short enough that nobody will catch it by accident, and the sub-processor page
+> itself states no notice period at all — it says only "This page will be
+> updated when Subprocessors are added or removed. Check back frequently for
+> changes or subscribe to updates via our Trust Center."
+> **Recommended:** subscribe to `trust.planetscale.com` with an address someone
+> actually reads, and treat a sub-processor notice as a five-day action rather
+> than something to review at the next meeting. Without that, the Article 28(2)
+> right to object exists on paper and expires unexercised every time.
+> **Trade-off:** none, beyond one more alert to triage.
+
+**A note on the list's own date.** The sub-processor page is dated **14 March
+2025**, while the DPA it is referenced from was updated **15 October 2026**. The
+page does not say whether the list was reviewed when the DPA changed, so its
+currency is asserted rather than demonstrated. Re-check it at the same time as
+the DPA rather than assuming the older date means nothing changed.
 
 ### Two processors named in documents that receive nothing
 
@@ -299,15 +328,25 @@ and is worth stating rather than implying a bespoke contract exists.
 AWS eu-west-2 (London); SES is in eu-west-2; Cloudflare terminates in the UK.
 The privacy notice states this to members.
 
-**Two** qualifications remain — the Axiom region question has closed, because
-Axiom receives nothing (§3):
+**Three** qualifications remain — the Axiom region question has closed, because
+Axiom receives nothing (§3), but PlanetScale's sub-processor list has opened a
+new one:
 
 - **Cloudflare** is a global network. Edge processing for UK traffic stays in UK
   points of presence, but the **Cloudflare Images** store's location needs
-  confirming, and that store holds children's photographs. This is now the more
-  important of the two, because the data is at rest and it is photographs of
-  minors.
+  confirming, and that store holds children's photographs. This is still the
+  most important of the three, because the data is at rest and it is
+  photographs of minors.
 - **Mapbox** is likely to process address fragments in the US.
+- **PlanetScale's sub-processors are almost entirely United States entities**
+  (§3). The *primary store* is AWS eu-west-2 (London) — confirmed from the
+  database host `aws-eu-west-2-1.pg.psdb.cloud` — so member records are held in
+  the UK. But PlanetScale's own monitoring and infrastructure sub-processors,
+  including Datadog, Sentry, ClickHouse and Google, are US-based, and the list
+  does not say which of them can see customer data as opposed to PlanetScale's
+  own telemetry. **This is the gap that matters most in this section now**,
+  because unlike Cloudflare Images and Mapbox it concerns the processor holding
+  all 55 tables.
 
 Where a transfer does occur, the notice relies on the **UK International Data
 Transfer Agreement or the UK Addendum to the EU Standard Contractual Clauses**,

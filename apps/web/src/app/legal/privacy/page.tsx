@@ -233,8 +233,10 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>PlanetScale, Inc.</strong> runs the Postgres
-            database that stores your member record. Data is stored in the
-            United Kingdom / European Economic Area (EEA).
+            database that stores your member record. Your records are held in
+            the United Kingdom (London). PlanetScale uses its own suppliers to
+            run and monitor that service, some of whom are based outside the
+            UK / EEA, under the transfer protections described below.
           </li>
           <li>
             <strong>Amazon Web Services, Inc.</strong> sends the
@@ -243,8 +245,13 @@ export default function PrivacyPage() {
             (London / Frankfurt).
           </li>
           <li>
-            <strong>Sentry, Inc.</strong> receives error reports when
-            Kairos fails, so we can diagnose and fix issues.
+            <strong>Mapbox, Inc.</strong> provides the maps and the address
+            autofill used when you enter an address or look up a nearby
+            fellowship. When you type into an address field, the characters you
+            have typed are sent to Mapbox so it can suggest matching addresses;
+            it also receives the coordinates needed to draw a map. Mapbox may
+            process this outside the UK / EEA, under the transfer protections
+            described below.
           </li>
         </ul>
         <p>
@@ -276,8 +283,11 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Records about children under 16</strong> are kept in
-            line with our safeguarding policy. When a child turns 18, their
-            record transitions to the standard adult retention above.
+            line with our safeguarding policy. When a child turns 16, their
+            record transitions to the standard adult retention above, and the
+            additional protections that apply to a child&rsquo;s record &mdash;
+            restricted visibility of their contact details, date of birth and
+            emergency contacts &mdash; no longer apply.
           </li>
           <li>
             <strong>Attendance records</strong> are kept for 3 years on a
@@ -298,8 +308,20 @@ export default function PrivacyPage() {
             evidence for the tax we reclaimed.
           </li>
           <li>
-            <strong>Sign-in logs and error reports</strong> are kept for
-            up to 90 days, then automatically deleted.
+            <strong>Security events</strong> &mdash; sign-ins, password and
+            email changes, permission grants, and records of who exported or
+            edited member data &mdash; are kept for the lifetime of your
+            account plus 6 years. They are the evidence that access to personal
+            data was controlled, which is why they are kept as long as the
+            consent records they sit alongside, and why they are never edited
+            or deleted once written.
+          </li>
+          <li>
+            <strong>Technical request logs</strong> &mdash; the short-lived
+            diagnostic records our hosting provider keeps for each request, used
+            to investigate faults &mdash; are retained by that provider on its
+            own schedule, which is a matter of days, and are then discarded. We
+            do not keep a separate copy.
           </li>
         </ul>
       </Section>
@@ -396,10 +418,28 @@ export default function PrivacyPage() {
 
       <Section title="8. Cookies and tracking">
         <p>
-          Kairos uses a single first-party cookie to keep you signed in
-          during a session. We do not use advertising cookies, we do not run
-          third-party analytics that track you across the web, and we do not
-          share your usage patterns with marketing platforms.
+          <strong>Kairos does not use a cookie to keep you signed in.</strong>{' '}
+          Your session is stored in your browser&rsquo;s local storage &mdash; a
+          private area of your own browser, on your own device. It is never sent
+          to another website, and signing out or clearing your browser data
+          removes it.
+        </p>
+        <p>
+          <strong>One cookie is used, and only during social sign-in.</strong> If
+          you sign in with Google, Microsoft or Apple, we set a single
+          short-lived cookie (<code>kairos.oauth_state</code>) that lasts ten
+          minutes and is deleted as soon as sign-in finishes. Its only job is to
+          confirm that the sign-in finishing in your browser is the one you
+          started, which is what stops someone else&rsquo;s sign-in being
+          substituted for yours. It holds no information about you.
+        </p>
+        <p>
+          We use no advertising cookies and no trackers of any kind, we do not
+          run third-party analytics that follow you across the web, and we do not
+          share your usage patterns with marketing platforms. The sign-in cookie
+          above is strictly necessary to provide a service you asked for, so
+          under the Privacy and Electronic Communications Regulations there is
+          nothing here that requires your consent.
         </p>
       </Section>
 

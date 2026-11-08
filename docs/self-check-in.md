@@ -91,9 +91,14 @@ If you rotate the secret, any QR currently on screen becomes invalid after 60
 seconds (one bucket + the grace bucket). No further action needed — no cache
 to bust, no DB rows to invalidate.
 
-Local Node dev falls back to `dev-self-check-in-qr-secret` (see
-`apps/api/src/attendance/router.ts:readQrSecret`); don't rely on that in any
-deployed environment.
+Local Node dev and the test runner fall back to `dev-self-check-in-qr-secret`
+(see `apps/api/src/attendance/router.ts:readQrSecret`, which delegates to
+`requireSecret` in `apps/api/src/lib/secret-env.ts`). A deployed environment
+cannot reach that fallback — it throws instead, because a public signing key
+would let anyone mint a token marking any member present at any service. So
+**the secret must be set before self-check-in will work on staging or
+production**; the symptom if it is missing is a 500 on token generation, not a
+quietly forgeable QR.
 
 ## Why not store the tokens?
 

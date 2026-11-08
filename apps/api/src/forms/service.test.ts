@@ -2118,3 +2118,81 @@ describe('submitForm — K-group host', () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 });
+
+// ── Audit coverage for the forms export ───────────────────
+//
+// The second of the two bulk-export paths. `docs/security/incident-response.md`
+// §2 named the member export as the gap; this is the same gap in a second
+// place, over a population that includes first-timer contact details and
+// baby-dedication records naming children and their parents.
+
+describe('exportSubmissionsToCSV audit coverage', () => {
+  const row = {
+    id: submissionId,
+    formType: 'testimony',
+    status: 'new',
+    createdAt: new Date('2026-05-22T00:00:00Z'),
+    payload: testimonyPayload,
+  };
+
+  function auditRow(): Record<string, unknown> | undefined {
+    return insertValuesArgs.find(
+      (a): a is Record<string, unknown> =>
+        typeof a === 'object' && a !== null && !Array.isArray(a) && 'action' in a,
+    );
+  }
+
+  it('records who exported which form type, and how many rows left', async () => {
+    setupSelectSequence([row, row]);
+    setupInsert([{ id: 'audit-1' }]);
+    const { exportSubmissionsToCSV } = await import('./service');
+
+    await exportSubmissionsToCSV(mockDb, adminAuth, { formType: 'testimony' });
+
+    const audit = auditRow();
+    expect(audit).toBeDefined();
+    expect(audit?.['action']).toBe('submissions_exported');
+    expect(audit?.['outcome']).toBe('success');
+    expect(audit?.['actorMemberId']).toBe(adminAuth.memberId);
+    expect(audit?.['targetType']).toBe('form_submissions');
+    const meta = audit?.['metadata'] as Record<string, unknown>;
+    expect(meta['rowCount']).toBe(2);
+    expect(meta['formType']).toBe('testimony');
+  });
+
+  it('uses its own action rather than reusing member_exported', async () => {
+    // A different population deserves a different action — an investigator
+    // filtering the log should not have to read targetType to tell the member
+    // directory from a file of form submissions.
+    setupSelectSequence([row]);
+    setupInsert([{ id: 'audit-1' }]);
+    const { exportSubmissionsToCSV } = await import('./service');
+
+    await exportSubmissionsToCSV(mockDb, adminAuth, { formType: 'testimony' });
+
+    expect(auditRow()?.['action']).not.toBe('member_exported');
+  });
+
+  it('never records the submissions themselves', async () => {
+    setupSelectSequence([row]);
+    setupInsert([{ id: 'audit-1' }]);
+    const { exportSubmissionsToCSV } = await import('./service');
+
+    await exportSubmissionsToCSV(mockDb, adminAuth, { formType: 'testimony' });
+
+    const serialised = JSON.stringify(auditRow()?.['metadata']);
+    expect(serialised).not.toContain('Health/Healing');
+    expect(serialised).not.toContain(submissionId);
+  });
+
+  it('writes no audit row when the caller is refused the form type', async () => {
+    setupSelectSequence([]);
+    setupInsert([]);
+    const { exportSubmissionsToCSV } = await import('./service');
+
+    await expect(
+      exportSubmissionsToCSV(mockDb, leaderAuth, { formType: 'first_time_visitor' }),
+    ).rejects.toThrow('You do not have access to export this form type');
+    expect(auditRow()).toBeUndefined();
+  });
+});

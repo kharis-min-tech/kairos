@@ -19,6 +19,8 @@ import {
 } from '@kairos/types';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
+import { recordAuditEvent, type RequestContext } from '../audit/service';
+import { AuditAction, AuditOutcome } from '@kairos/types';
 import type {
   ListDeclarationsQuery,
   MyDeclarationInput,
@@ -549,6 +551,8 @@ export async function exportRegister(
   db: Database,
   auth: AuthContext,
   query: RegisterExportQuery,
+  ctx?: RequestContext,
+  format: 'json' | 'csv' = 'json',
 ): Promise<GiftAidRegisterRow[]> {
   enforceGiftAidAdmin(auth);
 
@@ -567,6 +571,33 @@ export async function exportRegister(
     .leftJoin(branches, eq(giftAidDeclarations.branchId, branches.id))
     .where(and(...conditions))
     .orderBy(asc(giftAidDeclarations.lastName), asc(giftAidDeclarations.firstName));
+
+  // The third bulk-export path, and the one the cyber-security checklist names
+  // directly: "who exported or accessed donor/giving data". The register
+  // carries donor names and HOME ADDRESSES, which the member directory export
+  // does not, so a leak of this file is more sensitive per row, and it is
+  // HMRC-facing evidence besides.
+  //
+  // Written here rather than in the router because two routes serve it —
+  // /register and /register.csv — and both come through this function. Awaited,
+  // not deferred, for the usual reason: the Postgres client is per-request
+  // inside an AsyncLocalStorage scope, so a deferred write loses the row.
+  //
+  // Counts and names the slice. No donor names, no addresses.
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.DonorRegisterExported,
+    outcome: AuditOutcome.Success,
+    targetType: 'gift_aid_register',
+    metadata: {
+      rowCount: rows.length,
+      status: query.status,
+      ...(query.branchId ? { branchId: query.branchId } : { scope: 'all_branches' }),
+      ...(query.from ? { from: query.from } : {}),
+      format,
+    },
+    ...(ctx && { ctx }),
+  });
 
   return rows.map(({ declaration: d, branchName }) => ({
     title: d.title ?? '',
