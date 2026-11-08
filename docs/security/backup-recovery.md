@@ -170,11 +170,55 @@ Three tools, and when each is correct:
 | `db:bootstrap` | Yes, all files | Only against a genuinely empty or genuinely incomplete schema |
 | `db:bootstrap -- --force` | Yes, replays everything | Only when the journal is stamped as done but the schema was not changed. Safe only for `0007+`. |
 
-One loose end to close before relying on any of this: **`apps/api/entrypoint.sh:19`
-runs `drizzle-kit migrate`** — the one surviving non-bootstrap migration path in
-the repo, contradicting the rule above. It is the Docker entrypoint, so it does
-not run on Cloudflare, but it would run in a container-based recovery and would
-produce exactly the silent no-op the bootstrap script exists to prevent.
+### The journal defect that makes the container path actively dangerous
+
+**`apps/api/entrypoint.sh:19` runs `drizzle-kit migrate`** — the one surviving
+non-bootstrap migration path. It is **latent**: the script is referenced only by
+`apps/api/Dockerfile`, and nothing in `.github/workflows/` builds that image, so
+it cannot fire in CI or on Cloudflare. It fires only if someone runs the
+container — which is precisely a container-based recovery.
+
+And that path is now known to be unsafe, because `drizzle/meta/_journal.json`
+carries a timestamp defect. Verified by reading the journal:
+
+| idx range | `when` values | Decoded dates |
+|---|---|---|
+| 44–53 | `1801300000000` … `1810300000000`, all round numbers | **2027-01-30 … 2027-05-14 — dates in the future** |
+| 54–56 | `1791263375986`, `1791326315506`, `1791363961997` | 2026-10-06 … 2026-10-07 (genuine generated values) |
+| 57–62 | `1791450000000` … `1793150000000` | 2026-10-08 … 2026-10-28 |
+
+The maximum `when` in the whole journal belongs to **idx 53**
+(`0053_outreach_coordinator_integrity`, `1810300000000`). A block of
+hand-authored round timestamps at idx 44–53 was written on a wrong scale and
+landed roughly eight months in the future, so everything genuinely authored
+since sits *below* the maximum.
+
+**Consequence: nine migrations — `0054` through `0062` — sit after the
+maximum-timestamp entry.** `drizzle-kit migrate` applies entries in journal
+order against what the `drizzle.__drizzle_migrations` table already records, so
+a database stamped up to idx 53 will have those nine **silently skipped**: the
+command reports success and the schema stays nine migrations behind, missing
+`0054_safeguarding_head_and_minister`, `0056_member_guardians`,
+`0057_oauth_authorization_server`, `0059_gift_aid_declarations` and the rest.
+
+That is the exact failure mode `db:bootstrap` was written to prevent, described
+in its own header as "cheerfully says 'migrations applied successfully' and does
+nothing while your schema stays broken". A container-based recovery would hit
+it, and the missing tables include guardianship and Gift Aid.
+
+Carded at <https://trello.com/c/cieH533p>.
+
+**Two actions, neither of which is this document's to take:** fix the idx 44–53
+timestamps so the journal is monotonic, and delete the `drizzle-kit migrate`
+line from `entrypoint.sh` rather than leaving a path that will skip nine
+migrations without complaint. Until the first is done, **`drizzle-kit migrate`
+must not be run against any Kairos database**, which is what
+`docs/commands.md` already says — but it now has a concrete reason attached
+rather than a historical one.
+
+The entrypoint has a second recovery hazard worth noting while it exists: after
+migrating it runs `seed.ts` and `seed-souls.ts`. **Seeding a restored
+production database is not a recoverable mistake.**
 
 ---
 
@@ -266,15 +310,19 @@ noting.
 > **DECISION NEEDED: whether `audit_log` should be shipped out of the database.**
 > **Recommended:** yes — the structured logger already emits every request to
 > Cloudflare Workers Logs with `memberId`, `activeRole` and `branchId` attached
-> (`docs/observability.md`), and the Logpush → Axiom path described there would
+> (`../observability.md`), and the Logpush → Axiom path described there would
 > give the audit trail an independent copy with its own retention. Audit evidence
 > that shares a failure domain with the data it describes is not independent
 > evidence.
-> **Trade-off:** it duplicates personal data into a second system with its own
-> retention and transfer questions — Axiom's region needs checking against the
-> privacy notice's EEA statement. Note also that the Logpush job described in
-> `docs/observability.md` is a one-time dashboard setup that **cannot be verified
-> from the repo**; confirm whether it is actually running.
+> **But note that path does not currently exist.** `"logpush": true` appears
+> nowhere in `apps/api/wrangler.jsonc`, for either environment, and a Worker
+> emits to Logpush only when its own config carries that flag — so the pipeline
+> in `../observability.md` was never wired. Logs stop at Workers Logs,
+> head-sampled, retained for days. Enabling it is an open decision in
+> `incident-response.md` §9.
+> **Trade-off:** enabling it duplicates personal data into a second system with
+> its own retention and transfer questions, and adds a processor that needs a
+> DPA — see `ropa.md` §3.
 
 ---
 

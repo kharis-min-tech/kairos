@@ -17,13 +17,29 @@ unavailable and a ROPA is mandatory regardless of the church's size.
 
 | | |
 |---|---|
-| Controller | **Kharis Church** |
-| Registered charity number | **1139291** |
+| **Controller** | **UNRESOLVED — the ICO register says "Kharis Ministries"; the codebase and privacy notice say "Kharis Church".** See the discrepancy below. This record cannot be adopted until it is settled, because Article 30 is a record *of the controller's* processing. |
+| ICO registration | **Kharis Ministries — ZB659958.** Registered 13 February 2024, **expires 12 February 2027**. Payment Tier 1. Registered address 2A Orchard Road, Belvedere, Kent, DA17 5BP. |
+| Registered charity number | **1139291** (recorded against "Kharis Church" in `requirements/gift-aid.md:18`) |
 | Legal form | Charitable company limited by guarantee, **Companies House 07308725** |
-| Published data protection contact | **privacy@kharis.org** (one calendar month response commitment) |
-| DPO | **Not established.** No DPO is named anywhere in the repository — see `dpia.md` §6. |
-| ICO registration | **Not established.** No registration number appears anywhere — see `dpia.md` §6. |
+| **Data Protection Officer** | **Tianna Johnson.** Contact details not yet supplied — see `dpia.md` §6. |
+| Published data protection contact | **privacy@kharis.org** (one calendar month response commitment). Does not name the DPO, which Article 13(1)(b) requires. |
 | System | Kairos, an internal church administration platform. Pilot scope: **one branch, on production, structural seeding only, no member import.** |
+
+**The controlling-entity discrepancy.** The ICO public register names **Kharis
+Ministries** (ZB659958); the privacy notice names **Kharis Church** as "the data
+controller", and the Gift Aid material records Kharis Church as charity 1139291
+and Companies House 07308725. The Confidentiality Undertaking writes
+"**Kharis Ministries / Kharis Church**"
+(`apps/web/src/components/legal/confidentiality-body.tsx:30`), which suggests
+the ambiguity is already known.
+
+This matters to this document more than to any other, because a ROPA is by
+definition the record of one controller's activities. If the two names are one
+entity, this record simply needs re-heading. **If they are two entities, every
+activity in §1 needs an Article 28 processing agreement or an Article 26
+joint-controller arrangement between them**, and none exists. The full
+decision, with the three possible outcomes, is in `dpia.md` §6 and is not
+repeated here.
 
 ---
 
@@ -127,7 +143,7 @@ other five should eventually match.
 | **Special category** | No |
 | **Tables** | `audit_log`, `consent_records`, `oauth_clients`, `oauth_grants`, `oauth_authorization_codes`, `oauth_refresh_tokens` |
 | **Recipients** | System administrators; the member themselves for their own events via `GET /api/me/audit-log` |
-| **Processors** | Cloudflare, PlanetScale, and **Axiom if the Logpush pipeline is running** — see §3 |
+| **Processors** | Cloudflare (including Workers Logs, which is where request logs stop — Logpush is confirmed not enabled, §3), PlanetScale |
 | **Retention (stated)** | **"Sign-in logs and error reports are kept for up to 90 days, then automatically deleted."** |
 | **Enforced?** | **No, and the published statement is false.** `audit_log` is genuinely append-only — no code anywhere issues UPDATE or DELETE against it, and no migration deletes from it. Nothing is ever removed. Correcting this is an open decision in `data-retention.md` §2. |
 
@@ -168,25 +184,44 @@ safeguarding authority, a court, or a UK regulator.
 
 ## 3. Processors
 
-**This list differs deliberately from the published privacy notice, which is
-wrong in three ways: it names Sentry, which receives nothing; and it omits
-Mapbox and Axiom, which receive personal data.**
+**Four processors. This list differs deliberately from the published privacy
+notice, which is wrong in two ways: it names Sentry, which receives nothing, and
+it omits Mapbox, which receives personal data.**
 
 | Processor | Role | Personal data it receives | Region | DPA in place? |
 |---|---|---|---|---|
-| **Cloudflare, Inc.** | Pages (web), Worker (API), Hyperdrive (DB gateway), **Images** (profile photos) | Everything in transit; **profile photographs at rest, including children's** | UK/EU edge | **DECISION NEEDED** |
+| **Cloudflare, Inc.** | Pages (web), Worker (API), Hyperdrive (DB gateway), **Images** (profile photos), Workers Logs | Everything in transit; **profile photographs at rest, including children's**; request logs carrying `memberId`, `branchId`, `activeRole`, path and status | UK/EU edge — **but confirm where Cloudflare Images stores at rest** | **DECISION NEEDED** |
 | **PlanetScale, Inc.** | Postgres — the primary datastore | **All 55 tables, including health and safeguarding records** | AWS eu-west-2 (London) | **DECISION NEEDED** |
 | **Amazon Web Services, Inc.** | SES transactional email | Recipient name and email; email body content, which includes **children's names** in aging-out notifications | eu-west-2 | **DECISION NEEDED** |
 | **Mapbox** | Address autofill and map rendering, on web and mobile | **Partial address strings as a member types them**, plus coordinates. Not named in the privacy notice. | Confirm — likely US | **DECISION NEEDED** |
-| **Axiom** | Long-term log search via Cloudflare Logpush | Request logs carrying **`memberId`, `branchId`, `activeRole`**, path and status. Not named in the privacy notice. | **Confirm — and check against the notice's UK/EEA statement** | **DECISION NEEDED** |
 | **Expo / EAS** | Mobile app builds | Build artefacts and source. **No member data** — arguably not a processor of personal data at all | US | Note only |
 
-**Deliberately excluded: Sentry, Inc.** The privacy notice states that Sentry
-"receives error reports when Kairos fails". It does not. There is **no
-`@sentry` dependency in any workspace and no Sentry code anywhere in the
-monorepo** — the only mention of Sentry in the entire repository is that
-sentence in the notice. Including it here would make this record inaccurate in
-the same way.
+### Two processors named in documents that receive nothing
+
+Both are excluded on purpose. They are recorded here so that nobody reads them
+back into this list from the documents that mention them.
+
+**Sentry, Inc. — excluded.** The privacy notice states that Sentry "receives
+error reports when Kairos fails". It does not. There is **no `@sentry`
+dependency in any workspace and no Sentry code anywhere in the monorepo** — the
+only mention of Sentry in the entire repository is that sentence in the notice.
+So the system has no error reporting at all.
+
+**Axiom — excluded, verified.** `../observability.md` describes a Cloudflare
+Logpush job streaming request logs to Axiom for 30-day searchable retention.
+**It was never wired.** `"logpush": true` appears **nowhere** in
+`apps/api/wrangler.jsonc` — not in the top-level production config, not in the
+`staging` environment — and a Cloudflare Worker emits to Logpush only when its
+own configuration carries that flag, so no account-level Logpush job can be
+receiving anything regardless of what exists in the dashboard. Request logs
+therefore go no further than **Cloudflare Workers Logs**, which is enabled with
+head sampling (`observability.enabled: true` at `wrangler.jsonc:58` and `:118`)
+and retained for a short window. Cloudflare is already a processor for
+everything else, so this adds no new processor — it narrows where the logs go.
+
+Consequences recorded elsewhere: the Axiom region question in §4 disappears, and
+the investigation window in `incident-response.md` §2 is days rather than
+thirty, which materially weakens the Article 33 scoping position.
 
 > **DECISION NEEDED: confirm that a data processing agreement is in place for each processor above, and hold a copy.**
 > Article 28(3) requires a written contract covering subject matter, duration,
@@ -200,14 +235,20 @@ the same way.
 > document to close.
 > **Trade-off:** none, except the time to do it.
 
-> **DECISION NEEDED: is the Cloudflare Logpush job to Axiom actually running?**
-> It is a one-time dashboard setup described in `../observability.md` and leaves
-> no trace in the repository. The answer determines whether Axiom belongs in
-> this record at all, **and** whether incident investigation has 30 days of
-> history or 3 (`incident-response.md` §2).
-> **Recommended:** confirm, and if it is running, add Axiom to the privacy
-> notice's processor list and check its region against the notice's UK/EEA
-> statement.
+> **DECISION NEEDED: whether to enable Logpush — and if so, this record gains a processor.**
+> Logpush is **confirmed not enabled** (§3), so Axiom is not a processor today.
+> But `incident-response.md` §2 recommends enabling it precisely because a
+> days-long log window is too short to investigate a breach inside the 72-hour
+> notification clock.
+> **Recommended: enable it**, which means adding `"logpush": true` to both the
+> production and `staging` Worker configs *and* creating the account-level job —
+> the flag alone does nothing.
+> **Trade-off, and it is a real one for this document:** doing so adds a new
+> processor receiving `memberId`, `branchId` and `activeRole`, which then needs
+> a DPA, a region check against the privacy notice's UK/EEA statement, a
+> retention period of its own, and a row added to the notice's processor list.
+> Better detection costs a processor. That is the right trade, but it should be
+> made deliberately rather than discovered after the fact.
 
 ---
 
@@ -217,25 +258,27 @@ the same way.
 AWS eu-west-2 (London); SES is in eu-west-2; Cloudflare terminates in the UK.
 The privacy notice states this to members.
 
-Three qualifications that must be resolved before this section can be asserted
-rather than assumed:
+**Two** qualifications remain — the Axiom region question has closed, because
+Axiom receives nothing (§3):
 
 - **Cloudflare** is a global network. Edge processing for UK traffic stays in UK
   points of presence, but the **Cloudflare Images** store's location needs
-  confirming, and that store holds children's photographs.
+  confirming, and that store holds children's photographs. This is now the more
+  important of the two, because the data is at rest and it is photographs of
+  minors.
 - **Mapbox** is likely to process address fragments in the US.
-- **Axiom's** region is unconfirmed, and if it is outside the UK/EEA the
-  notice's statement is inaccurate.
 
 Where a transfer does occur, the notice relies on the **UK International Data
 Transfer Agreement or the UK Addendum to the EU Standard Contractual Clauses.**
 
-> **DECISION NEEDED: confirm the actual storage and processing regions for Cloudflare Images, Mapbox and Axiom, and confirm the transfer mechanism relied on for each that is outside the UK/EEA.**
+> **DECISION NEEDED: confirm the storage and processing regions for Cloudflare Images and Mapbox, and the transfer mechanism relied on for each that sits outside the UK/EEA.**
 > **Recommended:** resolve this alongside the DPA confirmations above — it is the
-> same conversation with the same vendors. If Mapbox or Axiom transfer outside
-> the UK/EEA, the privacy notice's "stored in the United Kingdom / European
-> Economic Area" statement needs qualifying, because at present it reads as
-> covering everything.
+> same conversation with the same two vendors. If Mapbox transfers outside the
+> UK/EEA, the privacy notice's "stored in the United Kingdom / European Economic
+> Area" statement needs qualifying, because at present it reads as covering
+> everything.
+> Note that if Logpush is later enabled, the region question returns with the
+> new processor.
 
 ---
 
@@ -319,6 +362,10 @@ Article 30(1)(g) asks for a general description. Full assessment in
 - **`member_roles.end_date` is never enforced**, so a time-limited grant is not.
 - **No alerting**, no dependency scanning, no secret scanning in CI, no SAST,
   no penetration test, and **no tested database restore**.
+- **No log destination and no error reporting outside Cloudflare.** Logpush is
+  not enabled and Sentry is not wired (§3), so request logs stop at Cloudflare
+  Workers Logs with a short retention window and unhandled exceptions are
+  reported nowhere.
 - **Encryption at rest is assumed** from the PlanetScale default and has not
   been verified (`backup-recovery.md` §2).
 

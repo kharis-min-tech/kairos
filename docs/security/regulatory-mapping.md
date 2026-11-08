@@ -4,10 +4,13 @@
 in code or in published text, and says plainly where it is only partly met.
 Nothing here is marked compliant on the strength of an intention.
 
-**Controller:** Kharis Church, for all personal data processed in Kairos
-(`apps/web/src/app/legal/privacy/page.tsx:33-36`). **Regime:** UK GDPR and the
-Data Protection Act 2018. **Contact:** privacy@kharis.org, with a published
-one-calendar-month response commitment.
+**Controller:** the privacy notice names **Kharis Church**
+(`apps/web/src/app/legal/privacy/page.tsx:33-36`), but the ICO register names
+**Kharis Ministries** (ZB659958). **Which entity is the controller is an open
+question** — see `dpia.md` §6, where the three possible outcomes and their
+consequences are set out. **Regime:** UK GDPR and the Data Protection Act 2018.
+**DPO:** Tianna Johnson, contact details outstanding. **Published contact:**
+privacy@kharis.org, with a one-calendar-month response commitment.
 
 One thing to establish before the table, because it changes how everything else
 reads: **the privacy notice is unusually good and unusually load-bearing.** It
@@ -40,10 +43,10 @@ the review happens.
 | Art 17 erasure | **Partly, and defensibly.** Pseudonymisation, not erasure. §5 |
 | Art 25 data protection by design | **Partly.** §9 |
 | Art 28 processors | **Partly.** One named processor is not in use. §10 |
-| Art 30 records of processing | **Not met.** No ROPA exists. §11 |
+| Art 30 records of processing | **Drafted, not adopted** — `ropa.md`. Blocked on the controlling-entity question. §11 |
 | Art 32 security of processing | **Partly.** §9 |
 | Art 33/34 breach notification | **Procedure now exists**; detection cannot scope an exfiltration. §12 |
-| Art 35 DPIA | **Not met. Required.** §11 |
+| Art 35 DPIA | **Drafted, not signed or consulted on** — `dpia.md`. §11 |
 | PCI DSS | **Out of scope.** §13 |
 
 ---
@@ -527,28 +530,36 @@ the UK IDTA or SCCs where data leaves the UK/EEA:
 | **Amazon Web Services, Inc.** | SES transactional email, eu-west-2 | In use |
 | **Sentry, Inc.** | "receives error reports when Kairos fails" | **Not in use. Not wired. Nothing is sent.** |
 
-Two further processors are **in use and not named**: **Expo / EAS** (mobile
-builds — build infrastructure rather than member data, arguably out of scope)
-and **Mapbox** (address autofill and map rendering, which receives partial
-address strings typed by members and is therefore a processor of personal data).
-If the Logpush pipeline to **Axiom** described in `docs/observability.md` is
-running, that is a third, receiving request logs containing `memberId`,
-`branchId` and `activeRole`.
+One further processor is **in use and not named: Mapbox** (address autofill and
+map rendering, which receives partial address strings as members type them and
+is therefore a processor of personal data). **Expo / EAS** handles mobile builds
+— build infrastructure rather than member data, arguably out of scope.
 
-> **DECISION NEEDED: reconcile the processor list, and confirm a DPA is in place for each.**
-> **Recommended:** remove Sentry until it is actually wired; add Mapbox; add
-> Axiom if Logpush is running and confirm its region against the notice's EEA
-> statement. Then record, for each remaining processor, that a data processing
-> agreement exists — all four current ones publish standard DPAs, but somebody
-> has to have accepted them and the church should hold a copy.
+**Axiom is not a processor**, verified rather than assumed: the Logpush pipeline
+described in `../observability.md` was never wired, because `"logpush": true`
+appears nowhere in `apps/api/wrangler.jsonc` for either environment and a Worker
+emits to Logpush only when its own config carries that flag. Request logs stop
+at Cloudflare Workers Logs, which Cloudflare already processes under its
+existing role. `ropa.md` §3 records this so nobody re-adds Axiom from reading
+the observability doc.
+
+So the accurate list is **four**: Cloudflare, PlanetScale, AWS SES and Mapbox.
+
+> **DECISION NEEDED: reconcile the processor list, and confirm a DPA is in place for each of the four.**
+> **Recommended:** remove Sentry from the notice until it is actually wired, and
+> add Mapbox. Then record, for each of the four, that a data processing
+> agreement exists — all four publish standard DPAs, but somebody has to have
+> accepted them and the church should hold a copy with the date.
 > **Trade-off:** none. This is a paperwork exercise and it is the single easiest
-> row in this document to turn from "partly" to "met".
+> row in this document to turn from "partly" to "met". Note that enabling
+> Logpush, which `incident-response.md` §9 recommends, would add a fifth
+> processor and reopen this row.
 
 ---
 
 ## 11. Articles 30 and 35 — ROPA and DPIA
 
-**Both not met.** Grepping the whole repository for `ROPA` and "record of
+**Both now drafted — neither is adopted, and until they are the obligations are not discharged.** `dpia.md` and `ropa.md` in this directory are the drafts; the DPIA needs Article 35(2) advice from the DPO, consultation under Article 35(9) and the controller's signature, and the ROPA cannot be headed until the controlling entity is settled. When this section was first written neither existed at all: grepping the whole repository for `ROPA` and "record of
 processing" returns **zero hits**. `DPIA` appears three times, all as
 *unbuilt product scope* for the church's own compliance teams —
 `requirements/mvp-scope.md:756` lists "Data Protection compliance tools (SAR,
@@ -628,8 +639,10 @@ security log.
 Article 33(3) requires the categories and approximate number of data subjects
 and records concerned. **From the audit log alone, that cannot be determined
 for an exfiltration incident.** The request logger would show the export call,
-but only within Workers Logs' 3-day retention unless the Logpush pipeline is
-actually running — which cannot be confirmed from the repository.
+but **Logpush is confirmed not enabled**, so the only copy is Cloudflare Workers
+Logs — head-sampled, retained for days. For any data-access incident more than
+a few days old, **this system retains no evidence from which to scope it**, and
+an Article 33 notification would have to say the scope is unknown.
 
 This also means the notice's §9 claim that administration access is
 "audit-logged" is not accurate as written.
@@ -688,7 +701,7 @@ In the order they should be addressed.
 3. Correct the six inaccurate statements in the published privacy notice (§3);
    fix the 18-versus-16 contradiction immediately.
 4. Reconcile the processor list and confirm a DPA for each — remove Sentry, add
-   Mapbox, add Axiom if Logpush is live (§10). Easiest win in the document.
+   Mapbox; Axiom is confirmed not a processor (§10). Easiest win in the document.
 5. Name the Article 9(2) condition for each kind of special-category
    processing, and produce the DPA 2018 Schedule 1 appropriate policy document
    (§7).

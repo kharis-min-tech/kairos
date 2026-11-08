@@ -175,13 +175,16 @@ Taken from the published lawful-basis table and assessed in §3.
 
 > **DECISION NEEDED: all consultation below is PENDING. None has taken place.**
 > This document records who should be consulted and must not be signed until
-> they have been. Article 35(2) requires the controller to seek the advice of
-> the DPO where one is designated; Article 35(9) requires seeking the views of
-> data subjects or their representatives where appropriate.
+> they have been. **Article 35(2) advice is now mandatory, not optional**: a DPO
+> is designated (Tianna Johnson — §6), so the controller is required to seek her
+> advice on this assessment rather than merely invited to. Article 35(9)
+> requires seeking the views of data subjects or their representatives where
+> appropriate.
 
 | Who | Why | On what, specifically |
 |---|---|---|
-| **Safeguarding Lead** | Article 35(2)-equivalent subject-matter authority. The role already exists in the system as an RBAC grant. | The children's retention period and the 75-year question (`data-retention.md` §2); whether the risks in §4 are acceptable; whether the health-record access model matches safeguarding practice. |
+| **Data Protection Officer (Tianna Johnson)** | **Article 35(2) — mandatory.** A DPO is designated, so her advice must be sought on this assessment. | The whole assessment; the lawful-basis positions; the Article 9(2) conditions in §3.3; and the controlling-entity question in §6. |
+| **Safeguarding Lead** | Subject-matter authority. The role already exists in the system as an RBAC grant. | The children's retention period and the 75-year question (`data-retention.md` §2); whether the risks in §4 are acceptable; whether the health-record access model matches safeguarding practice. |
 | **Church trustees** | The controller's governing body. They accept residual risk. | §6 sign-off; the retention decisions; the accepted-risk register. |
 | **Data subjects — parents and guardians** | Article 35(9). They are the representatives of the highest-risk subjects. | That children's records are held at all, who can see them, how long they are kept, and that a parent holds the child's rights. |
 | **Data subjects — members generally** | Article 35(9) | Visibility of their data to leaders; the member-directory scope; retention. |
@@ -496,9 +499,16 @@ faith throughout.
 
 **What.** No alerting of any kind. No rate limiting anywhere, so credential
 stuffing is unlimited and unanswered. The audit log cannot answer a data-access
-question (R3). Request-log retention is 3 days unless the Logpush pipeline is
-running, which cannot be confirmed from the repository. Sentry is named in the
-privacy notice as receiving error reports and **is not wired at all**.
+question (R3). **Request logs go no further than Cloudflare Workers Logs**,
+which is enabled with head sampling (`observability.enabled: true`) and retains
+a short window measured in days: `"logpush": true` appears **nowhere** in
+`apps/api/wrangler.jsonc`, for either production or staging, and a Worker emits
+to Logpush only when its own config carries that flag — so no account-level job
+can be receiving anything. The Logpush-to-Axiom pipeline in
+`../observability.md` is intended architecture that was never wired. Sentry is
+named in the privacy notice as receiving error reports and **is also not wired
+at all**. So the system has no log destination outside Cloudflare and no error
+reporting whatsoever.
 
 **Harm.** Not a primary harm but a multiplier on every risk above: a breach
 that is detected late, or whose scope cannot be established, cannot be notified
@@ -557,7 +567,7 @@ deploy, held for reviewer approval in the `production` GitHub Environment.
 | **R5** children's photographs | Set `requireSignedURLs: true`, mint signed URLs on read, add a delete call, add `Referrer-Policy` | **NOT remediated.** Open decisions in `secure-sdlc.md` §6. Needs a re-flagging pass for images already uploaded. | **High** |
 | **R6** indefinite retention | A retention runner; the periods themselves | **NOT remediated, and blocked on decisions** — seven open retention decisions in `data-retention.md` §6. The notice corrections are not blocked and should go first. | High |
 | **R7** non-expiring grants | Filter `selectRoleGrants` on `end_date` | **NOT remediated.** Open decision in `incident-response.md` §9. | High |
-| **R8** detection | `member_exported` / `member_updated` audit actions; confirm or enable Logpush; Cloudflare WAF rate limiting; security headers | **NOT remediated.** Open decisions in `incident-response.md` §9 and `secure-sdlc.md` §6. | **High** |
+| **R8** detection | `member_exported` / `member_updated` audit actions; **enable Logpush** (`"logpush": true` in the Worker config plus an account-level job — it is confirmed not running); Cloudflare WAF rate limiting; security headers | **NOT remediated.** Open decisions in `incident-response.md` §9 and `secure-sdlc.md` §6. | **High** |
 | **R9** residual data on erasure | Audit the erasure; scrub health detail; delete the image; decide the form-payload position | **NOT remediated.** Open decision in `regulatory-mapping.md` §5. | Medium–high |
 
 ### Organisational measures
@@ -602,55 +612,77 @@ a dated plan.
 |---|---|
 | Measures approved by | *unassigned* |
 | Residual risks approved by | *unassigned* |
-| **DPO advice** | **See below — it is not established that a DPO exists.** |
+| **Data Protection Officer** | **Tianna Johnson** |
+| DPO advice sought | **No. Pending — §2.** |
 | Data subject views sought | **No. Pending — §2.** |
 | Controller sign-off | *unassigned* |
 | Date | *unsigned* |
 | Review due | *to be set — recommended annually and at each scale trigger in `../database-architecture.md` §5* |
 
-### Controller identity — what the repository does establish
+> **DECISION NEEDED: the DPO's contact details, and whether the role is a statutory Article 37 designation or a non-statutory data protection lead.**
+> The name is confirmed. **No contact address has been supplied and this
+> document will not invent one** — Article 13(1)(b) requires the DPO's contact
+> details to be given to data subjects, so the privacy notice currently
+> publishes only `privacy@kharis.org` and does not name a DPO at all.
+> **Recommended:** a role address rather than a personal one, so it survives the
+> post changing, and add it to the privacy notice alongside the existing contact.
+> **The statutory question matters separately:** an Article 37 DPO must be
+> independent under Article 38, cannot be instructed on how to perform the role,
+> and cannot be dismissed for performing it. Those are real constraints for a
+> small organisation. A non-statutory "data protection lead" carries the duties
+> this assessment needs without them. Either is defensible; the church should
+> know which it has chosen, because the answer changes what Tianna Johnson can
+> be asked to do.
 
-| | |
-|---|---|
-| Controller | **Kharis Church** (`apps/web/src/app/legal/privacy/page.tsx:33-36`) |
-| Registered charity number | **1139291** (`requirements/gift-aid.md:18`) |
-| Legal form | Charitable company limited by guarantee, **Companies House 07308725** (`packages/types/src/gift-aid.ts:32`) |
-| Published DP contact | **privacy@kharis.org**, one calendar month response |
+### Controller identity — and an unresolved discrepancy
 
-### What the repository does NOT establish, and must not be assumed
+**The ICO register and the codebase name different entities.** This is recorded
+rather than smoothed over, because a DPIA and a ROPA must name the actual legal
+controller, and naming the wrong one makes both documents defective.
 
-> **DECISION NEEDED: does Kharis Church have a designated Data Protection Officer?**
-> **There is no reference to a DPO anywhere in this repository** — no name, no
-> role, no contact, no mention in any of the four legal documents. So this
-> assessment cannot say whether Article 37 applies or whether Article 35(2)
-> advice has been sought.
-> **Assessment of whether one is required:** Article 37(1) mandates a DPO for a
-> public authority, for large-scale regular and systematic monitoring, or for
-> large-scale processing of special categories of data. A single-branch pilot is
-> not large scale, so a DPO is **probably not mandatory today** — but the
-> documented path to 100 branches and ~20,000 members, processing children's
-> health data throughout, makes it likely to become so.
-> **Recommended:** designate a DPO or an equivalent named data protection lead
-> now, voluntarily, because this document needs someone to advise on it and
-> `incident-response.md` needs someone to own the Article 33 decision. The
-> incident-response doc already recommends that this person **not** be the
-> technical lead.
-> **Trade-off:** a designated DPO under Article 38 must be independent, cannot
-> be instructed on how to perform the role, and cannot be dismissed for
-> performing it — real constraints for a small organisation. A non-statutory
-> "data protection lead" carries the duties this document needs without the
-> Article 38 protections, and is the honest option if independence cannot be
-> given.
+| Source | Entity named | Identifiers |
+|---|---|---|
+| **ICO public register** | **Kharis Ministries** | Registration **ZB659958**. Registered 13 February 2024, **expires 12 February 2027**. Payment **Tier 1**. Registered address 2A Orchard Road, Belvedere, Kent, DA17 5BP. |
+| **This codebase** | **Kharis Church** | Registered charity **1139291**; charitable company limited by guarantee, **Companies House 07308725** (`requirements/gift-aid.md:18-19`, `packages/types/src/gift-aid.ts:32`) |
+| **The published privacy notice** | **Kharis Church**, named as "the data controller" | `apps/web/src/app/legal/privacy/page.tsx:33-36` |
+| Published DP contact | **privacy@kharis.org**, one calendar month response | — |
 
-> **DECISION NEEDED: is Kharis Church registered with the ICO and paying the data protection fee?**
-> **No registration number appears anywhere in this repository.** Most
-> controllers processing personal data electronically must pay the fee under the
-> Data Protection (Charges and Information) Regulations 2018. Some charity
-> processing is exempt, but the exemption is narrow and is unlikely to cover a
-> platform of this scope.
-> **Recommended:** confirm the position with the ICO's self-assessment and
-> register if required. It is a small annual fee and non-registration is the
-> most easily discovered compliance failure there is.
+The Confidentiality Undertaking hedges in a way that now looks significant: it
+says "**Kharis Ministries / Kharis Church**"
+(`apps/web/src/components/legal/confidentiality-body.tsx:30`), which suggests
+the ambiguity is known and unresolved rather than new.
+
+> **DECISION NEEDED: confirm which legal entity is the data controller for Kairos, and if there are two, what the relationship between them is.**
+> This is now the highest-priority open item in this document, because every
+> other row depends on it. Three possibilities, with different consequences:
+>
+> 1. **They are one entity under two trading names.** Then the ICO registration
+>    covers the processing, and the privacy notice should name the registered
+>    entity so a data subject can find it on the register. Simplest outcome,
+>    and the most likely.
+> 2. **Kharis Ministries is the controller and Kharis Church is a trading name
+>    or a constituent body.** Then the privacy notice names the wrong entity as
+>    controller, which is an Article 13 failure, and this DPIA and the ROPA must
+>    be re-headed.
+> 3. **They are two distinct legal entities** — one charitable company, one
+>    something else. Then the relationship is a processing relationship and
+>    **needs an Article 28 contract between them**, or a joint-controller
+>    arrangement under Article 26 with a transparent allocation of
+>    responsibilities. There is currently no such agreement, and neither
+>    document can be signed until this is settled.
+>
+> **Recommended:** confirm against the governing document and the Companies
+> House filing, then make the privacy notice, this DPIA, the ROPA and the Gift
+> Aid declaration wording all name the same entity. The Gift Aid declaration is
+> the one with external consequences — HMRC needs the charity's identity to be
+> right.
+> **Trade-off:** if outcome 3 is the answer, there is a genuine piece of legal
+> work to do before the pilot, not just a renaming.
+
+**Diarise: the ICO registration expires 12 February 2027.** Lapsed registration
+while processing continues is an offence, and it is the single most easily
+discovered compliance failure there is. It should sit in whatever calendar the
+church uses for its charity filings, not only in this document.
 
 ### Outcome
 

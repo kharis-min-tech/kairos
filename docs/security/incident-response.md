@@ -21,24 +21,28 @@ table survives staffing changes — but somebody has to be written into each one
 
 | Role | Responsible for |
 |---|---|
-| **Incident Lead** | Declares the incident and its severity, owns the timeline, decides when it is closed. Makes the Article 33 notification call. |
+| **Incident Lead** | Declares the incident and its severity, owns the timeline, decides when it is closed. Does **not** make the Article 33 notification call — see §4. |
 | **Technical Lead** | Containment and recovery. Holds Cloudflare, PlanetScale and GitHub access. |
-| **Data Protection Lead** | Owns the breach assessment in §4, drafts the ICO notification, and the Article 34 communication to members. |
+| **Data Protection Officer** — **Tianna Johnson** | Owns the breach assessment in §4, **makes the Article 33 notification call**, drafts the ICO notification, and drafts the Article 34 communication to members. |
 | **Safeguarding Lead** | Mandatory participant whenever children's data is in scope. Decides whether a safeguarding referral is needed independently of the data-protection question. |
 | **Church Leadership / Trustees** | Informed at Severity 1 and 2. Approve any external communication. |
 
-> **DECISION NEEDED: name a person and a deputy for each role above, with contact details and an out-of-hours route.**
-> This document cannot invent them, and the cyber team will ask for exactly this
-> table filled in.
+> **DECISION NEEDED: name the four remaining roles and a deputy for each, with contact details and an out-of-hours route.**
+> **The DPO is settled — Tianna Johnson.** Her contact details are still
+> outstanding (`dpia.md` §6), and the 72-hour clock in §4 does not pause for a
+> weekend, so an out-of-hours route for her specifically is the one that matters
+> most.
 > **Recommended:** Incident Lead and Technical Lead may be the same person at
-> current scale, but the **Data Protection Lead must not also be the Technical
-> Lead** — the person who caused or fixed a breach should not be the sole judge
-> of whether it is notifiable. The Safeguarding Lead role already exists in the
-> system as an RBAC grant (`SafeguardingLead` / `SafeguardingHead`), so the
-> natural holder is whoever holds that grant.
-> **Trade-off:** separating the roles needs two available people. If that is not
-> realistic, write down that the Trustees act as the check on the notification
-> decision, and accept it as a named risk.
+> current scale, but the **DPO must not also be the Technical Lead** — the person
+> who caused or fixed a breach should not be the sole judge of whether it is
+> notifiable. With a designated DPO that separation now exists by construction,
+> which is a real improvement on the position this document was first drafted in.
+> The Safeguarding Lead role already exists in the system as an RBAC grant
+> (`SafeguardingLead` / `SafeguardingHead`), so the natural holder is whoever
+> holds that grant.
+> **Trade-off:** a deputy for each role needs people who may not exist at current
+> scale. Where there is no deputy, write that down as an accepted
+> single-point-of-failure rather than leaving the cell blank.
 
 Contact point already published to data subjects: **privacy@kharis.org**, with a
 one-calendar-month response commitment (`privacy/page.tsx:357-366`). The ICO
@@ -78,9 +82,9 @@ These are not quibbles; each one changes what an investigation can conclude.
   export the entire member directory and leave no trace in `audit_log`.** Under
   Article 33 the questions are "whose data, how much, and was it taken" — and
   the audit log cannot answer any of them. The request logger would show a
-  `GET /api/members/export` with a `memberId`, so the gap is partly covered *if*
-  Logpush is running (see below), but the authoritative security log does not
-  cover it.
+  `GET /api/members/export` with a `memberId`, but only inside Workers Logs'
+  short retention window (see below), and the authoritative security log does
+  not cover it at all.
 - **No alerting.** Nothing pages anyone. No threshold alert on sign-in failures,
   no alarm on export volume, no Cloudflare notification configured in the repo.
   Detection is entirely either a member complaining or someone happening to look.
@@ -88,24 +92,55 @@ These are not quibbles; each one changes what an investigation can conclude.
   reports (`privacy/page.tsx:244-246`), but there is **no `@sentry` dependency
   in any workspace and no Sentry code anywhere in the monorepo**. Unhandled
   exceptions are not reported anywhere outside the request log.
-- **Logpush is unverified.** `docs/observability.md` describes a Logpush job to
-  Axiom giving 30-day searchable retention, set up once in the Cloudflare
-  dashboard. That cannot be confirmed from the repo. Without it, Workers Logs
-  retains **3 days**, which is shorter than the 72-hour notification clock and
-  far shorter than the time most breaches take to surface.
+- **Logpush is NOT enabled — verified, not assumed.** `../observability.md`
+  describes a Logpush job to Axiom giving 30-day searchable retention. It was
+  never wired. **`"logpush": true` appears nowhere in `apps/api/wrangler.jsonc`**
+  — not in the top-level production config, not in the `staging` environment —
+  and a Cloudflare Worker emits to Logpush only when its own configuration
+  carries that flag, so no account-level job can be receiving anything whatever
+  exists in the dashboard. Request logs therefore stop at **Cloudflare Workers
+  Logs**, which is enabled with head sampling (`observability.enabled: true` at
+  `wrangler.jsonc:58` and `:118`) and retains a window measured in **days, not
+  thirty**.
+
+  **This is a finding, not a caveat, and it is the one that most weakens the
+  Article 33 position.** The notification clock is 72 hours from awareness, and
+  most breaches are not discovered the day they happen — the `incident-response`
+  tabletop in §7 turns on a Sunday discovered on a Tuesday, which is already at
+  the edge of the window. Combined with the audit log's inability to record a
+  read or an export, the honest statement is: **for a data-access or
+  exfiltration incident more than a few days old, this system retains no
+  evidence from which to scope it.** Head sampling compounds it — sampled logs
+  are not a complete record even inside the window.
 - **No rate limiting anywhere.** Confirmed by grep across the whole monorepo and
   `wrangler.jsonc`: no Hono middleware, no Cloudflare rate-limiting rule in
   config, no Turnstile. So credential stuffing against `POST /api/auth/login`
   produces unlimited `signin_failure` rows and no automatic response. The rows
   are the detection; there is nothing stopping the attack while you read them.
 
-> **DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules and the Logpush job are configured at the edge.**
-> Both are dashboard settings that leave no trace in the repository. The answers
-> change this section materially: with Logpush running, there is 30 days of
-> searchable history to investigate with; without it, there are three days.
-> **Recommended:** confirm both before the pilot, and if Logpush is not running,
-> set it up first — it is the cheapest incident-response capability available and
-> `docs/observability.md` already has the steps.
+> **DECISION NEEDED: enable Logpush before the pilot.**
+> No longer a question of confirming — it is confirmed off. Enabling it needs
+> **both** halves: `"logpush": true` added to the production and `staging`
+> Worker configs in `apps/api/wrangler.jsonc`, **and** an account-level Logpush
+> job created in the dashboard. The flag alone sends nothing; the job alone
+> receives nothing. `../observability.md` has the dashboard steps but does not
+> mention the flag, which is probably why this was missed.
+> **Recommended: yes, and before the pilot.** It is the cheapest
+> incident-response capability available and nothing else on this page extends
+> the evidence window.
+> **Trade-off:** it adds a processor receiving `memberId`, `branchId` and
+> `activeRole`, which needs a DPA, a region check and a retention period of its
+> own — see `ropa.md` §3. Better detection costs a processor; make that trade
+> deliberately.
+
+> **DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules are configured at the edge.**
+> Still genuinely unknown — WAF rules are dashboard configuration and leave no
+> trace in the repository, unlike the Logpush flag. Nothing in the codebase or in
+> `wrangler.jsonc` rate-limits anything.
+> **Recommended:** confirm before the pilot, and if there are none, add them at
+> the edge rather than in Hono — the edge stops the request before it costs
+> Worker CPU, which is the whole point against the argon2id amplification path
+> in `secure-sdlc.md` §4.6.
 
 > **DECISION NEEDED: add `member_exported` and `member_updated` to the audit taxonomy before the pilot.**
 > **Recommended: yes.** Without them, a data-exfiltration incident cannot be
@@ -143,9 +178,9 @@ more than it looks.
 
 | | Definition | Examples | Response |
 |---|---|---|---|
-| **S1** | Confirmed unauthorised access to, or loss of, special-category or children's data. Or total system compromise. | Children's health records read or exported by someone with no lawful reason. `JWT_SECRET` compromise (forgeable admin tokens — see `key-management.md` §1). `DATABASE_URL` or `CLOUDFLARE_API_TOKEN` leak. | Immediate. Incident Lead + Technical Lead + DP Lead + Safeguarding Lead + Trustees informed. Assume notifiable until shown otherwise. |
-| **S2** | Unauthorised access to member PII without special-category data, or a confirmed availability loss with data loss. | A branch admin accessing another branch's directory. Member records exposed by a broken access-control bug. Database data loss requiring a restore. | Within 4 hours. Lead + Technical + DP Lead. Article 33 assessment required. |
-| **S3** | A vulnerability with no evidence of exploitation; a near miss. | A missing authorisation check found in review. A secret committed and immediately rotated. Credential stuffing attempt with no successful sign-in. | Within 1 working day. Technical Lead, DP Lead informed. Usually not notifiable; **record why**. |
+| **S1** | Confirmed unauthorised access to, or loss of, special-category or children's data. Or total system compromise. | Children's health records read or exported by someone with no lawful reason. `JWT_SECRET` compromise (forgeable admin tokens — see `key-management.md` §1). `DATABASE_URL` or `CLOUDFLARE_API_TOKEN` leak. | Immediate. Incident Lead + Technical Lead + DPO + Safeguarding Lead + Trustees informed. Assume notifiable until shown otherwise. |
+| **S2** | Unauthorised access to member PII without special-category data, or a confirmed availability loss with data loss. | A branch admin accessing another branch's directory. Member records exposed by a broken access-control bug. Database data loss requiring a restore. | Within 4 hours. Lead + Technical + DPO. Article 33 assessment required. |
+| **S3** | A vulnerability with no evidence of exploitation; a near miss. | A missing authorisation check found in review. A secret committed and immediately rotated. Credential stuffing attempt with no successful sign-in. | Within 1 working day. Technical Lead, DPO informed. Usually not notifiable; **record why**. |
 | **S4** | Availability only, no personal data at risk. | Bad deploy, Worker erroring, PlanetScale outage. | Normal working hours. Technical Lead. Not a breach. |
 
 The five vulnerability classes found in the recent pre-release review —
@@ -239,7 +274,7 @@ Q4. Is it UNLIKELY to result in a risk to rights and freedoms?
     notification that turns out not to have been required far more kindly than a
     late or absent one.
 
-Q5. If notifiable: the Data Protection Lead notifies the ICO within 72 hours of
+Q5. If notifiable: the DPO notifies the ICO within 72 hours of
     awareness, via the ICO's online breach-reporting service at ico.org.uk, or
     its helpline (0303 123 1113) if the service is unavailable.
     Article 33(3) requires: the nature of the breach; the categories and
@@ -264,7 +299,7 @@ Q7. Record it regardless of outcome. Article 33(5) requires a record of EVERY
 ```
 
 > **DECISION NEEDED: who makes the final notification call, and who can be reached at a weekend.**
-> **Recommended:** the Data Protection Lead decides and the Incident Lead cannot
+> **Recommended:** the DPO decides and the Incident Lead cannot
 > override; a disagreement escalates to the Trustees, who decide within the
 > remaining clock. Both roles need an out-of-hours contact route, because the
 > 72 hours do not pause.
@@ -291,11 +326,14 @@ ones — the absence of a scripted kill switch is itself a finding.
 | Need to stop all traffic | Delete the Worker's route in the Cloudflare dashboard, or deploy a 503 build | **There is no maintenance mode.** Both options are manual. |
 | Data destroyed or corrupted | `backup-recovery.md` §4 | **Export `audit_log` for the affected window before restoring** — the audit trail shares a database with the data, so a restore rolls the evidence back too. |
 
-**Preserve evidence before you fix.** For a finished incident, export the
-relevant `audit_log` rows and request logs first. The audit log is append-only
-in practice — no code anywhere issues UPDATE or DELETE against it — but a
-database restore will overwrite it, and Workers Logs ages out in 3 days without
-Logpush.
+**Preserve evidence before you fix, and treat it as urgent.** For a finished
+incident, export the relevant `audit_log` rows and request logs *first*. The
+audit log is append-only in practice — no code anywhere issues UPDATE or DELETE
+against it — but a database restore will overwrite it. And because Logpush is
+not enabled, **Workers Logs is the only copy of the request logs and it ages
+out within days**, so pulling them is the first action in any incident that
+might involve data access, before containment and before investigation. There
+is no second chance at this evidence.
 
 ---
 
@@ -366,14 +404,19 @@ so that the Sunday school could run. Nobody revoked it. `audit_log` has the
 **Inject 3 — when asked "what did he actually look at".** This is the inject the
 exercise exists for. `audit_log` has 18 action types and **none of them records
 reading a member record or a health record.** The request logger would show
-`GET /api/members/:id/health-record` lines with a `memberId` and a `branchId`,
-**if** Logpush to Axiom is running. If it is not, Workers Logs retains 3 days —
-and the Sunday in question was 2 days ago, so the data exists but expires
-tomorrow. Someone has to notice that and act on it inside the exercise.
+`GET /api/members/:id/health-record` lines with a `memberId` and a `branchId` —
+but **Logpush is not enabled**, so the only copy is Cloudflare Workers Logs,
+head-sampled, retained for days. The Sunday in question was two days ago. **The
+data is there now and will not be there by the end of the week**, and somebody
+in the room has to notice that and pull it before the exercise moves on. If
+nobody does, let it expire and make that the debrief.
 
-**Inject 4 — scope.** If the team gets the logs: eleven `health-record` reads
-across nine distinct children, over 20 minutes on Sunday morning. If they do
-not: there is no way to establish how many children were affected.
+**Inject 4 — scope.** If the team pulls the logs in time: eleven
+`health-record` reads across nine distinct children, over 20 minutes on Sunday
+morning — and note that head sampling means even this may be incomplete. If
+they do not pull them in time: **there is no way to establish how many children
+were affected, and the Article 34 letter to families cannot say whose child was
+involved.**
 
 **Inject 5 — released at 60 minutes.** The leader, asked, says he was "checking
 allergies before snack time" and that he did not know he was not supposed to.
@@ -405,10 +448,13 @@ He did not take screenshots. He cannot say who else saw the screen.
   column that reads as an expiry and is not is exactly the failure mode
   `apps/api/CLAUDE.md` records for `requireRole`: "a gate that reads as a gate
   and is not will eventually be trusted."
-- **The investigation capability is the second finding.** The team either cannot
-  scope the incident, or can only scope it because of a dashboard setting nobody
-  in the room can confirm — and in either case the evidence window is 3 days
-  unless Logpush is running.
+- **The investigation capability is the second finding, and it is now known to
+  be worse than conditional.** The audit log cannot record a read, and Logpush
+  is confirmed not enabled, so the only evidence is head-sampled Workers Logs
+  with a retention window of days. The team can scope this incident **only if
+  somebody pulls the logs within the first day or two**, and even then only
+  approximately. There is no version of this exercise in which the current
+  system gives a complete answer.
 - **Containment is easy and should be done in the first ten minutes:** revoke
   the `SafeguardingLead` grant. It takes effect on his next API call. If nobody
   does this early, point it out.
@@ -450,15 +496,21 @@ also evidences that the plan is tested.
 
 ## 9. Open decisions, collected
 
-1. Name a person and deputy for each role in §1, with out-of-hours contact.
-2. Confirm whether Cloudflare WAF rate limiting and the Logpush job are
-   configured at the edge (§2).
-3. Add `member_exported` and `member_updated` to the audit taxonomy before the
+1. Name the four remaining roles in §1 and a deputy for each, with out-of-hours
+   contact. **The DPO is settled — Tianna Johnson** — but her contact details
+   and out-of-hours route are still outstanding.
+2. **Enable Logpush before the pilot** (§2). Confirmed off: it needs
+   `"logpush": true` in both Worker configs *and* an account-level job. Adds a
+   processor — see `ropa.md` §3.
+3. Confirm whether Cloudflare WAF rate-limiting rules exist at the edge (§2) —
+   still genuinely unknown, unlike Logpush.
+4. Add `member_exported` and `member_updated` to the audit taxonomy before the
    pilot (§2).
-4. Confirm who makes the final notification call and that they are reachable at
-   a weekend (§4).
-5. Set the tabletop schedule (§7).
-6. Decide whether `member_roles.end_date` should be enforced, or dropped.
+5. Confirm the DPO is reachable at a weekend, since the 72-hour clock does not
+   pause (§4). *The question of who decides is settled: the DPO decides, and the
+   Incident Lead cannot override.*
+6. Set the tabletop schedule (§7).
+7. Decide whether `member_roles.end_date` should be enforced, or dropped.
    **Recommended: enforced** — add `or(isNull(endDate), gte(endDate, today))` to
    `selectRoleGrants`, so a time-limited grant means what an administrator
    reading the field would assume. **Trade-off:** any grant already carrying a
@@ -468,5 +520,7 @@ also evidences that the plan is tested.
    ability to grant temporary authority, which the §7 scenario shows the church
    genuinely needs.
 
-Items 2 and 3 are prerequisites for the §7 tabletop producing a useful answer
-rather than just demonstrating that it cannot.
+Items 2 and 4 are prerequisites for the §7 tabletop producing a useful answer
+rather than just demonstrating that it cannot. They are also the two that
+determine whether an Article 33 notification can state the scope of a breach or
+has to admit it is unknown.

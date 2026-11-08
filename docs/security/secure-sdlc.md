@@ -191,8 +191,18 @@ Two rules that are security controls even though they read as operational ones:
   silent journal drift, which has bitten three times. Both deploy workflows run
   `--dry-run` first so the pending set is visible in the job log before
   anything changes. See `backup-recovery.md` §3 for why this constrains
-  recovery. One loose end: `apps/api/entrypoint.sh:19` still runs
-  `drizzle-kit migrate` and is the only surviving non-bootstrap path.
+  recovery.
+
+  One loose end, now characterised precisely: `apps/api/entrypoint.sh:19` runs
+  `drizzle-kit migrate`, the only surviving non-bootstrap migration path. It is
+  **latent, not live** — the script is referenced only by `apps/api/Dockerfile`
+  (`ENTRYPOINT ["./entrypoint.sh"]`), and **nothing in `.github/workflows/`
+  builds that image**; both deploy workflows run `db:bootstrap`. So it cannot
+  fire in CI or on Cloudflare. It fires if anyone runs the container — which is
+  exactly the container-based recovery scenario in `backup-recovery.md` §4, and
+  it is now known to be actively unsafe there because of the journal defect
+  recorded in that document. Worth deleting the two lines rather than leaving a
+  trap.
 - **Soft delete by default.** `isActive` rather than `DELETE`. Across the whole
   API there are seven `db.delete(...)` call sites, all per-row and
   user-initiated. This is good for recoverability and is also why
