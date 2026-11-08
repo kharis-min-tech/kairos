@@ -9,6 +9,36 @@ import { KharisCardHeader } from '../kharis-logo';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 /**
+ * Constrain the post-sign-in redirect to a path on this origin.
+ *
+ * `returnTo` arrives in the URL fragment, so it is attacker-supplied: it was
+ * handed straight to `router.replace`, which follows an absolute URL off-site.
+ * That made this an open redirect at the worst possible moment — immediately
+ * after a successful sign-in, where the user has just been told the app is
+ * trustworthy, so a landing page styled as Kairos asking for a password is a
+ * credible phish. CodeQL flags the surrounding check as
+ * `js/user-controlled-bypass`.
+ *
+ * Accepted: a single-slash absolute path, optionally with query and hash.
+ * Rejected, and sent to /dashboard instead:
+ *   - anything with a scheme (`https://evil.test`, `javascript:...`)
+ *   - protocol-relative URLs (`//evil.test`), which browsers treat as absolute
+ *   - backslash variants (`/\evil.test`), which some browsers normalise to `//`
+ *   - anything not starting with `/`
+ *
+ * An allowlist of shapes rather than a denylist of payloads: the rejected list
+ * above is the explanation, not the implementation.
+ */
+function safeReturnTo(raw: string | null): string {
+  const FALLBACK = '/dashboard';
+  if (!raw) return FALLBACK;
+  if (!raw.startsWith('/')) return FALLBACK;
+  // `//host` and `/\host` both resolve to another origin.
+  if (raw.startsWith('//') || raw.startsWith('/\\')) return FALLBACK;
+  return raw;
+}
+
+/**
  * The API redirects a successful OAuth handshake here with tokens in the URL
  * fragment (not the query — fragments never leave the browser). We parse them,
  * fetch the caller's profile, hand both to `persistAuthSuccess`, wipe the
@@ -32,7 +62,7 @@ export default function OAuthCallbackPage() {
         const accessToken = params.get('accessToken');
         const refreshToken = params.get('refreshToken');
         const method = params.get('method');
-        const returnTo = params.get('returnTo') || '/dashboard';
+        const returnTo = safeReturnTo(params.get('returnTo'));
 
         if (!accessToken || !refreshToken) {
           router.replace('/login?oauth_error=provider_error');
