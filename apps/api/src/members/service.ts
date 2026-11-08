@@ -1532,9 +1532,49 @@ function escapeCSV(value: unknown): string {
   return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+/**
+ * The branches this caller actually holds `branch:write` on.
+ *
+ * `auth.branchId` is the ACTIVE branch, not the authority branch:
+ * `getActiveBranchId` returns `secondaryBranchId` whenever the member is at
+ * their secondary branch. Anything that filters on it is asking "where are
+ * they standing", when the question is "what may they touch" — and for an
+ * export those differ in the dangerous direction, handing a branch admin
+ * toggled to a secondary branch that branch's roll.
+ *
+ * Candidates come from the grants themselves and are then put through the one
+ * matcher, so the role→capability mapping is never restated here. A
+ * church-scoped grant names no branch and so contributes no candidate, which
+ * is right: no church role carries `branch:write`.
+ */
+function branchesCallerCanWrite(auth: AuthContext): string[] {
+  const candidates = new Set<string>();
+  for (const grant of auth.grants ?? []) {
+    if (grant.scope.kind === 'branch') candidates.add(grant.scope.id);
+    if (grant.branchId) candidates.add(grant.branchId);
+  }
+  return [...candidates].filter((id) =>
+    authHasCapability(auth, 'branch:write', { kind: 'branch', id }),
+  );
+}
+
 export async function exportMembersCsv(db: Database, auth: AuthContext): Promise<string> {
+  let scopeCondition: SQL | undefined;
+  if (auth.systemRole !== 'admin') {
+    const writable = branchesCallerCanWrite(auth);
+    if (writable.length === 0) {
+      throw new ForbiddenError('You have no branch to export');
+    }
+    scopeCondition = inArray(members.homeBranchId, writable);
+  }
+
   const rows = await db
     .select({
+      // id / homeBranchId / memberType are not exported — they are what the
+      // redaction below keys off. Without them every row went out raw.
+      id: members.id,
+      homeBranchId: members.homeBranchId,
+      memberType: members.memberType,
       firstName: members.firstName,
       lastName: members.lastName,
       email: members.email,
@@ -1553,12 +1593,17 @@ export async function exportMembersCsv(db: Database, auth: AuthContext): Promise
     })
     .from(members)
     .innerJoin(branches, eq(members.homeBranchId, branches.id))
-    .where(
-      auth.systemRole === 'admin'
-        ? eq(members.isActive, true)
-        : and(eq(members.isActive, true), eq(members.homeBranchId, auth.branchId)),
-    )
+    .where(and(eq(members.isActive, true), ...(scopeCondition ? [scopeCondition] : [])))
     .orderBy(members.lastName, members.firstName);
+
+  // The export carried NO redaction at all, so a minor's date of birth and
+  // emergency contacts left through the CSV even where the directory would
+  // have nulled them. Run every row through the same gate the screen uses —
+  // the file must never be more generous than the page it came from.
+  const guardedMemberIds = await getViewerGuardedMemberIds(db, auth);
+  const redacted = rows.map((row) =>
+    applyMinorProtection(row, hasDirectoryAccess(auth, row, guardedMemberIds)),
+  );
 
   const headers = [
     'firstName', 'lastName', 'email', 'phone', 'gender', 'dateOfBirth',
@@ -1568,7 +1613,7 @@ export async function exportMembersCsv(db: Database, auth: AuthContext): Promise
 
   const lines = [
     headers.join(','),
-    ...rows.map((r) => headers.map((h) => escapeCSV((r as Record<string, unknown>)[h])).join(',')),
+    ...redacted.map((r) => headers.map((h) => escapeCSV((r as Record<string, unknown>)[h])).join(',')),
   ];
 
   return lines.join('\n');

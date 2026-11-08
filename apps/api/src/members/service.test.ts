@@ -967,6 +967,84 @@ describe('exportMembersCsv', () => {
     expect(lines[0]).toContain('firstName');
   });
 
+  // The export applied NO redaction at all and filtered on `auth.branchId`,
+  // which is the ACTIVE branch rather than the authority branch. Together that
+  // handed a branch admin toggled to a secondary branch that branch's roll,
+  // minors' dates of birth and emergency contacts included, one click away
+  // from a screen that would have nulled them.
+  const minorCsvRow = {
+    id: 'minor-1',
+    homeBranchId: branchId,
+    memberType: 'child',
+    firstName: 'Tiny', lastName: 'Tot', email: 'kid@test.com', phone: '555000',
+    gender: 'Female', dateOfBirth: '2016-01-01', address: '1 Kid St', city: 'Lagos',
+    branchName: 'Lagos Branch', membershipDate: '2024-01-01',
+    emergencyContactName: 'Mum', emergencyContactPhone: '555111',
+    emergencyContactRelationship: 'Parent', systemRole: 'member', approvalStatus: 'approved',
+  };
+
+  // Selects, in order: the member rows, then the viewer's guardianships
+  // (skipped entirely for a platform admin).
+  it("redacts a minor's DOB and emergency contacts for a caller without directory access", async () => {
+    // Rows now go through the same gate the screen uses, so the file can never
+    // be more generous than the page it came from.
+    setupSelectSequence([minorCsvRow], []);
+    const csv = await exportMembersCsv(mockDb, branchAdminOtherBranchAuth);
+
+    expect(csv).not.toContain('2016-01-01');
+    expect(csv).not.toContain('Mum');
+    expect(csv).not.toContain('555111');
+    expect(csv).not.toContain('kid@test.com');
+    // The row is still there, just emptied of the protected fields.
+    expect(csv).toContain('Tiny');
+    expect(csv).toContain('Lagos Branch');
+  });
+
+  it("keeps a minor's fields for a branch admin of the child's own branch", async () => {
+    // The pair to the test above, and the reason the directory path keeps
+    // `branch:read`: this caller may EDIT the record, so blanking what they
+    // read would have them save the blanks back.
+    setupSelectSequence([minorCsvRow], []);
+    const csv = await exportMembersCsv(mockDb, branchAdminSameBranchAuth);
+    expect(csv).toContain('2016-01-01');
+    expect(csv).toContain('Mum');
+  });
+
+  it('scopes the export to branches the caller holds branch:write on, not the active one', async () => {
+    // branchAdminSameBranchAuth administers `branchId`. Put them at
+    // `otherBranchId` — the toggled-to-secondary case — and the export must
+    // still be of `branchId`, which is what they actually administer.
+    const toggled = { ...branchAdminSameBranchAuth, branchId: otherBranchId };
+    setupSelectSequence([], []);
+    await exportMembersCsv(mockDb, toggled);
+
+    // Drizzle's SQL object is self-referential, so pull the string leaves out
+    // rather than serialising it.
+    const strings: string[] = [];
+    const seen = new Set<unknown>();
+    const walk = (v: unknown) => {
+      if (typeof v === 'string') strings.push(v);
+      else if (v && typeof v === 'object' && !seen.has(v)) {
+        seen.add(v);
+        Object.values(v as Record<string, unknown>).forEach(walk);
+      }
+    };
+    walk((mockDb.select as ReturnType<typeof vi.fn>).mock.results[0]!.value.where.mock.calls[0]![0]);
+
+    expect(strings).toContain(branchId);
+    expect(strings).not.toContain(otherBranchId);
+  });
+
+  it('refuses a caller who holds branch:write on no branch at all', async () => {
+    // Previously this exported `auth.branchId` regardless — a fellowship
+    // leader standing in a branch got that branch's whole roll.
+    const fellowshipLeader = viewer('000-fl', branchId, [
+      { role: 'FellowshipLeader', scope: { kind: 'branch', id: branchId }, branchId },
+    ]);
+    await expect(exportMembersCsv(mockDb, fellowshipLeader))
+      .rejects.toThrow('You have no branch to export');
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
 });
 
 // ── switchActiveBranch ────────────────────────────────────
