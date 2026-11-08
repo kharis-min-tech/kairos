@@ -20,7 +20,7 @@ useful nor appropriate there.
 
 | | |
 |---|---|
-| [Security docs](security/README.md) | Six documents written for the pre-release cyber review: key management, data retention, incident response, backup and recovery, the secure development lifecycle and threat model, and the UK GDPR mapping. Start with the index — it lists the three things to do first. |
+| [Security docs](security/README.md) | Eight documents written for the pre-release cyber review: key management, data retention, incident response, backup and recovery, the secure development lifecycle and threat model, the UK GDPR mapping, and the two statutory records — the Article 35 DPIA and the Article 30 ROPA. Start with the index; it lists the four things to do first. |
 
 ## Working in the repo
 
