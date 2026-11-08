@@ -12,7 +12,8 @@ import { enforceScopeAllows } from '../lib/scope';
 import { authHasAnyCapability, authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
-import { recordAuditEvent } from '../audit/service';
+import { recordAuditEvent, type RequestContext } from '../audit/service';
+import { linkGuardians } from '../lib/member-shell';
 import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
 import {
   NotFoundError,
@@ -1499,6 +1500,258 @@ export async function reviewMinor(
     .returning();
 
   return updated;
+}
+
+// ── Guardian links ─────────────────────────────────────────
+//
+// The resolution path for `listUnguardedMinors`. Until these existed that list
+// reported a safeguarding problem nobody could fix: the only writes to
+// `member_guardians` were `createMemberShell` (always a brand-new member) and
+// the first-time-visitor form, which is gated to subjects the submission itself
+// minted. A child already on the roll could not be given a guardian at all.
+//
+// Both operations take `safeguarding:write` scoped to the SUBJECT's home
+// branch, because writing a guardian link IS the access-control decision:
+// `hasHealthRecordAccess` grants on `guardedMemberIds.has(member.id)`, so
+// whoever creates the link is handing that adult the child's unredacted
+// directory row plus read AND write on their health record. That belongs with
+// safeguarding authority rather than general branch administration — a
+// BranchAdmin holds `branch:write` and must not be able to give anybody access
+// to a child's health record. It also keeps reading and acting symmetric:
+// `listUnguardedMinors` is gated on `safeguarding:read`, so acting on what it
+// shows takes `safeguarding:write`.
+//
+// Scope resolves from the subject's own `homeBranchId`, never `auth.branchId`
+// or the URL — the same rule `reviewMinor` and `loadMemberForSafeguarding`
+// follow.
+
+/**
+ * Load the guarded member and authorise the caller against THEIR branch.
+ * Shared by attach and detach so the two cannot drift apart on the gate.
+ */
+async function loadGuardianLinkSubject(db: Database, auth: AuthContext, memberId: string) {
+  const [subject] = await db
+    .select({
+      id: members.id,
+      homeBranchId: members.homeBranchId,
+      memberType: members.memberType,
+      dateOfBirth: members.dateOfBirth,
+      isActive: members.isActive,
+    })
+    .from(members)
+    .where(eq(members.id, memberId));
+
+  if (!subject || !subject.isActive) throw new NotFoundError('Member not found');
+
+  if (
+    !authHasCapability(auth, 'safeguarding:write', {
+      kind: 'branch',
+      id: subject.homeBranchId,
+    })
+  ) {
+    throw new ForbiddenError('You need safeguarding access for this branch');
+  }
+
+  return subject;
+}
+
+/**
+ * Attach an existing member as a guardian of an existing member.
+ */
+export async function attachGuardian(
+  db: Database,
+  auth: AuthContext,
+  memberId: string,
+  input: { guardianMemberId: string; relationship?: string; isPrimary?: boolean },
+  ctx?: RequestContext,
+) {
+  const subject = await loadGuardianLinkSubject(db, auth, memberId);
+
+  // Guardianship is only a modelled concept for protected minors, and every
+  // other write path mints a child or a baby. Allowing an adult subject would
+  // let a safeguarding holder give a third party standing access to an adult
+  // member's health record — `hasHealthRecordAccess` grants on the guardian
+  // link without checking minor status. Guardianship over a vulnerable adult
+  // would need its own consent story; it is not this feature.
+  if (!isMinorMember(subject)) {
+    throw new ValidationError('A guardian can only be attached to a member under 16');
+  }
+
+  // `linkGuardians` drops a self-link silently, which is right for a form
+  // capture (one bad field must not sink the whole submission) and wrong for an
+  // explicit request, which would report success for something it did not do.
+  // The `member_id <> guardian_member_id` CHECK would refuse it regardless.
+  if (input.guardianMemberId === memberId) {
+    throw new ValidationError('A member cannot be their own guardian');
+  }
+
+  const [guardian] = await db
+    .select({
+      id: members.id,
+      memberType: members.memberType,
+      dateOfBirth: members.dateOfBirth,
+      isActive: members.isActive,
+    })
+    .from(members)
+    .where(eq(members.id, input.guardianMemberId));
+
+  if (!guardian || !guardian.isActive) throw new NotFoundError('Guardian not found');
+
+  // A minor cannot carry responsibility for another minor, and the link would
+  // hand one child sight of another child's health record.
+  if (isMinorMember(guardian)) {
+    throw new ValidationError('A member under 16 cannot be a guardian');
+  }
+
+  // The guardian is deliberately NOT required to share the subject's branch.
+  // Guardian access is branch-independent by design (see `hasHealthRecordAccess`)
+  // so a parent who attends another branch still reaches their own child. The
+  // authority check is on the SUBJECT's branch, because the subject's record is
+  // what is being opened up.
+
+  const [existing] = await db
+    .select({ id: memberGuardians.id })
+    .from(memberGuardians)
+    .where(
+      and(
+        eq(memberGuardians.memberId, memberId),
+        eq(memberGuardians.guardianMemberId, input.guardianMemberId),
+        eq(memberGuardians.isActive, true),
+      ),
+    );
+
+  // Without this the partial unique index makes `onConflictDoNothing` a no-op
+  // and the caller is told the link was created.
+  if (existing) {
+    throw new ConflictError('That member is already an active guardian of this member');
+  }
+
+  // One primary per member, enforced by `uq_member_guardians_primary`. Promote
+  // by demoting: taking over as first contact is an explicit instruction, so
+  // stand the previous primary down rather than letting the index reject the
+  // insert (which `onConflictDoNothing` would hide). The old link stays active
+  // — only its primacy moves.
+  if (input.isPrimary === true) {
+    await db
+      .update(memberGuardians)
+      .set({ isPrimary: false, updatedAt: sql`NOW()` })
+      .where(
+        and(
+          eq(memberGuardians.memberId, memberId),
+          eq(memberGuardians.isPrimary, true),
+          eq(memberGuardians.isActive, true),
+        ),
+      );
+  }
+
+  await linkGuardians(db, memberId, [
+    {
+      memberId: input.guardianMemberId,
+      relationship: input.relationship ?? null,
+      // Explicit, so `linkGuardians` does not default a lone link to primary.
+      isPrimary: input.isPrimary === true,
+    },
+  ]);
+
+  const [link] = await db
+    .select({
+      id: memberGuardians.id,
+      memberId: memberGuardians.memberId,
+      guardianMemberId: memberGuardians.guardianMemberId,
+      relationship: memberGuardians.relationship,
+      isPrimary: memberGuardians.isPrimary,
+      isActive: memberGuardians.isActive,
+    })
+    .from(memberGuardians)
+    .where(
+      and(
+        eq(memberGuardians.memberId, memberId),
+        eq(memberGuardians.guardianMemberId, input.guardianMemberId),
+        eq(memberGuardians.isActive, true),
+      ),
+    );
+
+  // Awaited, not handed to `ctx.waitUntil`. The Postgres client is per-request
+  // inside an AsyncLocalStorage scope, so a deferred write either throws or
+  // does I/O on a socket the request no longer owns, and the row vanishes.
+  // This is the first mutation in the system that grants access to a child's
+  // record; it does not get to be best-effort.
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.GuardianLinked,
+    outcome: AuditOutcome.Success,
+    targetType: 'member_guardian',
+    targetId: link?.id,
+    metadata: {
+      guardedMemberId: memberId,
+      guardianMemberId: input.guardianMemberId,
+      branchId: subject.homeBranchId,
+      isPrimary: input.isPrimary === true,
+      ...(input.relationship ? { relationship: input.relationship } : {}),
+    },
+    ...(ctx && { ctx }),
+  });
+
+  return link ?? null;
+}
+
+/**
+ * Deactivate a guardian link. Removing a guardian REVOKES that person's access
+ * to the child's record, so it is as much a safeguarding decision as granting
+ * it and takes the same capability.
+ */
+export async function detachGuardian(
+  db: Database,
+  auth: AuthContext,
+  memberId: string,
+  guardianMemberId: string,
+  ctx?: RequestContext,
+) {
+  // Note the asymmetry with attach: detach does NOT require the subject to be
+  // a minor. A link that should not exist — over an adult, or left behind by
+  // older data — has to be removable, and refusing to clean it up because of
+  // the subject's age would strand exactly the rows most worth removing.
+  const subject = await loadGuardianLinkSubject(db, auth, memberId);
+
+  const [link] = await db
+    .select({ id: memberGuardians.id, isPrimary: memberGuardians.isPrimary })
+    .from(memberGuardians)
+    .where(
+      and(
+        eq(memberGuardians.memberId, memberId),
+        eq(memberGuardians.guardianMemberId, guardianMemberId),
+        eq(memberGuardians.isActive, true),
+      ),
+    );
+
+  if (!link) throw new NotFoundError('Guardian link not found');
+
+  // Deactivate, never delete. Grant resolution filters on `isActive`
+  // (`getViewerGuardedMemberIds`), so flipping the flag is what actually
+  // revokes access — and destroying the record of who once had sight of a
+  // child's data is the opposite of what a safeguarding audit needs.
+  const [updated] = await db
+    .update(memberGuardians)
+    .set({ isActive: false, isPrimary: false, updatedAt: sql`NOW()` })
+    .where(eq(memberGuardians.id, link.id))
+    .returning();
+
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.GuardianUnlinked,
+    outcome: AuditOutcome.Success,
+    targetType: 'member_guardian',
+    targetId: link.id,
+    metadata: {
+      guardedMemberId: memberId,
+      guardianMemberId,
+      branchId: subject.homeBranchId,
+      wasPrimary: link.isPrimary,
+    },
+    ...(ctx && { ctx }),
+  });
+
+  return updated ?? null;
 }
 
 // ── CSV Import / Export ────────────────────────────────────

@@ -15,6 +15,7 @@ import {
   reviewMinorSchema,
   setMembershipClassSchema,
   importMembersFormSchema,
+  linkGuardianSchema,
 } from './schemas';
 import {
   listMembers,
@@ -38,9 +39,12 @@ import {
   listDormantMinors,
   reviewMinor,
   setMembershipClassCompleted,
+  attachGuardian,
+  detachGuardian,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 import { getMemberFollowupHistory } from './followups-history-service';
+import { extractRequestContext } from '../audit/context';
 
 export const membersRouter = new Hono();
 
@@ -275,4 +279,40 @@ membersRouter.delete('/:id/roles/:roleAssignmentId', requireRole('admin'), async
   const auth = getAuth(c);
   const result = await removeRole(db, c.req.param('id')!, c.req.param('roleAssignmentId')!, auth);
   return c.json(successResponse(result, 'Role removed'));
+});
+
+// ── Guardian links ─────────────────────────────────────────
+//
+// No `requireCapability` here on purpose. The capability is `safeguarding:write`
+// scoped to the SUBJECT's home branch, and the subject's branch is only known
+// after a database read — a route-level closure can only see the URL and body,
+// and gating on `auth.branchId` instead is the exact mistake these services
+// were just hardened against. The scoped check lives in the service, as it does
+// for `reviewMinor` and `loadMemberForSafeguarding`.
+//
+// `extractRequestContext(c)` is threaded through so the audit row carries the
+// actor's IP, user-agent and country.
+
+membersRouter.post('/:id/guardians', zValidator('json', linkGuardianSchema), async (c) => {
+  const auth = getAuth(c);
+  const link = await attachGuardian(
+    db,
+    auth,
+    c.req.param('id')!,
+    c.req.valid('json'),
+    extractRequestContext(c),
+  );
+  return c.json(successResponse(link, 'Guardian linked'), 201);
+});
+
+membersRouter.delete('/:id/guardians/:guardianMemberId', async (c) => {
+  const auth = getAuth(c);
+  const result = await detachGuardian(
+    db,
+    auth,
+    c.req.param('id')!,
+    c.req.param('guardianMemberId')!,
+    extractRequestContext(c),
+  );
+  return c.json(successResponse(result, 'Guardian removed'));
 });

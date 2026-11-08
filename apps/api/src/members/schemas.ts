@@ -144,3 +144,18 @@ export const unguardedMinorsQuerySchema = z.object({
 export const reviewMinorSchema = z.object({
   decision: z.enum(['active', 'archived']),
 });
+
+/**
+ * Attach an existing member as a guardian of an existing member — the
+ * resolution path for the unguarded-minors list.
+ *
+ * `relationship` matches `member_guardians.relationship` (varchar 40) and is
+ * deliberately free text, not an enum: families do not fit a closed list.
+ * `isPrimary` defaults to false at the service, because the subject may
+ * already have a primary and there is at most one.
+ */
+export const linkGuardianSchema = z.object({
+  guardianMemberId: z.string().uuid(),
+  relationship: z.string().trim().min(1).max(40).optional(),
+  isPrimary: z.boolean().optional(),
+});
