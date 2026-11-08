@@ -68,8 +68,18 @@ rather than still asking:
   defect in `backup-recovery.md` §3.
 
 Two of those answers raised sharper questions than they settled — the evidence
-window, and PlanetScale's missing sub-processor list — so they appear in the
-lists rather than disappearing from them.
+window, and PlanetScale's sub-processor list — so they appear in the lists
+rather than disappearing from them.
+
+**PlanetScale's sub-processor list was retrieved on 8 November 2026**, closing
+the last gap in the Article 28 evidence set. It raised two things of its own,
+both recorded in `ropa.md` §3 and §4: the objection window in DPA clause 4.3 is
+**five calendar days**, not thirty, so the right to object expires unexercised
+unless somebody is subscribed to PlanetScale's Trust Center; and PlanetScale's
+own sub-processors are **almost entirely US entities**, which does not move the
+member records out of London but does mean the processor holding all 55 tables
+has US-based monitoring suppliers. That is now the most significant open
+transfer question, ahead of Cloudflare Images.
 
 **What has since shipped.** This section opened as a four-item backlog. Three
 of the four are done and the fourth is a people task, so **no item on it is a
