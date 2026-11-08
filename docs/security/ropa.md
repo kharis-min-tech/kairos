@@ -17,29 +17,25 @@ unavailable and a ROPA is mandatory regardless of the church's size.
 
 | | |
 |---|---|
-| **Controller** | **UNRESOLVED — the ICO register says "Kharis Ministries"; the codebase and privacy notice say "Kharis Church".** See the discrepancy below. This record cannot be adopted until it is settled, because Article 30 is a record *of the controller's* processing. |
-| ICO registration | **Kharis Ministries — ZB659958.** Registered 13 February 2024, **expires 12 February 2027**. Payment Tier 1. Registered address 2A Orchard Road, Belvedere, Kent, DA17 5BP. |
-| Registered charity number | **1139291** (recorded against "Kharis Church" in `requirements/gift-aid.md:18`) |
+| **Controller** | **Kharis Ministries** |
+| ICO registration | **ZB659958.** Registered 13 February 2024, **expires 12 February 2027**. Payment Tier 1. Registered address 2A Orchard Road, Belvedere, Kent, DA17 5BP. |
+| Registered charity number | **1139291** |
 | Legal form | Charitable company limited by guarantee, **Companies House 07308725** |
 | **Data Protection Officer** | **Tianna Johnson.** Contact details not yet supplied — see `dpia.md` §6. |
 | Published data protection contact | **privacy@kharis.org** (one calendar month response commitment). Does not name the DPO, which Article 13(1)(b) requires. |
 | System | Kairos, an internal church administration platform. Pilot scope: **one branch, on production, structural seeding only, no member import.** |
 
-**The controlling-entity discrepancy.** The ICO public register names **Kharis
-Ministries** (ZB659958); the privacy notice names **Kharis Church** as "the data
-controller", and the Gift Aid material records Kharis Church as charity 1139291
-and Companies House 07308725. The Confidentiality Undertaking writes
-"**Kharis Ministries / Kharis Church**"
-(`apps/web/src/components/legal/confidentiality-body.tsx:30`), which suggests
-the ambiguity is already known.
-
-This matters to this document more than to any other, because a ROPA is by
-definition the record of one controller's activities. If the two names are one
-entity, this record simply needs re-heading. **If they are two entities, every
-activity in §1 needs an Article 28 processing agreement or an Article 26
-joint-controller arrangement between them**, and none exists. The full
-decision, with the three possible outcomes, is in `dpia.md` §6 and is not
-repeated here.
+**On the two names.** Kharis Ministries is the legal name and the registered
+data controller; **Kharis Church is the operating name** used in member-facing
+copy. They are one body, not two — so there is no Article 26 joint-controller
+arrangement and no internal Article 28 agreement to put in place. This is
+recorded because the ambiguity is visible in the codebase, where the
+Confidentiality Undertaking writes "Kharis Ministries / Kharis Church"
+(`apps/web/src/components/legal/confidentiality-body.tsx:30`), and a future
+reader will hit it. The convention is **legal name in legal contexts, operating
+name in member-facing copy** — the split that
+`GIFT_AID_CHARITY_NAME = 'Kharis Ministries'`
+(`packages/types/src/gift-aid.ts:26`) already encodes for HMRC.
 
 ---
 
@@ -188,13 +184,62 @@ safeguarding authority, a court, or a UK regulator.
 notice, which is wrong in two ways: it names Sentry, which receives nothing, and
 it omits Mapbox, which receives personal data.**
 
-| Processor | Role | Personal data it receives | Region | DPA in place? |
+| Processor | Role | Personal data it receives | Region | Article 28 evidence held |
 |---|---|---|---|---|
-| **Cloudflare, Inc.** | Pages (web), Worker (API), Hyperdrive (DB gateway), **Images** (profile photos), Workers Logs | Everything in transit; **profile photographs at rest, including children's**; request logs carrying `memberId`, `branchId`, `activeRole`, path and status | UK/EU edge — **but confirm where Cloudflare Images stores at rest** | **DECISION NEEDED** |
-| **PlanetScale, Inc.** | Postgres — the primary datastore | **All 55 tables, including health and safeguarding records** | AWS eu-west-2 (London) | **DECISION NEEDED** |
-| **Amazon Web Services, Inc.** | SES transactional email | Recipient name and email; email body content, which includes **children's names** in aging-out notifications | eu-west-2 | **DECISION NEEDED** |
-| **Mapbox** | Address autofill and map rendering, on web and mobile | **Partial address strings as a member types them**, plus coordinates. Not named in the privacy notice. | Confirm — likely US | **DECISION NEEDED** |
-| **Expo / EAS** | Mobile app builds | Build artefacts and source. **No member data** — arguably not a processor of personal data at all | US | Note only |
+| **Cloudflare, Inc.** | Pages (web), Worker (API), Hyperdrive (DB gateway), **Images** (profile photos), Workers Logs | Everything in transit; **profile photographs at rest, including children's**; request logs carrying `memberId`, `branchId`, `activeRole`, path and status | UK/EU edge — **but confirm where Cloudflare Images stores at rest** | **Yes.** Customer DPA **v6.4, 3 April 2026**. Sub-processor list retrieved 8 Nov 2026. |
+| **PlanetScale, Inc.** | Postgres — the primary datastore | **All 55 tables, including health and safeguarding records** | AWS eu-west-2 (London) | **Yes.** Customer DPA, **last updated 15 October 2026**. **Sub-processor list not retrieved** — see below. |
+| **Amazon Web Services, Inc.** | SES transactional email | Recipient name and email; email body content, which includes **children's names** in aging-out notifications | eu-west-2 | **Yes.** GDPR DPA incorporated into the **AWS Service Terms §1.14.1**, with the UK GDPR and Swiss addenda at **§1.14.4** and the June 2021 SCCs included. |
+| **Mapbox** | Address autofill and map rendering, on web and mobile | **Partial address strings as a member types them**, plus coordinates. Not named in the privacy notice. | Confirm — likely US | **Yes.** Customer DPA **1 April 2025**. Sub-processor list retrieved 8 Nov 2026. |
+| **Expo / EAS** | Mobile app builds | Build artefacts and source. **No member data** — arguably not a processor of personal data at all | US | Not required on that basis |
+
+### Where the evidence is held, and what it does and does not establish
+
+**Retrieved 8 November 2026.** Held by Kharis Ministries outside this
+repository, in OneDrive under `Tech/`, as:
+
+| Processor | File as saved | Document version |
+|---|---|---|
+| Cloudflare | `ikharis_cloudflare_customer_dpa-v6.4_april_3_2026.pdf` | Customer DPA v6.4, 3 April 2026 |
+| Cloudflare | `ikharis_cloudflare_subprocessors.pdf` | sub-processor list, retrieved 8 Nov 2026 |
+| PlanetScale | `ikharis_planetscale_customer_dpa_october_15_2026.pdf` | DPA last updated 15 October 2026 |
+| Mapbox | `ikharis_mapbox_customer_dpa_april_1_2025.pdf` | DPA 1 April 2025 |
+| Mapbox | `ikharis_mapbox_subprocessors.pdf` | sub-processor list, retrieved 8 Nov 2026 |
+| AWS | `ikharis_aws_customer_dpa.pdf` + `ikharis_aws_service_terms.pdf` | DPA at Service Terms §1.14.1; UK GDPR and Swiss addenda at §1.14.4 |
+
+The versions and dates are recorded here so that this record answers "which
+version were we relying on, and when" without anyone opening a file. When a
+processor publishes a new version, replace the saved copy **and update the row
+above** — otherwise the record silently describes a document that has been
+superseded.
+
+**All four are incorporated by reference, not separately signed.** PlanetScale's
+says so in its own first paragraph; AWS folded its GDPR DPA into the Service
+Terms in 2018 and requires no customer action. So **the controller's obligation
+here is evidential rather than contractual**: there is nothing to negotiate or
+countersign, and what Article 28(9) actually requires is that the terms be in
+writing and capable of being produced. Holding dated copies is precisely how
+that is discharged, which is why the retrieval date matters as much as the
+documents.
+
+> **What this closes, and what it does not.** This discharges the **Article 28
+> evidence** requirement for the four processors, and nothing further. It says
+> nothing about whether the processing those contracts cover is lawful — that is
+> the job of the lawful bases in §1, the Article 9(2) conditions in `dpia.md`
+> §3.3, the retention position in §5, and the risk assessment in `dpia.md` §4,
+> all of which remain open. A complete set of DPAs over unlawful processing is
+> still unlawful processing.
+
+> **DECISION NEEDED: retrieve PlanetScale's sub-processor list.**
+> Cloudflare's and Mapbox's were retrieved; PlanetScale's was not, and
+> PlanetScale is the processor holding **all 55 tables, including the health and
+> safeguarding records**. Article 28(2) makes sub-processor awareness the
+> controller's business — a processor may not engage another without the
+> controller's authorisation, and the controller cannot object to what it has
+> not seen.
+> **Recommended:** retrieve it and add a row above. Small, and it closes the one
+> asymmetry in an otherwise complete set.
+> **Trade-off:** none. The only reason it is a marker rather than an action is
+> that it is not this document's to perform.
 
 ### Two processors named in documents that receive nothing
 
@@ -223,17 +268,13 @@ Consequences recorded elsewhere: the Axiom region question in §4 disappears, an
 the investigation window in `incident-response.md` §2 is days rather than
 thirty, which materially weakens the Article 33 scoping position.
 
-> **DECISION NEEDED: confirm that a data processing agreement is in place for each processor above, and hold a copy.**
-> Article 28(3) requires a written contract covering subject matter, duration,
-> nature and purpose, the type of personal data, the categories of data subject,
-> and the controller's obligations and rights. **None of this can be verified
-> from the repository**, which is why every row is marked rather than asserted.
-> **Recommended:** Cloudflare, PlanetScale, AWS and Mapbox all publish standard
-> DPAs or data protection addenda that are accepted by using the service — but
-> somebody has to have accepted them, and the church should hold a copy of each
-> with the date. This is a paperwork exercise and the easiest row in this
-> document to close.
-> **Trade-off:** none, except the time to do it.
+**Article 28(3) content.** Each of the four DPAs covers the subject matter,
+duration, nature and purpose of the processing, the types of personal data and
+categories of data subject, and the controller's obligations and rights. Because
+they are the processors' own standard terms rather than negotiated instruments,
+the church's assurance on content rests on those published terms — which is the
+normal position for a controller of this size using commodity infrastructure,
+and is worth stating rather than implying a bespoke contract exists.
 
 > **DECISION NEEDED: whether to enable Logpush — and if so, this record gains a processor.**
 > Logpush is **confirmed not enabled** (§3), so Axiom is not a processor today.
@@ -269,14 +310,23 @@ Axiom receives nothing (§3):
 - **Mapbox** is likely to process address fragments in the US.
 
 Where a transfer does occur, the notice relies on the **UK International Data
-Transfer Agreement or the UK Addendum to the EU Standard Contractual Clauses.**
+Transfer Agreement or the UK Addendum to the EU Standard Contractual Clauses**,
+and the DPAs now held (§3) carry the mechanism: the AWS DPA incorporates the
+**UK GDPR addendum at Service Terms §1.14.4** and the **June 2021 SCCs**, and
+Cloudflare's v6.4 and Mapbox's carry equivalent transfer terms. So the
+*mechanism* is evidenced; what is still unestablished is **whether any transfer
+actually occurs**, which is a question about where these services store data,
+not about the paperwork.
 
-> **DECISION NEEDED: confirm the storage and processing regions for Cloudflare Images and Mapbox, and the transfer mechanism relied on for each that sits outside the UK/EEA.**
-> **Recommended:** resolve this alongside the DPA confirmations above — it is the
-> same conversation with the same two vendors. If Mapbox transfers outside the
-> UK/EEA, the privacy notice's "stored in the United Kingdom / European Economic
-> Area" statement needs qualifying, because at present it reads as covering
-> everything.
+> **DECISION NEEDED: confirm the storage and processing regions for Cloudflare Images and Mapbox.**
+> Narrowed from the earlier version of this marker: the transfer mechanism is no
+> longer in question now the DPAs are held (§3), so only the factual region
+> question remains.
+> **Recommended:** confirm Cloudflare Images first — it is the one holding
+> children's photographs at rest, and the only at-rest store whose region is
+> unknown. If Mapbox processes address fragments in the US, the privacy notice's
+> "stored in the United Kingdom / European Economic Area" statement needs
+> qualifying, because at present it reads as covering everything.
 > Note that if Logpush is later enabled, the region question returns with the
 > new processor.
 

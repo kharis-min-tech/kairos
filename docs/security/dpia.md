@@ -39,7 +39,8 @@ real family data is entered.
 
 ### 1.1 Nature
 
-Kairos is an internal administration platform for Kharis Church. It is not a
+Kairos is an internal administration platform for Kharis Ministries, operating
+as Kharis Church (§6). It is not a
 public service and not a consumer product: every authenticated user is a member
 of the church or someone acting on a member's behalf, and **under-16s cannot
 sign in at all** (`apps/api/src/auth/service.ts:403-407`).
@@ -183,7 +184,7 @@ Taken from the published lawful-basis table and assessed in §3.
 
 | Who | Why | On what, specifically |
 |---|---|---|
-| **Data Protection Officer (Tianna Johnson)** | **Article 35(2) — mandatory.** A DPO is designated, so her advice must be sought on this assessment. | The whole assessment; the lawful-basis positions; the Article 9(2) conditions in §3.3; and the controlling-entity question in §6. |
+| **Data Protection Officer (Tianna Johnson)** | **Article 35(2) — mandatory.** A DPO is designated, so her advice must be sought on this assessment. | The whole assessment; the lawful-basis positions and the missing LIAs; the Article 9(2) conditions in §3.3; and the residual-risk conclusion in §6. |
 | **Safeguarding Lead** | Subject-matter authority. The role already exists in the system as an RBAC grant. | The children's retention period and the 75-year question (`data-retention.md` §2); whether the risks in §4 are acceptable; whether the health-record access model matches safeguarding practice. |
 | **Church trustees** | The controller's governing body. They accept residual risk. | §6 sign-off; the retention decisions; the accepted-risk register. |
 | **Data subjects — parents and guardians** | Article 35(9). They are the representatives of the highest-risk subjects. | That children's records are held at all, who can see them, how long they are kept, and that a parent holds the child's rights. |
@@ -634,50 +635,32 @@ a dated plan.
 > know which it has chosen, because the answer changes what Tianna Johnson can
 > be asked to do.
 
-### Controller identity — and an unresolved discrepancy
+### Controller identity
 
-**The ICO register and the codebase name different entities.** This is recorded
-rather than smoothed over, because a DPIA and a ROPA must name the actual legal
-controller, and naming the wrong one makes both documents defective.
+| | |
+|---|---|
+| **Controller** | **Kharis Ministries** — the legal name and the registered data controller |
+| Operating name | **Kharis Church**, used in member-facing copy |
+| ICO registration | **ZB659958.** Registered 13 February 2024, **expires 12 February 2027**. Payment Tier 1. Registered address 2A Orchard Road, Belvedere, Kent, DA17 5BP. |
+| Registered charity number | **1139291** |
+| Legal form | Charitable company limited by guarantee, **Companies House 07308725** |
+| Published DP contact | **privacy@kharis.org**, one calendar month response |
 
-| Source | Entity named | Identifiers |
-|---|---|---|
-| **ICO public register** | **Kharis Ministries** | Registration **ZB659958**. Registered 13 February 2024, **expires 12 February 2027**. Payment **Tier 1**. Registered address 2A Orchard Road, Belvedere, Kent, DA17 5BP. |
-| **This codebase** | **Kharis Church** | Registered charity **1139291**; charitable company limited by guarantee, **Companies House 07308725** (`requirements/gift-aid.md:18-19`, `packages/types/src/gift-aid.ts:32`) |
-| **The published privacy notice** | **Kharis Church**, named as "the data controller" | `apps/web/src/app/legal/privacy/page.tsx:33-36` |
-| Published DP contact | **privacy@kharis.org**, one calendar month response | — |
+**The two names denote one body.** There is therefore no Article 26
+joint-controller arrangement and no internal Article 28 agreement to put in
+place. This is recorded because the ambiguity is visible in the codebase — the
+Confidentiality Undertaking writes "Kharis Ministries / Kharis Church"
+(`apps/web/src/components/legal/confidentiality-body.tsx:30`) — and a future
+reader will otherwise re-open a settled question. The convention is **legal name
+in legal contexts, operating name in member-facing copy**, which is the split
+`GIFT_AID_CHARITY_NAME = 'Kharis Ministries'`
+(`packages/types/src/gift-aid.ts:26`) already encodes for HMRC.
 
-The Confidentiality Undertaking hedges in a way that now looks significant: it
-says "**Kharis Ministries / Kharis Church**"
-(`apps/web/src/components/legal/confidentiality-body.tsx:30`), which suggests
-the ambiguity is known and unresolved rather than new.
-
-> **DECISION NEEDED: confirm which legal entity is the data controller for Kairos, and if there are two, what the relationship between them is.**
-> This is now the highest-priority open item in this document, because every
-> other row depends on it. Three possibilities, with different consequences:
->
-> 1. **They are one entity under two trading names.** Then the ICO registration
->    covers the processing, and the privacy notice should name the registered
->    entity so a data subject can find it on the register. Simplest outcome,
->    and the most likely.
-> 2. **Kharis Ministries is the controller and Kharis Church is a trading name
->    or a constituent body.** Then the privacy notice names the wrong entity as
->    controller, which is an Article 13 failure, and this DPIA and the ROPA must
->    be re-headed.
-> 3. **They are two distinct legal entities** — one charitable company, one
->    something else. Then the relationship is a processing relationship and
->    **needs an Article 28 contract between them**, or a joint-controller
->    arrangement under Article 26 with a transparent allocation of
->    responsibilities. There is currently no such agreement, and neither
->    document can be signed until this is settled.
->
-> **Recommended:** confirm against the governing document and the Companies
-> House filing, then make the privacy notice, this DPIA, the ROPA and the Gift
-> Aid declaration wording all name the same entity. The Gift Aid declaration is
-> the one with external consequences — HMRC needs the charity's identity to be
-> right.
-> **Trade-off:** if outcome 3 is the answer, there is a genuine piece of legal
-> work to do before the pilot, not just a renaming.
+The published privacy notice has been corrected to match: it now reads "Kharis
+Ministries, operating as Kharis Church, is the data controller" and cites
+registration ZB659958, which also satisfies Article 13(1)(a). **Committed as
+`e61dfdcf` on `fix/privacy-controller-identity`; no pull request has been
+raised, so it is further from production than the two remediation PRs in §5.**
 
 **Diarise: the ICO registration expires 12 February 2027.** Lapsed registration
 while processing continues is an offence, and it is the single most easily

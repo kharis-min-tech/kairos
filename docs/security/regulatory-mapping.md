@@ -4,11 +4,9 @@
 in code or in published text, and says plainly where it is only partly met.
 Nothing here is marked compliant on the strength of an intention.
 
-**Controller:** the privacy notice names **Kharis Church**
-(`apps/web/src/app/legal/privacy/page.tsx:33-36`), but the ICO register names
-**Kharis Ministries** (ZB659958). **Which entity is the controller is an open
-question** — see `dpia.md` §6, where the three possible outcomes and their
-consequences are set out. **Regime:** UK GDPR and the Data Protection Act 2018.
+**Controller:** **Kharis Ministries**, ICO registration **ZB659958**, operating
+as Kharis Church in member-facing copy — one body under two names
+(`dpia.md` §6). **Regime:** UK GDPR and the Data Protection Act 2018.
 **DPO:** Tianna Johnson, contact details outstanding. **Published contact:**
 privacy@kharis.org, with a one-calendar-month response commitment.
 
@@ -37,13 +35,13 @@ the review happens.
 | Art 7 consent | **Met**, with one defect in the evidence trail. §6 |
 | Art 9 special category | **Partly.** Access control is good; the Art 9 condition is not recorded. §7 |
 | Art 8 / children | **Met and well built.** §8 |
-| Art 12–14 information | **Met.** §3 |
+| Art 12–14 information | **Partly.** Art 13(1)(a) controller identity remediated, pending merge; **Art 13(1)(b) DPO contact still not met**; six statements inaccurate. §3 |
 | Art 15 access / Art 20 portability | **Partly.** Self-service export omits several categories. §5 |
 | Art 16 rectification | **Met.** §5 |
 | Art 17 erasure | **Partly, and defensibly.** Pseudonymisation, not erasure. §5 |
 | Art 25 data protection by design | **Partly.** §9 |
-| Art 28 processors | **Partly.** One named processor is not in use. §10 |
-| Art 30 records of processing | **Drafted, not adopted** — `ropa.md`. Blocked on the controlling-entity question. §11 |
+| Art 28 processors | **Met for evidence** — all four DPAs held, dated 8 Nov 2026. One sub-processor list outstanding; the notice still names a processor not in use. §10 |
+| Art 30 records of processing | **Drafted, not adopted** — `ropa.md`. Awaiting sign-off. §11 |
 | Art 32 security of processing | **Partly.** §9 |
 | Art 33/34 breach notification | **Procedure now exists**; detection cannot scope an exfiltration. §12 |
 | Art 35 DPIA | **Drafted, not signed or consulted on** — `dpia.md`. §11 |
@@ -105,6 +103,22 @@ level; why, with the lawful-basis table; who it is shared with; retention;
 rights; children; cookies; security; change process; and contact. Version
 `2026-07-v1`, effective 23 July 2026, mirrored for the docs site at
 `apps/docs/legal/privacy.md`.
+
+**Article 13(1)(a) — controller identity: remediated, pending merge.** The
+notice previously named "Kharis Church" as controller, which is the operating
+name rather than the registered entity. It now reads "Kharis Ministries,
+operating as Kharis Church, is the data controller" and cites ICO registration
+ZB659958, so a data subject can find the controller on the public register.
+**Committed as `e61dfdcf` on `fix/privacy-controller-identity`. No pull request
+has been raised**, so this is further from production than the two remediation
+PRs tracked in `dpia.md` §5 — it needs a PR, a review, a merge to `staging`, a
+merge to `main` and a production dispatch.
+
+**Article 13(1)(b) — DPO contact details: NOT met.** A DPO is designated
+(Tianna Johnson), and where one is designated Article 13(1)(b) requires their
+contact details to be given to data subjects. **The notice names no DPO and
+publishes only `privacy@kharis.org`.** Open decision in `dpia.md` §6, where the
+recommendation is a role address rather than a personal one.
 
 **Not met in accuracy.** Six statements in the published notice are
 contradicted by the code. Each is an Article 5(1)(a) exposure and all six are
@@ -545,15 +559,47 @@ the observability doc.
 
 So the accurate list is **four**: Cloudflare, PlanetScale, AWS SES and Mapbox.
 
-> **DECISION NEEDED: reconcile the processor list, and confirm a DPA is in place for each of the four.**
-> **Recommended:** remove Sentry from the notice until it is actually wired, and
-> add Mapbox. Then record, for each of the four, that a data processing
-> agreement exists — all four publish standard DPAs, but somebody has to have
-> accepted them and the church should hold a copy with the date.
-> **Trade-off:** none. This is a paperwork exercise and it is the single easiest
-> row in this document to turn from "partly" to "met". Note that enabling
-> Logpush, which `incident-response.md` §9 recommends, would add a fifth
-> processor and reopen this row.
+### Article 28 evidence — met
+
+**All four DPAs were retrieved on 8 November 2026** and are held by Kharis
+Ministries outside the repository. `ropa.md` §3 records the filenames and the
+exact document versions, so the record answers "which version were we relying
+on, and when":
+
+- Cloudflare Customer DPA **v6.4, 3 April 2026**, plus its sub-processor list
+- PlanetScale Customer DPA, **last updated 15 October 2026**
+- AWS GDPR DPA, incorporated into the **Service Terms §1.14.1**, with the UK
+  GDPR and Swiss addenda at **§1.14.4** and the June 2021 SCCs
+- Mapbox Customer DPA **1 April 2025**, plus its sub-processor list
+
+**All four are incorporated by reference rather than separately signed** —
+PlanetScale's says so in its own first paragraph, and AWS folded its DPA into
+the Service Terms in 2018 with no customer action required. So the obligation
+discharged here is **evidential**: Article 28(9) requires the terms to be in
+writing and producible, and dated copies are how that is satisfied.
+
+**This closes Article 28 evidence and nothing more.** It says nothing about
+whether the processing those contracts cover is lawful — that remains the work
+of the lawful bases in §2, the Article 9(2) conditions in §7, the retention
+position in §4 and the DPIA. A complete set of DPAs over unlawful processing is
+still unlawful processing.
+
+Two residual items, both small:
+
+> **DECISION NEEDED: retrieve PlanetScale's sub-processor list.**
+> Cloudflare's and Mapbox's were retrieved; PlanetScale's was not — and
+> PlanetScale holds all 55 tables including the health and safeguarding records.
+> Article 28(2) makes sub-processor awareness the controller's business: a
+> processor may not engage another without authorisation, and a controller cannot
+> object to what it has not seen.
+> **Recommended:** retrieve it and add the row to `ropa.md` §3.
+> **Trade-off:** none.
+
+> **DECISION NEEDED: correct the notice's processor list — remove Sentry, add Mapbox.**
+> Narrowed from the earlier version of this marker now the DPAs are held. Sentry
+> is named and receives nothing; Mapbox receives address fragments and is not
+> named. Note that enabling Logpush, which `incident-response.md` §9 recommends,
+> would add a fifth processor and reopen both this row and the §10 evidence set.
 
 ---
 
@@ -694,24 +740,29 @@ and the DPA 2018, not HIPAA.
 
 In the order they should be addressed.
 
-1. **Commission a DPIA before the pilot processes real member data** (§11). The
-   highest-priority item here, and the cheapest it will ever be.
+1. **Get the DPIA consulted on and signed** (§11). It is drafted (`dpia.md`);
+   Article 35(2) advice from the DPO is now mandatory, and Article 35(9)
+   consultation with parents and guardians has not happened.
 2. Add `member_exported` and `member_updated` audit actions (§12) — a
    prerequisite for Article 33 being answerable.
 3. Correct the six inaccurate statements in the published privacy notice (§3);
-   fix the 18-versus-16 contradiction immediately.
-4. Reconcile the processor list and confirm a DPA for each — remove Sentry, add
-   Mapbox; Axiom is confirmed not a processor (§10). Easiest win in the document.
-5. Name the Article 9(2) condition for each kind of special-category
+   fix the 18-versus-16 contradiction immediately. Also publish the DPO's
+   contact details, which Article 13(1)(b) requires and the notice omits.
+4. Raise a PR for `fix/privacy-controller-identity` and merge it (§3) — the
+   Article 13(1)(a) controller-identity fix is committed but has no PR.
+5. Correct the notice's processor list — remove Sentry, add Mapbox — and
+   retrieve PlanetScale's sub-processor list (§10). The four DPAs themselves are
+   now held.
+6. Name the Article 9(2) condition for each kind of special-category
    processing, and produce the DPA 2018 Schedule 1 appropriate policy document
    (§7).
-6. Write a legitimate interests assessment for the four LI purposes, and settle
+7. Write a legitimate interests assessment for the four LI purposes, and settle
    the `souls` position (§2).
-7. Extend the self-service export, and document the manual SAR route (§5).
-8. Close the four erasure residual-data gaps (§5).
-9. Make `consent_records` genuinely append-only (§6).
-10. Produce a ROPA, assembled from material that already exists (§11).
-11. Import the shared `MINOR_AGE_THRESHOLD` into the lifecycle cron, and record
+8. Extend the self-service export, and document the manual SAR route (§5).
+9. Close the four erasure residual-data gaps (§5).
+10. Make `consent_records` genuinely append-only (§6).
+11. **Adopt the ROPA** (§11) — drafted at `ropa.md`, awaiting sign-off.
+12. Import the shared `MINOR_AGE_THRESHOLD` into the lifecycle cron, and record
     the decision on whether the Age Appropriate Design Code applies (§8).
 
 Items 1 and 2 are the two that an auditor will ask about first, and item 2 is a

@@ -47,24 +47,34 @@ both. Each document collects its own at the end, and a few further
 recommendations appear only in those collected lists where they were too small
 to interrupt the text for.
 
-**Four have since closed with real answers**, and the documents record them
-rather than still asking: the DPO is **Tianna Johnson**; the ICO registration is
-**Kharis Ministries, ZB659958**, renewing **12 February 2027**; **Logpush is
-confirmed not enabled**, so Axiom is not a processor and the investigation
-window is days rather than thirty; and the `drizzle-kit migrate` path in
-`entrypoint.sh` is **latent, not live**. Two of those answers raised sharper
-questions than they settled — the controlling-entity discrepancy and the
-evidence window — which is why they appear in the list above rather than
-disappearing from it.
+**Six have since closed with real answers**, and the documents record them
+rather than still asking:
+
+- The **DPO is Tianna Johnson**. Her contact details are still outstanding, and
+  Article 13(1)(b) requires them to be published.
+- The **controller is Kharis Ministries**, ICO registration **ZB659958**,
+  renewing **12 February 2027**. "Kharis Church" is the operating name — one
+  body, two names, so there is no Article 26 or 28 question between them. The
+  privacy notice has been corrected to match, on a branch with no PR yet.
+- **All four processor DPAs are held**, retrieved 8 November 2026, with versions
+  recorded in `ropa.md` §3. That closes Article 28 *evidence* and nothing else.
+- **Logpush is confirmed not enabled**, so Axiom is not a processor and the
+  breach-investigation window is days rather than thirty.
+- The `drizzle-kit migrate` path in `entrypoint.sh` is **latent, not live** —
+  though it is now known to be unsafe if ever used, because of the journal
+  defect in `backup-recovery.md` §3.
+
+Two of those answers raised sharper questions than they settled — the evidence
+window, and PlanetScale's missing sub-processor list — so they appear in the
+lists rather than disappearing from them.
 
 **The four things to do first**, if the list is read as a backlog:
 
-1. **Settle which legal entity is the controller** (`dpia.md` §6). The ICO
-   register names **Kharis Ministries** (ZB659958); the privacy notice and the
-   codebase name **Kharis Church**. Every other item depends on this, and if
-   they are two entities there is an Article 26 or 28 agreement to put in place
-   before the pilot. Then get the DPIA consulted on and signed — Article 35(2)
-   advice from the DPO is now mandatory, because one is designated.
+1. **Get the DPIA consulted on and signed** (`dpia.md` §2 and §6). It is
+   drafted and the controller is now settled, so what remains is people work:
+   **Article 35(2) advice from the DPO is mandatory**, because one is
+   designated, and Article 35(9) consultation with parents and guardians has not
+   happened. Adopting the ROPA follows the same signature.
 2. **Make the JWT signing secrets fail closed** (`key-management.md` §1). The
    only item in this set that is a live vulnerability rather than a missing
    control, and it is not on either remediation PR.
