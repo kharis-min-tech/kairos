@@ -364,6 +364,14 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
     const [member] = await db.select().from(members).where(eq(members.id, link.memberId)).limit(1);
     if (!member) return auditFailureAndRedirect(c, providerId, 'provider_error', mobile);
 
+    // Password login rejects a deactivated member; this door has to as well,
+    // otherwise deactivation is bypassed by whichever provider they linked.
+    // `issueAuthenticatedSession` also refuses — this check exists so the
+    // attempt is audited and the user gets a message that names the reason.
+    if (!member.isActive) {
+      return auditFailureAndRedirect(c, providerId, 'account_inactive', mobile);
+    }
+
     const session = await issueAuthenticatedSession(db, member, getAuthSecrets(c));
 
     const ctx = extractRequestContext(c);

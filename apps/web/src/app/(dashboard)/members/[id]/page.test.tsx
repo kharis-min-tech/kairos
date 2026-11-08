@@ -46,6 +46,27 @@ vi.mock('@/hooks/use-branches', () => ({
   useBranches: () => ({ data: [] }),
 }));
 
+// Guardianship: a parent holds no grant at all, so the safeguarding section's
+// render gate has to consult this as well as the capability.
+let myChildren: Array<{ id: string }> = [];
+vi.mock('@/hooks/use-me', () => ({
+  useMyChildren: () => ({ data: myChildren }),
+}));
+
+// Capabilities. `null` (the default) mirrors the real hook for the two cases
+// these tests use: a platform admin holds everything, a plain member holds
+// nothing. Assign a list to give a grant-holding caller exactly those.
+let grantedCaps: string[] | null = null;
+vi.mock('@/hooks/use-capabilities', () => ({
+  useCapabilities: () => ({
+    has: (cap: string) =>
+      grantedCaps === null ? auth.user.systemRole === 'admin' : grantedCaps.includes(cap),
+    grants: [],
+    grantsOf: () => [],
+    systemRole: auth.user.systemRole,
+  }),
+}));
+
 import MemberDetailPage from './page';
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -94,6 +115,8 @@ const fullRecord = {
 beforeEach(() => {
   vi.clearAllMocks();
   healthData = undefined;
+  myChildren = [];
+  grantedCaps = null;
   auth = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
 });
 
@@ -155,6 +178,37 @@ describe('MemberDetailPage — minor protection', () => {
     expect(screen.getByText(/photo & media/i).closest('div')).toHaveTextContent(/granted/i);
     expect(screen.getByText(/medical treatment/i).closest('div')).toHaveTextContent(/declined/i);
     expect(screen.getByText(/data processing/i).closest('div')).toHaveTextContent(/not recorded/i);
+  });
+
+  // The API now gates health records on `safeguarding:read` scoped to the
+  // subject's branch, while the directory record stays on `branch:read`. So a
+  // branch admin sees an UNREDACTED member record (redacted: false) and would
+  // have rendered this section, fetched, and been 403'd.
+  it('hides the health section from a branch admin with no safeguarding grant', () => {
+    auth = { user: { id: 'badmin-1', systemRole: 'member' }, activeRole: 'member' };
+    grantedCaps = ['branch:read', 'branch:write'];
+    memberData = { ...baseMember, isMinor: true, redacted: false };
+    healthData = fullRecord;
+    render(<MemberDetailPage />, { wrapper });
+
+    // The directory record is still fully visible to them — that is deliberate,
+    // because they may edit it and redaction nulls rather than hides.
+    expect(screen.getByText('tim@example.com')).toBeInTheDocument();
+    // The clinical record is not.
+    expect(screen.queryByText(/safeguarding & health/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Asthma')).not.toBeInTheDocument();
+  });
+
+  it('shows the health section to a guardian who holds no grant at all', () => {
+    auth = { user: { id: 'parent-1', systemRole: 'member' }, activeRole: 'member' };
+    grantedCaps = [];
+    myChildren = [{ id: 'member-1' }];
+    memberData = { ...baseMember, isMinor: true, redacted: false };
+    healthData = fullRecord;
+    render(<MemberDetailPage />, { wrapper });
+
+    expect(screen.getByText(/safeguarding & health/i)).toBeInTheDocument();
+    expect(screen.getByText('Asthma')).toBeInTheDocument();
   });
 });
 

@@ -3,6 +3,19 @@ import { SignJWT, jwtVerify } from 'jose';
 import { hashPassword } from '@kairos/utils';
 import type { AuthSecrets } from '../lib/auth-secrets';
 
+// `isMailerLive()` reads the AWS creds off the environment, which vitest never
+// binds — so without this hook every test runs down the "mailer not live"
+// branch and the production behaviour (plaintext tokens withheld from the
+// response) would never be exercised. Flip `mailerState.live` to assert it.
+const mailerState = vi.hoisted(() => ({ live: false }));
+vi.mock('@kairos/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@kairos/utils')>();
+  return {
+    ...actual,
+    isMailerLive: () => mailerState.live,
+  };
+});
+
 const TEST_SECRETS: AuthSecrets = {
   accessSecret: 'dev-secret-change-me',
   refreshSecret: 'dev-refresh-secret-change-me',
@@ -115,6 +128,7 @@ const baseMember = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mailerState.live = false;
 });
 
 describe('signup', () => {
@@ -338,6 +352,33 @@ describe('login', () => {
       .rejects.toThrow('pending approval');
   });
 
+  it('should reject a deactivated member (isActive false)', async () => {
+    // Deactivation is how a leaver or a suspension is handled. Login checked
+    // emailVerified / approvalStatus / minor but never isActive, so a
+    // deactivated account kept working credentials indefinitely.
+    const { login } = await import('./service');
+
+    const hashed = await hashPassword('MyPassword1!');
+    setupSelectChain([{ ...baseMember, passwordHash: hashed, isActive: false }]);
+    setupUpdateChain();
+
+    await expect(login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS))
+      .rejects.toThrow('deactivated');
+  });
+
+  it('rejects a deactivated member even when every other state check passes', async () => {
+    // Guards the choke point itself: issueAuthenticatedSession is shared with
+    // the OAuth callback and the OAuth confirm-link exchange, neither of which
+    // ran any account-state check of its own.
+    const { issueAuthenticatedSession } = await import('./service');
+
+    await expect(issueAuthenticatedSession(
+      mockDb,
+      { ...baseMember, isActive: false } as never,
+      TEST_SECRETS,
+    )).rejects.toThrow('deactivated');
+  });
+
   it('should reject a minor (memberType child) from signing in', async () => {
     const { login } = await import('./service');
 
@@ -498,8 +539,9 @@ describe('forgotPassword', () => {
     setupSelectChain([{ id: baseMember.id, email: baseMember.email }]);
 
     const result = await forgotPassword(mockDb, 'john@example.com');
+    // Mailer isn't live in tests, so the local-dev token is still returned.
     expect(result.resetToken).toBeDefined();
-    expect(result.resetToken.length).toBeGreaterThan(0);
+    expect(result.resetToken?.length ?? 0).toBeGreaterThan(0);
   });
 
   it('should return empty token for non-existent email (no enumeration)', async () => {
@@ -509,6 +551,26 @@ describe('forgotPassword', () => {
 
     const result = await forgotPassword(mockDb, 'nope@example.com');
     expect(result.resetToken).toBe('');
+  });
+
+  it('withholds the plaintext reset token once the mailer is live', async () => {
+    // POST /api/auth/forgot-password is unauthenticated. Returning the reset
+    // token in its body made any member's email address sufficient to take
+    // over their account. Once the mailer is bound, email is the only path.
+    mailerState.live = true;
+    const { forgotPassword } = await import('./service');
+
+    setupSelectChain([{ id: baseMember.id, email: baseMember.email, firstName: baseMember.firstName }]);
+    setupUpdateChain();
+
+    const result = await forgotPassword(mockDb, 'john@example.com');
+
+    expect(result.resetToken).toBeUndefined();
+    // The token is still minted and persisted — only the response omits it.
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith(expect.objectContaining({
+      passwordResetToken: expect.any(String),
+    }));
   });
 });
 

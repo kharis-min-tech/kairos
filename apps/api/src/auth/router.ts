@@ -132,9 +132,13 @@ authRouter.post('/resend-code', zValidator('json', resendCodeSchema), async (c) 
 authRouter.post('/forgot-password', zValidator('json', forgotPasswordSchema), async (c) => {
   const body = c.req.valid('json');
   const result = await forgotPassword(db, body.email);
-  // Always return success to prevent email enumeration
+  // Always return success to prevent email enumeration. The reset token is
+  // present only when the mailer isn't live (local dev) — see the same gate
+  // on the signup verification token above. This route is unauthenticated,
+  // so shipping the token here in staging/prod was account takeover from
+  // nothing but an email address.
   return c.json(successResponse(
-    { resetToken: result.resetToken || undefined },
+    { ...(result.resetToken ? { resetToken: result.resetToken } : {}) },
     'If an account with that email exists, a password reset link has been sent.',
   ));
 });

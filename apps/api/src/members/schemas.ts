@@ -60,8 +60,54 @@ export const createMemberSchema = z.object({
   secondaryAddress: z.string().optional(),
   secondaryCity: z.string().max(100).optional(),
   secondaryPostalCode: z.string().max(20).optional(),
-  systemRole: z.enum(['admin', 'pastor', 'leader', 'member']).optional().default('member'),
+  // No `systemRole` key, deliberately. This route is gated on `branch:write`,
+  // not on admin, so accepting it from the body let anyone who could add a
+  // member mint a fully-approved global admin — and read its generated
+  // password straight out of the response. (The enum also still listed
+  // 'pastor' and 'leader', which stopped being system roles at the 2026-06
+  // RBAC rebuild.) Authority lives in `member_roles` grants; assign it there.
 });
+
+// ── CSV import ─────────────────────────────────────────────
+
+// POST /api/members/import had no validator at all: the handler read the
+// multipart body by hand and the service trusted every CSV cell.
+export const importMembersFormSchema = z.object({
+  file: z
+    .instanceof(File, { message: 'CSV file is required' })
+    .refine((f) => f.size > 0, 'CSV file is empty')
+    .refine((f) => f.size <= 5_000_000, 'CSV file must be 5MB or smaller'),
+});
+
+/**
+ * One parsed CSV row. Unknown columns are stripped rather than rejected —
+ * `exportMembersCsv` emits `systemRole` and `approvalStatus`, so an
+ * export → import round trip has to keep working. Those columns simply carry
+ * no authority: `systemRole` is never read from input (see
+ * `createMemberSchema` above) and approval is decided server-side.
+ */
+export const importMemberRowSchema = z.object({
+  firstName: z.string().min(1, 'firstName is required').max(100),
+  lastName: z.string().min(1, 'lastName is required').max(100),
+  email: z.string().email('email is not a valid email address'),
+  homeBranchId: z.string().uuid('homeBranchId must be a branch UUID').optional(),
+  phone: z.string().max(20).optional(),
+  gender: z.enum(['Male', 'Female'], { message: 'gender must be Male or Female' }).optional(),
+  dateOfBirth: z.string().date('dateOfBirth must be YYYY-MM-DD').optional(),
+  middleName: z.string().max(100).optional(),
+  address: z.string().optional(),
+  city: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  emergencyContactName: z.string().max(150).optional(),
+  emergencyContactPhone: z.string().max(20).optional(),
+  emergencyContactRelationship: z
+    .enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other'], {
+      message: 'emergencyContactRelationship is not a recognised relationship',
+    })
+    .optional(),
+});
+
+export type ImportMemberRow = z.infer<typeof importMemberRowSchema>;
 
 // Health record upsert — all fields optional/nullable. Consent flags are
 // tri-state (true / false / null = not yet recorded). branchId and consent

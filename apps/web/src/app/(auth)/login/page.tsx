@@ -26,6 +26,7 @@ const OAUTH_ERROR_COPY: Record<string, string> = {
   token_exchange_failed: "We couldn't complete sign-in with your provider. Please try again.",
   id_token_invalid: 'Sign-in verification failed. Please try again.',
   provider_error: 'Your provider returned an error. Please try again or use email + password.',
+  account_inactive: 'Your account has been deactivated. Please contact an administrator.',
 };
 
 function LoginContent() {

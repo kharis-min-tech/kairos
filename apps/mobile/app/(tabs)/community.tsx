@@ -27,6 +27,14 @@ import { api } from '@/lib/api-client';
 
 type Segment = 'people' | 'fellowships' | 'departments';
 
+/** Second-line fallback when a row has no branch resolved. */
+const MEMBER_TYPE_LABEL: Record<string, string> = {
+  member: 'Member',
+  attendee: 'Attendee',
+  visitor: 'Visitor',
+  child: 'Child',
+};
+
 const SEGMENTS: { key: Segment; label: string }[] = [
   { key: 'people', label: 'People' },
   { key: 'fellowships', label: 'Fellowships' },
@@ -131,7 +139,13 @@ function PeopleList({ search }: { search: string }) {
             <Text style={styles.rowTitle}>
               {item.firstName} {item.lastName}
             </Text>
-            <Text style={styles.rowMeta}>{item.branchName ?? item.email}</Text>
+            {/* Never the email. This fell back to it when branchName was
+                absent, and the directory no longer sends a member's email to
+                a caller without a directory capability — nor should a browse
+                list display one. memberType is always present. */}
+            <Text style={styles.rowMeta}>
+              {item.branchName ?? MEMBER_TYPE_LABEL[item.memberType] ?? 'Member'}
+            </Text>
           </View>
           <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
         </Pressable>
