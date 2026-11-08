@@ -45,7 +45,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { useAuthStore } from '@/store/auth';
-import { useCapabilities } from '@/lib/capabilities';
+import { DIRECTORY_CAPABILITIES, useCapabilities } from '@/lib/capabilities';
 
 const HELP_URL = 'https://docs.kairos.kharis.org';
 const ABOUT_URL = 'https://docs.kairos.kharis.org/getting-started/what-is-kairos';
@@ -69,6 +69,10 @@ export default function More() {
   const canSeeAdminSection =
     caps.systemRole === 'admin' ||
     (user?.homeBranchId ? caps.has('branch:write', { kind: 'branch', id: user.homeBranchId }) : false);
+  // Mirrors the gate inside apps/mobile/app/members/index.tsx, which mirrors
+  // the capabilities GET /api/members accepts. All three must agree: a row
+  // that leads straight to a redirect is worse than no row.
+  const canSeeDirectory = DIRECTORY_CAPABILITIES.some((cap) => caps.has(cap));
   const canSeeReports =
     caps.systemRole === 'admin' ||
     (user?.homeBranchId ? caps.has('branch:read', { kind: 'branch', id: user.homeBranchId }) : false);
@@ -160,6 +164,7 @@ export default function More() {
           <NavRow
             icon={Users}
             label="Members directory"
+            show={canSeeDirectory}
             onPress={() => router.push('/members')}
           />
           {hasAnyLeadership ? (

@@ -329,6 +329,15 @@ export async function issueAuthenticatedSession(
   member: typeof members.$inferSelect,
   secrets: AuthSecrets,
 ): Promise<{ tokens: AuthTokens; member: MemberProfile }> {
+  // Last line of defence: every sign-in door funnels through here — password
+  // login, the OAuth callback and the OAuth confirm-link exchange. `login()`
+  // rejects a deactivated member earlier with a friendlier message; the OAuth
+  // paths carried no account-state checks at all, so without this guard a
+  // deactivated member could sign straight back in via a linked provider.
+  if (!member.isActive) {
+    throw new ForbiddenError('This account has been deactivated.');
+  }
+
   const [authority, grants] = await Promise.all([
     resolveBranchAdminAuthority(db, member.id),
     resolveGrants(db, member.id),
@@ -388,6 +397,14 @@ export async function login(
   const valid = await verifyPassword(password, member.passwordHash);
   if (!valid) {
     throw new UnauthorizedError('Invalid email or password');
+  }
+
+  // Deactivation is the control used when someone leaves or is suspended, so
+  // it has to end access, not just hide the row. Checked ahead of the other
+  // state checks because it is the most decisive: telling a deactivated
+  // member their email is unverified would send them down the wrong path.
+  if (!member.isActive) {
+    throw new ValidationError('Your account has been deactivated. Please contact an administrator.');
   }
 
   if (!member.emailVerified) {
@@ -520,7 +537,7 @@ export async function verifyEmail(db: Database, token: string): Promise<void> {
     .where(eq(members.id, matched.id));
 }
 
-export async function forgotPassword(db: Database, email: string): Promise<{ resetToken: string }> {
+export async function forgotPassword(db: Database, email: string): Promise<{ resetToken?: string }> {
   const [member] = await db
     .select({ id: members.id, email: members.email, firstName: members.firstName })
     .from(members)
@@ -546,8 +563,15 @@ export async function forgotPassword(db: Database, email: string): Promise<{ res
 
   await sendPasswordResetEmail(member.email, resetLink, member.firstName);
 
-  // Return plain token for local dev easy testing — omit in production
-  return { resetToken: plainToken };
+  // Only return the plaintext reset token when the mailer is NOT live (local
+  // dev without SES creds) — same gate as the signup verification token
+  // above. POST /api/auth/forgot-password is unauthenticated, so returning
+  // this in staging/prod made any member's email address sufficient to take
+  // over their account: request a reset, read the token out of the response,
+  // POST it to /reset-password. The email is the only delivery path once the
+  // mailer is bound.
+  const mailerLive = isMailerLive();
+  return { ...(mailerLive ? {} : { resetToken: plainToken }) };
 }
 
 export async function resetPassword(db: Database, token: string, newPassword: string): Promise<void> {

@@ -12,6 +12,18 @@ vi.mock('../lib/grants', async (importOriginal) => {
   };
 });
 
+// vitest never binds AWS creds, so isMailerLive() is false by default and the
+// local-dev branches (plaintext tokens echoed in the response) are what runs.
+// Flip `mailerState.live` to exercise the staging/prod behaviour.
+const mailerState = vi.hoisted(() => ({ live: false }));
+vi.mock('@kairos/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@kairos/utils')>();
+  return {
+    ...actual,
+    isMailerLive: () => mailerState.live,
+  };
+});
+
 // ── Mock db module before importing app ────────────────────
 const mockDb = {
   select: vi.fn(),
@@ -62,6 +74,7 @@ const baseMember = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mailerState.live = false;
 });
 
 // ── Health Check ───────────────────────────────────────────
@@ -220,6 +233,31 @@ describe('POST /api/auth/forgot-password', () => {
     expect(res.status).toBe(200);
     const body = await res.json() as any;
     expect(body.success).toBe(true);
+  });
+
+  it('never ships the reset token in the public response when the mailer is live', async () => {
+    // This route needs no authentication. While it returned the plaintext
+    // reset token, knowing any member's email address was enough to take
+    // over their account: request a reset, read the token out of this body,
+    // POST it to /reset-password.
+    mailerState.live = true;
+    mockDb.select.mockReturnValue(chainTo([
+      { id: baseMember.id, email: baseMember.email, firstName: baseMember.firstName },
+    ]));
+    mockDb.update.mockReturnValue(chainTo([]));
+
+    const res = await app.request('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: baseMember.email }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.success).toBe(true);
+    expect(body.data).not.toHaveProperty('resetToken');
+    // And the whole serialised body carries no 64-hex token anywhere.
+    expect(JSON.stringify(body)).not.toMatch(/[0-9a-f]{64}/);
   });
 });
 

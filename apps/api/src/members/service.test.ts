@@ -651,6 +651,66 @@ describe('createMember', () => {
     await expect(createMember(mockDb, createInput, adminAuth))
       .rejects.toThrow('A member with this phone number already exists');
   });
+
+  it('never writes a caller-supplied systemRole — always inserts "member"', async () => {
+    // POST /api/members is gated on `branch:write`, not on admin. While the
+    // create path wrote `input.systemRole` through, anyone who could add a
+    // member could mint a fully-approved global admin and read its generated
+    // password out of the 201.
+    setupSelectSequence([], []);
+    setupInsert([createdMember]);
+
+    await createMember(
+      mockDb,
+      // The field is gone from the type; a hand-rolled body could still
+      // carry it, so prove the insert ignores it.
+      { ...createInput, systemRole: 'admin' } as never,
+      adminAuth,
+    );
+
+    const inserted = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!
+      .value.values.mock.calls[0]![0] as Record<string, unknown>;
+    expect(inserted['systemRole']).toBe('member');
+  });
+
+  it('refuses to create into a branch the caller has no authority over', async () => {
+    // Nothing used to compare `homeBranchId` against the caller's grants, so
+    // a BranchAdmin for one branch could write members into any other by
+    // naming its id — directly, or a cell at a time through the CSV import.
+    const branchAdmin = {
+      ...memberAuth,
+      branchId: 'branch-a',
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: 'branch-a' },
+          branchId: 'branch-a',
+        },
+      ],
+    };
+
+    await expect(createMember(mockDb, { ...createInput, homeBranchId: branchId }, branchAdmin))
+      .rejects.toThrow('You cannot create members in this branch');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('allows a branch admin to create into their own branch', async () => {
+    const branchAdmin = {
+      ...memberAuth,
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: branchId },
+          branchId,
+        },
+      ],
+    };
+    setupSelectSequence([], []);
+    setupInsert([createdMember]);
+
+    const result = await createMember(mockDb, createInput, branchAdmin);
+    expect(result.member).toEqual(createdMember);
+  });
 });
 
 // ── reactivateMember ──────────────────────────────────────
@@ -800,6 +860,70 @@ describe('importMembers', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('email already exists');
   });
+
+  it('ignores a systemRole column instead of obeying it', async () => {
+    // `row['systemRole']` went straight into the insert, so an importer could
+    // mint admins in bulk with no schema in the way. The column is tolerated
+    // (exportMembersCsv emits it, so the round trip has to work) but carries
+    // no authority.
+    const csv = `firstName,lastName,email,systemRole
+Jane,Doe,jane@test.com,admin`;
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+
+    const result = await importMembers(mockDb, csv, adminAuth);
+
+    expect(result.imported).toBe(1);
+    expect(result.errors).toHaveLength(0);
+    const inserted = (mockDb.insert as ReturnType<typeof vi.fn>).mock.results[0]!
+      .value.values.mock.calls[0]![0] as Record<string, unknown>;
+    expect(inserted['systemRole']).toBe('member');
+  });
+
+  it('refuses rows naming a branch the importer has no authority over', async () => {
+    // `homeBranchId: row['homeBranchId'] || auth.branchId` trusted the cell,
+    // so an importer could write members into ANY branch by naming its id.
+    const branchAdmin = {
+      ...memberAuth,
+      branchId: '220e8400-0000-0000-0000-00000000000a',
+      grants: [
+        {
+          role: 'BranchAdmin' as const,
+          scope: { kind: 'branch' as const, id: '220e8400-0000-0000-0000-00000000000a' },
+          branchId: '220e8400-0000-0000-0000-00000000000a',
+        },
+      ],
+    };
+    const csv = `firstName,lastName,email,homeBranchId
+Jane,Doe,jane@test.com,${branchId}`;
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+
+    const result = await importMembers(mockDb, csv, branchAdmin);
+
+    expect(result.imported).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('cannot create members in this branch');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed row rather than passing the cell through', async () => {
+    // The route carried no validator at all, so shapes were never checked.
+    const csv = `firstName,lastName,email,homeBranchId,gender
+Jane,Doe,not-an-email,not-a-uuid,Martian`;
+    setupSelect([]);
+    setupInsert([{ id: 'new-1' }]);
+
+    const result = await importMembers(mockDb, csv, adminAuth);
+
+    expect(result.imported).toBe(0);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('Row 2');
+    expect(result.errors[0]).toContain('email is not a valid email address');
+    expect(result.errors[0]).toContain('homeBranchId must be a branch UUID');
+    expect(result.errors[0]).toContain('gender must be Male or Female');
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
 });
 
 // ── exportMembersCsv ──────────────────────────────────────
@@ -841,6 +965,85 @@ describe('exportMembersCsv', () => {
     const lines = csv.split('\n');
     expect(lines).toHaveLength(1);
     expect(lines[0]).toContain('firstName');
+  });
+
+  // The export applied NO redaction at all and filtered on `auth.branchId`,
+  // which is the ACTIVE branch rather than the authority branch. Together that
+  // handed a branch admin toggled to a secondary branch that branch's roll,
+  // minors' dates of birth and emergency contacts included, one click away
+  // from a screen that would have nulled them.
+  const minorCsvRow = {
+    id: 'minor-1',
+    homeBranchId: branchId,
+    memberType: 'child',
+    firstName: 'Tiny', lastName: 'Tot', email: 'kid@test.com', phone: '555000',
+    gender: 'Female', dateOfBirth: '2016-01-01', address: '1 Kid St', city: 'Lagos',
+    branchName: 'Lagos Branch', membershipDate: '2024-01-01',
+    emergencyContactName: 'Mum', emergencyContactPhone: '555111',
+    emergencyContactRelationship: 'Parent', systemRole: 'member', approvalStatus: 'approved',
+  };
+
+  // Selects, in order: the member rows, then the viewer's guardianships
+  // (skipped entirely for a platform admin).
+  it("redacts a minor's DOB and emergency contacts for a caller without directory access", async () => {
+    // Rows now go through the same gate the screen uses, so the file can never
+    // be more generous than the page it came from.
+    setupSelectSequence([minorCsvRow], []);
+    const csv = await exportMembersCsv(mockDb, branchAdminOtherBranchAuth);
+
+    expect(csv).not.toContain('2016-01-01');
+    expect(csv).not.toContain('Mum');
+    expect(csv).not.toContain('555111');
+    expect(csv).not.toContain('kid@test.com');
+    // The row is still there, just emptied of the protected fields.
+    expect(csv).toContain('Tiny');
+    expect(csv).toContain('Lagos Branch');
+  });
+
+  it("keeps a minor's fields for a branch admin of the child's own branch", async () => {
+    // The pair to the test above, and the reason the directory path keeps
+    // `branch:read`: this caller may EDIT the record, so blanking what they
+    // read would have them save the blanks back.
+    setupSelectSequence([minorCsvRow], []);
+    const csv = await exportMembersCsv(mockDb, branchAdminSameBranchAuth);
+    expect(csv).toContain('2016-01-01');
+    expect(csv).toContain('Mum');
+  });
+
+  it('scopes the export to branches the caller holds branch:write on, not the active one', async () => {
+    // branchAdminSameBranchAuth administers `branchId`. Put them at
+    // `otherBranchId` — the toggled-to-secondary case — and the export must
+    // still be of `branchId`, which is what they actually administer.
+    const toggled = { ...branchAdminSameBranchAuth, branchId: otherBranchId };
+    setupSelectSequence([], []);
+    await exportMembersCsv(mockDb, toggled);
+
+    // Drizzle's SQL object is self-referential, so pull the string leaves out
+    // rather than serialising it.
+    const strings: string[] = [];
+    const seen = new Set<unknown>();
+    const walk = (v: unknown) => {
+      if (typeof v === 'string') strings.push(v);
+      else if (v && typeof v === 'object' && !seen.has(v)) {
+        seen.add(v);
+        Object.values(v as Record<string, unknown>).forEach(walk);
+      }
+    };
+    walk((mockDb.select as ReturnType<typeof vi.fn>).mock.results[0]!.value.where.mock.calls[0]![0]);
+
+    expect(strings).toContain(branchId);
+    expect(strings).not.toContain(otherBranchId);
+  });
+
+  it('refuses a caller who holds branch:write on no branch at all', async () => {
+    // Previously this exported `auth.branchId` regardless — a fellowship
+    // leader standing in a branch got that branch's whole roll.
+    const fellowshipLeader = viewer('000-fl', branchId, [
+      { role: 'FellowshipLeader', scope: { kind: 'branch', id: branchId }, branchId },
+    ]);
+    await expect(exportMembersCsv(mockDb, fellowshipLeader))
+      .rejects.toThrow('You have no branch to export');
+    expect(mockDb.select).not.toHaveBeenCalled();
   });
 });
 
@@ -919,16 +1122,81 @@ const minorMember = {
 };
 
 // Auth contexts for the various viewers.
-const leaderAuth = { memberId: '000-leader', email: 'leader@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const guardianAuth = { memberId: guardianId, email: 'guardian@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-const sgLeadSameBranchAuth = { memberId: '000-sg-same', email: 'sg-same@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
-// Physically present in `branchId` (so the detail read gate passes) but only
-// holds the Safeguarding Lead role in a DIFFERENT branch (otherBranchId).
-const sgLeadOtherBranchAuth = { memberId: '000-sg-other', email: 'sg-other@test.com', systemRole: 'member' as const, branchId, branchSystemAdminBranchIds: [], branchDataAdminBranchIds: [], grants: [] };
+//
+// Safeguarding access is now decided by a CAPABILITY on the caller's grants,
+// not by a `roles.roleName = 'Safeguarding Lead'` lookup, so these fixtures
+// carry grants rather than relying on a mocked database row. That is the whole
+// point of the change: the role-name string missed SafeguardingHead and the
+// derived BranchPastor, both of whom carry `safeguarding:read`.
+const CHURCH_NIL = '00000000-0000-0000-0000-000000000000';
+
+function viewer(
+  memberId: string,
+  activeBranchId: string,
+  grants: Array<{ role: string; scope: { kind: 'branch' | 'church'; id: string }; branchId: string }> = [],
+) {
+  return {
+    memberId,
+    email: `${memberId}@test.com`,
+    systemRole: 'member' as const,
+    branchId: activeBranchId,
+    branchSystemAdminBranchIds: [],
+    branchDataAdminBranchIds: [],
+    grants,
+  } as unknown as import('@kairos/types').AuthContext;
+}
+
+/** No grants at all — a plain member standing in the child's branch. */
+const leaderAuth = viewer('000-leader', branchId);
+/** A guardian with no grants. The guardian path must not need one. */
+const guardianAuth = viewer(guardianId, branchId);
+/** Safeguarding Lead for the child's own branch. */
+const sgLeadSameBranchAuth = viewer('000-sg-same', branchId, [
+  { role: 'SafeguardingLead', scope: { kind: 'branch', id: branchId }, branchId },
+]);
+// Physically present in `branchId` but holds Safeguarding Lead only in a
+// DIFFERENT branch (otherBranchId).
+const sgLeadOtherBranchAuth = viewer('000-sg-other', branchId, [
+  { role: 'SafeguardingLead', scope: { kind: 'branch', id: otherBranchId }, branchId: otherBranchId },
+]);
+/**
+ * Church-scoped SafeguardingHead, standing in some other branch. A church
+ * grant satisfies a branch target, so this reaches every branch — the
+ * escalation path above the Leads, which the old role-name lookup never saw.
+ */
+const sgHeadAuth = viewer('000-sg-head', otherBranchId, [
+  { role: 'SafeguardingHead', scope: { kind: 'church', id: CHURCH_NIL }, branchId: otherBranchId },
+]);
+/**
+ * A Main Pastor: `resolveGrants` synthesises a BranchPastor grant from
+ * `branch_leadership`, carrying safeguarding:read/write for their own branch
+ * and nothing else. Also invisible to the old role-name lookup.
+ */
+const branchPastorAuth = viewer('000-pastor', branchId, [
+  { role: 'BranchPastor', scope: { kind: 'branch', id: branchId }, branchId },
+]);
+/**
+ * A fellowship leader. `fellowship:read` is a directory capability, so they
+ * receive full rows — but they hold no `branch:read`, so a minor's fields in
+ * those rows are still nulled by redaction. The one caller for whom in-list
+ * minor protection is observable rather than moot.
+ */
+const fellowshipLeaderAuth = viewer('000-fl-dir', branchId, [
+  { role: 'FellowshipLeader', scope: { kind: 'branch', id: branchId }, branchId },
+]);
+/** BranchAdmin of the child's own branch: directory yes, health record no. */
+const branchAdminSameBranchAuth = viewer('000-badmin-same', branchId, [
+  { role: 'BranchAdmin', scope: { kind: 'branch', id: branchId }, branchId },
+]);
+/** BranchAdmin of a different branch: neither. */
+const branchAdminOtherBranchAuth = viewer('000-badmin-other', otherBranchId, [
+  { role: 'BranchAdmin', scope: { kind: 'branch', id: otherBranchId }, branchId: otherBranchId },
+]);
 
 describe('getMember — minor redaction', () => {
   it('admin sees full minor record (not redacted)', async () => {
-    // select 1: member row; the viewer-capability prefetch is skipped for admin/pastor
+    // select 1: member row. The guardianship prefetch is skipped for a
+    // platform admin, so there is no second select.
     setupSelect([minorMember]);
     const result = await getMember(mockDb, 'minor-1', adminAuth);
     expect(result.isMinor).toBe(true);
@@ -937,12 +1205,11 @@ describe('getMember — minor redaction', () => {
     expect(result.email).toBe('kid@test.com');
   });
 
+  // Every non-admin viewer costs exactly two selects now: the member row, then
+  // the members they guard. The separate Safeguarding-Lead branch lookup is
+  // gone — that authority is a capability on the caller's grants.
   it('guardian sees their own child full record', async () => {
-    // select 1: member row; 2: viewer SG-Lead branches → none;
-    // 3: the members this viewer guards → includes this child.
-    // The guardian link is a row now, not a column on the member, so it costs
-    // a query instead of a short-circuit.
-    setupSelectSequence([minorMember], [], [{ memberId: 'minor-1' }]);
+    setupSelectSequence([minorMember], [{ memberId: 'minor-1' }]);
     const result = await getMember(mockDb, 'minor-1', guardianAuth);
     expect(result.redacted).toBe(false);
     expect(result.phone).toBe('555000');
@@ -953,7 +1220,7 @@ describe('getMember — minor redaction', () => {
     // The guardian link is branch-independent — a guardian scoped to another
     // branch must not be locked out of their own child's record.
     const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
-    setupSelectSequence([minorMember], [], [{ memberId: 'minor-1' }]);
+    setupSelectSequence([minorMember], [{ memberId: 'minor-1' }]);
     const result = await getMember(mockDb, 'minor-1', crossBranchGuardian);
     expect(result.redacted).toBe(false);
     expect(result.dateOfBirth).toBe('2016-01-01');
@@ -961,7 +1228,6 @@ describe('getMember — minor redaction', () => {
   });
 
   it('unrelated in-branch leader gets a REDACTED minor record', async () => {
-    // select 1: member row; select 2: viewer safeguarding-lead branches → none
     setupSelectSequence([minorMember], []);
     const result = await getMember(mockDb, 'minor-1', leaderAuth);
     expect(result.isMinor).toBe(true);
@@ -982,19 +1248,158 @@ describe('getMember — minor redaction', () => {
   });
 
   it('Safeguarding Lead in the member branch sees full record', async () => {
-    // select 1: member row; select 2: viewer holds SG-Lead in branchId
-    setupSelectSequence([minorMember], [{ branchId }]);
+    setupSelectSequence([minorMember], []);
     const result = await getMember(mockDb, 'minor-1', sgLeadSameBranchAuth);
     expect(result.redacted).toBe(false);
     expect(result.email).toBe('kid@test.com');
   });
 
   it('Safeguarding Lead in a DIFFERENT branch does NOT see full record', async () => {
-    // select 1: member row (in branchId); select 2: viewer holds SG-Lead only in otherBranchId
-    setupSelectSequence([minorMember], [{ branchId: otherBranchId }]);
+    setupSelectSequence([minorMember], []);
     const result = await getMember(mockDb, 'minor-1', sgLeadOtherBranchAuth);
     expect(result.redacted).toBe(true);
     expect(result.email).toBeNull();
+  });
+
+  it('GAINED: a church-scoped SafeguardingHead sees the full record', async () => {
+    // The old gate looked up `roles.roleName = 'Safeguarding Lead'`, so the
+    // escalation role above the Leads — the one person who must be able to
+    // look across branches — could not read a minor's record at all. A church
+    // grant satisfies a branch target, so the capability check admits them.
+    setupSelectSequence([minorMember], []);
+    const result = await getMember(mockDb, 'minor-1', sgHeadAuth);
+    expect(result.redacted).toBe(false);
+    expect(result.email).toBe('kid@test.com');
+  });
+
+  it('GAINED: a Main Pastor (derived BranchPastor grant) sees the full record', async () => {
+    // Also invisible to the role-name lookup: BranchPastor is synthesised from
+    // `branch_leadership` by resolveGrants and has no `member_roles` row.
+    setupSelectSequence([minorMember], []);
+    const result = await getMember(mockDb, 'minor-1', branchPastorAuth);
+    expect(result.redacted).toBe(false);
+    expect(result.email).toBe('kid@test.com');
+  });
+
+  it('a branch admin of the subject branch KEEPS the directory record', async () => {
+    // Deliberate: editing is gated on `branch:write`, which this caller holds,
+    // and redaction nulls fields rather than hiding them. Narrow the directory
+    // too and they would open the edit form, see empty fields, press Save and
+    // blank the child's record. A viewer who may write a field must read it.
+    setupSelectSequence([minorMember], []);
+    const result = await getMember(mockDb, 'minor-1', branchAdminSameBranchAuth);
+    expect(result.redacted).toBe(false);
+    expect(result.dateOfBirth).toBe('2016-01-01');
+  });
+
+  it('a branch admin of ANOTHER branch is refused the record outright', async () => {
+    setupSelectSequence([minorMember], []);
+    await expect(getMember(mockDb, 'minor-1', branchAdminOtherBranchAuth))
+      .rejects.toThrow('You can only access members in your branch');
+  });
+
+  // ── The health record is a separate surface ────────────────────
+  //
+  // The gate used to be one predicate answering both questions with an
+  // UNSCOPED `branch:read`, true for any holder on ANY branch — so a
+  // BranchAdmin or BranchDataAdmin of one branch could read and write every
+  // child's health record in the church. `loadMemberForSafeguarding` does not
+  // pre-filter by the viewer's branch (correctly: a guardian's active branch
+  // may differ from their child's), so this was the only check there.
+  //
+  // The surface is split, not the capability: health records take
+  // `safeguarding:read` scoped to the subject's branch, the directory keeps
+  // `branch:read`, and safeguarding sight implies directory sight.
+  describe('getHealthRecord — the safeguarding surface', () => {
+    const healthRecord = { memberId: 'minor-1', allergies: 'Peanuts', isActive: true };
+    const minorSubject = {
+      id: 'minor-1',
+      homeBranchId: branchId,
+      memberType: 'member',
+      dateOfBirth: '2016-01-01',
+    };
+
+    it('REMOVED: a branch admin of the subject branch is DENIED the health record', async () => {
+      // The pair to "KEEPS the directory record" above. Branch administration
+      // is not safeguarding standing; a BranchAdmin holds no safeguarding
+      // capability, so the clinical record is now out of reach even in their
+      // own branch. selects: member row, guarded members. The record select is
+      // never reached.
+      setupSelectSequence([minorSubject], []);
+      await expect(getHealthRecord(mockDb, 'minor-1', branchAdminSameBranchAuth))
+        .rejects.toThrow('You do not have safeguarding access to this member');
+    });
+
+    it('REMOVED: a branch admin of another branch is denied it too', async () => {
+      setupSelectSequence([minorSubject], []);
+      await expect(getHealthRecord(mockDb, 'minor-1', branchAdminOtherBranchAuth))
+        .rejects.toThrow('You do not have safeguarding access to this member');
+    });
+
+    it('a platform admin still reads it', async () => {
+      // systemRole === 'admin' short-circuits before scope is read, and skips
+      // the guardianship lookup.
+      setupSelectSequence([minorSubject], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', adminAuth);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a guardian active in a DIFFERENT branch still reads it', async () => {
+      const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
+      setupSelectSequence([minorSubject], [{ memberId: 'minor-1' }], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', crossBranchGuardian);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it("a Safeguarding Lead for the child's branch still reads it", async () => {
+      setupSelectSequence([minorSubject], [], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', sgLeadSameBranchAuth);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a Safeguarding Lead for a DIFFERENT branch is still refused', async () => {
+      setupSelectSequence([minorSubject], []);
+      await expect(getHealthRecord(mockDb, 'minor-1', sgLeadOtherBranchAuth))
+        .rejects.toThrow('You do not have safeguarding access to this member');
+    });
+
+    it('GAINED: a church-scoped SafeguardingHead reads it', async () => {
+      setupSelectSequence([minorSubject], [], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', sgHeadAuth);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('GAINED: a Main Pastor (derived BranchPastor grant) reads it', async () => {
+      setupSelectSequence([minorSubject], [], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', branchPastorAuth);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a branch admin of A who is a GUARDIAN of a child in B still reads it', async () => {
+      // The guardianship resolver used to hand an empty set to any
+      // `branch:read` holder — "they see everything anyway". Scoping the gate
+      // made that false, so the short-circuit is now platform-admin only.
+      const guardianAlsoBranchAdmin = { ...branchAdminOtherBranchAuth, memberId: guardianId };
+      setupSelectSequence([minorSubject], [{ memberId: 'minor-1' }], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', guardianAlsoBranchAdmin);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('a branch admin of A who is a SAFEGUARDING LEAD for B still reads it', async () => {
+      const leadAlsoBranchAdmin = viewer('000-sg-badmin', otherBranchId, [
+        { role: 'BranchAdmin', scope: { kind: 'branch', id: otherBranchId }, branchId: otherBranchId },
+        { role: 'SafeguardingLead', scope: { kind: 'branch', id: branchId }, branchId },
+      ]);
+      setupSelectSequence([minorSubject], [], [healthRecord]);
+      const result = await getHealthRecord(mockDb, 'minor-1', leadAlsoBranchAdmin);
+      expect(result?.allergies).toBe('Peanuts');
+    });
+
+    it('upsert needs safeguarding:WRITE, so a branch admin cannot write it', async () => {
+      setupSelectSequence([minorSubject], []);
+      await expect(upsertHealthRecord(mockDb, 'minor-1', { allergies: 'x' }, branchAdminSameBranchAuth))
+        .rejects.toThrow('You do not have safeguarding access to this member');
+    });
   });
 
   it('admin sees a non-minor record unredacted', async () => {
@@ -1007,11 +1412,11 @@ describe('getMember — minor redaction', () => {
   });
 
   it('an unrelated in-branch leader CANNOT read an adult record (adult privacy preserved)', async () => {
-    // Adults keep the original strict gate: admin/pastor/self only. A general
+    // Adults keep the original strict gate: privileged/self only. A general
     // in-branch leader is forbidden — they must NOT see another adult's address
     // or emergency contacts via the detail endpoint.
     const adult = { ...minorMember, dateOfBirth: '1980-01-01', memberType: 'member' };
-    setupSelect([adult]);
+    setupSelectSequence([adult], []);
     await expect(getMember(mockDb, 'minor-1', leaderAuth)).rejects.toThrow(
       'You can only access your own profile',
     );
@@ -1019,12 +1424,13 @@ describe('getMember — minor redaction', () => {
 });
 
 describe('listMembers — minor redaction', () => {
-  it('redacts in-list minors for an unrelated in-branch leader', async () => {
+  it('redacts in-list minors for a fellowship leader (full row, nulled fields)', async () => {
+    // A fellowship leader gets full rows but holds no `branch:read`, so the
+    // minor's sensitive fields come back NULL inside an otherwise full row.
+    // selects: members they guard → none; rows; count.
     const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01' };
-    // select 1: viewer SG-Lead branches → none; 2: members they guard → none;
-    // 3: rows; 4: count
-    setupSelectSequence([], [], [minorMember, adult], [{ count: 2 }]);
-    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    setupSelectSequence([], [minorMember, adult], [{ count: 2 }]);
+    const result = await listMembers(mockDb, fellowshipLeaderAuth, { page: 1, limit: 20 });
     const minorRow = result.data.find((m) => m.id === 'minor-1')!;
     const adultRow = result.data.find((m) => m.id === 'adult-1')!;
     expect(minorRow.isMinor).toBe(true);
@@ -1037,13 +1443,27 @@ describe('listMembers — minor redaction', () => {
   });
 
   it('does not redact for a guardian viewing their own child in the list', async () => {
-    // guardian has no SG-Lead role; 1: SG branches → none; 2: the members they
-    // guard → this child; 3: rows; 4: count
-    setupSelectSequence([], [{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
-    const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
+    // A guardian who also leads a fellowship: the guardian path wins the
+    // redaction verdict, and the directory capability earns the full row.
+    const guardianWithGrant = { ...fellowshipLeaderAuth, memberId: guardianId };
+    setupSelectSequence([{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
+    const result = await listMembers(mockDb, guardianWithGrant, { page: 1, limit: 20 });
     const minorRow = result.data[0]!;
     expect(minorRow.redacted).toBe(false);
     expect(minorRow.email).toBe('kid@test.com');
+  });
+
+  it('a guardian with NO grant sees their child unredacted but still core-only', async () => {
+    // The projection and the redaction are independent: `redacted` is false
+    // because they are the guardian, and the contact fields are absent because
+    // they hold no directory capability. Their child's full record is one tap
+    // away on the detail endpoint, which the guardian path also admits.
+    setupSelectSequence([{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
+    const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+    expect(row['redacted']).toBe(false);
+    expect(Object.keys(row)).not.toContain('email');
+    expect(row['firstName']).toBe('Tiny');
   });
 
   it('admin sees all list rows unredacted without a capability prefetch', async () => {
@@ -1051,6 +1471,95 @@ describe('listMembers — minor redaction', () => {
     const result = await listMembers(mockDb, adminAuth, { page: 1, limit: 20 });
     expect(result.data[0]!.redacted).toBe(false);
     expect(result.data[0]!.email).toBe('kid@test.com');
+  });
+
+  // ── Least privilege by projection ─────────────────────────────
+  //
+  // GET /api/members had no authorization at all, and a row was the whole
+  // contact record. Gating the endpoint closed that and took the mobile
+  // Community tab's People segment with it — a member-facing browse showing
+  // nothing but an avatar, a name and a branch. So the narrowing is by FIELD:
+  // the rows a member can reach are unchanged, the fields they carry are not.
+  const WITHHELD_FROM_MEMBERS = [
+    'email', 'phone', 'address', 'city', 'postalCode', 'dateOfBirth',
+    'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship',
+    'systemRole',
+  ];
+
+  it('withholds the contact fields from a caller holding no directory capability', async () => {
+    const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01', memberType: 'member' };
+    setupSelectSequence([], [adult], [{ count: 1 }]);
+
+    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+
+    // Absent KEYS, not undefined values — so a future `...row` spread cannot
+    // quietly reintroduce them, and no reader can mistake "not sent to you"
+    // for "not recorded".
+    for (const field of WITHHELD_FROM_MEMBERS) {
+      expect(Object.keys(row)).not.toContain(field);
+    }
+    expect(row).toEqual({
+      id: 'adult-1',
+      firstName: 'Tiny',
+      lastName: 'Tot',
+      photoUrl: null,
+      homeBranchId: branchId,
+      branchName: 'Lagos Branch',
+      memberType: 'member',
+      isMinor: false,
+      redacted: false,
+    });
+  });
+
+  it('serves the full row to a branch admin of the subject branch', async () => {
+    const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01', memberType: 'member' };
+    setupSelectSequence([], [adult], [{ count: 1 }]);
+
+    const result = await listMembers(mockDb, branchAdminSameBranchAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+
+    for (const field of WITHHELD_FROM_MEMBERS) {
+      expect(Object.keys(row)).toContain(field);
+    }
+    expect(row['email']).toBe('kid@test.com');
+    expect(row['emergencyContactName']).toBe('Mum');
+  });
+
+  it('redacts a minor UNDER the projection for a caller without directory access', async () => {
+    // Minor protection runs first and its verdict travels with the core, so a
+    // member browsing the roll still learns a row is a protected minor — they
+    // simply never had the fields redaction would have nulled.
+    setupSelectSequence([], [minorMember], [{ count: 1 }]);
+
+    const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+    const row = result.data[0]! as Record<string, unknown>;
+
+    expect(row['isMinor']).toBe(true);
+    expect(row['redacted']).toBe(true);
+    for (const field of WITHHELD_FROM_MEMBERS) {
+      expect(Object.keys(row)).not.toContain(field);
+    }
+  });
+
+  it('still narrows a member to their own branch — the projection widened nobody', async () => {
+    setupSelectSequence([], [], [{ count: 0 }]);
+    await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
+
+    // The rows query is the second select. Walk its `where` for the caller's
+    // branch id: the branch condition is still applied for a caller without
+    // `branch:read`.
+    const strings: string[] = [];
+    const seen = new Set<unknown>();
+    const walk = (v: unknown) => {
+      if (typeof v === 'string') strings.push(v);
+      else if (v && typeof v === 'object' && !seen.has(v)) {
+        seen.add(v);
+        Object.values(v as Record<string, unknown>).forEach(walk);
+      }
+    };
+    walk((mockDb.select as ReturnType<typeof vi.fn>).mock.results[1]!.value.where.mock.calls[0]![0]);
+    expect(strings).toContain(branchId);
   });
 });
 
@@ -1218,22 +1727,35 @@ describe('listUnguardedMinors', () => {
   });
 
   it('allows a Safeguarding Lead scoped to the branch', async () => {
-    // select 1: viewer SG-Lead branches → includes branchId; select 2: minors
-    setupSelectSequence([{ branchId }], [unguardedRow]);
+    // One select: the minors query. Authority is read off the caller's grants,
+    // so there is no lookup query any more.
+    setupSelect([unguardedRow]);
     const result = await listUnguardedMinors(mockDb, sgLeadSameBranchAuth, {});
     expect(result).toHaveLength(1);
   });
 
-  it('forbids a leader without the Safeguarding Lead role', async () => {
-    setupSelectSequence([]); // viewer SG-Lead branches → none
+  it('forbids a caller with no safeguarding grant', async () => {
     await expect(listUnguardedMinors(mockDb, leaderAuth, {}))
+      .rejects.toThrow('need safeguarding access');
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it('forbids a BRANCH ADMIN — branch administration is not safeguarding standing', async () => {
+    // This gate used to accept an UNSCOPED `branch:read`, so a branch admin of
+    // any branch could list any other branch's minors.
+    await expect(listUnguardedMinors(mockDb, branchAdminSameBranchAuth, { branchId }))
       .rejects.toThrow('need safeguarding access');
   });
 
   it('forbids a Safeguarding Lead querying a branch they do not cover', async () => {
-    // viewer holds SG-Lead only in otherBranchId; queries branchId
-    setupSelectSequence([{ branchId: otherBranchId }]);
-    await expect(listUnguardedMinors(mockDb, sgLeadSameBranchAuth, { branchId }))
+    // Holds SG-Lead in otherBranchId only; asks about branchId.
+    await expect(listUnguardedMinors(mockDb, sgLeadOtherBranchAuth, { branchId }))
       .rejects.toThrow('need safeguarding access');
+  });
+
+  it('allows a church-scoped SafeguardingHead to query any branch', async () => {
+    setupSelect([unguardedRow]);
+    const result = await listUnguardedMinors(mockDb, sgHeadAuth, { branchId });
+    expect(result).toHaveLength(1);
   });
 });
