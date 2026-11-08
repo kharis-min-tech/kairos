@@ -447,6 +447,73 @@ describe('exportRegister', () => {
       exportRegister(mockDb, auth(), { status: 'active' } as never),
     ).rejects.toThrow(/Gift Aid admins/);
   });
+
+  // The cyber-security checklist asks, by name, "who exported or accessed
+  // donor/giving data". Before this the answer was nobody knows: both
+  // /register and /register.csv wrote no audit row. The register is more
+  // sensitive per row than the member directory because it carries donor
+  // names and HOME ADDRESSES, and it is HMRC-facing evidence besides.
+  describe('audit trail', () => {
+    function auditRow(): Record<string, unknown> | undefined {
+      return insertValues.find(
+        (a): a is Record<string, unknown> =>
+          typeof a === 'object' && a !== null && !Array.isArray(a) && 'action' in a,
+      );
+    }
+
+    it('records who exported the register, and how many donors it carried', async () => {
+      setupSelects([
+        { declaration: row(), branchName: 'Peckham' },
+        { declaration: row(), branchName: 'Peckham' },
+      ]);
+      setupInsert([{ id: 'audit-1' }]);
+
+      await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never);
+
+      const audit = auditRow();
+      expect(audit).toBeDefined();
+      expect(audit?.['action']).toBe('donor_register_exported');
+      expect(audit?.['outcome']).toBe('success');
+      expect(audit?.['actorMemberId']).toBe(giftAidAdmin.memberId);
+      expect(audit?.['targetType']).toBe('gift_aid_register');
+      const meta = audit?.['metadata'] as Record<string, unknown>;
+      expect(meta['rowCount']).toBe(2);
+      expect(meta['status']).toBe('active');
+    });
+
+    it('distinguishes the CSV download from the JSON read', async () => {
+      setupSelects([{ declaration: row(), branchName: 'Peckham' }]);
+      setupInsert([{ id: 'audit-1' }]);
+
+      await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never, undefined, 'csv');
+
+      expect((auditRow()?.['metadata'] as Record<string, unknown>)['format']).toBe('csv');
+    });
+
+    it('never records donor names or addresses', async () => {
+      // The register's whole point is names and home addresses. Copying them
+      // into the audit log would put the most sensitive rows in the system
+      // into a second table with a different retention period.
+      setupSelects([{ declaration: row(), branchName: 'Peckham' }]);
+      setupInsert([{ id: 'audit-1' }]);
+
+      await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never);
+
+      const serialised = JSON.stringify(auditRow()?.['metadata']);
+      expect(serialised).not.toContain('Ade');
+      expect(serialised).not.toContain('Bolarinwa');
+      expect(serialised).not.toContain('High Street');
+      expect(serialised).not.toContain('SE1 2AB');
+    });
+
+    it('writes no audit row when the caller is refused', async () => {
+      setupInsert([]);
+      await expect(
+        exportRegister(mockDb, auth(), { status: 'active' } as never),
+      ).rejects.toThrow(/Gift Aid admins/);
+      expect(auditRow()).toBeUndefined();
+    });
+  });
 });
 
 describe('registerToCsv', () => {

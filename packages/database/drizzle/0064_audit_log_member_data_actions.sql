@@ -7,6 +7,7 @@
 --   member_updated        — an actor changed fields on a member record
 --   member_exported       — an actor pulled the member directory out as CSV
 --   submissions_exported  — an actor pulled form submissions out as CSV
+--   donor_register_exported — an actor pulled the Gift Aid claim register
 --
 -- These exist because of a gap the pre-release security review found in the
 -- incident-response procedure, not because of a new feature. UK GDPR Article 33
@@ -20,6 +21,14 @@
 -- first-timer contact details and baby-dedication records naming children; it
 -- gets its own action rather than reusing member_exported, so an investigator
 -- filtering the log does not have to read targetType to tell the two apart.
+--
+-- The Gift Aid register is the third such path and the one the cyber-security
+-- checklist names explicitly ("who exported or accessed donor/giving data").
+-- It is separate again because it carries donor names and HOME ADDRESSES,
+-- which the directory export does not, and because it is HMRC-facing evidence
+-- with a six-year retention of its own. Two routes serve it —
+-- GET /api/gift-aid/register and /register.csv — and both go through
+-- exportRegister, so the audit row is written in the service, not the router.
 --
 -- Deliberately NOT recorded: field values, and the contents of the export.
 -- Only which field names an update touched, and how many rows the export
@@ -48,5 +57,6 @@ ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_check
     'oauth_client_created','oauth_client_updated',
     'oauth_client_secret_rotated','oauth_client_deleted',
     'guardian_linked','guardian_unlinked',
-    'member_updated','member_exported','submissions_exported'
+    'member_updated','member_exported','submissions_exported',
+    'donor_register_exported'
   ));

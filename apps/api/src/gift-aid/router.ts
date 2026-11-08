@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, getAuth } from '../middleware/auth';
 import { db } from '../db';
+import { extractRequestContext } from '../audit/context';
 import { successResponse } from '@kairos/utils';
 import {
   GIFT_AID_CHARITY_NAME,
@@ -120,13 +121,19 @@ giftAidRouter.post('/me/withdraw', zValidator('json', withdrawMineSchema), async
  */
 giftAidRouter.get('/register', zValidator('query', registerExportQuerySchema), async (c) => {
   const auth = getAuth(c);
-  const rows = await exportRegister(db, auth, c.req.valid('query'));
+  const rows = await exportRegister(db, auth, c.req.valid('query'), extractRequestContext(c));
   return c.json(successResponse(rows));
 });
 
 giftAidRouter.get('/register.csv', zValidator('query', registerExportQuerySchema), async (c) => {
   const auth = getAuth(c);
-  const rows = await exportRegister(db, auth, c.req.valid('query'));
+  const rows = await exportRegister(
+    db,
+    auth,
+    c.req.valid('query'),
+    extractRequestContext(c),
+    'csv',
+  );
   const stamp = new Date().toISOString().slice(0, 10);
   c.header('Content-Type', 'text/csv; charset=utf-8');
   c.header('Content-Disposition', `attachment; filename="gift-aid-register-${stamp}.csv"`);

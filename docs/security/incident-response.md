@@ -89,12 +89,20 @@ These are not quibbles; each one changes what an investigation can conclude.
   data would be a second copy of it under a different retention period, which
   enlarges the breach it exists to describe.
 
-  The **forms export** had the identical defect and was closed in the same
-  change, as `submissions_exported` — a separate action rather than a reuse of
-  `member_exported`, because it carries a different population (first-timer
-  contact details, baby-dedication records naming children and their parents,
-  testimonies) and an investigator filtering the log should not have to read
-  `targetType` to tell the two files apart.
+  **All three bulk-export paths are now audited**, each with its own action
+  rather than a shared one, because each carries a different population and an
+  investigator filtering the log should not have to read `targetType` to tell
+  the files apart:
+
+  | Action | Path | Why it is separate |
+  |---|---|---|
+  | `member_exported` | `GET /api/members/export` | The directory — every member the caller can reach, children included |
+  | `submissions_exported` | `GET /api/forms/submissions/export` | First-timer contact details, baby-dedication records naming children and their parents, testimonies |
+  | `donor_register_exported` | `GET /api/gift-aid/register` and `/register.csv` | Donor names and **home addresses**, which the directory export does not carry; HMRC-facing evidence with its own six-year retention |
+
+  The Gift Aid one matters disproportionately: it is the path the
+  cyber-security checklist asks about by name — "who exported or accessed
+  donor/giving data" — and it was the last of the three still writing nothing.
 
   **One gap remains, deliberately.** `member_viewed` does not exist and is not
   planned: a row per directory read would be an access log rather than an audit
@@ -163,8 +171,10 @@ These are not quibbles; each one changes what an investigation can conclude.
 > Both actions exist, migration 0064 widened the CHECK constraint, and the two
 > call sites record them. `members/service.test.ts` asserts both the presence of
 > the rows and the absence of field values from them.
-> The forms export, which had the same defect, was closed in the same change as
-> `submissions_exported`. Both export paths now leave a trail.
+> The forms export and the Gift Aid register, which had the same defect, were
+> closed in the same change as `submissions_exported` and
+> `donor_register_exported`. All three bulk-export paths now leave a trail, and
+> none of them records field values, member ids or donor details.
 
 ---
 
@@ -522,8 +532,9 @@ also evidences that the plan is tested.
    still genuinely unknown, unlike Logpush.
 4. ~~Add `member_exported` and `member_updated` to the audit taxonomy before the
    pilot~~ — **CLOSED 8 November 2026**, together with `submissions_exported`
-   for the forms export, which had the same defect (§2). Both bulk-export paths
-   now leave a trail; neither records field values or member ids.
+   and `donor_register_exported` for the forms and Gift Aid exports, which had
+   the same defect (§2). All three bulk-export paths now leave a trail; none
+   records field values, member ids or donor details.
 5. Confirm the DPO is reachable at a weekend, since the 72-hour clock does not
    pause (§4). *The question of who decides is settled: the DPO decides, and the
    Incident Lead cannot override.*

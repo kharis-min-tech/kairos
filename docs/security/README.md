@@ -98,14 +98,17 @@ the order things were fixed in is itself audit evidence.
    rather than fall back to a value committed to this repository. §1 of that
    document records why the fix did not take the shape it first recommended.
 3. ~~**Add `member_exported` and `member_updated` audit actions**~~
-   (`incident-response.md` §2) — **done 8 November 2026**, plus
-   `submissions_exported` for the forms export, which had the same defect.
-   Migration 0064 widened `audit_log_action_check`, without which the inserts
-   would have failed silently. Both bulk-export paths and every member edit now
-   leave a trail; none of them records field values or member ids, so the audit
-   log does not become a second copy of the data it describes. `member_viewed`
-   was considered and rejected — a row per read is an access log, not an audit
-   log.
+   (`incident-response.md` §2) — **done 8 November 2026**, and it turned out to
+   be four actions across **three** export paths, not one. `member_exported`
+   (the directory), `submissions_exported` (form submissions) and
+   `donor_register_exported` (the Gift Aid register — the path the checklist
+   asks about by name, and the last one still writing nothing), plus
+   `member_updated` for every edit to a member record. Migration 0064 widened
+   `audit_log_action_check`, without which all four inserts would have failed
+   silently. None of them records field values, member ids or donor details, so
+   the audit log does not become a second copy of the data it describes.
+   `member_viewed` was considered and rejected — a row per read is an access
+   log, not an audit log.
 4. ~~**Merge and deploy the remediation PRs**~~ — **done 8 November 2026.**
    #71 (`fix/security-blockers-round-1`), #72 (`fix/guardian-attachment`), #73
    (`feat/guardian-confirm-link`, carrying migration 0063), #74

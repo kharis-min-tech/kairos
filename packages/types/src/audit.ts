@@ -54,6 +54,11 @@ export const AuditAction = {
   // records naming children — and an investigator filtering the log should not
   // have to read `targetType` to tell the two files apart.
   SubmissionsExported: 'submissions_exported',
+  // The Gift Aid claim register. A third population again, and the one the
+  // cyber-security checklist asks about by name ("who exported or accessed
+  // donor/giving data"): it carries donor names and HOME ADDRESSES, which the
+  // member directory export does not, and it is HMRC-facing evidence.
+  DonorRegisterExported: 'donor_register_exported',
 } as const;
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
 
@@ -81,6 +86,7 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   AuditAction.MemberUpdated,
   AuditAction.MemberExported,
   AuditAction.SubmissionsExported,
+  AuditAction.DonorRegisterExported,
 ];
 
 export const AuditOutcome = {
@@ -116,6 +122,7 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   member_updated: 'Member record changed',
   member_exported: 'Member directory exported',
   submissions_exported: 'Form submissions exported',
+  donor_register_exported: 'Gift Aid register exported',
 };
 
 export interface AuditLogRow {
