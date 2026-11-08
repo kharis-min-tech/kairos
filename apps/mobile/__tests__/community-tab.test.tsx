@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 // A real QueryClient: the screen's own query drives what the row renders.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import CommunityScreen from './community';
+import CommunityScreen from '../app/(tabs)/community';
 
 const mockMembersList = jest.fn();
 
