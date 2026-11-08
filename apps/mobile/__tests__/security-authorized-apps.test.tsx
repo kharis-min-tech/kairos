@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import AuthorizedAppsScreen from './apps';
+import AuthorizedAppsScreen from '../app/security/apps';
 
 const mockBack = jest.fn();
 const mockList = jest.fn();

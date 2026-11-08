@@ -1,7 +1,7 @@
 import { AccessibilityInfo } from 'react-native';
 import { act, render } from '@testing-library/react-native';
-import ForgotPasswordScreen from './forgot-password';
-import PendingApprovalScreen from './pending-approval';
+import ForgotPasswordScreen from '../app/(auth)/forgot-password';
+import PendingApprovalScreen from '../app/(auth)/pending-approval';
 
 jest.mock('react-native-svg', () => {
   const React = require('react');
