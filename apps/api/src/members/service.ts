@@ -35,8 +35,6 @@ function enforceMemberAccess(auth: AuthContext, memberId: string) {
 }
 
 // ── Minor data protection ─────────────────────────────────
-// The seeded role that grants safeguarding access to minor records.
-const SAFEGUARDING_LEAD_ROLE = 'Safeguarding Lead';
 
 // Sensitive member fields that are nulled out when a minor record is redacted.
 const REDACTABLE_FIELDS = [
@@ -58,58 +56,23 @@ type SafeguardingSubject = {
 };
 
 /**
- * Resolve, ONCE per request, the set of branchIds where the viewer holds an
- * active Safeguarding Lead role. Admin/pastor short-circuit (they see all) and
- * don't trigger the query. Used by the list path to avoid an N+1.
- */
-async function getViewerSafeguardingBranches(
-  db: Database,
-  auth: AuthContext,
-): Promise<Set<string>> {
-  // Platform admins only. This short-circuit is a query optimisation for
-  // viewers who bypass the gate unconditionally, and since the bypass below
-  // became branch-scoped, that is exactly `systemRole === 'admin'`. It used to
-  // test `branch:read` unscoped, which returned an EMPTY set to every branch
-  // admin — so a branch admin who also held a Safeguarding Lead grant would
-  // have been denied their own lead branches the moment the bypass narrowed.
-  if (auth.systemRole === 'admin') {
-    return new Set();
-  }
-  const rows = await db
-    .select({ branchId: memberRoles.branchId })
-    .from(memberRoles)
-    .innerJoin(roles, eq(memberRoles.roleId, roles.id))
-    .where(
-      and(
-        eq(memberRoles.memberId, auth.memberId),
-        eq(memberRoles.isActive, true),
-        eq(roles.roleName, SAFEGUARDING_LEAD_ROLE),
-        eq(roles.isActive, true),
-      ),
-    );
-  return new Set(rows.map((r) => r.branchId));
-}
-
-/**
  * Resolve, ONCE per request, the members this viewer is an active guardian of.
  *
  * Guardianship used to be a single column on the member row, so the list path
  * could read it straight off the row it had already selected. It is a join
  * table now (0056 — a child can have two parents and often a carer as well),
- * so the set is resolved up front for the same reason the Safeguarding Lead
- * branches are: the alternative is a query per row.
+ * so the set is resolved up front: the alternative is a query per row.
  *
- * Admin/pastor short-circuit — they already see everything, so the query is
- * pointless for them.
+ * Only a platform admin short-circuits. This used to test `branch:read`
+ * unscoped, which handed an EMPTY set to every branch admin on the reasoning
+ * that they "see everything anyway" — true only while the gate below was
+ * unscoped. Narrowing the gate made that false, and a branch admin would have
+ * lost access to their OWN child's record.
  */
 async function getViewerGuardedMemberIds(
   db: Database,
   auth: AuthContext,
 ): Promise<Set<string>> {
-  // Platform admins only — same reasoning as the branches resolver above.
-  // Testing `branch:read` unscoped here emptied the set for every branch
-  // admin, which would deny a branch admin access to their OWN child's
-  // record once the bypass became branch-scoped.
   if (auth.systemRole === 'admin') {
     return new Set();
   }
@@ -126,59 +89,64 @@ async function getViewerGuardedMemberIds(
 }
 
 /**
- * In-memory safeguarding-access check given a pre-resolved capability set.
- * True when the viewer administers the member's OWN branch, is one of the
- * member's guardians, or holds an active Safeguarding Lead role scoped to the
- * member's home branch.
+ * Safeguarding sight of one member: their health record, and their unredacted
+ * personal fields.
  *
- * The capability check is scoped to the subject deliberately. It used to pass
- * no scope, and unscoped `branch:read` is true for any holder on ANY branch —
- * so a BranchAdmin or BranchDataAdmin of one branch could read and write any
- * child's unredacted record, and their health record, across the whole
- * church. `loadMemberForSafeguarding` does not pre-filter by the viewer's
- * branch (correctly: a guardian's active branch may differ from their
- * child's), so this check was the only thing standing there.
+ * The surface is split, not the capability. Health records are safeguarding
+ * data and need a safeguarding grant; the directory is branch administration
+ * and needs a branch grant (see `hasDirectoryAccess`). One predicate used to
+ * answer both with an UNSCOPED `branch:read`, which is true for any holder on
+ * ANY branch — so a BranchAdmin or BranchDataAdmin of one branch could read
+ * and write every child's health record in the church.
  *
- * Who still gets through: a platform admin (`matchesCapability` short-circuits
- * on `systemRole === 'admin'` before scope is read), a guardian (the
- * `guardedMemberIds` path), a Safeguarding Lead for the child's branch (the
- * `safeguardingBranches` path), and a church-scoped SafeguardingHead (a church
- * grant satisfies a branch target — the matcher is asymmetric by design).
+ * Checking the capability rather than looking up a role name also fixes two
+ * pre-existing lockouts for free. The old resolver matched
+ * `roles.roleName = 'Safeguarding Lead'` exactly, so it missed:
+ *  - SafeguardingHead, whose church grant carries `safeguarding:read` — a
+ *    church grant satisfies a branch target (the matcher is asymmetric by
+ *    design; the reverse never holds), so church-wide escalation now works;
+ *  - the derived BranchPastor grant synthesised in `lib/grants.ts`, which
+ *    carries `safeguarding:read` for the pastor's own branch.
+ * Both are the people this data exists for, and neither could reach it.
+ *
+ * `cap` is `safeguarding:write` for the upsert path — the first place that
+ * capability is enforced anywhere in the API.
  */
-function hasSafeguardingAccessWith(
+function hasHealthRecordAccess(
   auth: AuthContext,
   member: SafeguardingSubject,
-  safeguardingBranches: Set<string>,
   guardedMemberIds: Set<string>,
+  cap: 'safeguarding:read' | 'safeguarding:write' = 'safeguarding:read',
 ): boolean {
-  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: member.homeBranchId })) {
-    return true;
-  }
+  if (auth.systemRole === 'admin') return true;
   // ANY active guardian, not "the" guardian — that is the whole point of 0056.
+  // Branch-independent on purpose: a guardian active in another branch must
+  // still reach their own child.
   if (guardedMemberIds.has(member.id)) return true;
-  return safeguardingBranches.has(member.homeBranchId);
+  return authHasCapability(auth, cap, { kind: 'branch', id: member.homeBranchId });
 }
 
 /**
- * Async single-member safeguarding-access check (detail / health-record path).
- * Resolves the viewer's Safeguarding Lead branches then evaluates in memory.
+ * Directory sight of one member: their row in the roll, and their unredacted
+ * personal fields on the detail page.
+ *
+ * Safeguarding sight implies directory sight — anyone trusted with the health
+ * record is trusted with the name and date of birth beside it.
+ *
+ * This keeps `branch:read`, scoped to the subject's branch, deliberately.
+ * Editing a member is gated on `branch:write`, which both BranchAdmin and
+ * BranchDataAdmin hold, and redaction nulls fields rather than hiding them: a
+ * branch admin narrowed out of a child's record would open the edit form,
+ * see dateOfBirth / phone / address as empty, press Save and blank the record.
+ * A viewer who may write a field has to be able to read it.
  */
-async function hasSafeguardingAccess(
-  db: Database,
+function hasDirectoryAccess(
   auth: AuthContext,
   member: SafeguardingSubject,
-): Promise<boolean> {
-  // Platform admins skip both lookups; everyone else is decided by the scoped
-  // check in `hasSafeguardingAccessWith`. This early return carried the same
-  // unscoped `branch:read` test as that function and had to be narrowed with
-  // it, or the detail and health-record paths would keep the church-wide hole
-  // the list path no longer has.
-  if (auth.systemRole === 'admin') return true;
-  const [branches, guarded] = await Promise.all([
-    getViewerSafeguardingBranches(db, auth),
-    getViewerGuardedMemberIds(db, auth),
-  ]);
-  return hasSafeguardingAccessWith(auth, member, branches, guarded);
+  guardedMemberIds: Set<string>,
+): boolean {
+  if (hasHealthRecordAccess(auth, member, guardedMemberIds)) return true;
+  return authHasCapability(auth, 'branch:read', { kind: 'branch', id: member.homeBranchId });
 }
 
 /**
@@ -294,13 +262,10 @@ export async function listMembers(
   const where = and(...conditions);
   const offset = (query.page - 1) * query.limit;
 
-  // Resolve the viewer's safeguarding capability ONCE up front (admin/pastor
-  // short-circuit to an empty set without a query), then evaluate per-row in
-  // memory to avoid an N+1 across the list.
-  const [safeguardingBranches, guardedMemberIds] = await Promise.all([
-    getViewerSafeguardingBranches(db, auth),
-    getViewerGuardedMemberIds(db, auth),
-  ]);
+  // Resolve the viewer's guardianships ONCE up front, then evaluate per-row in
+  // memory to avoid an N+1 across the list. Capabilities need no query — the
+  // grants are already on the auth context.
+  const guardedMemberIds = await getViewerGuardedMemberIds(db, auth);
 
   const [rows, [total]] = await Promise.all([
     db
@@ -343,7 +308,7 @@ export async function listMembers(
   ]);
 
   const data = rows.map((row) =>
-    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches, guardedMemberIds)),
+    applyMinorProtection(row, hasDirectoryAccess(auth, row, guardedMemberIds)),
   );
 
   return {
@@ -398,28 +363,29 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
 
   if (!member) throw new NotFoundError('Member not found');
 
-  const isPrivileged = authHasCapability(auth, 'branch:read');
   const isSelf = auth.memberId === memberId;
+  // Scoped to the SUBJECT's branch. This was an unscoped `branch:read`, so a
+  // branch admin of any one branch read every child's unredacted record across
+  // the whole church — and it sat ahead of the safeguarding check below, which
+  // is why scoping that check alone did not close this path.
+  const guardedMemberIds = isSelf ? new Set<string>() : await getViewerGuardedMemberIds(db, auth);
 
-  // Admin/pastor and the member themselves always get the full record.
-  if (isPrivileged || isSelf) {
+  // The member themselves, and anyone with directory sight of them (which
+  // safeguarding sight implies), get the full record.
+  if (isSelf || hasDirectoryAccess(auth, member, guardedMemberIds)) {
     return applyMinorProtection(member, true);
   }
 
   // Non-privileged, non-self readers:
-  //  - ADULT records keep the original strict gate (admin/pastor/self only) so
+  //  - ADULT records keep the original strict gate (privileged/self only) so
   //    this feature doesn't newly expose adults' address / emergency contacts.
-  //  - MINOR records follow the safeguarding model: the linked guardian (branch-
-  //    independent) and Safeguarding Leads scoped to the child's branch get the
-  //    full record; other same-branch viewers get a REDACTED stub (name/branch,
-  //    no DOB/contact); out-of-branch viewers are denied.
+  //  - MINOR records get a REDACTED stub (name/branch, no DOB/contact) for a
+  //    same-branch viewer; out-of-branch viewers are denied. Guardians and
+  //    safeguarding holders never reach here — `hasDirectoryAccess` above
+  //    already returned true for them, branch-independently in the guardian's
+  //    case.
   if (!isMinorMember({ memberType: member.memberType, dateOfBirth: member.dateOfBirth })) {
     throw new ForbiddenError('You can only access your own profile');
-  }
-  // Guardian / SG-Lead access is evaluated BEFORE the branch gate — a guardian
-  // active in another branch must still reach their own child's record.
-  if (await hasSafeguardingAccess(db, auth, member)) {
-    return applyMinorProtection(member, true);
   }
   if (member.homeBranchId !== auth.branchId) {
     throw new ForbiddenError('You can only access members in your branch');
@@ -1127,11 +1093,12 @@ async function loadMemberForSafeguarding(
   db: Database,
   memberId: string,
   auth: AuthContext,
+  cap: 'safeguarding:read' | 'safeguarding:write' = 'safeguarding:read',
 ): Promise<SafeguardingSubject & { id: string }> {
   // Resolve by id only — NOT filtered by the viewer's branch. Safeguarding
   // access is branch-independent for a guardian, and scoped to the MEMBER's
   // branch (not the viewer's) for a Safeguarding Lead; both are decided by
-  // hasSafeguardingAccess below. Pre-filtering on auth.branchId here would lock
+  // hasHealthRecordAccess below. Pre-filtering on auth.branchId here would lock
   // out a guardian whose active branch differs from their child's home branch.
   const [member] = await db
     .select({
@@ -1145,8 +1112,8 @@ async function loadMemberForSafeguarding(
 
   if (!member) throw new NotFoundError('Member not found');
 
-  const hasAccess = await hasSafeguardingAccess(db, auth, member);
-  if (!hasAccess) {
+  const guardedMemberIds = await getViewerGuardedMemberIds(db, auth);
+  if (!hasHealthRecordAccess(auth, member, guardedMemberIds, cap)) {
     throw new ForbiddenError('You do not have safeguarding access to this member');
   }
 
@@ -1183,7 +1150,9 @@ export async function upsertHealthRecord(
   },
   auth: AuthContext,
 ): Promise<MemberHealthRecord> {
-  const member = await loadMemberForSafeguarding(db, memberId, auth);
+  // Writing a health record needs `safeguarding:write`, not merely read — the
+  // first place that capability is enforced in the API.
+  const member = await loadMemberForSafeguarding(db, memberId, auth, 'safeguarding:write');
 
   // Stamp consent provenance only when a consent flag is actually provided.
   const consentProvided =
@@ -1235,11 +1204,11 @@ export async function listUnguardedMinors(
 ) {
   const branchId = query.branchId ?? auth.branchId;
 
-  if (!authHasCapability(auth, 'branch:read')) {
-    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
-    if (!safeguardingBranches.has(branchId)) {
-      throw new ForbiddenError('You need safeguarding access to view this list');
-    }
+  // A safeguarding surface, so it takes a safeguarding grant scoped to the
+  // branch being asked about. It used to accept an UNSCOPED `branch:read`,
+  // which let a branch admin of any branch list any other branch's minors.
+  if (!authHasCapability(auth, 'safeguarding:read', { kind: 'branch', id: branchId })) {
+    throw new ForbiddenError('You need safeguarding access to view this list');
   }
 
   // "Unguarded" now means: no active guardian link pointing at an active adult.
@@ -1329,11 +1298,11 @@ export async function listDormantMinors(
 ) {
   const branchId = query.branchId ?? auth.branchId;
 
-  if (!authHasCapability(auth, 'branch:read')) {
-    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
-    if (!safeguardingBranches.has(branchId)) {
-      throw new ForbiddenError('You need safeguarding access to view this list');
-    }
+  // A safeguarding surface, so it takes a safeguarding grant scoped to the
+  // branch being asked about. It used to accept an UNSCOPED `branch:read`,
+  // which let a branch admin of any branch list any other branch's minors.
+  if (!authHasCapability(auth, 'safeguarding:read', { kind: 'branch', id: branchId })) {
+    throw new ForbiddenError('You need safeguarding access to view this list');
   }
 
   const reviewer = alias(members, 'reviewer');
@@ -1426,13 +1395,11 @@ export async function reviewMinor(
     throw new ConflictError('Member is already inactive');
   }
 
-  // Authorization mirrors listDormantMinors — admin/pastor short-circuit, SG
-  // Lead must hold safeguarding access to this branch.
-  if (!authHasCapability(auth, 'branch:read')) {
-    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
-    if (!safeguardingBranches.has(row.homeBranchId)) {
-      throw new ForbiddenError('You need safeguarding access for this branch');
-    }
+  // This archives a child's record, so it takes `safeguarding:write` scoped to
+  // the child's own branch. It used to accept an UNSCOPED `branch:read`, which
+  // let a branch admin of any branch archive a minor in any other.
+  if (!authHasCapability(auth, 'safeguarding:write', { kind: 'branch', id: row.homeBranchId })) {
+    throw new ForbiddenError('You need safeguarding access for this branch');
   }
 
   const [updated] = await db

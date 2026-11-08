@@ -300,8 +300,11 @@ describe('GET /api/members/:id', () => {
   it('should return 403 when member views a profile in another branch', async () => {
     // Target member lives in a different branch from the requesting member.
     const otherBranchMember = { ...sampleMember, id: TEST_IDS.pastorId, homeBranchId: 'some-other-branch' };
-    const chain = chainTo([otherBranchMember]);
-    mockDb.select.mockReturnValueOnce(chain);
+    // Two selects for a non-admin viewer: the member row, then the members
+    // this viewer is a guardian of (none).
+    mockDb.select
+      .mockReturnValueOnce(chainTo([otherBranchMember]))
+      .mockReturnValue(chainTo([]));
 
     const res = await app.request(`/api/members/${TEST_IDS.pastorId}`, {
       headers: { Authorization: `Bearer ${memberToken}` },

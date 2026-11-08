@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles, useSetMembershipClass, useMemberFollowupHistory } from '@/hooks/use-members';
 import { useCapabilities } from '@/hooks/use-capabilities';
+import { useMyChildren } from '@/hooks/use-me';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
 import { useBranches } from '@/hooks/use-branches';
 import { Button, CustomSelect, Badge } from '@kairos/ui';
@@ -64,6 +65,20 @@ export default function MemberDetailPage() {
       caps.has('branch:write', { kind: 'branch', id: member.homeBranchId }));
   const { data: followupHistory, isLoading: followupHistoryLoading } =
     useMemberFollowupHistory(id, canSeeFollowupHistory);
+
+  // Health records are a safeguarding surface now, not a branch-admin one: the
+  // API gates them on `safeguarding:read` scoped to the SUBJECT's home branch
+  // (see the split in members/service.ts). A branch admin still reads the
+  // directory record, so `member.redacted` is false for them and the section
+  // would have rendered, fetched and 403'd. Gate the render on the same thing
+  // the server checks, plus guardianship — a parent holds no grant at all and
+  // must still reach their own child's record.
+  const { data: myChildren } = useMyChildren();
+  const isGuardianOfMember = (myChildren ?? []).some((c) => c.id === id);
+  const canSeeSafeguarding =
+    isGuardianOfMember ||
+    (!!member?.homeBranchId &&
+      caps.has('safeguarding:read', { kind: 'branch', id: member.homeBranchId }));
 
   if (isLoading) {
     return <MemberDetailSkeleton />;
@@ -344,12 +359,13 @@ export default function MemberDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Safeguarding & Health — minors only */}
-      {member.isMinor && (
+      {/* Safeguarding & Health — minors only, and only for a viewer the API
+          will actually serve the record to. */}
+      {member.isMinor && canSeeSafeguarding && (
         <SafeguardingSection
           memberId={member.id}
           redacted={member.redacted}
-          canEdit={canManage}
+          canEdit={canSeeSafeguarding}
         />
       )}
 
