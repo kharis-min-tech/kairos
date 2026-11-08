@@ -26,6 +26,10 @@ export const AuditAction = {
   OauthClientUpdated: 'oauth_client_updated',
   OauthClientSecretRotated: 'oauth_client_secret_rotated',
   OauthClientDeleted: 'oauth_client_deleted',
+  // Guardian links grant and revoke sight of a child's unredacted record and
+  // health record, so they are security events, not directory bookkeeping.
+  GuardianLinked: 'guardian_linked',
+  GuardianUnlinked: 'guardian_unlinked',
 } as const;
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
 
@@ -48,6 +52,8 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   AuditAction.OauthClientUpdated,
   AuditAction.OauthClientSecretRotated,
   AuditAction.OauthClientDeleted,
+  AuditAction.GuardianLinked,
+  AuditAction.GuardianUnlinked,
 ];
 
 export const AuditOutcome = {
@@ -78,6 +84,8 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   oauth_client_updated: 'App settings changed',
   oauth_client_secret_rotated: 'App secret rotated',
   oauth_client_deleted: 'App deleted',
+  guardian_linked: 'Guardian linked',
+  guardian_unlinked: 'Guardian removed',
 };
 
 export interface AuditLogRow {
