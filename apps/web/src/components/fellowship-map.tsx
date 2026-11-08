@@ -50,6 +50,32 @@ const MAPBOX_STYLE_DARK = 'mapbox://styles/mapbox/dark-v11';
 // otherwise risks silently swapping coordinates.
 const ll = ([lat, lng]: [number, number]): [number, number] => [lng, lat];
 
+/**
+ * Escape text for interpolation into the Mapbox popup HTML.
+ *
+ * These popups are built as HTML strings and handed to `popup.setHTML()`,
+ * which does no escaping — so a fellowship's name or description went into the
+ * document as markup. Fellowship names are written by fellowship leaders and
+ * branch admins, which made this stored XSS: a fellowship named
+ * `<img src=x onerror=...>` ran in the browser of every member who opened the
+ * map, with that member's session. CodeQL flags the old code as
+ * `js/incomplete-sanitization`, because the only escaping present was a
+ * `.replace(/'/g, ...)` on the inline `onclick` payload, which is both the
+ * wrong character set and the wrong layer — HTML attribute parsing happens
+ * before the JS is parsed, so an entity-encoded quote reopens the hole.
+ *
+ * `&` goes first; otherwise it would re-encode the ampersands this function
+ * has just written.
+ */
+export function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Known branch locations mapped to countries
 interface BranchFellowshipInfo {
   name: string;
@@ -376,11 +402,42 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
         setJoinRequestSent(false);
       }
     };
+    // The popup buttons used to carry an inline `onclick` that built this
+    // CustomEvent from interpolated fellowship data — which is how the stored
+    // XSS got in (see `escapeHtml`). They now carry `data-join-*` attributes
+    // and no script, and this delegated listener does the dispatch. Attribute
+    // values are inert text no matter what a fellowship is named.
+    //
+    // Delegated from `document` because Mapbox owns the popup's lifecycle: it
+    // creates and destroys the element on open/close, so there is nothing
+    // stable to bind to per button.
+    const handlePopupClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const button = target?.closest<HTMLElement>('[data-kairos-join]');
+      if (!button) return;
+
+      const kind = button.dataset['kairosJoin'];
+      const detail = {
+        id: button.dataset['joinId'] ?? '',
+        name: button.dataset['joinName'] ?? '',
+        type: button.dataset['joinType'] ?? '',
+        schedule: button.dataset['joinSchedule'] ?? '',
+      };
+
+      if (kind === 'api') {
+        window.dispatchEvent(new CustomEvent('fellowship-join', { detail }));
+      } else if (kind === 'static') {
+        window.dispatchEvent(new CustomEvent('fellowship-join-static', { detail }));
+      }
+    };
+
     window.addEventListener('fellowship-join', handleJoin);
     window.addEventListener('fellowship-join-static', handleJoinStatic);
+    document.addEventListener('click', handlePopupClick);
     return () => {
       window.removeEventListener('fellowship-join', handleJoin);
       window.removeEventListener('fellowship-join-static', handleJoinStatic);
+      document.removeEventListener('click', handlePopupClick);
     };
   }, []);
 
@@ -579,11 +636,11 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                 <div style="padding:8px 10px;border:1px solid rgba(148,163,184,0.2);border-radius:8px;margin-top:6px;background:rgba(99,102,241,0.04);">
                   <div style="display:flex;align-items:center;gap:6px;">
                     <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
-                    <strong style="font-size:12px;color:#111827;">${f.fellowshipName}</strong>
+                    <strong style="font-size:12px;color:#111827;">${escapeHtml(f.fellowshipName)}</strong>
                   </div>
-                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
-                  ${f.description ? `<div style="margin-top:3px;font-size:11px;color:#6b7280;">${f.description}</div>` : ''}
-                  <button onclick="window.dispatchEvent(new CustomEvent('fellowship-join', {detail:{id:'${f.id}',name:'${f.fellowshipName.replace(/'/g, "\\'")}',type:'${f.fellowshipType}',schedule:'${(f.meetingSchedule || '').replace(/'/g, "\\'")}'} }))" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Request to Join</button>
+                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${escapeHtml(nextMeeting)}</strong></div>` : ''}
+                  ${f.description ? `<div style="margin-top:3px;font-size:11px;color:#6b7280;">${escapeHtml(f.description)}</div>` : ''}
+                  <button data-kairos-join="api" data-join-id="${escapeHtml(f.id)}" data-join-name="${escapeHtml(f.fellowshipName)}" data-join-type="${escapeHtml(f.fellowshipType)}" data-join-schedule="${escapeHtml(f.meetingSchedule || '')}" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Request to Join</button>
                 </div>
               `;
             }).join('');
@@ -594,11 +651,11 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
                 <div style="padding:8px 10px;border:1px solid rgba(148,163,184,0.2);border-radius:8px;margin-top:6px;background:rgba(99,102,241,0.04);">
                   <div style="display:flex;align-items:center;gap:6px;">
                     <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
-                    <strong style="font-size:12px;color:#111827;">${f.name}</strong>
+                    <strong style="font-size:12px;color:#111827;">${escapeHtml(f.name)}</strong>
                   </div>
-                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${nextMeeting}</strong></div>` : ''}
-                  <div style="margin-top:3px;font-size:11px;color:#6b7280;">${f.description}</div>
-                  <button onclick="window.dispatchEvent(new CustomEvent('fellowship-join-static', {detail:{name:'${f.name.replace(/'/g, "\\'")}',type:'${f.type}',schedule:'${f.schedule.replace(/'/g, "\\'")}'} }))" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Request to Join</button>
+                  ${nextMeeting ? `<div style="margin-top:5px;font-size:11px;color:#374151;">Next meeting: <strong style="color:#111827;">${escapeHtml(nextMeeting)}</strong></div>` : ''}
+                  <div style="margin-top:3px;font-size:11px;color:#6b7280;">${escapeHtml(f.description)}</div>
+                  <button data-kairos-join="static" data-join-name="${escapeHtml(f.name)}" data-join-type="${escapeHtml(f.type)}" data-join-schedule="${escapeHtml(f.schedule)}" style="margin-top:8px;width:100%;padding:6px 12px;background:#6366f1;color:white;border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;">Request to Join</button>
                 </div>
               `;
             }).join('');
@@ -607,7 +664,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
           return `
             <details style="margin-top:6px;">
               <summary style="display:inline-block;background:${color};color:white;padding:5px 14px;border-radius:12px;font-size:11px;font-weight:500;cursor:pointer;list-style:none;user-select:none;">
-                ${type}
+                ${escapeHtml(type)}
               </summary>
               <div style="margin-top:4px;padding-left:4px;">
                 ${detailCards}
@@ -618,7 +675,7 @@ export default function FellowshipMap({ focusedFellowship }: FellowshipMapProps)
 
         const popupContent = `
           <div style="min-width:240px;max-width:300px;padding:6px 0;">
-            <strong style="font-size:14px;display:block;margin-bottom:8px;">${branch.name}</strong>
+            <strong style="font-size:14px;display:block;margin-bottom:8px;">${escapeHtml(branch.name)}</strong>
             <div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Tap a fellowship type to see details:</div>
             ${fellowshipSections}
           </div>
