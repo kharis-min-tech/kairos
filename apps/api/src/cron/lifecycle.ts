@@ -7,7 +7,7 @@ import {
   resolveBranchAuthority,
   resolveSafeguardingLeads,
 } from '../notifications/recipients';
-import { NotificationEventType } from '@kairos/types';
+import { NotificationEventType, MINOR_AGE_THRESHOLD } from '@kairos/types';
 
 function memberPortalUrl(memberId: string): string {
   const base = process.env['FRONTEND_URL'] ?? 'http://localhost:3002';
@@ -97,7 +97,10 @@ async function dispatchVisitorPromotion(db: Database, transitioned: string[]) {
  * worker.ts wraps this call in withDb), so connection lifecycle is unchanged.
  */
 
-const MINOR_AGE_THRESHOLD = 16;
+// MINOR_AGE_THRESHOLD comes from @kairos/types. It was redeclared here, and a
+// local copy of the one number that decides who is a protected minor is a
+// drift waiting to happen — the threshold is 16 (the first-timer form's
+// "under 16 / attends with a guardian" line), never 18.
 const VISITOR_PROMOTION_THRESHOLD = 6;
 const VISITOR_PROMOTION_WINDOW_DAYS = 90;
 
