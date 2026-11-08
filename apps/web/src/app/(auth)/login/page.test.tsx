@@ -207,6 +207,14 @@ describe('LoginPage — OAuth', () => {
     });
   });
 
+  it('names deactivation when ?oauth_error=account_inactive is present', async () => {
+    searchParamsString = 'oauth_error=account_inactive';
+    render(<LoginPage />, { wrapper });
+    await waitFor(() => {
+      expect(screen.getByRole('alert').textContent).toMatch(/deactivated/i);
+    });
+  });
+
   it('falls back to the generic provider_error copy for an unknown slug', async () => {
     searchParamsString = 'oauth_error=totally_unknown';
     render(<LoginPage />, { wrapper });

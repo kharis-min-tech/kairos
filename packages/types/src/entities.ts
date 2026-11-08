@@ -1013,6 +1013,13 @@ export interface FormSubmission extends BaseEntity {
   consentGivenAt?: string | null;
   consentBy?: string | null;
   consentPolicyVersion?: string | null;
+  /** True when the submission named a guardian member and no guardian link was
+   *  written — either the subject already existed (a guardian link may only be
+   *  self-asserted over a record the same submission created; see
+   *  apps/api/src/me/service.ts:1004-1017) or the named member did not resolve
+   *  in the branch. The claim is kept in the payload; the link needs an admin
+   *  to confirm it. Optional — only the first-time-visitor form ever sets it. */
+  guardianLinkPending?: boolean;
 }
 
 // ── Member Health Record ───────────────────────────────────

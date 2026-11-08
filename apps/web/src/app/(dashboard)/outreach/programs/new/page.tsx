@@ -76,11 +76,20 @@ export default function CreateProgramPage() {
         }
       });
 
-      api.members.list({ limit: 100 }).then((response) => {
-        if (response.success) {
-          setMembers(response.data?.data ?? []);
-        }
-      });
+      // The page redirects away unless `canCreate`, but this effect fires
+      // first, so a member who lands here briefly issues a request the
+      // directory endpoint now refuses. Catch it: an unhandled rejection in
+      // the console is not a useful way to learn you lack a grant.
+      api.members
+        .list({ limit: 100 })
+        .then((response) => {
+          if (response.success) {
+            setMembers(response.data?.data ?? []);
+          }
+        })
+        .catch(() => {
+          setMembers([]);
+        });
     }
   }, [api]);
 

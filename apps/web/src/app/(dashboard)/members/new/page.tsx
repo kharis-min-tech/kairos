@@ -270,20 +270,17 @@ export default function AddMemberPage() {
                 />
                 {errors.homeBranchId && <p className="mt-1 text-xs text-destructive">{errors.homeBranchId.message}</p>}
               </div>
+              {/* The "System Role" select that used to sit here is gone. The
+                  API no longer accepts systemRole on create — the field was
+                  only gated on `branch:write`, so it was a route to minting a
+                  global admin. Authority is granted afterwards, on Users &
+                  Roles, which writes a `member_roles` grant. */}
               <div>
-                <Label htmlFor="systemRole">System Role</Label>
-                {isAdmin ? (
-                  <CustomSelect
-                    id="systemRole"
-                    value={watch('systemRole') ?? 'member'}
-                    onValueChange={(v) => setValue('systemRole', v as 'member' | 'admin')}
-                    options={[{ value: 'member', label: 'Member' }, { value: 'admin', label: 'Admin' }]}
-                  />
-                ) : (
-                  <Input id="systemRole" value="Member" disabled className="mt-1 cursor-not-allowed" />
-                )}
+                <Label htmlFor="systemRoleNote">System Role</Label>
+                <Input id="systemRoleNote" value="Member" disabled className="mt-1 cursor-not-allowed" />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {isAdmin ? 'Promote new admins or pastors here.' : 'Only admins can assign pastor or admin roles.'}
+                  Everyone is created as a member. Grant admin rights or a leadership
+                  role afterwards from Users &amp; Roles.
                 </p>
               </div>
             </div>

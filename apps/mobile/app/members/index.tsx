@@ -35,7 +35,7 @@ import {
 } from '@kairos/ui-native';
 import type { MemberWithBranchProtected } from '@kairos/types';
 import { api } from '@/lib/api-client';
-import { useCapabilities } from '@/lib/capabilities';
+import { DIRECTORY_CAPABILITIES, useCapabilities, useRequireCapability } from '@/lib/capabilities';
 
 type TypeFilter = 'all' | 'member' | 'attendee';
 type StatusFilter = 'all' | 'approved' | 'pending' | 'rejected';
@@ -68,6 +68,16 @@ export default function MembersDirectory() {
   const debouncedSearch = useDebounced(searchInput.trim(), 300);
   const caps = useCapabilities();
   const canAdmin = caps.has('signup:approve') || caps.has('branch:write');
+
+  // GET /api/members is a leadership read: a row carries email, phone, address
+  // and emergency contacts, and the endpoint now refuses a caller holding none
+  // of the directory capabilities. This screen had no gate at all, so a plain
+  // member reached it from the "Members directory" row and would now meet a
+  // 403. Gate on the same set the server does, and keep the nav row in
+  // apps/mobile/app/(tabs)/more.tsx showing exactly this rule — a row that
+  // leads to a redirect is worse than no row.
+  const canSeeDirectory = DIRECTORY_CAPABILITIES.some((cap) => caps.has(cap));
+  useRequireCapability(canSeeDirectory);
 
   const members = useInfiniteQuery({
     queryKey: [

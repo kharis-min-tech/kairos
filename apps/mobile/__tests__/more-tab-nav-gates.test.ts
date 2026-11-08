@@ -15,8 +15,8 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const APP_DIR = join(__dirname, '..');
-const MORE_TSX = join(__dirname, 'more.tsx');
+const APP_DIR = join(__dirname, '..', 'app');
+const MORE_TSX = join(APP_DIR, '(tabs)', 'more.tsx');
 
 /** Each `<NavRow …/>` in the More tab, with its label, destination and gate. */
 function navRows() {

@@ -2,13 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { signTestToken, TEST_IDS } from '../test-helpers';
 
 // RBAC Phase 1: authMiddleware now calls resolveGrants on every request.
-// Router tests use partial-mock DBs, so we stub the resolver to return [].
-// Service-level capability behavior is covered by grants.test.ts.
+// Router tests use partial-mock DBs, so the resolver is stubbed — but
+// configurably, because GET /api/members is gated on a real capability now and
+// a test has to be able to hand a caller the grant that carries it.
+const { resolveGrantsMock } = vi.hoisted(() => ({
+  resolveGrantsMock: vi.fn(async (): Promise<unknown[]> => []),
+}));
+
 vi.mock('../lib/grants', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/grants')>();
   return {
     ...actual,
-    resolveGrants: vi.fn(async () => []),
+    resolveGrants: resolveGrantsMock,
   };
 });
 
@@ -73,8 +78,11 @@ const sampleMember = {
   photoUrl: null,
   emergencyContactName: null,
   emergencyContactPhone: null,
+  emergencyContactRelationship: null,
   approvalStatus: 'approved',
   systemRole: 'member',
+  // The directory query always selects memberType; the projection keys off it.
+  memberType: 'member',
   emailVerified: true,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -87,8 +95,16 @@ const pendingMember = {
   isActive: true,
 };
 
+/** Hand the next request a single grant. */
+function grant(role: string, kind: 'branch' | 'fellowship' | 'department' | 'church', id: string) {
+  resolveGrantsMock.mockResolvedValueOnce([
+    { role, scope: { kind, id }, branchId: TEST_IDS.branchId },
+  ]);
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
+  resolveGrantsMock.mockResolvedValue([]);
 });
 
 // ── GET /api/members/me ────────────────────────────────────
@@ -117,6 +133,92 @@ describe('GET /api/members/me', () => {
 // ── GET /api/members ───────────────────────────────────────
 
 describe('GET /api/members', () => {
+  it('should return 401 without auth', async () => {
+    const res = await app.request('/api/members?page=1&limit=20');
+    expect(res.status).toBe(401);
+  });
+
+  /** Selects for a non-admin caller: guardianships, then rows, then count. */
+  function mockDirectoryRows(rows: unknown[]) {
+    mockDb.select
+      .mockReturnValueOnce(chainTo([]))
+      .mockReturnValueOnce(chainTo(rows))
+      .mockReturnValue(chainTo([{ count: rows.length }]));
+  }
+
+  // The contact fields the directory must never hand to a caller with no
+  // directory capability. Asserted as ABSENT KEYS rather than undefined
+  // values, so a future `...row` spread cannot quietly put them back.
+  const WITHHELD = [
+    'email', 'phone', 'address', 'city', 'postalCode', 'dateOfBirth',
+    'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelationship',
+    'systemRole',
+  ];
+
+  it('serves a plain member with no grant, but WITHOUT the contact fields', async () => {
+    // The route carried authMiddleware and nothing else, so any authenticated
+    // account — including a brand-new self-registered member — paged the roll
+    // with every row's email, phone, address, date of birth and all three
+    // emergency contact fields. It still answers them, because the mobile
+    // Community tab is an ordinary member-facing browse; it answers with less.
+    mockDirectoryRows([sampleMember]);
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    const row = body.data.data[0];
+
+    for (const field of WITHHELD) {
+      expect(Object.keys(row)).not.toContain(field);
+    }
+    // And what the browse surfaces actually display is all there.
+    expect(row.id).toBe(sampleMember.id);
+    expect(row.firstName).toBe('Emma');
+    expect(row.lastName).toBe('Thompson');
+    expect(row.branchName).toBe('Kharis London Central');
+    expect(row).toHaveProperty('photoUrl');
+    expect(row).toHaveProperty('memberType');
+    expect(row).toHaveProperty('isMinor');
+    expect(row).toHaveProperty('redacted');
+  });
+
+  it('serves a fellowship leader the full row', async () => {
+    // The projection must not over-tighten to branch admins: group leaders,
+    // the new-believers team, the membership programme and safeguarding all
+    // read the roll legitimately.
+    grant('FellowshipLeader', 'fellowship', TEST_IDS.fellowshipId);
+    mockDirectoryRows([sampleMember]);
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.data.data[0].email).toBe('emma@kairos.local');
+    expect(body.data.data[0].phone).toBe('+441234567891');
+  });
+
+  it('serves a branch admin of the subject branch the full row', async () => {
+    grant('BranchAdmin', 'branch', TEST_IDS.branchId);
+    mockDirectoryRows([sampleMember]);
+
+    const res = await app.request('/api/members?page=1&limit=20', {
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    const row = body.data.data[0];
+    for (const field of WITHHELD) {
+      expect(Object.keys(row)).toContain(field);
+    }
+    expect(row.emergencyContactName).toBeDefined();
+  });
+
   it('should return paginated members for admin', async () => {
     chainToParallel([sampleMember]);
 
@@ -129,6 +231,64 @@ describe('GET /api/members', () => {
     expect(body.success).toBe(true);
     expect(body.data.data).toBeDefined();
     expect(body.data.meta).toBeDefined();
+  });
+});
+
+// ── POST /api/members/import ───────────────────────────────
+
+describe('POST /api/members/import', () => {
+  it('should return 401 without auth', async () => {
+    const res = await app.request('/api/members/import', { method: 'POST' });
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects a request with no file at the validator', async () => {
+    // This route carried no zValidator at all — the handler hand-rolled the
+    // only check there was and the service trusted every CSV cell.
+    const res = await app.request('/api/members/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: new FormData(),
+    });
+
+    expect(res.status).toBe(400);
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty file at the validator', async () => {
+    const form = new FormData();
+    form.append('file', new File([''], 'members.csv', { type: 'text/csv' }));
+
+    const res = await app.request('/api/members/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: form,
+    });
+
+    expect(res.status).toBe(400);
+    expect(mockDb.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects an oversized upload before parsing a single row', async () => {
+    // Nothing bounded the upload: the handler read the whole body into a
+    // string and split it on newlines, however large it was.
+    const form = new FormData();
+    const row = 'Jane,Doe,jane@test.com\n';
+    form.append(
+      'file',
+      new File(['firstName,lastName,email\n' + row.repeat(250_000)], 'members.csv', {
+        type: 'text/csv',
+      }),
+    );
+
+    const res = await app.request('/api/members/import', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${adminToken}` },
+      body: form,
+    });
+
+    expect(res.status).toBe(400);
+    expect(mockDb.insert).not.toHaveBeenCalled();
   });
 });
 
@@ -162,8 +322,11 @@ describe('GET /api/members/:id', () => {
   it('should return 403 when member views a profile in another branch', async () => {
     // Target member lives in a different branch from the requesting member.
     const otherBranchMember = { ...sampleMember, id: TEST_IDS.pastorId, homeBranchId: 'some-other-branch' };
-    const chain = chainTo([otherBranchMember]);
-    mockDb.select.mockReturnValueOnce(chain);
+    // Two selects for a non-admin viewer: the member row, then the members
+    // this viewer is a guardian of (none).
+    mockDb.select
+      .mockReturnValueOnce(chainTo([otherBranchMember]))
+      .mockReturnValue(chainTo([]));
 
     const res = await app.request(`/api/members/${TEST_IDS.pastorId}`, {
       headers: { Authorization: `Bearer ${memberToken}` },

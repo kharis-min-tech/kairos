@@ -14,6 +14,7 @@ import {
   unguardedMinorsQuerySchema,
   reviewMinorSchema,
   setMembershipClassSchema,
+  importMembersFormSchema,
 } from './schemas';
 import {
   listMembers,
@@ -56,6 +57,30 @@ membersRouter.get('/me', async (c) => {
 
 // ── Members CRUD ───────────────────────────────────────────
 
+/**
+ * The directory answers every authenticated caller, but not with the same row.
+ *
+ * It used to carry `authMiddleware` and nothing else, and a row was the whole
+ * contact record: email, phone, address, date of birth and all three emergency
+ * contact fields. So a brand-new self-registered member could page their
+ * branch's roll in full.
+ *
+ * A capability gate here closed that and took the mobile Community tab's
+ * People segment with it — an ordinary member-facing browse on a tab every
+ * user has, which displays nothing but an avatar, a name and a branch. So the
+ * narrowing is by FIELD, not by access: `listMembers` serves the full record
+ * to a caller holding one of the directory capabilities and
+ * `MemberDirectoryCore` to everyone else, with the withheld fields absent
+ * rather than null. The row-level branch narrowing and the minor redaction are
+ * unchanged and still apply on top.
+ *
+ * What this endpoint now guarantees: a caller receives a field only if they
+ * hold a grant that needs it, or the surface they are on displays it.
+ *
+ * The leader-facing directory screen — which does show contact details, and
+ * offers approvals and exports — is a separate surface, gated client-side on
+ * the same capability list (`apps/mobile/lib/capabilities.ts`).
+ */
 membersRouter.get('/', zValidator('query', listMembersQuerySchema), async (c) => {
   const auth = getAuth(c);
   const query = c.req.valid('query');
@@ -70,17 +95,22 @@ membersRouter.post('/', requireCapability('branch:write'), zValidator('json', cr
   return c.json(successResponse(result, 'Member created'), 201);
 });
 
-membersRouter.post('/import', requireCapability('branch:write'), async (c) => {
-  const auth = getAuth(c);
-  const body = await c.req.parseBody();
-  const file = body['file'];
-  if (!file || typeof file === 'string') {
-    return c.json({ success: false, message: 'CSV file is required' }, 400);
-  }
-  const text = await (file as File).text();
-  const result = await importMembers(db, text, auth);
-  return c.json(successResponse(result, 'Import complete'), 201);
-});
+// This route had no validator at all — the handler hand-rolled the only
+// check there was (file present and not a string). zValidator now owns the
+// upload's shape, and `importMembers` validates each CSV row against
+// `importMemberRowSchema` before it reaches the insert.
+membersRouter.post(
+  '/import',
+  requireCapability('branch:write'),
+  zValidator('form', importMembersFormSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { file } = c.req.valid('form');
+    const text = await file.text();
+    const result = await importMembers(db, text, auth);
+    return c.json(successResponse(result, 'Import complete'), 201);
+  },
+);
 
 membersRouter.get('/export', requireCapability('branch:write'), async (c) => {
   const auth = getAuth(c);

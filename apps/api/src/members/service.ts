@@ -5,10 +5,11 @@ import { members, memberRoles, memberGuardians, roles, branches, fellowshipMembe
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD, CHURCH_SCOPE_ID, RoleScopeKind } from '@kairos/types';
+import type { Capability } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
-import { authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
+import { authHasAnyCapability, authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent } from '../audit/service';
@@ -24,6 +25,7 @@ import {
   randomTokenHex,
   logger,
 } from '@kairos/utils';
+import { importMemberRowSchema } from './schemas';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
   if (auth.systemRole === 'admin') return;
@@ -34,8 +36,6 @@ function enforceMemberAccess(auth: AuthContext, memberId: string) {
 }
 
 // ── Minor data protection ─────────────────────────────────
-// The seeded role that grants safeguarding access to minor records.
-const SAFEGUARDING_LEAD_ROLE = 'Safeguarding Lead';
 
 // Sensitive member fields that are nulled out when a minor record is redacted.
 const REDACTABLE_FIELDS = [
@@ -57,49 +57,24 @@ type SafeguardingSubject = {
 };
 
 /**
- * Resolve, ONCE per request, the set of branchIds where the viewer holds an
- * active Safeguarding Lead role. Admin/pastor short-circuit (they see all) and
- * don't trigger the query. Used by the list path to avoid an N+1.
- */
-async function getViewerSafeguardingBranches(
-  db: Database,
-  auth: AuthContext,
-): Promise<Set<string>> {
-  if (authHasCapability(auth, 'branch:read')) {
-    return new Set();
-  }
-  const rows = await db
-    .select({ branchId: memberRoles.branchId })
-    .from(memberRoles)
-    .innerJoin(roles, eq(memberRoles.roleId, roles.id))
-    .where(
-      and(
-        eq(memberRoles.memberId, auth.memberId),
-        eq(memberRoles.isActive, true),
-        eq(roles.roleName, SAFEGUARDING_LEAD_ROLE),
-        eq(roles.isActive, true),
-      ),
-    );
-  return new Set(rows.map((r) => r.branchId));
-}
-
-/**
  * Resolve, ONCE per request, the members this viewer is an active guardian of.
  *
  * Guardianship used to be a single column on the member row, so the list path
  * could read it straight off the row it had already selected. It is a join
  * table now (0056 — a child can have two parents and often a carer as well),
- * so the set is resolved up front for the same reason the Safeguarding Lead
- * branches are: the alternative is a query per row.
+ * so the set is resolved up front: the alternative is a query per row.
  *
- * Admin/pastor short-circuit — they already see everything, so the query is
- * pointless for them.
+ * Only a platform admin short-circuits. This used to test `branch:read`
+ * unscoped, which handed an EMPTY set to every branch admin on the reasoning
+ * that they "see everything anyway" — true only while the gate below was
+ * unscoped. Narrowing the gate made that false, and a branch admin would have
+ * lost access to their OWN child's record.
  */
 async function getViewerGuardedMemberIds(
   db: Database,
   auth: AuthContext,
 ): Promise<Set<string>> {
-  if (authHasCapability(auth, 'branch:read')) {
+  if (auth.systemRole === 'admin') {
     return new Set();
   }
   const rows = await db
@@ -115,37 +90,139 @@ async function getViewerGuardedMemberIds(
 }
 
 /**
- * In-memory safeguarding-access check given a pre-resolved capability set.
- * True when the viewer is admin/pastor, the member's guardian, or holds an
- * active Safeguarding Lead role scoped to the member's home branch.
+ * Safeguarding sight of one member: their health record, and their unredacted
+ * personal fields.
+ *
+ * The surface is split, not the capability. Health records are safeguarding
+ * data and need a safeguarding grant; the directory is branch administration
+ * and needs a branch grant (see `hasDirectoryAccess`). One predicate used to
+ * answer both with an UNSCOPED `branch:read`, which is true for any holder on
+ * ANY branch — so a BranchAdmin or BranchDataAdmin of one branch could read
+ * and write every child's health record in the church.
+ *
+ * Checking the capability rather than looking up a role name also fixes two
+ * pre-existing lockouts for free. The old resolver matched
+ * `roles.roleName = 'Safeguarding Lead'` exactly, so it missed:
+ *  - SafeguardingHead, whose church grant carries `safeguarding:read` — a
+ *    church grant satisfies a branch target (the matcher is asymmetric by
+ *    design; the reverse never holds), so church-wide escalation now works;
+ *  - the derived BranchPastor grant synthesised in `lib/grants.ts`, which
+ *    carries `safeguarding:read` for the pastor's own branch.
+ * Both are the people this data exists for, and neither could reach it.
+ *
+ * `cap` is `safeguarding:write` for the upsert path — the first place that
+ * capability is enforced anywhere in the API.
  */
-function hasSafeguardingAccessWith(
+function hasHealthRecordAccess(
   auth: AuthContext,
   member: SafeguardingSubject,
-  safeguardingBranches: Set<string>,
   guardedMemberIds: Set<string>,
+  cap: 'safeguarding:read' | 'safeguarding:write' = 'safeguarding:read',
 ): boolean {
-  if (authHasCapability(auth, 'branch:read')) return true;
+  if (auth.systemRole === 'admin') return true;
   // ANY active guardian, not "the" guardian — that is the whole point of 0056.
+  // Branch-independent on purpose: a guardian active in another branch must
+  // still reach their own child.
   if (guardedMemberIds.has(member.id)) return true;
-  return safeguardingBranches.has(member.homeBranchId);
+  return authHasCapability(auth, cap, { kind: 'branch', id: member.homeBranchId });
 }
 
 /**
- * Async single-member safeguarding-access check (detail / health-record path).
- * Resolves the viewer's Safeguarding Lead branches then evaluates in memory.
+ * Directory sight of one member: their row in the roll, and their unredacted
+ * personal fields on the detail page.
+ *
+ * Safeguarding sight implies directory sight — anyone trusted with the health
+ * record is trusted with the name and date of birth beside it.
+ *
+ * This keeps `branch:read`, scoped to the subject's branch, deliberately.
+ * Editing a member is gated on `branch:write`, which both BranchAdmin and
+ * BranchDataAdmin hold, and redaction nulls fields rather than hiding them: a
+ * branch admin narrowed out of a child's record would open the edit form,
+ * see dateOfBirth / phone / address as empty, press Save and blank the record.
+ * A viewer who may write a field has to be able to read it.
  */
-async function hasSafeguardingAccess(
-  db: Database,
+function hasDirectoryAccess(
   auth: AuthContext,
   member: SafeguardingSubject,
-): Promise<boolean> {
-  if (authHasCapability(auth, 'branch:read')) return true;
-  const [branches, guarded] = await Promise.all([
-    getViewerSafeguardingBranches(db, auth),
-    getViewerGuardedMemberIds(db, auth),
-  ]);
-  return hasSafeguardingAccessWith(auth, member, branches, guarded);
+  guardedMemberIds: Set<string>,
+): boolean {
+  if (hasHealthRecordAccess(auth, member, guardedMemberIds)) return true;
+  return authHasCapability(auth, 'branch:read', { kind: 'branch', id: member.homeBranchId });
+}
+
+/**
+ * The capabilities that earn a FULL directory row.
+ *
+ * Every grant with a real reason to read the roll: branch admins and the
+ * approval queue, fellowship and department leaders picking members into their
+ * group, the membership-class programme, the new-believers team choosing a
+ * mentor, and safeguarding. Mirrored in `apps/mobile/lib/capabilities.ts`,
+ * which gates the dedicated leader-facing directory screen.
+ */
+const DIRECTORY_CAPABILITIES = [
+  'branch:read',
+  'signup:approve',
+  'fellowship:read',
+  'department:read',
+  'membership:admin',
+  'membership:branch:read',
+  'newbelievers:mentor',
+  'newbelievers:teach',
+  'safeguarding:read',
+] as const satisfies readonly Capability[];
+
+/**
+ * The only fields a caller without a directory capability receives.
+ *
+ * An allowlist, not a blocklist: a field added to the query later is withheld
+ * by default rather than leaking until someone notices. These are exactly what
+ * the member-facing browse surfaces display — an avatar, a name, and the
+ * branch underneath it.
+ */
+const DIRECTORY_CORE_FIELDS = [
+  'id',
+  'firstName',
+  'lastName',
+  'photoUrl',
+  'homeBranchId',
+  'branchName',
+  'memberType',
+  // Minor protection is applied BEFORE the projection and its verdict is part
+  // of the contract, so these two travel with the core.
+  'isMinor',
+  'redacted',
+] as const;
+
+/**
+ * Narrow a directory row to the core when the caller holds no directory
+ * capability.
+ *
+ * `GET /api/members` had no authorization at all: any authenticated account,
+ * including a brand-new self-registered member, could page the roll and every
+ * row carried email, phone, address, date of birth and all three emergency
+ * contact fields. Gating the whole endpoint would have closed the leak and
+ * taken the mobile Community tab's People segment with it, because that is an
+ * ordinary member-facing browse. Least privilege by projection instead: the
+ * rows a member can reach are unchanged, the fields they carry are not.
+ *
+ * Withheld fields are ABSENT from the object rather than set to null, so no
+ * reader can confuse "not sent to you" with "not recorded".
+ */
+type DirectoryCoreKey = (typeof DIRECTORY_CORE_FIELDS)[number];
+
+/** Core fields stay required; everything else becomes optional. */
+type ProjectedRow<T> = Partial<T> & Pick<T, Extract<keyof T, DirectoryCoreKey>>;
+
+function projectDirectoryRow<T extends Record<string, unknown>>(
+  row: T,
+  full: boolean,
+): ProjectedRow<T> {
+  if (full) return row;
+  const core = {} as Record<string, unknown>;
+  for (const field of DIRECTORY_CORE_FIELDS) {
+    if (field in row) core[field] = row[field];
+  }
+  return core as ProjectedRow<T>;
 }
 
 /**
@@ -261,13 +338,10 @@ export async function listMembers(
   const where = and(...conditions);
   const offset = (query.page - 1) * query.limit;
 
-  // Resolve the viewer's safeguarding capability ONCE up front (admin/pastor
-  // short-circuit to an empty set without a query), then evaluate per-row in
-  // memory to avoid an N+1 across the list.
-  const [safeguardingBranches, guardedMemberIds] = await Promise.all([
-    getViewerSafeguardingBranches(db, auth),
-    getViewerGuardedMemberIds(db, auth),
-  ]);
+  // Resolve the viewer's guardianships ONCE up front, then evaluate per-row in
+  // memory to avoid an N+1 across the list. Capabilities need no query — the
+  // grants are already on the auth context.
+  const guardedMemberIds = await getViewerGuardedMemberIds(db, auth);
 
   const [rows, [total]] = await Promise.all([
     db
@@ -309,8 +383,16 @@ export async function listMembers(
     db.select({ count: count() }).from(members).where(where),
   ]);
 
+  // Decided once per request, not per row: does this caller have any business
+  // reading the roll in full? The row-level branch narrowing above is
+  // unchanged either way — this governs which FIELDS come back, not which rows.
+  const fullRows = authHasAnyCapability(auth, ...DIRECTORY_CAPABILITIES);
+
   const data = rows.map((row) =>
-    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches, guardedMemberIds)),
+    projectDirectoryRow(
+      applyMinorProtection(row, hasDirectoryAccess(auth, row, guardedMemberIds)),
+      fullRows,
+    ),
   );
 
   return {
@@ -365,28 +447,29 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
 
   if (!member) throw new NotFoundError('Member not found');
 
-  const isPrivileged = authHasCapability(auth, 'branch:read');
   const isSelf = auth.memberId === memberId;
+  // Scoped to the SUBJECT's branch. This was an unscoped `branch:read`, so a
+  // branch admin of any one branch read every child's unredacted record across
+  // the whole church — and it sat ahead of the safeguarding check below, which
+  // is why scoping that check alone did not close this path.
+  const guardedMemberIds = isSelf ? new Set<string>() : await getViewerGuardedMemberIds(db, auth);
 
-  // Admin/pastor and the member themselves always get the full record.
-  if (isPrivileged || isSelf) {
+  // The member themselves, and anyone with directory sight of them (which
+  // safeguarding sight implies), get the full record.
+  if (isSelf || hasDirectoryAccess(auth, member, guardedMemberIds)) {
     return applyMinorProtection(member, true);
   }
 
   // Non-privileged, non-self readers:
-  //  - ADULT records keep the original strict gate (admin/pastor/self only) so
+  //  - ADULT records keep the original strict gate (privileged/self only) so
   //    this feature doesn't newly expose adults' address / emergency contacts.
-  //  - MINOR records follow the safeguarding model: the linked guardian (branch-
-  //    independent) and Safeguarding Leads scoped to the child's branch get the
-  //    full record; other same-branch viewers get a REDACTED stub (name/branch,
-  //    no DOB/contact); out-of-branch viewers are denied.
+  //  - MINOR records get a REDACTED stub (name/branch, no DOB/contact) for a
+  //    same-branch viewer; out-of-branch viewers are denied. Guardians and
+  //    safeguarding holders never reach here — `hasDirectoryAccess` above
+  //    already returned true for them, branch-independently in the guardian's
+  //    case.
   if (!isMinorMember({ memberType: member.memberType, dateOfBirth: member.dateOfBirth })) {
     throw new ForbiddenError('You can only access your own profile');
-  }
-  // Guardian / SG-Lead access is evaluated BEFORE the branch gate — a guardian
-  // active in another branch must still reach their own child's record.
-  if (await hasSafeguardingAccess(db, auth, member)) {
-    return applyMinorProtection(member, true);
   }
   if (member.homeBranchId !== auth.branchId) {
     throw new ForbiddenError('You can only access members in your branch');
@@ -885,12 +968,22 @@ export async function createMember(
     emergencyContactName?: string;
     emergencyContactPhone?: string;
     emergencyContactRelationship?: string;
-    systemRole?: string;
+    // No `systemRole`. It is never taken from caller input — see
+    // `createMemberSchema`. Global admin comes from a grant, not a form field.
   },
   auth: AuthContext,
 ) {
   if (!authHasCapability(auth, 'branch:read')) {
     throw new ForbiddenError('Only admins and pastors can create members');
+  }
+
+  // The route gate is capability-wide, not branch-bound, and nothing here
+  // used to look at `homeBranchId` — so a BranchAdmin for one branch could
+  // write members into any other by naming its id (directly, or a cell at a
+  // time through the CSV import). Platform admins short-circuit this inside
+  // `authHasCapability`.
+  if (!authHasCapability(auth, 'branch:write', { kind: 'branch', id: input.homeBranchId })) {
+    throw new ForbiddenError('You cannot create members in this branch');
   }
 
   // Check for existing email
@@ -939,7 +1032,9 @@ export async function createMember(
       passwordHash,
       emailVerified: true,
       approvalStatus: 'approved',
-      systemRole: input.systemRole ?? 'member',
+      // Always 'member'. The only other value is 'admin', and that is a
+      // grant decision made on the roles surface, never a create-form field.
+      systemRole: 'member',
       // Phase 2: admin-add lands as an attendee; the admin must explicitly
       // mark the membership class as completed afterwards. This matches
       // self-signup behaviour — neither path auto-confers Member status.
@@ -1082,11 +1177,12 @@ async function loadMemberForSafeguarding(
   db: Database,
   memberId: string,
   auth: AuthContext,
+  cap: 'safeguarding:read' | 'safeguarding:write' = 'safeguarding:read',
 ): Promise<SafeguardingSubject & { id: string }> {
   // Resolve by id only — NOT filtered by the viewer's branch. Safeguarding
   // access is branch-independent for a guardian, and scoped to the MEMBER's
   // branch (not the viewer's) for a Safeguarding Lead; both are decided by
-  // hasSafeguardingAccess below. Pre-filtering on auth.branchId here would lock
+  // hasHealthRecordAccess below. Pre-filtering on auth.branchId here would lock
   // out a guardian whose active branch differs from their child's home branch.
   const [member] = await db
     .select({
@@ -1100,8 +1196,8 @@ async function loadMemberForSafeguarding(
 
   if (!member) throw new NotFoundError('Member not found');
 
-  const hasAccess = await hasSafeguardingAccess(db, auth, member);
-  if (!hasAccess) {
+  const guardedMemberIds = await getViewerGuardedMemberIds(db, auth);
+  if (!hasHealthRecordAccess(auth, member, guardedMemberIds, cap)) {
     throw new ForbiddenError('You do not have safeguarding access to this member');
   }
 
@@ -1138,7 +1234,9 @@ export async function upsertHealthRecord(
   },
   auth: AuthContext,
 ): Promise<MemberHealthRecord> {
-  const member = await loadMemberForSafeguarding(db, memberId, auth);
+  // Writing a health record needs `safeguarding:write`, not merely read — the
+  // first place that capability is enforced in the API.
+  const member = await loadMemberForSafeguarding(db, memberId, auth, 'safeguarding:write');
 
   // Stamp consent provenance only when a consent flag is actually provided.
   const consentProvided =
@@ -1190,11 +1288,11 @@ export async function listUnguardedMinors(
 ) {
   const branchId = query.branchId ?? auth.branchId;
 
-  if (!authHasCapability(auth, 'branch:read')) {
-    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
-    if (!safeguardingBranches.has(branchId)) {
-      throw new ForbiddenError('You need safeguarding access to view this list');
-    }
+  // A safeguarding surface, so it takes a safeguarding grant scoped to the
+  // branch being asked about. It used to accept an UNSCOPED `branch:read`,
+  // which let a branch admin of any branch list any other branch's minors.
+  if (!authHasCapability(auth, 'safeguarding:read', { kind: 'branch', id: branchId })) {
+    throw new ForbiddenError('You need safeguarding access to view this list');
   }
 
   // "Unguarded" now means: no active guardian link pointing at an active adult.
@@ -1284,11 +1382,11 @@ export async function listDormantMinors(
 ) {
   const branchId = query.branchId ?? auth.branchId;
 
-  if (!authHasCapability(auth, 'branch:read')) {
-    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
-    if (!safeguardingBranches.has(branchId)) {
-      throw new ForbiddenError('You need safeguarding access to view this list');
-    }
+  // A safeguarding surface, so it takes a safeguarding grant scoped to the
+  // branch being asked about. It used to accept an UNSCOPED `branch:read`,
+  // which let a branch admin of any branch list any other branch's minors.
+  if (!authHasCapability(auth, 'safeguarding:read', { kind: 'branch', id: branchId })) {
+    throw new ForbiddenError('You need safeguarding access to view this list');
   }
 
   const reviewer = alias(members, 'reviewer');
@@ -1381,13 +1479,11 @@ export async function reviewMinor(
     throw new ConflictError('Member is already inactive');
   }
 
-  // Authorization mirrors listDormantMinors — admin/pastor short-circuit, SG
-  // Lead must hold safeguarding access to this branch.
-  if (!authHasCapability(auth, 'branch:read')) {
-    const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
-    if (!safeguardingBranches.has(row.homeBranchId)) {
-      throw new ForbiddenError('You need safeguarding access for this branch');
-    }
+  // This archives a child's record, so it takes `safeguarding:write` scoped to
+  // the child's own branch. It used to accept an UNSCOPED `branch:read`, which
+  // let a branch admin of any branch archive a minor in any other.
+  if (!authHasCapability(auth, 'safeguarding:write', { kind: 'branch', id: row.homeBranchId })) {
+    throw new ForbiddenError('You need safeguarding access for this branch');
   }
 
   const [updated] = await db
@@ -1432,6 +1528,18 @@ function parseCSVLine(line: string): string[] {
   return values;
 }
 
+/**
+ * CSV gives absent values as empty strings. Drop them so Zod's `.optional()`
+ * applies rather than failing an empty cell against `.uuid()` / `.email()`.
+ */
+function stripBlanks(row: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (v !== '') out[k] = v;
+  }
+  return out;
+}
+
 export async function importMembers(
   db: Database,
   csvText: string,
@@ -1455,28 +1563,42 @@ export async function importMembers(
         row[h] = values[idx] ?? '';
       });
 
-      if (!row['firstName'] || !row['lastName'] || !row['email']) {
-        errors.push(`Row ${i + 1}: firstName, lastName, and email are required`);
+      // Every cell used to go through untouched — the route carried no
+      // validator and the service read `row['systemRole']` and
+      // `row['homeBranchId']` straight into the insert. Validate the row
+      // against the same shape rules the single-create route enforces, and
+      // report failures per row so one bad line doesn't sink the file.
+      const parsed = importMemberRowSchema.safeParse(stripBlanks(row));
+      if (!parsed.success) {
+        errors.push(`Row ${i + 1}: ${parsed.error.issues.map((is) => is.message).join('; ')}`);
         continue;
       }
+      const data = parsed.data;
 
       await createMember(
         db,
         {
-          firstName: row['firstName']!,
-          lastName: row['lastName']!,
-          email: row['email']!,
-          homeBranchId: row['homeBranchId'] || auth.branchId,
-          phone: row['phone'] || undefined,
-          gender: (row['gender'] as 'Male' | 'Female') || undefined,
-          dateOfBirth: row['dateOfBirth'] || undefined,
-          middleName: row['middleName'] || undefined,
-          address: row['address'] || undefined,
-          city: row['city'] || undefined,
-          emergencyContactName: row['emergencyContactName'] || undefined,
-          emergencyContactPhone: row['emergencyContactPhone'] || undefined,
-          emergencyContactRelationship: row['emergencyContactRelationship'] || undefined,
-          systemRole: row['systemRole'] || undefined,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          // A blank column still falls back to the importer's own branch.
+          // A named one is honoured only if they have authority over it —
+          // `createMember` checks, and throws into the per-row catch below.
+          homeBranchId: data.homeBranchId ?? auth.branchId,
+          ...(data.phone ? { phone: data.phone } : {}),
+          ...(data.gender ? { gender: data.gender } : {}),
+          ...(data.dateOfBirth ? { dateOfBirth: data.dateOfBirth } : {}),
+          ...(data.middleName ? { middleName: data.middleName } : {}),
+          ...(data.address ? { address: data.address } : {}),
+          ...(data.city ? { city: data.city } : {}),
+          ...(data.postalCode ? { postalCode: data.postalCode } : {}),
+          ...(data.emergencyContactName ? { emergencyContactName: data.emergencyContactName } : {}),
+          ...(data.emergencyContactPhone ? { emergencyContactPhone: data.emergencyContactPhone } : {}),
+          ...(data.emergencyContactRelationship
+            ? { emergencyContactRelationship: data.emergencyContactRelationship }
+            : {}),
+          // No systemRole. A `systemRole` column in the CSV is ignored, not
+          // obeyed — it used to let an importer mint admins in bulk.
         },
         auth,
       );
@@ -1494,9 +1616,49 @@ function escapeCSV(value: unknown): string {
   return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+/**
+ * The branches this caller actually holds `branch:write` on.
+ *
+ * `auth.branchId` is the ACTIVE branch, not the authority branch:
+ * `getActiveBranchId` returns `secondaryBranchId` whenever the member is at
+ * their secondary branch. Anything that filters on it is asking "where are
+ * they standing", when the question is "what may they touch" — and for an
+ * export those differ in the dangerous direction, handing a branch admin
+ * toggled to a secondary branch that branch's roll.
+ *
+ * Candidates come from the grants themselves and are then put through the one
+ * matcher, so the role→capability mapping is never restated here. A
+ * church-scoped grant names no branch and so contributes no candidate, which
+ * is right: no church role carries `branch:write`.
+ */
+function branchesCallerCanWrite(auth: AuthContext): string[] {
+  const candidates = new Set<string>();
+  for (const grant of auth.grants ?? []) {
+    if (grant.scope.kind === 'branch') candidates.add(grant.scope.id);
+    if (grant.branchId) candidates.add(grant.branchId);
+  }
+  return [...candidates].filter((id) =>
+    authHasCapability(auth, 'branch:write', { kind: 'branch', id }),
+  );
+}
+
 export async function exportMembersCsv(db: Database, auth: AuthContext): Promise<string> {
+  let scopeCondition: SQL | undefined;
+  if (auth.systemRole !== 'admin') {
+    const writable = branchesCallerCanWrite(auth);
+    if (writable.length === 0) {
+      throw new ForbiddenError('You have no branch to export');
+    }
+    scopeCondition = inArray(members.homeBranchId, writable);
+  }
+
   const rows = await db
     .select({
+      // id / homeBranchId / memberType are not exported — they are what the
+      // redaction below keys off. Without them every row went out raw.
+      id: members.id,
+      homeBranchId: members.homeBranchId,
+      memberType: members.memberType,
       firstName: members.firstName,
       lastName: members.lastName,
       email: members.email,
@@ -1515,12 +1677,17 @@ export async function exportMembersCsv(db: Database, auth: AuthContext): Promise
     })
     .from(members)
     .innerJoin(branches, eq(members.homeBranchId, branches.id))
-    .where(
-      auth.systemRole === 'admin'
-        ? eq(members.isActive, true)
-        : and(eq(members.isActive, true), eq(members.homeBranchId, auth.branchId)),
-    )
+    .where(and(eq(members.isActive, true), ...(scopeCondition ? [scopeCondition] : [])))
     .orderBy(members.lastName, members.firstName);
+
+  // The export carried NO redaction at all, so a minor's date of birth and
+  // emergency contacts left through the CSV even where the directory would
+  // have nulled them. Run every row through the same gate the screen uses —
+  // the file must never be more generous than the page it came from.
+  const guardedMemberIds = await getViewerGuardedMemberIds(db, auth);
+  const redacted = rows.map((row) =>
+    applyMinorProtection(row, hasDirectoryAccess(auth, row, guardedMemberIds)),
+  );
 
   const headers = [
     'firstName', 'lastName', 'email', 'phone', 'gender', 'dateOfBirth',
@@ -1530,7 +1697,7 @@ export async function exportMembersCsv(db: Database, auth: AuthContext): Promise
 
   const lines = [
     headers.join(','),
-    ...rows.map((r) => headers.map((h) => escapeCSV((r as Record<string, unknown>)[h])).join(',')),
+    ...redacted.map((r) => headers.map((h) => escapeCSV((r as Record<string, unknown>)[h])).join(',')),
   ];
 
   return lines.join('\n');

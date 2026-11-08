@@ -82,6 +82,25 @@ export function useCapabilities() {
  * predicate however they like (system-admin OR branch grant, or a chain of
  * cap checks). Default fallback route = the tab home.
  */
+/**
+ * The capabilities `GET /api/members` accepts. The directory is a leadership
+ * read — a row carries email, phone, address and emergency contacts — so the
+ * endpoint refuses a caller holding none of these. Kept here, in one place, so
+ * the screen's own guard and the nav row that leads to it cannot drift apart:
+ * a row that leads straight to a redirect is worse than no row.
+ */
+export const DIRECTORY_CAPABILITIES = [
+  'branch:read',
+  'signup:approve',
+  'fellowship:read',
+  'department:read',
+  'membership:admin',
+  'membership:branch:read',
+  'newbelievers:mentor',
+  'newbelievers:teach',
+  'safeguarding:read',
+] as const;
+
 export function useRequireCapability(
   allowed: boolean,
   redirectTo: string = '/(tabs)',

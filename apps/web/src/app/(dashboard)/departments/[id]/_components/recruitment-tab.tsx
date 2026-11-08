@@ -43,7 +43,7 @@ import {
 import { isAwaitingAction } from '@kairos/types';
 import type {
   DepartmentJoinRequestWithMember,
-  MemberWithBranch,
+  MemberWithBranchProtected,
 } from '@kairos/types';
 import {
   canDragRecruitmentRequest,
@@ -126,7 +126,7 @@ function interviewerName(r: DepartmentJoinRequestWithMember): string | null {
 interface Props {
   branchDeptId: string;
   defaultProbationDays: number;
-  branchMembers: MemberWithBranch[];
+  branchMembers: MemberWithBranchProtected[];
   joinRequests: DepartmentJoinRequestWithMember[];
   canManage: boolean;
 }
@@ -1032,7 +1032,7 @@ function ScheduleInterviewDialog({
 }: {
   branchDeptId: string;
   request: DepartmentJoinRequestWithMember;
-  branchMembers: MemberWithBranch[];
+  branchMembers: MemberWithBranchProtected[];
   onClose: () => void;
   mutation: ReturnType<typeof useScheduleDepartmentInterview>;
 }) {
