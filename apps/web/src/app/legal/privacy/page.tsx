@@ -418,19 +418,28 @@ export default function PrivacyPage() {
 
       <Section title="8. Cookies and tracking">
         <p>
-          <strong>Kairos does not use cookies.</strong> To keep you signed in,
-          it stores your session token in your browser&rsquo;s local storage
-          &mdash; a private area of your own browser, on your own device. It is
-          never sent to another website, and clearing your browser data or
-          signing out removes it.
+          <strong>Kairos does not use a cookie to keep you signed in.</strong>{' '}
+          Your session is stored in your browser&rsquo;s local storage &mdash; a
+          private area of your own browser, on your own device. It is never sent
+          to another website, and signing out or clearing your browser data
+          removes it.
         </p>
         <p>
-          We do not use advertising cookies or trackers of any kind, we do not
-          run third-party analytics that follow you across the web, and we do
-          not share your usage patterns with marketing platforms. Because there
-          are no non-essential cookies or similar technologies, there is nothing
-          here that requires your consent under the Privacy and Electronic
-          Communications Regulations.
+          <strong>One cookie is used, and only during social sign-in.</strong> If
+          you sign in with Google, Microsoft or Apple, we set a single
+          short-lived cookie (<code>kairos.oauth_state</code>) that lasts ten
+          minutes and is deleted as soon as sign-in finishes. Its only job is to
+          confirm that the sign-in finishing in your browser is the one you
+          started, which is what stops someone else&rsquo;s sign-in being
+          substituted for yours. It holds no information about you.
+        </p>
+        <p>
+          We use no advertising cookies and no trackers of any kind, we do not
+          run third-party analytics that follow you across the web, and we do not
+          share your usage patterns with marketing platforms. The sign-in cookie
+          above is strictly necessary to provide a service you asked for, so
+          under the Privacy and Electronic Communications Regulations there is
+          nothing here that requires your consent.
         </p>
       </Section>
 
