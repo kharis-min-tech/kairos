@@ -438,6 +438,99 @@ describe('POST /api/me/delete-account', () => {
     expect(res.status).toBe(401);
   });
 
+  // ── DPIA risk R5 ──
+  //
+  // Scrubbing `photo_url` is not erasure: the photograph lives in Cloudflare
+  // Images and survived, permanently retrievable by anyone who had ever seen
+  // the URL and unfindable from our side. These assert that the image is now
+  // destroyed, and that an erasure which could NOT destroy it is recorded as
+  // incomplete rather than reported as success.
+  describe('destroys the profile photograph, not just the reference', () => {
+    const PHOTO = 'https://imagedelivery.net/hash-1/img-abc/public';
+
+    function arrangeErasure(photoUrl: string | null) {
+      mockDb.select.mockReturnValueOnce(
+        chainTo([
+          { id: TEST_IDS.memberId, passwordHash: '$2b$10$stub', isActive: true, photoUrl },
+        ]),
+      );
+      mockDb.update.mockReturnValueOnce(chainTo([]));
+      mockDb.delete.mockReturnValueOnce(chainTo([]));
+      // The audit insert.
+      const insertChain = chainTo([{ id: 'audit-1' }]);
+      mockDb.insert.mockReturnValueOnce(insertChain);
+      return insertChain;
+    }
+
+    async function erase() {
+      const token = await signTestToken({ memberId: TEST_IDS.memberId });
+      return app.request('/api/me/delete-account', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: 'right' }),
+      });
+    }
+
+    it('calls Cloudflare to delete the image when credentials are present', async () => {
+      process.env['CF_IMAGES_ACCOUNT_ID'] = 'acct-1';
+      process.env['CF_IMAGES_ACCOUNT_HASH'] = 'hash-1';
+      process.env['CF_IMAGES_TOKEN'] = 'tok-1';
+      const fetchSpy = vi.fn(async () => ({ ok: true, status: 200 }) as unknown as Response);
+      vi.stubGlobal('fetch', fetchSpy);
+      try {
+        arrangeErasure(PHOTO);
+        const res = await erase();
+        expect(res.status).toBe(200);
+        const calls = fetchSpy.mock.calls as unknown as Array<[string, RequestInit]>;
+        const deleteCall = calls.find(
+          (call) => typeof call[0] === 'string' && call[0].includes('/images/v1/img-abc'),
+        );
+        expect(deleteCall, 'no DELETE was issued for the stored image').toBeDefined();
+        expect(deleteCall![1].method).toBe('DELETE');
+      } finally {
+        vi.unstubAllGlobals();
+        delete process.env['CF_IMAGES_ACCOUNT_ID'];
+        delete process.env['CF_IMAGES_ACCOUNT_HASH'];
+        delete process.env['CF_IMAGES_TOKEN'];
+      }
+    });
+
+    it('records the erasure as a FAILURE when the image could not be destroyed', async () => {
+      // No credentials configured, so the image survives. The member row is
+      // still scrubbed — erasure must not be blocked by a storage problem —
+      // but the audit row has to say the erasure was incomplete, or nobody can
+      // discover that a child's photograph is still out there.
+      const insertChain = arrangeErasure(PHOTO);
+      const res = await erase();
+      expect(res.status).toBe(200);
+
+      const row = (insertChain.values as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Record<string, unknown>;
+      expect(row['action']).toBe('member_erased');
+      expect(row['outcome']).toBe('failure');
+      expect((row['metadata'] as Record<string, unknown>)['photoDeletion']).toBe('failed');
+    });
+
+    it('records success when there was no remote image to destroy', async () => {
+      const insertChain = arrangeErasure(null);
+      const res = await erase();
+      expect(res.status).toBe(200);
+
+      const row = (insertChain.values as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Record<string, unknown>;
+      expect(row['action']).toBe('member_erased');
+      expect(row['outcome']).toBe('success');
+      expect((row['metadata'] as Record<string, unknown>)['photoDeletion']).toBe('nothing-to-delete');
+    });
+
+    it('never records the erased data in the audit row', async () => {
+      const insertChain = arrangeErasure(PHOTO);
+      await erase();
+      const row = (insertChain.values as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Record<string, unknown>;
+      const serialised = JSON.stringify(row['metadata']);
+      expect(serialised).not.toContain('img-abc');
+      expect(serialised).not.toContain('imagedelivery');
+    });
+  });
+
   it('scrubs PII and returns 200 on success', async () => {
     mockDb.select.mockReturnValueOnce(
       chainTo([{ id: TEST_IDS.memberId, passwordHash: '$2b$10$stub', isActive: true }]),

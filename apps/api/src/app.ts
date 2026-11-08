@@ -41,6 +41,16 @@ export function createApp() {
     credentials: true,
   }));
 
+  // Security headers on every API response. `Referrer-Policy` is named by DPIA
+  // risk R5; `X-Content-Type-Options` is here because the CSV export routes
+  // serve attacker-influenced content (member names, form answers) as
+  // text/csv, and a sniffing browser that decides it is HTML would execute it.
+  app.use('*', async (c, next) => {
+    await next();
+    c.header('Referrer-Policy', 'no-referrer');
+    c.header('X-Content-Type-Options', 'nosniff');
+  });
+
   // Health check
   app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 

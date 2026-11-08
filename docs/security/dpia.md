@@ -441,25 +441,89 @@ actually bound (`key-management.md` §1), so the error would be silent.
 
 ### R5 — Permanent unauthenticated exposure of children's photographs
 
-**What.** `requireSignedURLs` is set to `'false'`
-(`apps/api/src/media/service.ts:41`), so every profile photo is served from
-`imagedelivery.net/{accountHash}/{imageId}/public` with no authentication and no
-expiry. The image id is a Cloudflare-generated UUID, so URLs are not
-enumerable — but any leak is permanent and **there is no delete call anywhere
-in the codebase**, so there is no revocation. The absence of a `Referrer-Policy`
-header anywhere compounds it.
+**What.** Three defects, of which **two are closed as of 8 November 2026** and
+one is not.
 
-**Harm.** A child's photograph, permanently available to anyone who ever
-obtained the URL, with no way to withdraw it — including after an erasure
-request, which nulls `photo_url` and leaves the image in place, now
-unfindable. Severe in a safeguarding context.
+*Originally:* `requireSignedURLs` was `'false'`, so every profile photo was
+served from `imagedelivery.net/{accountHash}/{imageId}/public` with no
+authentication and no expiry. The image id is a Cloudflare-generated UUID, so
+URLs are not enumerable — but any leak was permanent, because **there was no
+delete call anywhere in the codebase**, so there was no revocation at all. The
+absence of a `Referrer-Policy` header compounded it.
 
-**Likelihood: possible.** Needs no attacker — a forwarded screenshot, a logged
-URL, a referrer leak, or a CSV export passed onward.
+**CLOSED — revocation now exists.** `deleteImage` and `deleteStoredImage`
+(`apps/api/src/media/service.ts`) destroy the object in Cloudflare Images, and
+they are wired into the two places an image stops being wanted:
 
-| Likelihood | Severity | **Overall** |
-|---|---|---|
-| Possible | Severe | **HIGH** |
+- **Erasure.** `deleteMyAccount` reads `photo_url` *before* the scrub nulls it,
+  then destroys the image. Reading first matters: nulling the column was what
+  made the surviving photograph unfindable as well as undeleted.
+- **Replacement.** `updateMember` destroys the superseded image when
+  `photo_url` changes, so a replaced photo is not orphaned on a live URL.
+
+**CLOSED — the erasure is now evidence.** A new `member_erased` audit action
+(migration **0065**) records the outcome of the image deletion as `deleted`,
+`nothing-to-delete` or `failed`, and the audit row's `outcome` is **failure**
+when the image survived. This matters more than it looks: the row scrub is a
+local transaction that always succeeds, while the image deletion is a network
+call that can fail, so **the two halves of an erasure can come apart.** Before
+this the system could not tell a complete erasure from an incomplete one. The
+metadata records no erased data — an audit row preserving what was deleted
+would defeat the erasure it describes.
+
+**CLOSED — `Referrer-Policy: no-referrer`** is now set on the Pages app
+(`apps/web/public/_headers`) and on every API response, together with
+`X-Content-Type-Options: nosniff`. Being precise about scope, since this item
+listed the header as *compounding* rather than causing: it stops our pages
+leaking our own URLs, which carry member and branch UUIDs in their paths. It
+cannot govern what `imagedelivery.net` sends, because that response is not ours.
+
+**STILL OPEN — delivery is still unauthenticated.** `requireSignedURLs` remains
+`'false'`. A leaked URL still works until somebody deletes the image. The
+residual risk is therefore **a leak between upload and deletion**, rather than
+the original *permanent, unrevocable* exposure.
+
+Why it is still open rather than done: authenticated delivery means signing a
+time-limited URL on every read, and ~29 API sites return a photo URL. The
+viable implementation is Cloudflare's Images binding, whose `signedUrl()` signs
+on Cloudflare's side so **the account signing key never enters this system** —
+materially better than holding another secret. The blocker is a fact that
+cannot be established from the documentation: whether `signedUrl()` is a local
+operation or a network round-trip. A member directory page needs roughly fifty
+signatures per request, so if it is a network hop per image the approach is
+unusable and the alternative is a hand-rolled HMAC whose exact string-to-sign
+Cloudflare does not publish. **Guessing it would produce a signature that
+silently 403s every photograph in the system.** Resolving that one question is
+the next step, and it is tracked as an open decision.
+
+**Harm.** *Originally:* a child's photograph permanently available to anyone who
+ever obtained the URL, with no way to withdraw it, including after an erasure
+request. *Now:* a child's photograph available to anyone who obtains the URL
+**until the image is deleted** — and deletion now happens automatically on
+erasure and on replacement. Still severe in a safeguarding context, but no
+longer irreversible, which was the specific property that made this risk gate
+the pilot.
+
+**Likelihood: possible.** Unchanged. Needs no attacker — a forwarded
+screenshot, a logged URL, or a CSV export passed onward.
+
+| | Likelihood | Severity | **Overall** |
+|---|---|---|---|
+| **Originally** | Possible | Severe | **HIGH** |
+| **Now** | Possible | Severe | **MEDIUM** — same likelihood and severity for a single leak, but the exposure is now bounded and revocable rather than permanent |
+
+> **DECISION NEEDED: whether to require authenticated image delivery before the pilot, given that the irreversibility is now fixed.**
+> **Recommended: no — proceed with the pilot, and close it immediately after.**
+> The reason this risk gated the pilot was that applying the mitigation later
+> had no value, because a leaked URL could never be withdrawn. That is no longer
+> true: deletion exists, so a leak discovered next month can be contained next
+> month. **Deferring is now a bounded risk rather than an irreversible one.**
+> **Trade-off, stated plainly:** between now and then, any photo URL that
+> escapes works until somebody notices and deletes the image, and nothing
+> detects such an escape. For a one-branch pilot whose photographs are uploaded
+> by the families themselves, that is a risk a controller could reasonably
+> accept — **but it is the controller's to accept, not the assessor's**, and the
+> DPO should be told it is open rather than discovering it.
 
 ### R6 — Indefinite retention of everything
 
@@ -595,8 +659,13 @@ In the assessor's view, and offered as a recommendation rather than a decision:
 2. **R8, in part** — the two audit actions. Without them a breach cannot be
    scoped, and §6 cannot honestly conclude that detection is adequate.
 3. **R1, R2, R3** — merged and deployed, not merely approved.
-4. **R5** — because it is the one risk whose harm is *irreversible*: a leaked
-   photo URL cannot be withdrawn, so the mitigation has no value applied later.
+4. ~~**R5**~~ — **substantially closed 8 November 2026.** This gated the pilot
+   because its harm was *irreversible*: a leaked photo URL could not be
+   withdrawn, so mitigation had no value applied later. **Deletion now exists**
+   and runs on both erasure and replacement, and a `member_erased` audit action
+   records whether it succeeded — so the harm is now bounded and revocable.
+   Authenticated delivery remains open and is no longer a gating item for the
+   reason above; see R5 for the specific technical question blocking it.
 5. **The privacy notice corrections** — cheap, and the only item here that is
    currently telling families something untrue.
 
