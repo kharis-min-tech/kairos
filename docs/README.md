@@ -16,6 +16,12 @@ useful nor appropriate there.
 | [Observability](observability.md) | Logging shape, Sentry, and what is deliberately not instrumented yet. |
 | [Self check-in](self-check-in.md) | The stateless HMAC token behind the rotating QR code. |
 
+## Security and data protection
+
+| | |
+|---|---|
+| [Security docs](security/README.md) | Six documents written for the pre-release cyber review: key management, data retention, incident response, backup and recovery, the secure development lifecycle and threat model, and the UK GDPR mapping. Start with the index — it lists the three things to do first. |
+
 ## Working in the repo
 
 | | |
