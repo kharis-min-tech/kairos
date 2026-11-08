@@ -1,0 +1,73 @@
+version: 2
+
+# Keeping dependencies current is what stops the audit baseline in
+# .github/npm-audit-baseline.json growing. Two rules shape this config:
+#
+#   - Routine minor/patch bumps are grouped into one PR per ecosystem per week.
+#     Ungrouped, an npm monorepo this size produces dozens of PRs a week and
+#     they all get ignored together.
+#   - Security updates are deliberately NOT grouped. Every `groups` entry below
+#     is pinned to `applies-to: version-updates`, which leaves Dependabot's
+#     security PRs to be raised one advisory at a time, so a real vulnerability
+#     fix never arrives buried in a 40-package digest.
+
+updates:
+  - package-ecosystem: npm
+    # One entry covers the whole workspace tree: Dependabot reads the
+    # `workspaces` globs in the root package.json and resolves apps/* and
+    # packages/* against the single root lockfile.
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/London
+    open-pull-requests-limit: 5
+    commit-message:
+      # Conventional Commits, matching the repo's own convention.
+      prefix: chore
+      prefix-development: chore
+      include: scope
+
+    groups:
+      - name: npm-minor-and-patch
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]
+
+    # Majors on these are upgrade projects with their own testing, not
+    # dependency hygiene — and several are version-coupled to each other
+    # (next <-> @cloudflare/next-on-pages, expo <-> react-native <-> react).
+    # A Dependabot PR bumping one of them in isolation cannot pass CI, so
+    # asking for it only produces a PR someone has to close.
+    ignore:
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: '@cloudflare/next-on-pages'
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: expo
+        update-types: [version-update:semver-major]
+      - dependency-name: react-native
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/London
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: ci
+      include: scope
+
+    groups:
+      - name: github-actions
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: [minor, patch]
