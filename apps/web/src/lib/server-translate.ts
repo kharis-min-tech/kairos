@@ -1,10 +1,15 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 import en from '../../locales/en.json';
 import fr from '../../locales/fr.json';
 import kri from '../../locales/kri.json';
 import tw from '../../locales/tw.json';
-import { LANGUAGE_COOKIE, asLanguage, type LanguageCode } from '@/lib/language';
+import {
+  LANGUAGE_COOKIE,
+  LANGUAGE_HEADER,
+  asLanguage,
+  type LanguageCode,
+} from '@/lib/language';
 
 /**
  * A `t()` for `generateMetadata`, which runs on the server and so cannot use
@@ -28,8 +33,13 @@ const CATALOGUES: Record<LanguageCode, Record<string, Record<string, string>>> =
 export async function serverTranslator(): Promise<
   (key: string, fallback: string) => string
 > {
+  // Same order of authority as the root layout, so the tab title cannot
+  // disagree with the page underneath it: the path first, then the cookie.
+  const fromPath = (await headers()).get(LANGUAGE_HEADER);
   const store = await cookies();
-  const lang = asLanguage(store.get(LANGUAGE_COOKIE)?.value);
+  const lang = fromPath
+    ? asLanguage(fromPath)
+    : asLanguage(store.get(LANGUAGE_COOKIE)?.value);
   return (key, fallback) => {
     const [ns, path] = key.split(':');
     if (!ns || !path) return fallback;

@@ -9,6 +9,7 @@ import i18n, {
   storedPreference,
   type LanguagePreference,
 } from '@/lib/i18n';
+import { splitLocale, withLocale, type LanguageCode } from '@/lib/language';
 
 /**
  * Applies the saved language on the client.
@@ -45,7 +46,15 @@ export function I18nProvider({
   });
 
   useEffect(() => {
-    void i18n.changeLanguage(resolveLanguage(storedPreference())).finally(() => setReady(true));
+    // The path outranks the stored preference, for the same reason the server
+    // gives it precedence: someone opening a shared /fr link has asked for
+    // French by opening it, and their own saved choice is not an answer to
+    // that. Without this the effect would switch them straight back out of
+    // the language the URL names.
+    const fromPath = splitLocale(window.location.pathname)?.locale;
+    void i18n
+      .changeLanguage(fromPath ?? resolveLanguage(storedPreference()))
+      .finally(() => setReady(true));
 
     const onStorage = (e: StorageEvent) => {
       if (e.key !== LANGUAGE_KEY) return;
@@ -79,5 +88,32 @@ export function setLanguagePreference(pref: LanguagePreference) {
   } catch {
     // Blocked cookies: this tab still switches below.
   }
-  void i18n.changeLanguage(resolveLanguage(pref));
+  const next = resolveLanguage(pref);
+  void i18n.changeLanguage(next);
+  moveToLocale(next);
+}
+
+/**
+ * Put the chosen language in the address bar.
+ *
+ * `replaceState` rather than a navigation: the switch itself is already
+ * instant and client-side, and sending the reader through the server would
+ * blank the dashboard to change a label. This only relabels the URL they are
+ * on so it is shareable and so a refresh lands in the same language.
+ *
+ * It is deliberately not a history entry. Switching language is not a place
+ * you navigated to, and stacking entries would make Back walk through every
+ * language tried instead of leaving the page.
+ */
+function moveToLocale(lang: LanguageCode) {
+  try {
+    const url = new URL(window.location.href);
+    const next = withLocale(url.pathname, lang);
+    if (next === url.pathname) return;
+    url.pathname = next;
+    window.history.replaceState(window.history.state, '', url);
+  } catch {
+    // A URL we cannot parse is not worth failing a language change over; the
+    // cookie still carries the choice to the next document request.
+  }
 }

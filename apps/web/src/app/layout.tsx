@@ -4,8 +4,8 @@ import './globals.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Providers } from '@/components/providers';
 import { Toaster } from 'sonner';
-import { cookies } from 'next/headers';
-import { LANGUAGE_COOKIE, asLanguage } from '@/lib/language';
+import { cookies, headers } from 'next/headers';
+import { LANGUAGE_COOKIE, LANGUAGE_HEADER, asLanguage } from '@/lib/language';
 import { serverTranslator } from '@/lib/server-translate';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -34,8 +34,16 @@ export default async function RootLayout({
   // followed by a switch. 'system' cannot be resolved server-side -- the
   // browser's Accept-Language is a weaker signal than the explicit choice --
   // so it falls through to English and the client corrects it in one step.
+  //
+  // The path's language outranks the cookie: a shared /fr link has to render
+  // French for whoever opens it, not whatever their own last visit stored.
+  const fromPath = (await headers()).get(LANGUAGE_HEADER);
   const pref = (await cookies()).get(LANGUAGE_COOKIE)?.value;
-  const language = pref && pref !== 'system' ? asLanguage(pref) : 'en';
+  const language = fromPath
+    ? asLanguage(fromPath)
+    : pref && pref !== 'system'
+      ? asLanguage(pref)
+      : 'en';
 
   return (
     <html lang={language} suppressHydrationWarning>
