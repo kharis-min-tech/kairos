@@ -11,7 +11,11 @@ const tours = [
 
 const chosen = ref('member')
 const tour = () => tours.find(t => t.id === chosen.value)
-const clip = id => `/clips/${id}${LANG}`
+// Same base as SectionClip, so the role tours follow the clips wherever they
+// are served from. Spelled out in full because Vite substitutes this exact
+// expression at build time and leaves any variation of it alone.
+const CLIPS = (import.meta.env.VITE_CLIPS_BASE || '/clips').replace(/\/$/, '')
+const clip = id => `${CLIPS}/${id}${LANG}`
 </script>
 
 <style scoped>

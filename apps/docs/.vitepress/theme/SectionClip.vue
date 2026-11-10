@@ -11,7 +11,7 @@
  * approximate — the subtitles carry the real language, and they come from
  * the script rather than from anything the voice was heard to say.
  */
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useData } from 'vitepress'
 
 const props = defineProps<{ slug: string }>()
@@ -24,6 +24,31 @@ const file = computed(() => {
   const base = props.slug.replace(/\//g, '-')
   return code.value === 'en' ? base : `${base}-${code.value}`
 })
+
+/**
+ * Where the clips are served from.
+ *
+ * They are 582MB of generated video and are deliberately not in the repo, so
+ * a deploy built from a checkout alone has none of them. Pointing this at a
+ * bucket lets the site serve them without the repo carrying them. It defaults
+ * to the local path, which is what a dev server and a local build want.
+ */
+// Written out in full rather than with optional chaining: Vite substitutes
+// this exact expression at build time, and `import.meta.env?.X` is a
+// different expression that it leaves alone, which would silently ignore the
+// setting in a production build.
+const BASE = (import.meta.env.VITE_CLIPS_BASE || '/clips').replace(/\/$/, '')
+
+/**
+ * Whether this clip failed to load.
+ *
+ * A missing clip used to render as a dead player: a black box with controls
+ * that do nothing, once per section, which looks far more broken than having
+ * no video at all. If the file is not there the whole figure is dropped and
+ * the prose closes over it.
+ */
+const failed = ref(false)
+watch(file, () => { failed.value = false })
 
 
 const COPY: Record<string, { heading: string; fallback: string }> = {
@@ -49,7 +74,7 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
 </script>
 
 <template>
-  <figure class="section-clip">
+  <figure v-if="!failed" class="section-clip">
     <figcaption class="section-clip__head">
       {{ t.heading }}
     </figcaption>
@@ -61,9 +86,10 @@ const t = computed(() => COPY[code.value] ?? COPY.en)
       playsinline
       width="1920"
       height="1080"
-      :poster="`/clips/${file}.jpg`"
+      :poster="`${BASE}/${file}.jpg`"
+      :src="`${BASE}/${file}.mp4`"
+      @error="failed = true"
     >
-      <source :src="`/clips/${file}.mp4`" type="video/mp4" />
       {{ t.fallback }}
     </video>
   </figure>
