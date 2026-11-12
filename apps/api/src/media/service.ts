@@ -117,10 +117,22 @@ interface CfDirectUploadResponse {
  */
 export function extractCfImageId(stored: string | null | undefined): string | null {
   if (!stored) return null;
-  // Cheap reject before constructing a URL — data URIs are up to 270KB.
-  if (!stored.includes('imagedelivery.net')) return null;
+  // Cheap reject before constructing a URL — data URIs are up to 270KB, and
+  // `new URL()` on one of those parses the whole payload to no purpose.
+  //
+  // This filters on the SCHEME, not on a substring of the host. It used to
+  // read `!stored.includes('imagedelivery.net')`, which CodeQL flagged (High,
+  // "incomplete URL substring sanitization") because that is the shape of a
+  // real vulnerability: `evil.com/imagedelivery.net` and
+  // `imagedelivery.net.evil.com` both contain the string. It was not actually
+  // exploitable here — the hostname check below is an exact comparison and is
+  // what decides — but a substring test against a host is a pattern to keep
+  // out of the codebase whether or not today's version is reachable, and a
+  // standing High alert makes the security tab less readable for everyone.
+  if (!stored.startsWith('http://') && !stored.startsWith('https://')) return null;
   try {
     const url = new URL(stored);
+    // Exact host. This is the check that matters.
     if (url.hostname !== 'imagedelivery.net') return null;
     // Path is /{accountHash}/{imageId}/{variant}
     const parts = url.pathname.split('/').filter(Boolean);

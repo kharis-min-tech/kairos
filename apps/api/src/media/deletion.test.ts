@@ -44,6 +44,24 @@ describe('extractCfImageId', () => {
     expect(extractCfImageId('https://imagedelivery.net.evil.test/hash/img-abc/public')).toBeNull();
   });
 
+  // The two shapes CodeQL named when it flagged the old substring pre-filter.
+  // Neither was ever exploitable — the hostname comparison is exact — but they
+  // are the cases a substring test gets wrong, so they are pinned.
+  it('is not fooled by the delivery domain appearing in the path or the userinfo', () => {
+    expect(extractCfImageId('https://evil.test/imagedelivery.net/hash/img-abc/public')).toBeNull();
+    expect(extractCfImageId('https://evil.test/?x=imagedelivery.net')).toBeNull();
+    expect(extractCfImageId('https://imagedelivery.net@evil.test/hash/img-abc/public')).toBeNull();
+  });
+
+  it('rejects anything that is not an http(s) URL without parsing it', () => {
+    // A data URI is up to 270KB; the scheme filter is what keeps it from
+    // reaching `new URL()`.
+    expect(extractCfImageId('data:text/plain,imagedelivery.net')).toBeNull();
+    expect(extractCfImageId('ftp://imagedelivery.net/hash/img-abc/public')).toBeNull();
+    expect(extractCfImageId('//imagedelivery.net/hash/img-abc/public')).toBeNull();
+    expect(extractCfImageId('imagedelivery.net/hash/img-abc/public')).toBeNull();
+  });
+
   it('returns null for empty, null and undefined', () => {
     expect(extractCfImageId('')).toBeNull();
     expect(extractCfImageId(null)).toBeNull();
