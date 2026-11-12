@@ -2,10 +2,14 @@
   "$comment": [
     "Known high/critical npm advisories accepted as debt, so CI can gate on NEW ones.",
     "Regenerate with: node .github/scripts/audit-gate.mjs --update",
-    "This is a debt register. Shrink it; do not pad it to make CI green."
+    "This is a debt register. Shrink it; do not pad it to make CI green.",
+    "EVERY CRITICAL IN THIS FILE NEEDS A REACHABILITY NOTE in",
+    "docs/security/secure-sdlc.md \"The accepted criticals\" — an auditor reading",
+    "\"unauthenticated RCE, accepted\" with no rationale will rightly escalate it.",
+    "This array is regenerated, so write the rationale in that document, not here."
   ],
   "threshold": "high",
-  "generated": "2026-11-08",
+  "generated": "2026-11-12",
   "accepted": [
     {
       "id": "GHSA-23c5-xmqv-rm74",
@@ -86,6 +90,14 @@
         "nanoid"
       ],
       "title": "nanoid: custom generators can loop indefinitely when size is zero"
+    },
+    {
+      "id": "GHSA-2vgq-wchc-25w7",
+      "severity": "low",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: Incomplete PKCS#7 padding validation in AES/DES CBC and ECB decryption"
     },
     {
       "id": "GHSA-2xp9-vwfh-vxw4",
@@ -296,6 +308,14 @@
       "title": "Forge: X.509 basicConstraints bypass in verifyCertificateChain() via deprecated extension OIDs 2.5.29.10 and 2.5.29.13"
     },
     {
+      "id": "GHSA-6889-vf6x-f3g5",
+      "severity": "low",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: Ed25519 signature verification accepts small-order public keys"
+    },
+    {
       "id": "GHSA-68fv-2mgg-jv7q",
       "severity": "high",
       "modules": [
@@ -310,6 +330,14 @@
         "vite"
       ],
       "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows"
+    },
+    {
+      "id": "GHSA-6cv4-p8m7-4r25",
+      "severity": "moderate",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: ReDoS in forge.http response header and cookie trimming"
     },
     {
       "id": "GHSA-6g55-p6wh-862q",
@@ -358,6 +386,14 @@
         "@xmldom/xmldom"
       ],
       "title": "xmldom: HTML raw-text closing-tag case mismatch causes output amplification"
+    },
+    {
+      "id": "GHSA-6qrw-m8cv-hcxf",
+      "severity": "high",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: RSA PKCS#1 v1.5 signature forgery via non-canonical DigestInfo encoding"
     },
     {
       "id": "GHSA-6w3j-5fw6-r9vr",
@@ -488,6 +524,14 @@
       "title": "Vite: Cross origin script execution through Vite custom middleware"
     },
     {
+      "id": "GHSA-9wg5-mj3p-v49q",
+      "severity": "low",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: Certificate signature verified with the issuer's RSA signature scheme"
+    },
+    {
       "id": "GHSA-c7q8-3ch8-vqpv",
       "severity": "high",
       "modules": [
@@ -608,6 +652,14 @@
       "title": "@fastify/busboy vulnerable to CRLF injection via multipart Content-Disposition filename and name"
     },
     {
+      "id": "GHSA-h46v-rmh6-fq4f",
+      "severity": "moderate",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: X.509 pathLenConstraint not enforced by verifyCertificateChain() for CA certificates without keyUsage"
+    },
+    {
       "id": "GHSA-h6cr-wjv9-3cpp",
       "severity": "low",
       "modules": [
@@ -630,6 +682,14 @@
         "fast-uri"
       ],
       "title": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets"
+    },
+    {
+      "id": "GHSA-j8rw-jp99-435v",
+      "severity": "moderate",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: TLS client crash on a handshake record received without a session"
     },
     {
       "id": "GHSA-jc66-7q78-782g",
@@ -824,6 +884,14 @@
       "title": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545"
     },
     {
+      "id": "GHSA-rhr8-3pm8-cq29",
+      "severity": "high",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: ASN.1 resource exhaustion via BIT STRING decoding in asn1.fromDer"
+    },
+    {
       "id": "GHSA-rq7h-c2jc-7f22",
       "severity": "moderate",
       "modules": [
@@ -926,6 +994,14 @@
         "image-size"
       ],
       "title": "image-size: ICNS parser allows denial of service through an infinite loop"
+    },
+    {
+      "id": "GHSA-w4xr-hqv8-ch44",
+      "severity": "moderate",
+      "modules": [
+        "node-forge"
+      ],
+      "title": "Forge: TLS client crash on an unsupported ServerHello compression method"
     },
     {
       "id": "GHSA-w74x-v6f9-j3xg",
