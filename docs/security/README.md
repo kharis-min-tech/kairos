@@ -44,14 +44,47 @@ with the authority to decide has done so.
 
 There were **45 such markers** when these documents were drafted on 8 November
 2026, covering 43 distinct decisions — two appeared in more than one file
-because they were a prerequisite for both. **Nine have since closed**, leaving
-**36 open**, and the closures are struck through in place rather than deleted,
-because the order things were decided in is itself audit evidence. Each document
-collects its own at the end.
+because they were a prerequisite for both.
 
-**Six have since closed with real answers**, and the documents record them
+**As of 12 November 2026 there are 36 open.** That figure is measured, not
+derived from the original 45, and the two numbers deliberately are not
+reconciled: markers have both closed and been added since drafting, and an
+arithmetic chain across a fortnight of edits would be wrong within a week.
+Count them the same way at any time with:
+
+```sh
+grep -rn "DECISION NEEDED" docs/security/*.md | grep -v "~~"
+```
+
+(Two lines that match are not markers: this file's description of the
+convention, and `data-retention.md`'s "collected in one place" cross-reference.)
+
+Closures are **struck through in place rather than deleted**, because the order
+things were decided in is itself audit evidence. Each document collects its own
+at the end.
+
+Note that a closed *question* is not always a struck-through *marker*. Several
+of the things settled on 12 November 2026 — the PlanetScale export, Cloudflare
+Images, Cloudflare Pro, the absence of alerting — were open checkboxes or
+unstated assumptions rather than numbered markers, so closing them is recorded
+in the relevant document without moving this count.
+
+**Eight have since closed with real answers**, and the documents record them
 rather than still asking:
 
+- **Backup posture is confirmed and the RPO is decided at 1 hour**, on
+  12 November 2026. PlanetScale Postgres archives the WAL continuously, so the
+  achievable recovery point is about 5 minutes; 1 hour is adopted as the
+  commitment, with the margin as headroom. A 30-day backup schedule was added
+  alongside the mandatory 12-hourly one, which also extends the PITR window
+  from 2 days to 30. Backups and WAL stay in `eu-west-2` and are encrypted at
+  rest by platform default. `backup-recovery.md` §2.
+- **No backup is exported out of PlanetScale, and that risk is accepted**
+  rather than open, with the reasoning and the review triggers recorded in
+  `backup-recovery.md` §2. The gap is real — a backup inside the vendor you are
+  resilient against does not survive that vendor — but the exposure is loss of
+  *access*, not loss of data, and the automated mitigation would have created a
+  second complete copy of children's records in another system.
 - The **DPO is Tianna Johnson**. Her contact details are still outstanding, and
   Article 13(1)(b) requires them to be published.
 - The **controller is Kharis Ministries**, ICO registration **ZB659958**,

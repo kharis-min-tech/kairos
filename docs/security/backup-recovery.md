@@ -1,10 +1,14 @@
 # Backup and recovery
 
-**Status:** first draft, 2026-11-08. This document is deliberately split into
-what the repository proves and what only the PlanetScale and Cloudflare consoles
-can confirm. Nothing in the repo configures, schedules or tests a backup, so
-almost everything about *backups* is in the second category — while almost
-everything about *restore* is constrained by code, and is in the first.
+**Status:** second draft, 2026-11-12. The PlanetScale console questions are
+answered (§2), the RPO is decided, and the off-platform export is an accepted
+risk rather than an open one. What remains is a rehearsal, not research.
+
+This document is deliberately split into what the repository proves and what
+only the PlanetScale and Cloudflare consoles can confirm. Nothing in the repo
+configures, schedules or tests a backup, so almost everything about *backups*
+is in the second category — while almost everything about *restore* is
+constrained by code, and is in the first.
 
 ---
 
@@ -42,43 +46,121 @@ Every one of those replicates to all three nodes immediately. HA is an
 availability control; the only recovery control for the above is a backup or
 point-in-time recovery, and that is the subject of §2.
 
+**The two replicas are both in `eu-west-2`, the same region as the primary**
+(console, 12 November 2026). That is worth stating precisely, because "three
+nodes with two replicas" is easily read as geographic redundancy and it is not:
+a region-level AWS failure takes all three at once. The replicas are a high
+availability control, not a disaster recovery one. Disaster recovery here rests
+entirely on backups and PITR.
+
 ---
 
-## 2. What needs confirming in the console
+## 2. Confirmed in the console, 12 November 2026
 
-The repository is silent on all of this, and the decision record says so
-explicitly. `docs/database-architecture.md` §11 lists as still-open:
+**This section was a checklist of unanswered questions. Most of them now have
+answers**, read off the PlanetScale console and PlanetScale's own documentation
+on 12 November 2026. The questions are kept with their answers rather than
+deleted, because what was unknown and when it stopped being unknown is itself
+audit evidence.
 
-> - **Backup retention strategy beyond PlanetScale's default** — set during
->   Phase 2 (#43 in production-readiness cluster).
-> - **PITR (point-in-time recovery) window** — PlanetScale defaults are
->   reasonable; revisit if compliance demands custom retention.
+| Question | Answer |
+|---|---|
+| Automated backups enabled, on what schedule? | **Yes. Two schedules.** `Production daily` — every 12 hours, 2-day retention, mandatory and not modifiable. Plus `30 Day Production Operational` — every 24 hours, **30-day retention**, added 12 November 2026. |
+| Backup retention on PS-5? | **Configurable.** The included schedule is fixed at 2 days; custom schedules set their own. 30 days is what we run. |
+| Is PITR available, and what is the window? | **Yes.** PlanetScale Postgres archives the write-ahead log continuously and replays it onto a base backup. On the default schedule alone the window is bounded by its 2-day retention; **with a custom schedule in place, PITR runs from the oldest available backup to roughly 5 minutes before now.** The 30-day schedule therefore buys a 30-day PITR window, not just 30 days of restore points. |
+| Backups encrypted at rest? | **Yes.** Platform-level default at the storage layer, with no user-facing toggle — it cannot be enabled, disabled or misconfigured. |
+| Where are backups stored? | **`eu-west-2`, the same region as the cluster.** PlanetScale's documentation states that backups and WAL files are held "in the same cloud provider and region as the cluster". London is in the UK, so the privacy notice's "stored in the United Kingdom / European Economic Area" claim holds for backups as well as for the primary. The only way data would leave the region is an explicitly added read-only region elsewhere, and none is configured. |
+| Can a backup restore into a new branch? | **Still unconfirmed.** This is the one that matters for §5, because it decides whether a restore can be rehearsed without an outage. |
+| Does any export leave PlanetScale? | **No, and this is now an accepted risk rather than an open question.** See below. |
 
-"PlanetScale defaults are reasonable" is an assumption that has never been
-checked against the console or against a stated recovery objective. Before the
-pilot, someone needs to open the PlanetScale dashboard for `kairos-prod` and
-record the answers to these, in this document:
+### The off-platform export: risk accepted, 12 November 2026
 
-- [ ] Are automated backups enabled, and on what schedule?
-- [ ] What is the backup **retention period** on the PS-5 plan?
-- [ ] Is point-in-time recovery available on PS-5, and if so what is the window?
-- [ ] Are backups encrypted at rest, and where are they stored — same region as
-      the primary (eu-west-2) or elsewhere? This is a UK GDPR transfer question,
-      not just a resilience one, and the privacy notice already tells members
-      their data is "stored in the United Kingdom / European Economic Area"
-      (`apps/web/src/app/legal/privacy/page.tsx:233-236`).
-- [ ] Can a backup be restored **into a new branch** rather than over the
-      primary? This determines whether the restore procedure in §4 can be
-      rehearsed without an outage.
-- [ ] Is there any **export** that leaves PlanetScale, so that a PlanetScale
-      account compromise or billing lapse is survivable?
+**Decision: no backup is exported out of PlanetScale. The residual risk is
+accepted and recorded here rather than mitigated.** Taken by the product owner
+on 12 November 2026, with the alternatives on the table.
 
-That last one is the gap most likely to be challenged. A backup held only inside
-the vendor you are trying to be resilient against is not a complete control, and
-`docs/database-architecture.md` §5 Trigger 5 already contemplates PlanetScale
-becoming unviable — including "sustained outage or data-integrity incident" as a
-trigger. The escape hatch described there (`pg_dump` → RDS Multi-AZ) assumes a
-`pg_dump` is possible, which it is, but nothing schedules one.
+The gap is real and should not be softened: a backup held only inside the vendor
+you are trying to be resilient against does not survive that vendor.
+`database-architecture.md` §5 Trigger 5 already contemplates PlanetScale
+becoming unviable, and the escape hatch described there assumes a `pg_dump` that
+nothing schedules.
+
+**Why accepting it is defensible for the pilot.** The failure this control
+guards against is not data loss — PlanetScale holds the data in region-local,
+encrypted, durable storage with a 30-day PITR window and two replicas. It is
+loss of *access*: account lockout, a billing lapse, a contract dispute, or a
+vendor-level integrity incident. Those are recoverable on a timescale of days
+through support and billing, not minutes, and the pilot's tolerance for a
+multi-day outage is higher than its tolerance for the risk the mitigation would
+itself create.
+
+**Why the mitigation was not free.** The automated option considered was a
+scheduled `pg_dump`, encrypted and pushed to Cloudflare R2. That means a
+complete copy of the member database — children's safeguarding records, health
+data, Gift Aid declarations — as a single file, in a second system, produced by
+CI on a schedule. A single encrypted file in object storage is a more attractive
+target than the database behind Hyperdrive, and it would add a new storage
+location to the ROPA, a new retention period to enforce, and a key whose loss
+makes every copy worthless. The design that makes it defensible (encrypt with a
+public key whose private half CI never holds, and a write-only bucket token) is
+sound, but it is a system that has to be maintained and reviewed, and an
+automated backup nobody reviews is a liability dressed as a control.
+
+**What is accepted, stated plainly.** If PlanetScale becomes unreachable for
+reasons outside a normal outage, Kairos has no independent copy of its data and
+recovery depends entirely on PlanetScale restoring access. There is no RTO for
+that scenario.
+
+**Review triggers.** This decision should be revisited if any of the following
+becomes true, and it is the triggers rather than a calendar date that matter:
+
+- the pilot ends and Kairos carries live data for more than one branch;
+- Kairos begins holding donation records rather than only declarations;
+- PlanetScale's terms, pricing or ownership change materially;
+- any incident, at PlanetScale or elsewhere, demonstrates access loss lasting
+  longer than the church can absorb.
+
+A quarterly manual `pg_dump` to the church's own encrypted storage remains the
+cheap middle option if the appetite changes before any of those triggers fire.
+It depends on a person remembering, which is why it was not adopted as the
+answer today.
+
+## 2a. What still needs confirming in the console
+
+`docs/database-architecture.md` §11 listed two of these as still-open and said
+"PlanetScale defaults are reasonable" — an assumption that had never been
+checked. **It has now been checked, and the defaults were not adequate on their
+own**: the included schedule retains 2 days, which also capped the PITR window
+at 2 days. The 30-day custom schedule added on 12 November 2026 is what makes
+the recovery objectives below achievable. That entry in §11 can be closed.
+
+**All PlanetScale questions are now answered.** The last one, confirmed
+12 November 2026:
+
+| Question | Answer |
+|---|---|
+| Can a backup restore **into a new branch**? | **Yes.** Backups → select a backup → **Restore to new branch** creates an independent branch holding the schema and data as at the backup point, which can then be promoted to production or discarded. **§5's rehearsal can therefore be run against real production data with no outage and no risk to the primary** — which removes the last obstacle to stating an honest RTO. |
+
+Three properties of a restored branch that §4 has to account for, written down
+here because the alternative is discovering them during an incident:
+
+- **Restored branches are created in the same cloud region as the source**, so
+  a rehearsal and a real restore both stay in `eu-west-2`. No transfer
+  question arises.
+- **Database extensions are NOT restored** and must be reinstalled. Establish
+  what the schema depends on before the rehearsal, not during it: a restore
+  that completes and then fails on a missing extension is exactly the failure
+  this bullet exists to prevent.
+- **User-defined roles are restored but their passwords are reset.** The
+  application cannot connect to a restored branch until a new password is set
+  and the Hyperdrive configuration is repointed at it. That is a required step
+  in the recovery path, not an afterthought, and it interacts with
+  `key-management.md` §5: Cloudflare secrets are write-only, so the new value
+  has to be recorded as it is minted.
+
+Taken with §3, the restore path is now fully characterised: restore to a
+branch, reinstall extensions, reset the role password, repoint Hyperdrive, and
+only then run `db:diagnose` before any migration command.
 
 Also to confirm, outside PlanetScale:
 
@@ -94,17 +176,28 @@ Also to confirm, outside PlanetScale:
       independently recorded in the church's password manager — otherwise the
       recovery procedure for "Cloudflare account lost" has no path back.
 
-> **DECISION NEEDED: RPO (recovery point objective) — how much data the church can afford to lose.**
-> **Recommended: 1 hour.** The realistic worst case is a Sunday morning: a
-> failure at 11:00 that loses an hour costs one service's attendance records,
-> any check-ins, and a handful of form submissions — annoying, re-enterable, and
-> nothing irreplaceable. A 24-hour RPO would, on the same Sunday, lose the entire
-> service.
-> **Trade-off:** a 1-hour RPO essentially requires PITR rather than daily
-> snapshots. If PS-5 does not offer PITR, the honest choices are to accept the
-> snapshot interval as the RPO and say so, or to upgrade the plan. **Do not write
-> down 1 hour until the console confirms it is achievable** — an RPO the
-> infrastructure cannot meet is worse than an honest 24 hours.
+> ~~**DECISION NEEDED: RPO (recovery point objective) — how much data the church can afford to lose.**~~
+> **DECIDED 12 November 2026: RPO is 1 hour.**
+>
+> The reasoning that produced the recommendation stands: the realistic worst
+> case is a Sunday morning, and a failure at 11:00 that loses an hour costs one
+> service's attendance records, any check-ins, and a handful of form
+> submissions — annoying, re-enterable, nothing irreplaceable. A 24-hour RPO
+> would, on the same Sunday, lose the entire service.
+>
+> The marker said **"do not write down 1 hour until the console confirms it is
+> achievable"**, because an RPO the infrastructure cannot meet is worse than an
+> honest 24 hours. The console now confirms it, and with room to spare:
+> PlanetScale Postgres archives the WAL continuously, so with the 30-day
+> schedule in place the achievable recovery point is **roughly 5 minutes**, not
+> one hour. **1 hour is adopted deliberately rather than 5 minutes**, because
+> the objective should be what the church commits to and can verify, not the
+> best number the vendor's marketing supports. The margin between the two is
+> the headroom that absorbs a slow WAL replay or a restore that has to be
+> restarted.
+>
+> **This is now a real commitment and it has a consequence**: §5's restore
+> rehearsal has to demonstrate it, not assume it.
 
 > **DECISION NEEDED: RTO (recovery time objective) — how long the church can be without Kairos.**
 > **Recommended: 8 working hours for data loss, 1 hour for an availability-only outage.**
@@ -371,15 +464,83 @@ from decision to verified, and anything that went wrong.
 
 ## 7. Open decisions, collected
 
-1. Record the PlanetScale backup, retention, PITR and region answers from the
-   console (§2 checklist).
-2. RPO — recommended 1 hour, pending confirmation that PITR supports it (§2).
-3. RTO — recommended 8 hours for data loss, 1 hour for availability; only
-   honest once rehearsed (§2).
-4. Whether an export leaves PlanetScale, so a vendor-level failure is
-   survivable (§2).
+1. ~~Record the PlanetScale backup, retention, PITR and region answers from the
+   console.~~ **Done 12 November 2026 (§2).** It also produced a change rather
+   than just an answer: the 30-day custom schedule.
+2. ~~RPO — recommended 1 hour, pending confirmation that PITR supports it.~~
+   **Decided 12 November 2026: 1 hour (§2).**
+3. RTO — recommended 8 hours for data loss, 1 hour for availability; **still
+   only honest once rehearsed** (§2). **No longer blocked**: restore-to-a-new-
+   branch is confirmed (§2a), so the rehearsal can run against production data
+   without an outage.
+4. ~~Whether an export leaves PlanetScale, so a vendor-level failure is
+   survivable.~~ **Decided 12 November 2026: no export. Risk accepted and
+   recorded, with review triggers (§2).**
 5. Whether `audit_log` is shipped out of the database (§4).
 6. The restore-test schedule and owner (§5).
+7. ~~Whether profile photographs need a backup.~~ **Decided 12 November 2026:
+   no. Risk accepted (§8).**
 
-Item 1 is a 20-minute task and blocks items 2 and 3. Nothing else in this
-document can be finished before it.
+**Four of seven are closed, and nothing left is waiting on information.**
+Items 3 and 6 are the same half-day exercise: restore a backup to a branch,
+reinstall whatever extensions the schema needs, reset the role password, time
+it, and write the result in §6. Until somebody does that, the RTO is an
+estimate wearing the clothes of a commitment.
+
+Item 5 is the only genuine open question left in this document.
+
+## 8. Cloudflare Images: risk accepted, 12 November 2026
+
+**Decision: profile photographs are not backed up, and that is accepted.**
+Taken by the product owner on 12 November 2026.
+
+**The gap, stated without softening.** Cloudflare Images provides no
+versioning, no point-in-time recovery and no bulk export. Cloudflare's own
+documentation says plainly that **no backups are kept** of stored images;
+durability is 99.999999999% annually, which protects against the medium
+failing and against nothing else. A deleted image is permanently gone. The
+repository contains no code that can even enumerate the account's contents, so
+today we could not produce a list of what we hold, let alone restore it. This
+is the one dataset in Kairos with no recovery story whatsoever — the database
+now has a 30-day PITR window; photographs have zero.
+
+**Why accepting it is reasonable.** The basis given was that the images are
+not critical or sensitive data, and that holds up on inspection rather than
+just as an assertion:
+
+- They are profile photographs, used for recognition in the member directory
+  and on rotas. **Nothing depends on them.** No claim, no legal record, no
+  statutory retention. Losing the lot degrades the product cosmetically.
+- They are **replaceable by the people they depict.** Unlike a Gift Aid
+  declaration or a safeguarding note, the source of truth is the member, who
+  can upload again.
+- The database retains the `photo_url` references, so after a hypothetical
+  total loss we would know exactly who had a photograph and could ask.
+
+**One qualification that should not be lost.** "Not sensitive" is doing less
+work than it appears. Some of these are **photographs of children**, and a
+photograph of a child is special-category-adjacent in practice even where it
+is not special-category data in law. The accepted risk is about
+*availability*, and availability is genuinely the least important of the three
+properties here. **Confidentiality and erasure are not accepted** and are
+being fixed in the same change that produced this document set: delivery URLs
+carry no authentication and no expiry, which is DPIA risk R5, and PR #78 adds
+destruction on erasure and on replacement. **Do not let "images: accepted
+risk" be read as covering R5.** It covers losing them, not leaking them.
+
+**The option not taken, and why it is worth keeping on the shelf.** The
+natural alternative is R2: either moving storage there outright, or keeping
+Images for delivery and resizing while writing a copy of each original to R2.
+R2 gives versioning, lifecycle rules and a real export path, and it is the same
+vendor and the same account, so it adds no processor and no transfer question.
+The reason not to do it now is not technical — it is that the work is a storage
+migration plus a deletion path that has to stay correct across two stores, and
+R5's erasure fix would then have to delete from both. **Doing that while the
+erasure fix is still in flight would be the wrong order.** Revisit once #78 is
+merged and settled, and treat it as a storage decision rather than a backup
+one.
+
+**Revisit when:** images become load-bearing for anything (identity
+verification, safeguarding evidence, printed passes), the volume makes
+re-collection impractical, or the R2 migration above is taken up for unrelated
+reasons.
