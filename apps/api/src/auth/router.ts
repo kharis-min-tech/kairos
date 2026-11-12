@@ -38,6 +38,7 @@ import { extractRequestContext } from '../audit/context';
 import { dispatchNotification } from '../notifications/service';
 import { AuditAction, AuditOutcome, NotificationEventType } from '@kairos/types';
 import { oauthRouter } from './oauth/router';
+import { mfaRouter } from './mfa-router';
 
 export const authRouter = new Hono();
 
@@ -69,7 +70,7 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
   const body = c.req.valid('json');
   const ctx = extractRequestContext(c);
   try {
-    const result = await login(db, body.email, body.password, getAuthSecrets(c));
+    const result = await login(db, body.email, body.password, getAuthSecrets(c), c);
 
     const isNewDevice = ctx.userAgent
       ? !(await hasPriorSigninFromUserAgent(db, result.member.id, ctx.userAgent))
@@ -153,6 +154,7 @@ authRouter.post('/reset-password', zValidator('json', resetPasswordSchema), asyn
 // authed (/connections) routes. Mount here so the authed ones inherit the
 // same base path (/api/auth/oauth/…) as the public start/callback.
 authRouter.route('/oauth', oauthRouter);
+authRouter.route('/mfa', mfaRouter);
 
 // ── Protected routes ───────────────────────────────────────
 

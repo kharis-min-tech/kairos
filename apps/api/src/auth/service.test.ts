@@ -16,6 +16,17 @@ vi.mock('@kairos/utils', async (importOriginal) => {
   };
 });
 
+/**
+ * `LoginResponse.tokens` became optional when MFA landed: a correct password
+ * no longer always ends in a session. These tests are all about the paths
+ * where it does, so they narrow loudly rather than with a non-null assertion,
+ * and a test that unexpectedly gets a challenge says so instead of failing on
+ * a property read.
+ */
+function tokensOf(result: { tokens?: { accessToken: string; refreshToken: string } }) {
+  if (!result.tokens) throw new Error('expected an authenticated session, got an MFA challenge');
+  return result.tokens;
+}
 const TEST_SECRETS: AuthSecrets = {
   accessSecret: 'dev-secret-change-me',
   refreshSecret: 'dev-refresh-secret-change-me',
@@ -302,13 +313,13 @@ describe('login', () => {
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS);
 
-    expect(result.tokens.accessToken).toBeDefined();
-    expect(result.tokens.refreshToken).toBeDefined();
+    expect(tokensOf(result).accessToken).toBeDefined();
+    expect(tokensOf(result).refreshToken).toBeDefined();
     expect(result.member.email).toBe('john@example.com');
     expect(result.isFirstLogin).toBe(true);
 
     // Verify access token is valid JWT
-    const decoded = await verifyAccess(result.tokens.accessToken);
+    const decoded = await verifyAccess(tokensOf(result).accessToken);
     expect(decoded['memberId']).toBe(baseMember.id);
     expect(decoded['email']).toBe('john@example.com');
     expect(decoded['systemRole']).toBe('member');
@@ -407,7 +418,7 @@ describe('login', () => {
     setupUpdateChain();
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS);
-    expect(result.tokens.accessToken).toBeDefined();
+    expect(tokensOf(result).accessToken).toBeDefined();
   });
 
   it('JWT branchId is secondaryBranchId when member is at secondary branch', async () => {
@@ -419,7 +430,7 @@ describe('login', () => {
     setupUpdateChain();
 
     const result = await login(mockDb, 'john@example.com', 'MyPassword1!', TEST_SECRETS);
-    const decoded = await verifyAccess(result.tokens.accessToken);
+    const decoded = await verifyAccess(tokensOf(result).accessToken);
     expect(decoded['branchId']).toBe(secondaryBranchId);
   });
 });

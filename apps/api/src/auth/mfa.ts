@@ -326,3 +326,19 @@ export async function regenerateBackupCodes(
     .values(backupCodes.map((plain) => ({ memberId, codeHash: hashBackupCode(plain) })));
   return { backupCodes };
 }
+
+/**
+ * Does this member have a factor that actually works?
+ *
+ * A cheap, single-column check for the sign-in path, which runs this on every
+ * login and must not drag the backup-code count along with it. Unconfirmed
+ * rows are not factors and are excluded here, not by the caller.
+ */
+export async function hasConfirmedFactor(db: Database, memberId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ confirmedAt: memberMfa.confirmedAt })
+    .from(memberMfa)
+    .where(eq(memberMfa.memberId, memberId))
+    .limit(1);
+  return Boolean(row?.confirmedAt);
+}

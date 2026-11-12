@@ -169,6 +169,15 @@ export default function LoginScreen() {
       return res.data;
     },
     onSuccess: async ({ tokens, member }) => {
+      // A correct password no longer always ends in a session: privileged
+      // accounts get a second-factor challenge instead. The screen for it is
+      // not built yet, so this says so plainly rather than signing someone in
+      // without the factor. Unreachable until enrolment ships, because
+      // nothing can be enrolled before there is a way to enrol.
+      if (!tokens) {
+        setError('This account needs an authenticator code. Please sign in on the web for now.');
+        return;
+      }
       // setSession reseals biometric for users already opted in. It never
       // turns biometric ON for a new user — enrolment lives here so the
       // login screen owns the one-time prompt.

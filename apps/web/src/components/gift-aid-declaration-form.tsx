@@ -192,7 +192,7 @@ export function GiftAidDeclarationForm({
         <p>
           Please give your full first name and surname as appears on your bank account and as HM Revenue and Customs would know them
           (for example, &ldquo;Margaret Jones&rdquo; rather than &ldquo;Maggie Jones&rdquo; or
-          &ldquo;M Jones&rdquo;). This helps us make sure your Gift Aid claim is accepted and match your giving records.
+          &ldquo;M Jones&rdquo;). This helps us make sure your Gift Aid claim is accepted and matched to your giving records.
         </p>
       </div>
 

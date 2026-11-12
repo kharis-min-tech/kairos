@@ -89,9 +89,25 @@ export const CHURCH_SCOPE_ID = '00000000-0000-0000-0000-000000000000';
 export const CHURCH_SCOPE: RoleScope = { kind: 'church', id: CHURCH_SCOPE_ID };
 
 export interface LoginResponse {
-  tokens: AuthTokens;
+  /**
+   * Absent when `mfa` is present. The password was right and the session is
+   * still not authenticated.
+   *
+   * Optional rather than a lie: the alternative was returning the pre-MFA
+   * token in this field, which would let any client that ignores `mfa` carry
+   * on as though it had signed someone in, and discover otherwise on the
+   * first 401. Optional makes every call site handle it at compile time.
+   */
+  tokens?: AuthTokens;
   member: MemberProfile;
   isFirstLogin: boolean;
+  /** Set when a second factor is outstanding. See `MfaChallenge`. */
+  mfa?: MfaChallenge;
+  /**
+   * The member is privileged, has no factor, and is inside the grace period
+   * before `MFA_REQUIRED_FROM`. They are signed in; the client should nag.
+   */
+  mfaSetupRecommended?: boolean;
 }
 
 export interface RefreshRequest {
@@ -1832,4 +1848,20 @@ export interface DueFollowupRow {
   contextKind: string;
   nextFollowUpDate: string | null;
   assignedToId: string | null;
+}
+
+/**
+ * A sign-in that has proved a password but not yet a second factor.
+ *
+ * `token` is NOT an access token. `authMiddleware` refuses it for every
+ * `/api/*` route except the MFA endpoints, so holding one grants nothing but
+ * the right to finish signing in. It is short-lived for the same reason.
+ *
+ * `stage` says which half is outstanding:
+ *   - `challenge` — a factor exists; produce a code from it.
+ *   - `enrolment` — none exists and one is now required; set one up first.
+ */
+export interface MfaChallenge {
+  token: string;
+  stage: 'challenge' | 'enrolment';
 }
