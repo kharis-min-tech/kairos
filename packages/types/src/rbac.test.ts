@@ -5,6 +5,7 @@ import {
   RoleCapabilities,
   RoleScopeKind,
   matchesCapability,
+  isPrivileged,
   type Grant,
 } from './rbac';
 
@@ -252,5 +253,49 @@ describe('the pastor / minister split', () => {
     expect(
       matchesCapability([branchAdmin], 'member', 'welfare:read', { kind: 'branch', id: 'B-1' }),
     ).toBe(true);
+  });
+});
+
+// ── isPrivileged ──────────────────────────────────────────────────────────
+
+describe('isPrivileged', () => {
+  const branchGrant = (role: FunctionalRole): Grant => ({
+    role,
+    scope: { kind: 'branch', id: 'b1' },
+    branchId: 'b1',
+  });
+
+  it('is true for a platform admin holding no grants at all', () => {
+    expect(isPrivileged('admin', [])).toBe(true);
+  });
+
+  it('is false for a plain member with no grants', () => {
+    expect(isPrivileged('member', [])).toBe(false);
+  });
+
+  /**
+   * The line is deliberately drawn at "any grant", not at an admin-ish
+   * subset. Each of these sees personal data an ordinary member cannot, so
+   * excluding any of them would mean arguing that children's safeguarding
+   * notes or donors' home addresses do not warrant a second factor.
+   */
+  it.each([
+    FunctionalRole.BranchAdmin,
+    FunctionalRole.FellowshipLeader,
+    FunctionalRole.DepartmentDeputy,
+    FunctionalRole.SafeguardingLead,
+    FunctionalRole.NewBelieversMentor,
+    FunctionalRole.MembershipChampion,
+    FunctionalRole.GiftAidAdmin,
+    FunctionalRole.BranchPastor,
+  ])('is true for %s, however narrow the scope', (role) => {
+    expect(isPrivileged('member', [branchGrant(role)])).toBe(true);
+  });
+
+  it('catches BranchPastor, which no member_roles query would find', () => {
+    // BranchPastor is synthesised by resolveGrants from branch_leadership and
+    // is never stored, so counting member_roles rows would miss every Main
+    // Pastor — the widest sight in a branch.
+    expect(isPrivileged('member', [branchGrant(FunctionalRole.BranchPastor)])).toBe(true);
   });
 });
