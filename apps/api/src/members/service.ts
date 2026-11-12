@@ -13,6 +13,7 @@ import { authHasAnyCapability, authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } f
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent, type RequestContext } from '../audit/service';
+import { deleteStoredImage, type CfImagesConfig } from '../media/service';
 import { linkGuardians } from '../lib/member-shell';
 import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
 import {
@@ -512,6 +513,7 @@ export async function updateMember(
   input: Record<string, unknown>,
   auth: AuthContext,
   ctx?: RequestContext,
+  cfImages?: CfImagesConfig | null,
 ) {
   enforceMemberAccess(auth, memberId);
 
@@ -534,6 +536,11 @@ export async function updateMember(
       emergencyContactName: members.emergencyContactName,
       emergencyContactPhone: members.emergencyContactPhone,
       emergencyContactRelationship: members.emergencyContactRelationship,
+      // Read before the write so a replaced photograph can be destroyed. The
+      // old image outlives the column that pointed at it, and an orphaned
+      // image on an unauthenticated URL is the same leak as DPIA risk R5 with
+      // an extra step.
+      photoUrl: members.photoUrl,
     })
     .from(members)
     .where(and(eq(members.id, memberId), eq(members.isActive, true)));
@@ -619,6 +626,19 @@ export async function updateMember(
       },
       ...(ctx && { ctx }),
     });
+
+    // A replaced photograph leaves the old image in Cloudflare Images, on an
+    // unauthenticated URL, forever. Destroy it — but only once the row update
+    // has succeeded, so a failed update never destroys the photo it was going
+    // to replace. Deletion failures are logged inside `deleteStoredImage` and
+    // never thrown: losing the old image is not worth failing the user's edit.
+    if ('photoUrl' in safeInput) {
+      const previous = (existing as Record<string, unknown>)['photoUrl'];
+      const next = safeInput['photoUrl'];
+      if (typeof previous === 'string' && previous && previous !== next) {
+        await deleteStoredImage(cfImages ?? null, previous);
+      }
+    }
 
     return updated;
   } catch (err) {

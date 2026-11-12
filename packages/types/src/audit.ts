@@ -59,6 +59,13 @@ export const AuditAction = {
   // donor/giving data"): it carries donor names and HOME ADDRESSES, which the
   // member directory export does not, and it is HMRC-facing evidence.
   DonorRegisterExported: 'donor_register_exported',
+  // An Article 17 erasure. Recorded because erasure in this system is
+  // pseudonymisation plus the destruction of remote objects, and the two can
+  // come apart: the row is always scrubbed, but a profile photograph lives in
+  // Cloudflare Images and its deletion can fail. An erasure whose image
+  // survived is an INCOMPLETE erasure, and the controller cannot know that
+  // without a record. The metadata carries the outcome, never the data erased.
+  MemberErased: 'member_erased',
 } as const;
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
 
@@ -87,6 +94,7 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   AuditAction.MemberExported,
   AuditAction.SubmissionsExported,
   AuditAction.DonorRegisterExported,
+  AuditAction.MemberErased,
 ];
 
 export const AuditOutcome = {
@@ -123,6 +131,7 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   member_exported: 'Member directory exported',
   submissions_exported: 'Form submissions exported',
   donor_register_exported: 'Gift Aid register exported',
+  member_erased: 'Account erased',
 };
 
 export interface AuditLogRow {

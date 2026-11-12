@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, getAuth } from '../middleware/auth';
 import { db } from '../db';
+import { readCfImagesConfigOrNull } from '../media/service';
+import { extractRequestContext } from '../audit/context';
 import { successResponse } from '@kairos/utils';
 import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
@@ -154,7 +156,13 @@ meRouter.post(
   async (c) => {
     const auth = getAuth(c);
     const body = c.req.valid('json');
-    await deleteMyAccount(db, auth.memberId, body.currentPassword);
+    await deleteMyAccount(
+      db,
+      auth.memberId,
+      body.currentPassword,
+      readCfImagesConfigOrNull(c),
+      extractRequestContext(c),
+    );
     return c.json(successResponse({ deleted: true }));
   },
 );

@@ -1,3 +1,22 @@
+# Referrer policy, named by DPIA risk R5.
+#
+# `no-referrer` rather than the browser default `strict-origin-when-cross-origin`,
+# which still sends our origin. Kairos URLs carry member and branch UUIDs in
+# their paths (/members/{id}, /departments/{id}), so a referrer sent anywhere
+# off-origin discloses that a particular record was being viewed. Nothing here
+# depends on referrers — there is no third-party analytics in this application,
+# which the privacy notice states — so the strictest value costs nothing.
+#
+# Being precise about what this does and does not do, because R5 lists the
+# missing header as *compounding* the image problem rather than causing it:
+# this stops OUR pages leaking OUR urls. It cannot govern what imagedelivery.net
+# sends when an image URL is opened directly in a tab, because that response is
+# not ours to set headers on. Only authenticated delivery and deletion address
+# that, and they are tracked separately on R5.
+
+/*
+  Referrer-Policy: no-referrer
+
 # Apple + Android universal-link / app-link association files.
 #
 # Apple's spec requires application/json + no auth prompt + no redirect. The
