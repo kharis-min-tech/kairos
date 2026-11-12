@@ -456,6 +456,13 @@
       "when": 1793250000000,
       "tag": "0064_audit_log_member_data_actions",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1793300000000,
+      "tag": "0065_gift_aid_maiden_name",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,7 @@ vi.mock('@/hooks/use-gift-aid', () => ({
     data: {
       charityName: 'Kharis Ministries',
       charityNumber: '1139291',
-      wordingVersion: '2026-10-v1',
+      wordingVersion: '2026-11-v1',
       coverageLabels: {
         past_and_future: 'This gift, the past 4 years, and all future gifts',
         future: 'This gift and all future gifts',
@@ -57,6 +57,7 @@ function declaration(over: Partial<GiftAidDeclaration> = {}): GiftAidDeclaration
     title: 'Mr',
     firstName: 'Ade',
     lastName: 'Bolarinwa',
+    maidenName: null,
     addressLine1: '12 High Street',
     addressLine2: null,
     city: 'London',
@@ -68,7 +69,7 @@ function declaration(over: Partial<GiftAidDeclaration> = {}): GiftAidDeclaration
     coversFrom: '2022-10-30',
     singleGiftDescription: null,
     channel: 'online',
-    wordingVersion: '2026-10-v1',
+    wordingVersion: '2026-11-v1',
     declarationText: 'I want to Gift Aid...',
     declaredAt: '2026-10-30T10:00:00.000Z',
     capturedById: null,
@@ -108,10 +109,10 @@ describe('Gift Aid profile settings', () => {
     expect(screen.getByText(/12 High Street, London, SE1 2AB/)).toBeInTheDocument();
   });
 
-  it('tells the donor a withdrawal is prospective before they confirm it', () => {
+  it('tells the donor a cancellation is prospective before they confirm it', () => {
     active = declaration();
     render(<GiftAidSettingsPage />);
-    fireEvent.click(screen.getByRole('button', { name: /Withdraw/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(
       screen.getByText(/Gift Aid will stop on gifts you make from today/),
@@ -121,14 +122,14 @@ describe('Gift Aid profile settings', () => {
     ).toBeInTheDocument();
   });
 
-  it('withdraws with the donor note attached', async () => {
+  it('cancels with the donor note attached', async () => {
     active = declaration();
     render(<GiftAidSettingsPage />);
-    fireEvent.click(screen.getByRole('button', { name: /Withdraw/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.change(screen.getByPlaceholderText(/Anything you'd like us to note/), {
       target: { value: 'Retired, no longer paying tax' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Yes, withdraw it/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Yes, cancel it/ }));
 
     await waitFor(() =>
       expect(withdrawMutate).toHaveBeenCalledWith({ notes: 'Retired, no longer paying tax' }),
@@ -153,7 +154,7 @@ describe('Gift Aid profile settings', () => {
       }),
     ];
     render(<GiftAidSettingsPage />);
-    expect(screen.getByText(/Withdrawn on 1 September 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Cancelled on 1 September 2026/)).toBeInTheDocument();
     expect(
       screen.getByText(/not removed if you ask us to delete your profile/),
     ).toBeInTheDocument();
