@@ -99,8 +99,15 @@ These are design choices, not gaps to fix on the current branch.
 - XSS protection
 
 ### Out of Scope for MVP
-- Multi-factor authentication (MFA)
-- Audit logs (detailed access tracking)
+- ~~Multi-factor authentication (MFA)~~ — **shipped 12 November 2026** for
+  privileged accounts, meaning system admins and anyone holding a role grant.
+  TOTP with backup codes, enforced at login, at the OAuth doors and at token
+  refresh. Ordinary members are unaffected. The cutover date after which a
+  privileged account must have a factor is still open: see
+  `docs/security/key-management.md` §9.
+- ~~Audit logs (detailed access tracking)~~ — **shipped**, as `audit_log`.
+  Sign-in, export, member-edit and erasure events, with a 90-day purge for the
+  sign-in rows only. See `docs/security/data-retention.md`.
 - Advanced session controls (device management)
 
 ---
@@ -769,8 +776,9 @@ These are design choices, not gaps to fix on the current branch.
 - HMRC tax year reports
 - Pledge tracking
 - Regional coordinator views
-- Multi-factor authentication
-- Audit logs
+- ~~Multi-factor authentication~~ — shipped 12 November 2026 for privileged
+  accounts; see section 1.
+- ~~Audit logs~~ — shipped as `audit_log`.
 - Advanced analytics
 - Custom report builder
 

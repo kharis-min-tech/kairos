@@ -434,3 +434,34 @@ is a judgement call rather than an obvious yes — but it should be a decision
 someone made on purpose, not a default. Business ($200/month) is only worth
 discussing if response-code-based counting (`R1`'s refinement) or all five rules
 become a requirement.
+
+---
+
+## 7. Amend the rule when MFA deploys
+
+Added 12 November 2026.
+
+The deployed rule matches an **exact path list**, so a new endpoint is not
+covered until it is named. `/api/auth/mfa/verify` is a brute-force target of
+exactly the kind this rule exists for: it accepts a six-digit code, which is a
+one-in-a-million guess, and a few hundred thousand requests is not a large
+number.
+
+**Before the MFA branch is deployed**, add these two paths to the expression:
+
+```
+"/api/auth/mfa/verify" "/api/auth/mfa/confirm"
+```
+
+Not before. The endpoints do not exist in production yet, and a rule that
+names a path nothing serves is a rule nobody can test.
+
+`/confirm` is included because it is the other place a code is checked, during
+enrolment. `/enrol`, `/disable` and `/backup-codes` are left out: the first
+two are not guessable and the last two already require the account password.
+
+**The edge rule is the second line here, not the first.** `auth/mfa.ts`
+throttles per account — five wrong codes and the account is locked for fifteen
+minutes — which is the stronger control for this endpoint, because it still
+bites when an attempt is distributed across addresses and no single IP trips
+the edge rule. The edge rule's job is to keep that volume off the Worker.
