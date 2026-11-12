@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireRole, requireCapability, getAuth } from '../middleware/auth';
 import { db } from '../db';
+import { readCfImagesConfigOrNull } from '../media/service';
 import { getAuthSecrets } from '../lib/auth-secrets';
 import { successResponse } from '@kairos/utils';
 import {
@@ -183,6 +184,7 @@ membersRouter.patch('/:id', zValidator('json', updateMemberSchema), async (c) =>
     c.req.valid('json'),
     auth,
     extractRequestContext(c),
+    readCfImagesConfigOrNull(c),
   );
   return c.json(successResponse(member));
 });

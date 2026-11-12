@@ -38,8 +38,11 @@ import {
   ValidationError,
   ConflictError,
 } from '@kairos/utils';
-import { randomTokenHex } from '@kairos/utils';
+import { randomTokenHex, logger } from '@kairos/utils';
 import { authHasCapability } from '../lib/grants';
+import { deleteStoredImage, type CfImagesConfig } from '../media/service';
+import { recordAuditEvent, type RequestContext } from '../audit/service';
+import { AuditAction, AuditOutcome } from '@kairos/types';
 import { createMemberShell } from '../lib/member-shell';
 
 /**
@@ -242,12 +245,18 @@ export async function deleteMyAccount(
   db: Database,
   memberId: string,
   currentPassword: string,
+  cfImages?: CfImagesConfig | null,
+  ctx?: RequestContext,
 ): Promise<void> {
   const [member] = await db
     .select({
       id: members.id,
       passwordHash: members.passwordHash,
       isActive: members.isActive,
+      // Needed before the scrub, because the scrub nulls it. Without reading it
+      // first the handle to the remote object is lost and the photograph
+      // becomes undeletable — which is precisely DPIA risk R5.
+      photoUrl: members.photoUrl,
     })
     .from(members)
     .where(eq(members.id, memberId))
@@ -306,6 +315,46 @@ export async function deleteMyAccount(
   // Wipe notification preferences — they're per-member behavioural state, not
   // audit. Keeping them serves no one.
   await db.delete(notificationPreferences).where(eq(notificationPreferences.memberId, memberId));
+
+  // Destroy the profile photograph itself. Nulling `photo_url` above scrubs the
+  // reference; the image lives in Cloudflare Images and survives unless it is
+  // explicitly deleted. Before this, an erasure left a child's photograph
+  // permanently retrievable by anyone who had ever seen the URL, and
+  // unfindable from our side — DPIA risk R5, and the reason that assessment
+  // calls R5 irreversible.
+  //
+  // Deliberately AFTER the row scrub, not before: if image deletion throws or
+  // the service is unreachable, the member's right to erasure must still be
+  // honoured in the database. `deleteStoredImage` swallows its own failures and
+  // reports them rather than throwing, so this cannot undo the scrub.
+  const photoOutcome = await deleteStoredImage(cfImages ?? null, member.photoUrl);
+
+  // The erasure is now evidence, because its two halves can come apart. An
+  // outcome of 'failed' means the row is scrubbed and the image is NOT gone —
+  // an incomplete erasure, which the controller has to be able to discover.
+  // No erased data is recorded here, only the outcome: an audit row that kept
+  // what was deleted would defeat the erasure it describes.
+  await recordAuditEvent(db, {
+    actorMemberId: memberId,
+    action: AuditAction.MemberErased,
+    outcome: photoOutcome === 'failed' ? AuditOutcome.Failure : AuditOutcome.Success,
+    targetType: 'member',
+    targetId: memberId,
+    metadata: {
+      selfService: true,
+      photoDeletion: photoOutcome,
+      notificationPreferencesDeleted: true,
+    },
+    ...(ctx && { ctx }),
+  });
+
+  if (photoOutcome === 'failed') {
+    logger.error('me.delete_account.photo_not_destroyed', {
+      module: 'me',
+      memberId,
+      detail: 'Member row scrubbed but the profile image was not deleted. Erasure is INCOMPLETE.',
+    });
+  }
 }
 
 /**
