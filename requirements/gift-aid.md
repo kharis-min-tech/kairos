@@ -199,23 +199,42 @@ Mobile has no Gift Aid surface yet. The giving tab is a WebView over kharis.org,
 
 The form is reached by **scanning a QR code on a printed card**. Nobody types the address, which decides most of this: what matters is the domain the phone shows in the scan preview, and the fact that a printed card cannot be recalled.
 
-**Encode `https://kharis.org/gift-aid`, and back it with a Cloudflare Redirect Rule** to `https://kairos.kharis.org/gift-aid` (301, query string preserved, matching `kharis.org` and `www.kharis.org`). `kharis.org` is WordPress behind Cloudflare, in the same zone the Worker routes already use (`zone_name: kharis.org`), and `/gift-aid` is free on it. The rule runs at the edge, so WordPress needs no page for it.
+**DECIDED 12 November 2026: encode `https://giftaid.kharis.org`**, a redirect-only hostname in the `kharis.org` zone, pointing at the form through a Cloudflare dynamic-redirect rule.
 
-The indirection is the point. Encoding `kairos.kharis.org/gift-aid` directly saves one invisible hop and bakes the app's current address into a physical object forever; if the app ever moves, every printed card dies. One redirect rule is cheap insurance, and the scan preview reads `kharis.org`, which is the most trustworthy string available.
+The indirection is the point. Encoding `kairos.kharis.org/gift-aid` directly saves one invisible hop and bakes the app's current address into a physical object forever; if the app ever moves, every printed card dies. One redirect rule is cheap insurance, and the scan preview reads `giftaid.kharis.org`, which says what it is and carries the church's domain.
+
+**Why not `kharis.org/gift-aid`, which this section originally recommended.** It cannot work as the zone is configured, and the reason is worth recording because it is invisible from the dashboard's rules screen: **the `kharis.org` root is DNS-only**. The `A` record points at `160.153.0.102` (GoDaddy) with `proxied: false`, and `www` is a CNAME to the root, also unproxied. Cloudflare never sees that traffic, so no rule in the zone can fire for it — a redirect rule written against `kharis.org/gift-aid` sits there looking correct and does nothing. Verified: `https://kharis.org/gift-aid` returns 404 with the rule deployed and enabled.
+
+Making it work would mean proxying the root record, which puts Cloudflare in front of a live GoDaddy WordPress site and changes caching and SSL handling (the zone is on `Full`, not `Full (strict)`). That is a deliberate decision about the main church website, not a side effect of a QR code, and it was declined as not worth the hassle for a URL nobody types.
+
+**What is deployed**
+
+| | |
+|---|---|
+| Hostname | `giftaid.kharis.org` — `AAAA` to `100::`, **proxied**. The IPv6 discard prefix, so nothing is ever reached and the proxy answers. Same pattern as `visit-spurgeons-centre.kharis.org`, already in this zone. |
+| Rule | `04c77895de4a4cdc9fae773cb44cc436`, ruleset `ad23ec00da5544fab2b9d3fac5a52c28`, phase `http_request_dynamic_redirect` |
+| Expression | `http.host eq "giftaid.kharis.org"` — any path |
+| Target | `https://staging.kairos.kharis.org/gift-aid`, query string preserved |
+| Status | **302 while validating.** See below. |
+
+**The 302 is deliberate and must be changed on purpose.** A 301 is cached hard and effectively permanently by browsers. Validating against staging with a 301 would pin every tester's browser to staging after the target is switched to production, and the people most likely to have tested are the people demonstrating it. Switch to 301 only once the target is the production URL and settled.
+
+**Two edits before the print run**, both on the same rule: target → `https://kairos.kharis.org/gift-aid`, status → 301.
 
 Before the print run:
 
-- **Ship to production.** The form is on `staging` only, and `kairos.kharis.org/gift-aid` 404s as of 11 November 2026. Merge `staging` into `main`. Never put a staging URL on a card.
+- **Ship to production, then repoint the rule.** The form is on `staging` only, and `kairos.kharis.org/gift-aid` 404s as of 12 November 2026. Merge `staging` into `main`. The QR itself never changes, which is the whole point of the indirection: the card can be designed and even printed before production exists, because only the rule target moves.
 - **No link shortener, and no third-party dynamic QR.** On a form asking for a home address and a statement about someone's tax affairs, a `bit.ly` reads as phishing, and a tracking redirector puts a third party in the path of donor data.
 - **Test the printed card**, not a QR on a screen, on both an iPhone and an Android camera. Use error-correction level Q or H if the card carries a logo overlay or is likely to crease.
 - The browser tab title and link preview are set in `apps/web/src/app/gift-aid/layout.tsx`, overriding the app root's "Kairos: Church Administration". That override exists purely because of the scan.
 
-Two alternatives, recorded so they are not re-proposed:
+One alternative, recorded so it is not re-proposed:
 
-- **A true rewrite**, so the address bar never leaves `kharis.org`. Needs both the page and `POST /api/public/gift-aid/*` proxied through the zone, because the form posts same-origin today, and it touches live WordPress routing. Not worth it for a URL nobody reads.
-- **`giftaid.kharis.org` as a second Pages custom domain.** Looks tidiest and is the one that silently breaks: the Worker route is `kairos.kharis.org/api/*`, so from that host the form's POST is cross-origin, and the CORS callback in `apps/api/src/app.ts` returns `http://localhost:3002` for every non-localhost origin. It needs an extra Worker route and a CORS change before it would work at all, and the whole Kairos app would answer on that hostname.
+- **A true rewrite**, so the address bar never leaves `kharis.org`. Needs both the page and `POST /api/public/gift-aid/*` proxied through the zone, because the form posts same-origin today, and it touches live WordPress routing. Not worth it for a URL nobody reads, and it has the same unproxied-root problem as above before it even starts.
 
-Whichever is chosen, the form has to reach **production** first: merge `staging` into `main`.
+**A correction, because the earlier version of this section got it wrong and the error is instructive.** This document previously listed `giftaid.kharis.org` as "the one that silently breaks", on the grounds that the form's POST would be cross-origin and the CORS callback in `apps/api/src/app.ts` returns `http://localhost:3002` for every non-localhost origin. **That is true of serving the app on a subdomain. It is not true of redirecting from one.** A redirect lands the browser on `kairos.kharis.org`, same-origin with the API, so the form posts exactly as it does today. The two uses of the same hostname were conflated. The CORS warning still stands for anyone who later proposes pointing Pages at `giftaid.kharis.org` as a second custom domain — that version really would break.
+
+The form still has to reach **production** before the print run: merge `staging` into `main`.
 
 The public layout's header and the "Back to Kharis Church" button now point at `https://kharis.org` rather than `/`, because a donor who follows `/` lands on the Kairos product landing page with a sign-in button, which is not a page they can use.
 
