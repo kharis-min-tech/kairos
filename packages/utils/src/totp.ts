@@ -78,6 +78,13 @@ export function base32Encode(bytes: Uint8Array): string {
 }
 
 /**
+ * Longest input accepted. A 160-bit secret is 32 characters, so this is
+ * generous; it exists so that nothing pasted into an enrolment field gets
+ * walked character by character at length.
+ */
+const MAX_BASE32_INPUT = 1024;
+
+/**
  * Decode RFC 4648 base32.
  *
  * Tolerant of the two things humans and apps actually do — lower case, and
@@ -86,15 +93,34 @@ export function base32Encode(bytes: Uint8Array): string {
  * absent from the alphabet precisely because they are confusable with `O`,
  * `I` and `B`, so silently dropping them would turn a mistyped secret into a
  * different valid one and hand someone an enrolment that never verifies.
+ *
+ * Separators are dropped and trailing padding trimmed by walking the string
+ * once, rather than with `/=+$/` as this first did. That regex backtracks from
+ * every start position across a long run of `=`, which is quadratic: harmless
+ * for a 32-character secret, a cheap denial-of-service primitive once a
+ * request body can reach it, which it will at enrolment confirm. CodeQL
+ * flagged it on the pull request and was right to. The per-character `\s`
+ * test below is a fixed-width match on one character, so it cannot backtrack.
  */
 export function base32Decode(input: string): Uint8Array {
-  const clean = input.replace(/[\s-]/g, '').replace(/=+$/, '').toUpperCase();
-  if (clean.length === 0) throw new Error('base32: empty input');
+  if (input.length > MAX_BASE32_INPUT) throw new Error('base32: input too long');
+
+  const chars: string[] = [];
+  for (const char of input) {
+    if (char === '-' || /\s/.test(char)) continue;
+    chars.push(char);
+  }
+  // Padding is only meaningful at the end. A `=` anywhere else is an invalid
+  // character and falls through to the throw below, which is the point.
+  let end = chars.length;
+  while (end > 0 && chars[end - 1] === '=') end--;
+  if (end === 0) throw new Error('base32: empty input');
 
   let bits = 0;
   let value = 0;
   const out: number[] = [];
-  for (const char of clean) {
+  for (let i = 0; i < end; i++) {
+    const char = (chars[i] as string).toUpperCase();
     const index = BASE32_ALPHABET.indexOf(char);
     if (index === -1) throw new Error(`base32: invalid character ${JSON.stringify(char)}`);
     value = (value << 5) | index;

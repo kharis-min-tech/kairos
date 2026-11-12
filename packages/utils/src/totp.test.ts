@@ -48,6 +48,25 @@ describe('base32', () => {
     expect(() => base32Decode('MZXW6!!!')).toThrow(/base32/i);
     expect(() => base32Decode('MZXW601')).toThrow(/base32/i);
   });
+
+  it('rejects an embedded = rather than treating it as padding', () => {
+    // Padding is only meaningful at the end. Trimming it anywhere would let
+    // two different strings decode to the same secret.
+    expect(() => base32Decode('MZ=XW6')).toThrow(/base32/i);
+  });
+
+  it('does not degrade on a long run of padding', () => {
+    // The first implementation used /=+$/, which backtracks from every start
+    // position across a run of '=' — quadratic, and reachable from a request
+    // body once enrolment confirm accepts a typed secret. This asserts the
+    // bound rather than the timing, because a timing assertion on CI is a
+    // flake generator.
+    expect(() => base32Decode('A'.repeat(8) + '='.repeat(5000))).toThrow(/too long/i);
+    const padded = `MZXW6${'='.repeat(500)}`;
+    const started = Date.now();
+    expect(base32Decode(padded)).toEqual(base32Decode('MZXW6'));
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
 });
 
 describe('totpCodeAt — RFC 6238 Appendix B', () => {
