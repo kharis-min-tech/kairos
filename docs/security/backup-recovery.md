@@ -134,12 +134,33 @@ own**: the included schedule retains 2 days, which also capped the PITR window
 at 2 days. The 30-day custom schedule added on 12 November 2026 is what makes
 the recovery objectives below achievable. That entry in §11 can be closed.
 
-One question about PlanetScale remains:
+**All PlanetScale questions are now answered.** The last one, confirmed
+12 November 2026:
 
-- [ ] Can a backup be restored **into a new branch** rather than over the
-      primary? This determines whether the restore procedure in §4 can be
-      rehearsed without an outage, and it is therefore the blocker on §5 and on
-      stating an honest RTO.
+| Question | Answer |
+|---|---|
+| Can a backup restore **into a new branch**? | **Yes.** Backups → select a backup → **Restore to new branch** creates an independent branch holding the schema and data as at the backup point, which can then be promoted to production or discarded. **§5's rehearsal can therefore be run against real production data with no outage and no risk to the primary** — which removes the last obstacle to stating an honest RTO. |
+
+Three properties of a restored branch that §4 has to account for, written down
+here because the alternative is discovering them during an incident:
+
+- **Restored branches are created in the same cloud region as the source**, so
+  a rehearsal and a real restore both stay in `eu-west-2`. No transfer
+  question arises.
+- **Database extensions are NOT restored** and must be reinstalled. Establish
+  what the schema depends on before the rehearsal, not during it: a restore
+  that completes and then fails on a missing extension is exactly the failure
+  this bullet exists to prevent.
+- **User-defined roles are restored but their passwords are reset.** The
+  application cannot connect to a restored branch until a new password is set
+  and the Hyperdrive configuration is repointed at it. That is a required step
+  in the recovery path, not an afterthought, and it interacts with
+  `key-management.md` §5: Cloudflare secrets are write-only, so the new value
+  has to be recorded as it is minted.
+
+Taken with §3, the restore path is now fully characterised: restore to a
+branch, reinstall extensions, reset the role password, repoint Hyperdrive, and
+only then run `db:diagnose` before any migration command.
 
 Also to confirm, outside PlanetScale:
 
@@ -449,23 +470,77 @@ from decision to verified, and anything that went wrong.
 2. ~~RPO — recommended 1 hour, pending confirmation that PITR supports it.~~
    **Decided 12 November 2026: 1 hour (§2).**
 3. RTO — recommended 8 hours for data loss, 1 hour for availability; **still
-   only honest once rehearsed** (§2). Blocked on the restore-into-a-branch
-   question in §2a.
+   only honest once rehearsed** (§2). **No longer blocked**: restore-to-a-new-
+   branch is confirmed (§2a), so the rehearsal can run against production data
+   without an outage.
 4. ~~Whether an export leaves PlanetScale, so a vendor-level failure is
    survivable.~~ **Decided 12 November 2026: no export. Risk accepted and
    recorded, with review triggers (§2).**
 5. Whether `audit_log` is shipped out of the database (§4).
 6. The restore-test schedule and owner (§5).
+7. ~~Whether profile photographs need a backup.~~ **Decided 12 November 2026:
+   no. Risk accepted (§8).**
 
-**Three of six are closed.** What blocks the rest is no longer information, it
-is a rehearsal: items 3 and 6 both need someone to restore a backup once and
-time it. That is a half-day exercise, and §2a's one remaining console question
-decides whether it can be done without an outage.
+**Four of seven are closed, and nothing left is waiting on information.**
+Items 3 and 6 are the same half-day exercise: restore a backup to a branch,
+reinstall whatever extensions the schema needs, reset the role password, time
+it, and write the result in §6. Until somebody does that, the RTO is an
+estimate wearing the clothes of a commitment.
 
-**The one thing in this document with no recovery story at all is not the
-database.** It is Cloudflare Images (§1): no versioning, no PITR, no export, and
-no code in the repository that can enumerate the account's contents. PlanetScale
-now has a 30-day PITR window; profile photographs have nothing. That asymmetry
-is worth carrying into any future conversation about backup gaps, because the
-database is the part people worry about and the images are the part that is
-actually unrecoverable.
+Item 5 is the only genuine open question left in this document.
+
+## 8. Cloudflare Images: risk accepted, 12 November 2026
+
+**Decision: profile photographs are not backed up, and that is accepted.**
+Taken by the product owner on 12 November 2026.
+
+**The gap, stated without softening.** Cloudflare Images provides no
+versioning, no point-in-time recovery and no bulk export. Cloudflare's own
+documentation says plainly that **no backups are kept** of stored images;
+durability is 99.999999999% annually, which protects against the medium
+failing and against nothing else. A deleted image is permanently gone. The
+repository contains no code that can even enumerate the account's contents, so
+today we could not produce a list of what we hold, let alone restore it. This
+is the one dataset in Kairos with no recovery story whatsoever — the database
+now has a 30-day PITR window; photographs have zero.
+
+**Why accepting it is reasonable.** The basis given was that the images are
+not critical or sensitive data, and that holds up on inspection rather than
+just as an assertion:
+
+- They are profile photographs, used for recognition in the member directory
+  and on rotas. **Nothing depends on them.** No claim, no legal record, no
+  statutory retention. Losing the lot degrades the product cosmetically.
+- They are **replaceable by the people they depict.** Unlike a Gift Aid
+  declaration or a safeguarding note, the source of truth is the member, who
+  can upload again.
+- The database retains the `photo_url` references, so after a hypothetical
+  total loss we would know exactly who had a photograph and could ask.
+
+**One qualification that should not be lost.** "Not sensitive" is doing less
+work than it appears. Some of these are **photographs of children**, and a
+photograph of a child is special-category-adjacent in practice even where it
+is not special-category data in law. The accepted risk is about
+*availability*, and availability is genuinely the least important of the three
+properties here. **Confidentiality and erasure are not accepted** and are
+being fixed in the same change that produced this document set: delivery URLs
+carry no authentication and no expiry, which is DPIA risk R5, and PR #78 adds
+destruction on erasure and on replacement. **Do not let "images: accepted
+risk" be read as covering R5.** It covers losing them, not leaking them.
+
+**The option not taken, and why it is worth keeping on the shelf.** The
+natural alternative is R2: either moving storage there outright, or keeping
+Images for delivery and resizing while writing a copy of each original to R2.
+R2 gives versioning, lifecycle rules and a real export path, and it is the same
+vendor and the same account, so it adds no processor and no transfer question.
+The reason not to do it now is not technical — it is that the work is a storage
+migration plus a deletion path that has to stay correct across two stores, and
+R5's erasure fix would then have to delete from both. **Doing that while the
+erasure fix is still in flight would be the wrong order.** Revisit once #78 is
+merged and settled, and treat it as a storage decision rather than a backup
+one.
+
+**Revisit when:** images become load-bearing for anything (identity
+verification, safeguarding evidence, printed passes), the volume makes
+re-collection impractical, or the R2 migration above is taken up for unrelated
+reasons.

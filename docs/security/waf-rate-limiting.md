@@ -356,7 +356,67 @@ will not land exactly on request 31.
 
 ---
 
-## 6. Recommendation
+## 6. Recommendation, and what was decided
+
+**Status: §3 is deployed. Pro is declined for now and the residual risk is
+accepted.** Both on 12 November 2026.
+
+### Deployed
+
+The §3 rule is live on zone `kharis.org`:
+
+| | |
+|---|---|
+| Rule | `Auth burst limit (sensitive POST endpoints)` |
+| Rule id | `4da8ab6528a54cbf87da2d61d11cd2ed` |
+| Ruleset id | `8ca546c35ab94fbe86e8a027d632a4df` (phase `http_ratelimit`) |
+| Deployed | 12 November 2026, via the Cloudflare API |
+
+Verified before deployment: the zone had **no `http_ratelimit` ruleset at
+all**, confirming §1's claim that nothing was rate limited, and all six paths
+in the expression were checked against `app.ts`, `auth/router.ts` and
+`oauth-server/router.ts` rather than taken from this document.
+
+Two settings were checked at the same time and needed no change: **minimum TLS
+is already 1.2** and **Always Use HTTPS is on** (set 8 November 2026).
+
+### Pro declined, risk accepted
+
+**Decision: the zone stays on Free for the pilot, and the sustained-rate gap is
+accepted.** Taken by the product owner on 12 November 2026, on the basis that
+there is nothing further to deploy on Free and the Pro upgrade is not justified
+by the pilot's exposure.
+
+**What is accepted, stated plainly.** With a 10-second counting period and a
+10-second mitigation timeout, an attacker pacing below the threshold — say two
+requests per second against `/api/auth/login` — never trips the rule and still
+gets roughly 170,000 attempts a day. The deployed rule stops machine-speed
+credential stuffing and accidental client loops. **It does not stop a patient
+attacker**, and no configuration available on Free does.
+
+**Report the checklist item as "burst protection deployed, sustained-rate
+protection requires Pro" — not as closed.** This is repeated here because it is
+the sentence most likely to get rounded up to "rate limiting: yes" by somebody
+summarising.
+
+**What makes the residual risk tolerable, for now.** Passwords are argon2id at
+OWASP 2025 parameters, so offline cracking of a stolen hash is expensive and
+online guessing is slow per attempt. The administrator population is small and
+known. `signin_failure` rows are written for every failed attempt, so a
+sustained run is reconstructable afterwards even though nothing throttles it —
+though note that this leans on the same absent alerting accepted in
+`incident-response.md` §2, so nobody is told while it is happening. Those two
+accepted risks compound, and should be reviewed together rather than
+separately.
+
+**Revisit when:** the pilot opens beyond one branch, any credential-stuffing
+attempt is observed in the `signin_failure` rows, or the support model (which
+is also what unblocks alerting) is in place to act on one. At $20/month against
+a roughly $15/month running cost the decision is a judgement call rather than
+an obvious yes, which is exactly why it should be revisited deliberately rather
+than drifting.
+
+### The original recommendation, for the record
 
 Deploy §3 now; it is the best available configuration on Free and it closes the
 burst-attack half of the checklist item.

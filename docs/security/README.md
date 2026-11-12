@@ -44,10 +44,30 @@ with the authority to decide has done so.
 
 There were **45 such markers** when these documents were drafted on 8 November
 2026, covering 43 distinct decisions — two appeared in more than one file
-because they were a prerequisite for both. **Eleven have since closed**, leaving
-**34 open**, and the closures are struck through in place rather than deleted,
-because the order things were decided in is itself audit evidence. Each document
-collects its own at the end.
+because they were a prerequisite for both.
+
+**As of 12 November 2026 there are 36 open.** That figure is measured, not
+derived from the original 45, and the two numbers deliberately are not
+reconciled: markers have both closed and been added since drafting, and an
+arithmetic chain across a fortnight of edits would be wrong within a week.
+Count them the same way at any time with:
+
+```sh
+grep -rn "DECISION NEEDED" docs/security/*.md | grep -v "~~"
+```
+
+(Two lines that match are not markers: this file's description of the
+convention, and `data-retention.md`'s "collected in one place" cross-reference.)
+
+Closures are **struck through in place rather than deleted**, because the order
+things were decided in is itself audit evidence. Each document collects its own
+at the end.
+
+Note that a closed *question* is not always a struck-through *marker*. Several
+of the things settled on 12 November 2026 — the PlanetScale export, Cloudflare
+Images, Cloudflare Pro, the absence of alerting — were open checkboxes or
+unstated assumptions rather than numbered markers, so closing them is recorded
+in the relevant document without moving this count.
 
 **Eight have since closed with real answers**, and the documents record them
 rather than still asking:
