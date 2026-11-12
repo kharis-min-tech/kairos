@@ -105,7 +105,7 @@ giftAidRouter.post('/me', zValidator('json', myDeclarationSchema), async (c) => 
   return c.json(successResponse(result), 201);
 });
 
-/** Withdrawal by the donor. Prospective: earlier claims stand. */
+/** Cancellation by the donor. Prospective: earlier claims stand. */
 giftAidRouter.post('/me/withdraw', zValidator('json', withdrawMineSchema), async (c) => {
   const auth = getAuth(c);
   const { notes } = c.req.valid('json');

@@ -36,7 +36,7 @@ function formatDate(iso: string | null): string {
  * profile settings — which is where people look for "what have I agreed to".
  *
  * It is NOT a consent toggle, and the copy is careful not to read like one. A
- * withdrawal is prospective: it stops Gift Aid on future gifts and leaves
+ * cancellation is prospective: it stops Gift Aid on future gifts and leaves
  * everything already claimed in place, and the declaration itself is kept
  * either way because HMRC can ask to see it years later.
  */
@@ -79,7 +79,8 @@ export default function GiftAidSettingsPage() {
       <div className="pb-4">
         <h1 className="text-2xl font-bold tracking-tight">Gift Aid</h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          If you pay UK tax, the church can reclaim 25p for every 1 pound you give.
+          If you pay UK Income Tax or Capital Gains Tax, the church can reclaim 25p for every £1
+          you give, at no extra cost to you.
         </p>
       </div>
 
@@ -132,18 +133,18 @@ export default function GiftAidSettingsPage() {
                     className="gap-1 text-destructive hover:text-destructive"
                     onClick={() => setWithdrawing((v) => !v)}
                   >
-                    <Undo2 className="h-4 w-4" aria-hidden /> Withdraw
+                    <Undo2 className="h-4 w-4" aria-hidden /> Cancel
                   </Button>
                 </div>
               </div>
 
               {withdrawing && (
                 <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-                  <p className="text-sm font-medium">Withdraw your Gift Aid declaration?</p>
+                  <p className="text-sm font-medium">Cancel your Gift Aid declaration?</p>
                   <p className="text-xs leading-relaxed text-muted-foreground">
                     Gift Aid will stop on gifts you make from today. Anything already claimed on
                     your earlier giving is unaffected, and we keep a record of the declaration and
-                    of this withdrawal because HM Revenue and Customs requires it. You can make a
+                    of this cancellation because HM Revenue and Customs requires it. You can make a
                     new declaration whenever you like.
                   </p>
                   <Textarea
@@ -156,7 +157,7 @@ export default function GiftAidSettingsPage() {
                     <p className="text-xs text-destructive">
                       {withdraw.error instanceof Error
                         ? withdraw.error.message
-                        : 'Could not withdraw the declaration.'}
+                        : 'Could not cancel the declaration.'}
                     </p>
                   )}
                   <div className="flex gap-2">
@@ -166,7 +167,7 @@ export default function GiftAidSettingsPage() {
                       onClick={handleWithdraw}
                       disabled={withdraw.isPending}
                     >
-                      {withdraw.isPending ? 'Withdrawing…' : 'Yes, withdraw it'}
+                      {withdraw.isPending ? 'Cancelling…' : 'Yes, cancel it'}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setWithdrawing(false)}>
                       Keep it
@@ -178,7 +179,7 @@ export default function GiftAidSettingsPage() {
               {showForm && (
                 <div className="space-y-3 rounded-lg border p-4">
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    A declaration cannot be edited in place. Saving this withdraws the one above
+                    A declaration cannot be edited in place. Saving this cancels the one above
                     and records a new declaration from today, which is how HM Revenue and Customs
                     requires a change to be made.
                   </p>
@@ -212,8 +213,8 @@ export default function GiftAidSettingsPage() {
             <div className="space-y-4">
               <p className="text-sm leading-relaxed text-muted-foreground">
                 You have no Gift Aid declaration in place. Making one takes a minute, costs you
-                nothing, and lets the church reclaim 25p for every 1 pound you give. It covers your
-                future giving until you withdraw it, and can reach back over the past four years.
+                nothing, and lets the church reclaim 25p for every £1 you give. It covers your
+                future giving until you cancel it, and can reach back over the past four years.
               </p>
               <Button
                 onClick={() => setShowForm(true)}

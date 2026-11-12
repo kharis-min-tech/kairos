@@ -41,7 +41,7 @@ import type {
 // finance data, not branch-operations data. `branch_id` on the row is a query
 // handle for the review queue, nothing more.
 //
-// The donor-facing surfaces (make a declaration, see your own, withdraw it)
+// The donor-facing surfaces (make a declaration, see your own, cancel it)
 // are gated on being the donor and on nothing else, which is why there is one
 // capability here rather than a read/write split.
 
@@ -63,6 +63,7 @@ function toDto(row: Row): GiftAidDeclaration {
     title: row.title,
     firstName: row.firstName,
     lastName: row.lastName,
+    maidenName: row.maidenName,
     addressLine1: row.addressLine1,
     addressLine2: row.addressLine2,
     city: row.city,
@@ -105,6 +106,7 @@ interface DeclarantFields {
   title?: string | undefined;
   firstName: string;
   lastName: string;
+  maidenName?: string | undefined;
   addressLine1: string;
   addressLine2?: string | undefined;
   city?: string | undefined;
@@ -142,6 +144,7 @@ function buildInsert(
     title: input.title ?? null,
     firstName: input.firstName,
     lastName: input.lastName,
+    maidenName: input.maidenName ?? null,
     addressLine1: input.addressLine1,
     addressLine2: input.addressLine2 ?? null,
     city: input.city ?? null,
@@ -200,7 +203,7 @@ export async function getMyGiftAidStatus(
 /**
  * The member declares, from their own profile.
  *
- * If a declaration is already in force this withdraws it and supersedes it
+ * If a declaration is already in force this cancels it and supersedes it
  * with the new one, rather than editing it in place. That is HMRC's required
  * route for changing what a declaration covers (3.30.1): a declaration's
  * scope cannot be amended, only cancelled and replaced. Editing in place
@@ -254,9 +257,9 @@ export async function declareMine(
 }
 
 /**
- * The donor withdraws. Prospective only: Gift Aid stops on gifts made from
+ * The donor cancels. Prospective only: Gift Aid stops on gifts made from
  * today, and claims already made stand (HMRC 3.8.2). Nothing is deleted —
- * the declaration and the record of its withdrawal are both evidence.
+ * the declaration and the record of its cancellation are both evidence.
  */
 export async function withdrawMine(
   db: Database,
@@ -318,7 +321,7 @@ export async function submitPublicDeclaration(
     const existing = await findActiveForMember(db, match.id);
     if (existing) {
       throw new ConflictError(
-        'A Gift Aid declaration is already in place for this email address. Sign in to update or withdraw it.',
+        'A Gift Aid declaration is already in place for this email address. Sign in to update or cancel it.',
       );
     }
   }
@@ -359,6 +362,10 @@ export async function listDeclarations(
     const search = or(
       ilike(giftAidDeclarations.lastName, needle),
       ilike(giftAidDeclarations.firstName, needle),
+      // The match queue is where a maiden name earns its keep: an admin
+      // holding a bank payment in the donor's former name has nothing else
+      // to search on.
+      ilike(giftAidDeclarations.maidenName, needle),
       ilike(giftAidDeclarations.email, needle),
       ilike(giftAidDeclarations.postcode, needle),
     );
@@ -442,7 +449,7 @@ export async function matchDeclaration(
     const existing = await findActiveForMember(db, memberId);
     if (existing) {
       throw new ConflictError(
-        'This member already has a Gift Aid declaration in force. Record a withdrawal of it first.',
+        'This member already has a Gift Aid declaration in force. Record a cancellation of it first.',
       );
     }
   }
@@ -462,7 +469,7 @@ export async function matchDeclaration(
 }
 
 /**
- * Record a withdrawal that reached us by phone, letter, email or in person.
+ * Record a cancellation that reached us by phone, letter, email or in person.
  * The 2016 Regulations require the date AND the method, which is why neither
  * is optional and why the DB carries a CHECK that they travel together.
  */
@@ -481,12 +488,12 @@ export async function recordWithdrawal(
     .limit(1);
   if (!row) throw new NotFoundError('Gift Aid declaration');
   if (row.status !== 'active') {
-    throw new ConflictError('Only a declaration in force can be withdrawn');
+    throw new ConflictError('Only a declaration in force can be cancelled');
   }
 
   const cancelledAt = input.cancelledAt ?? new Date();
   if (cancelledAt.getTime() < row.declaredAt.getTime()) {
-    throw new ValidationError('A withdrawal cannot predate the declaration it withdraws');
+    throw new ValidationError('A cancellation cannot predate the declaration it cancels');
   }
 
   const [updated] = await db
@@ -602,6 +609,9 @@ export async function exportRegister(
   return rows.map(({ declaration: d, branchName }) => ({
     title: d.title ?? '',
     name: `${d.firstName} ${d.lastName}`.trim(),
+    // Its own column, not folded into `name`: `name` is pasted straight into
+    // HMRC's 35-character claim column and must stay the declared name.
+    maidenName: d.maidenName ?? '',
     houseNameOrNumber: d.addressLine1,
     // HMRC rejects a postcode for an overseas address, so it is blank there
     // and the full address travels in its own column instead.
@@ -622,6 +632,7 @@ export async function exportRegister(
 const REGISTER_COLUMNS: readonly (keyof GiftAidRegisterRow)[] = [
   'title',
   'name',
+  'maidenName',
   'houseNameOrNumber',
   'postcode',
   'overseasAddress',
@@ -636,13 +647,14 @@ const REGISTER_COLUMNS: readonly (keyof GiftAidRegisterRow)[] = [
 const REGISTER_HEADERS: Record<keyof GiftAidRegisterRow, string> = {
   title: 'Title',
   name: 'Name',
+  maidenName: 'Maiden or previous name',
   houseNameOrNumber: 'House name or number',
   postcode: 'Postcode',
   overseasAddress: 'Overseas address',
   declaredAt: 'Declared on',
   coversFrom: 'Covers donations from',
   status: 'Status',
-  cancelledAt: 'Withdrawn on',
+  cancelledAt: 'Cancelled on',
   email: 'Email',
   branchName: 'Branch',
 };
