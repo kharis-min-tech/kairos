@@ -198,7 +198,7 @@ it states what survives erasure, why, and what would break if it did not.
 | **Data** | 18 action types (`packages/types/src/audit.ts:10-29`) covering authentication, password change, email change, role grant/revoke and the OAuth authorization-server events. Each row carries `ip`, `user_agent`, `country`, `attempted_email` and a `metadata` jsonb. |
 | **Period** | **Published: "Sign-in logs and error reports are kept for up to 90 days, then automatically deleted"** (`privacy/page.tsx:299-301`) |
 | **Basis** | Legitimate interests in maintaining a secure platform |
-| **Enforced** | **No — and this published sentence is false.** `grep` for `update(auditLog` and `delete(auditLog` across `apps/` and `packages/` returns zero hits, and no migration contains `DELETE FROM audit_log`. The table is genuinely append-only, which is the right property for an audit log and the wrong property for a 90-day promise. |
+| **Enforced** | **Partly, since 12 November 2026.** `apps/api/src/cron/retention.ts` deletes `signin_success` and `signin_failure` rows past 90 days on the nightly 03:00 cron, which makes the "sign-in logs" half of the published sentence true. Every other action is still retained indefinitely and deliberately — see the decision below. The "error reports" half of the sentence remains false, because no error reporting exists at all. |
 
 Two further points the audit team will ask about:
 
@@ -209,19 +209,61 @@ Two further points the audit team will ask about:
 - Append-only is enforced by convention, not by database grants. The
   application never updates or deletes; the application's database role could.
 
-> **DECISION NEEDED: reconcile the audit log's retention with the 90-day published claim.**
-> These cannot both stand. Three ways out, in order of preference:
-> **(a)** Keep the log append-only and correct the privacy notice to say
-> security events are retained for as long as the account exists plus 6 years,
-> matching the consent-record rationale — they are the evidence that access was
-> controlled. **(b)** Keep the 90-day promise and write the purge job, accepting
-> that a breach discovered in month four has no sign-in history to investigate,
-> which is the opposite of what an incident-response capability needs.
-> **(c)** Split the table: a 90-day window for high-volume `signin_*` rows and a
-> long retention for role grants, OAuth authorizations and email changes.
-> **Recommended: (a) now, (c) later.** Whichever is chosen, `attempted_email`
-> for non-existent accounts should be purged on a short clock regardless —
-> 30 days is enough to investigate a credential-stuffing run.
+> ~~**DECISION NEEDED: reconcile the audit log's retention with the 90-day published claim.**~~
+> **DECIDED 12 November 2026: option (c), the split. Built, not just decided.**
+>
+> The three options were **(a)** keep the log append-only and correct the
+> notice to say security events are kept for the life of the account plus six
+> years; **(b)** keep the 90-day promise and purge the whole table; **(c)**
+> split it — 90 days for high-volume `signin_*` rows, long retention for
+> everything that is evidence.
+>
+> **(c) was chosen and implemented** in `apps/api/src/cron/retention.ts`,
+> running nightly off the existing 03:00 cron. It deletes `signin_success` and
+> `signin_failure` rows older than 90 days and **nothing else**.
+>
+> **Why not (b), which is what "build the purger" sounds like.** A blanket
+> 90-day purge would delete `member_updated`, `member_exported`,
+> `submissions_exported` and `donor_register_exported` — the four actions
+> added in November 2026 specifically so a data-exfiltration incident could be
+> scoped. It would have removed the breach-scoping capability the same
+> security review had just built, silently, months after anyone remembered the
+> job existed. Role grants, guardian links and the OAuth authorization events
+> are the same kind of evidence and are equally untouched.
+>
+> **The action list is a literal, not a prefix match**, so a future
+> `signin_mfa_challenge` has to be added by somebody who has decided it is not
+> evidence. `SIGNIN_RETENTION_DAYS` and the published period are tied together
+> in a comment, because changing one without the other reintroduces exactly
+> the defect this closes.
+>
+> **The property this gives up, stated plainly.** `audit_log` was append-only
+> in practice and `incident-response.md` §4 leans on that. It is now
+> append-only *except* for sign-in rows past 90 days. That is the trade the
+> controller made; the narrowness is the mitigation — one function, one action
+> filter, no UPDATE path at all.
+
+> **DECISION NEEDED: `attempted_email` on a shorter clock than the row it sits on.**
+> **Recommended: scrub at 30 days.** `attempted_email` holds the address typed
+> at a failed sign-in, including addresses matching no account — personal data
+> about people who have no relationship with the church and no way to know the
+> record exists. Thirty days is enough to investigate a credential-stuffing
+> run; the rows themselves go at 90 either way.
+> **Trade-off, and why it was not bundled into the purge above:** scrubbing a
+> column is an **UPDATE**, where the purge is a DELETE. The audit log has never
+> been updated by anything, and introducing the first UPDATE path is a larger
+> change to the table's character than the delete was. It deserves its own
+> decision rather than riding along on one already taken.
+
+> **STILL OUTSTANDING even with the purge built: the other half of the sentence.**
+> The published claim is "Sign-in logs **and error reports** are kept for up to
+> 90 days, then automatically deleted". The purge makes the first half true.
+> The second half remains false for a different reason: the notice names Sentry
+> as a processor receiving error reports, and **there is no `@sentry` dependency
+> in any workspace and no Sentry code in the monorepo** (`incident-response.md`
+> §2). There are no error reports, to delete or otherwise. That is one of the
+> inaccurate statements tracked in `regulatory-mapping.md` §3 and it is fixed by
+> editing the notice, not by writing code.
 
 ### Consent records
 

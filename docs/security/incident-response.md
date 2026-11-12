@@ -71,6 +71,40 @@ this church learns about an account compromise is a member saying "I got an
 email about a sign-in I didn't make."** That is a real detection channel and it
 should be treated as one — see §3.
 
+### Accepted for the pilot, 12 November 2026
+
+**Decision: the absence of active detection and alerting below is accepted for
+the pilot.** Taken by the product owner on 12 November 2026, on the stated
+basis that **the church is in the process of forming its support model and
+operational processes**, and that alerting without a named person rostered to
+receive it is theatre rather than a control.
+
+That reasoning is sound and worth preserving, because it is the argument
+against the obvious quick fix: wiring an email alert on `signin_failure`
+volume would let this checklist item be reported as closed while nobody is
+on the other end of it. An alert nobody is accountable for answering is worse
+than a known gap, because it converts an open risk into a false assurance.
+
+**What is accepted, stated plainly.** Today, a credential-stuffing run, an
+anomalous export, or an administrator acting outside their remit is detected
+only if a member complains or somebody happens to look. There is no automatic
+notification to anyone.
+
+**What this is NOT.** It is not a decision that detection is unnecessary, and
+it does not close the two checklist items it covers — they remain **Fail**,
+with a compensating control that is honest rather than flattering: the pilot
+is one branch, the administrator population is small and known by name, and
+`audit_log` now records member edits and all three export paths, so an
+incident can be reconstructed after the fact even though nothing announces it
+in the moment.
+
+**The dependency is a person, not a system.** The work here is small — a
+threshold on `signin_failure` rows and a Cloudflare notification — and it is
+deliberately deferred until the support model names who receives it, with an
+out-of-hours route. That is the same gap as the unnamed roles in §1 and the
+notification decision in §5, and it should be closed in the same conversation
+rather than separately.
+
 ### What does not exist
 
 These are not quibbles; each one changes what an investigation can conclude.

@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { db, withDb } from './db';
 import { bindMailerEnv, logger } from '@kairos/utils';
 import { runLifecycleCron } from './cron/lifecycle';
+import { runRetentionCron } from './cron/retention';
 import { runDailyDigest } from './notifications/digest';
 
 /**
@@ -107,6 +108,29 @@ export default {
         // so we don't silently skip work on a schedule typo).
         const summary = await runLifecycleCron(db);
         logger.info('cron.lifecycle.complete', { module: 'cron', ...summary });
+
+        // Audit-log retention rides on the same nightly run rather than
+        // taking its own trigger. A new cron expression would have to be
+        // added to BOTH the top-level and the `staging` blocks in
+        // wrangler.jsonc — env blocks inherit nothing — and a retention job
+        // that silently never fires in one environment is precisely the
+        // failure this is meant to prevent.
+        //
+        // Isolated in its own try/catch on purpose: the lifecycle run above
+        // has already completed and logged, and a retention failure must not
+        // be reported as a lifecycle failure. It also must not be silent —
+        // the privacy notice promises these rows are deleted, so a job that
+        // stops working needs to say so where someone reading Workers Logs
+        // will see it.
+        try {
+          const retention = await runRetentionCron(db);
+          logger.info('cron.retention.complete', { module: 'cron', ...retention });
+        } catch (err) {
+          logger.error('cron.retention.failed', {
+            module: 'cron',
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
       } catch (err) {
         logger.error('cron.failed', {
           module: 'cron',
