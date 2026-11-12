@@ -21,7 +21,7 @@ import {
  * The leading blank is a real choice, because title is optional.
  */
 const TITLE_SELECT_OPTIONS = [
-  { value: '', label: 'Not given' },
+  { value: '', label: '' },
   ...GIFT_AID_TITLE_OPTIONS.map((t) => ({ value: t, label: t })),
 ];
 
@@ -235,11 +235,6 @@ export function GiftAidDeclarationForm({
         {errors.maidenName && (
           <p className="text-xs text-destructive">{errors.maidenName.message}</p>
         )}
-        <p className="text-xs text-muted-foreground">
-          Only needed if your bank account or card is in a different name from the one above. It
-          is used to match your giving, and is not part of your declaration to HM Revenue and
-          Customs.
-        </p>
       </div>
 
       <div className="space-y-4">
