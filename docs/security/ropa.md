@@ -115,7 +115,7 @@ column is the honest answer rather than the intended one.
 | **Purpose** | Claiming Gift Aid on donations, and retaining the declaration as HMRC evidence |
 | **Lawful basis** | **Article 6(1)(c) legal obligation** under UK tax law. Expressly **not** consent, and expressly not stoppable at the donor's request |
 | **Data subjects** | Donors, **including people with no Kairos account** — the public form predates enrolment |
-| **Personal data** | Declared title, first and last name, address lines, city, postcode, country, email, phone; the exact declaration wording agreed to; **`source_ip` and `user_agent` as evidence of the act**; declaration date; coverage scope; any withdrawal with method and notes |
+| **Personal data** | Declared title, first and last name, address lines, city, postcode, country, email, phone; the exact declaration wording agreed to; **`source_ip` and `user_agent` as evidence of the act**; declaration date; coverage scope; any cancellation with method and notes; maiden or previous name where given |
 | **Special category** | No |
 | **Tables** | `gift_aid_declarations` |
 | **Recipients** | Holders of `giftaid:admin` (church-scoped, and carrying **no** other capability — no directory, no safeguarding, no reports). **HMRC**, as a separate controller, on a claim |

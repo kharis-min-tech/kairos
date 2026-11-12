@@ -6,7 +6,7 @@ import { GiftAidDeclarationForm } from './gift-aid-declaration-form';
 const wording: GiftAidDeclarationTextResponse = {
   charityName: 'Kharis Ministries',
   charityNumber: '1139291',
-  wordingVersion: '2026-10-v1',
+  wordingVersion: '2026-11-v1',
   coverageLabels: {
     past_and_future: 'This gift, the past 4 years, and all future gifts',
     future: 'This gift and all future gifts',
@@ -116,6 +116,59 @@ describe('GiftAidDeclarationForm', () => {
       coverage: 'past_and_future',
       confirmedDeclaration: true,
     });
+  });
+
+  it('offers the title as a dropdown, not a free-text box', async () => {
+    render(<GiftAidDeclarationForm wording={wording} onSubmit={onSubmit} />);
+    const trigger = screen.getByLabelText('Title');
+    // A button, not an input: HMRC's title column is 4 characters, and a
+    // typed title overruns it.
+    expect(trigger.tagName).toBe('BUTTON');
+
+    fireEvent.click(trigger);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Miss' })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Miss' }));
+
+    fillValidDonor();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /Make my Gift Aid declaration/ }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ title: 'Miss' });
+  });
+
+  it('puts the HMRC name guidance above the name fields, where it can still be read', () => {
+    render(<GiftAidDeclarationForm wording={wording} onSubmit={onSubmit} />);
+    const guidance = screen.getByText(/as HM Revenue and Customs would know them/);
+    const firstName = screen.getByLabelText('First name');
+    // Node.compareDocumentPosition: FOLLOWING means the name field comes
+    // after the guidance in document order.
+    expect(
+      guidance.compareDocumentPosition(firstName) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByText(/Margaret Jones/)).toBeInTheDocument();
+  });
+
+  it('submits without a maiden name, and carries one through when given', async () => {
+    const { unmount } = render(<GiftAidDeclarationForm wording={wording} onSubmit={onSubmit} />);
+    fillValidDonor();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /Make my Gift Aid declaration/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    // Blank optional fields are stripped rather than sent as ''.
+    expect(onSubmit.mock.calls[0]![0]).not.toHaveProperty('maidenName');
+    unmount();
+
+    onSubmit.mockReset();
+    render(<GiftAidDeclarationForm wording={wording} onSubmit={onSubmit} />);
+    fillValidDonor();
+    fireEvent.change(screen.getByLabelText(/Maiden or previous name/), {
+      target: { value: 'Okonkwo' },
+    });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: /Make my Gift Aid declaration/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ maidenName: 'Okonkwo' });
   });
 
   it('warns an overseas donor that Gift Aid needs UK tax, and disables the postcode', async () => {

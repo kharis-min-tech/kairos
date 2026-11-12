@@ -17,7 +17,7 @@ import { members } from './members';
 /**
  * gift_aid_declarations — the auditable record of each Gift Aid declaration.
  *
- * Append-mostly. A withdrawal UPDATEs the row's cancellation columns; nothing
+ * Append-mostly. A cancellation UPDATEs the row's cancellation columns; nothing
  * in the application deletes a row, and `is_active` exists only to satisfy the
  * repo-wide soft-delete convention (it is never flipped by the Gift Aid
  * service). HMRC can ask to see any declaration a claim rested on, and the
@@ -62,6 +62,14 @@ export const giftAidDeclarations = pgTable('gift_aid_declarations', {
   title: varchar('title', { length: 4 }),
   firstName: varchar('first_name', { length: 35 }).notNull(),
   lastName: varchar('last_name', { length: 35 }).notNull(),
+  /**
+   * Maiden or previous name. Optional, never claimed on: HMRC's schedule has
+   * no column for it. It is captured because the name on the bank account a
+   * donor gives from is often not the name they declare under, and finance
+   * has nothing else to match the two with. Sized to the name column so it
+   * can never hold more than a name.
+   */
+  maidenName: varchar('maiden_name', { length: 35 }),
   /** House name or number first — it is the part HMRC actually matches on. */
   addressLine1: varchar('address_line1', { length: 200 }).notNull(),
   addressLine2: varchar('address_line2', { length: 200 }),
@@ -101,7 +109,7 @@ export const giftAidDeclarations = pgTable('gift_aid_declarations', {
    */
   status: varchar('status', { length: 20 }).notNull().default('active'),
   /**
-   * Withdrawal. Prospective: Gift Aid stops on gifts made from this date, and
+   * Cancellation. Prospective: Gift Aid stops on gifts made from this date, and
    * claims already made stand. HMRC requires both the date and the method.
    */
   cancelledAt: timestamp('cancelled_at'),
@@ -128,7 +136,7 @@ export const giftAidDeclarations = pgTable('gift_aid_declarations', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
-  // One declaration in force per member. Partial, so withdrawn and
+  // One declaration in force per member. Partial, so cancelled and
   // superseded rows accumulate freely beneath it.
   uniqueIndex('uq_gift_aid_active_per_member')
     .on(table.memberId)

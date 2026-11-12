@@ -128,6 +128,7 @@ function row(overrides: Record<string, unknown> = {}) {
     title: 'Mr',
     firstName: 'Ade',
     lastName: 'Bolarinwa',
+    maidenName: null,
     addressLine1: '12 High Street',
     addressLine2: null,
     city: 'London',
@@ -270,7 +271,7 @@ describe('declareMine', () => {
     expect((insertValues[0] as Record<string, unknown>)['coversFrom']).toBeNull();
   });
 
-  it('withdraws and supersedes an existing declaration rather than editing it', async () => {
+  it('cancels and supersedes an existing declaration rather than editing it', async () => {
     setupSelects([row()]);
     setupInsert([row({ id: 'new-id' })]);
     await declareMine(mockDb, auth(), declarantInput as never);
@@ -280,7 +281,7 @@ describe('declareMine', () => {
     expect(set['status']).toBe('cancelled');
     expect(set['cancellationMethod']).toBe('online');
     expect(set['supersededById']).toBe('new-id');
-    // The retention clock starts at withdrawal, not at deletion.
+    // The retention clock starts at cancellation, not at deletion.
     expect(set['retentionReviewAt']).toBeInstanceOf(Date);
   });
 });
@@ -338,6 +339,42 @@ describe('submitPublicDeclaration', () => {
     expect(values['branchId']).toBe(OTHER_BRANCH_ID);
   });
 
+  it('stores a maiden name when one is given, and null when it is not', async () => {
+    setupSelects([]);
+    setupInsert([{ id: 'new', declaredAt: new Date() }]);
+    await submitPublicDeclaration(
+      mockDb,
+      { ...declarantInput, email: 'stranger@example.com', maidenName: 'Okonkwo' } as never,
+      {},
+    );
+    expect((insertValues[0] as Record<string, unknown>)['maidenName']).toBe('Okonkwo');
+
+    insertValues.length = 0;
+    setupSelects([]);
+    setupInsert([{ id: 'new2', declaredAt: new Date() }]);
+    await submitPublicDeclaration(
+      mockDb,
+      { ...declarantInput, email: 'stranger2@example.com' } as never,
+      {},
+    );
+    expect((insertValues[0] as Record<string, unknown>)['maidenName']).toBeNull();
+  });
+
+  it('leaves the declaration wording untouched by the maiden name', async () => {
+    setupSelects([]);
+    setupInsert([{ id: 'new', declaredAt: new Date() }]);
+    await submitPublicDeclaration(
+      mockDb,
+      { ...declarantInput, email: 'stranger@example.com', maidenName: 'Okonkwo' } as never,
+      {},
+    );
+    const values = insertValues[0] as Record<string, unknown>;
+    // The maiden name is a matching aid, not part of the tax document, so it
+    // must not reach the stored wording or move the version.
+    expect(values['declarationText']).not.toContain('Okonkwo');
+    expect(values['wordingVersion']).toBe(GIFT_AID_WORDING_VERSION);
+  });
+
   it('refuses to stack a second declaration on a donor who already has one', async () => {
     setupSelects([{ id: OTHER_MEMBER_ID, homeBranchId: OTHER_BRANCH_ID }], [row()]);
     await expect(
@@ -382,7 +419,7 @@ describe('matchDeclaration', () => {
 });
 
 describe('recordWithdrawal', () => {
-  it('stores the method a withdrawal arrived by', async () => {
+  it('stores the method a cancellation arrived by', async () => {
     setupSelects([row()]);
     setupUpdate([row({ status: 'cancelled', cancelledAt: new Date(), cancellationMethod: 'letter' })]);
     await recordWithdrawal(mockDb, giftAidAdmin, DECLARATION_ID, {
@@ -396,7 +433,7 @@ describe('recordWithdrawal', () => {
     expect(set['retentionReviewAt']).toBeInstanceOf(Date);
   });
 
-  it('refuses a withdrawal dated before the declaration', async () => {
+  it('refuses a cancellation dated before the declaration', async () => {
     setupSelects([row()]);
     await expect(
       recordWithdrawal(mockDb, giftAidAdmin, DECLARATION_ID, {
@@ -406,7 +443,7 @@ describe('recordWithdrawal', () => {
     ).rejects.toThrow(/predate/);
   });
 
-  it('refuses to withdraw something already withdrawn', async () => {
+  it('refuses to cancel something already cancelled', async () => {
     setupSelects([row({ status: 'cancelled', cancelledAt: new Date() })]);
     await expect(
       recordWithdrawal(mockDb, giftAidAdmin, DECLARATION_ID, { method: 'phone' } as never),
@@ -428,6 +465,23 @@ describe('exportRegister', () => {
       overseasAddress: '',
       branchName: 'Peckham',
     });
+  });
+
+  it('carries the maiden name in its own column, leaving the claim name alone', async () => {
+    setupSelects([
+      { declaration: row({ maidenName: 'Okonkwo' }), branchName: 'Peckham' },
+    ]);
+    const rows = await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never);
+    // `name` is pasted straight into HMRC's 35-character column, so the
+    // maiden name must never be folded into it.
+    expect(rows[0]!.name).toBe('Ade Bolarinwa');
+    expect(rows[0]!.maidenName).toBe('Okonkwo');
+  });
+
+  it('blanks the maiden name column when the donor gave none', async () => {
+    setupSelects([{ declaration: row(), branchName: 'Peckham' }]);
+    const rows = await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never);
+    expect(rows[0]!.maidenName).toBe('');
   });
 
   it('blanks the postcode for an overseas donor and gives the full address', async () => {
@@ -520,7 +574,7 @@ describe('registerToCsv', () => {
   it('writes the HMRC-shaped header row', () => {
     const csv = registerToCsv([]);
     expect(csv.split('\r\n')[0]).toBe(
-      'Title,Name,House name or number,Postcode,Overseas address,Declared on,Covers donations from,Status,Withdrawn on,Email,Branch',
+      'Title,Name,Maiden or previous name,House name or number,Postcode,Overseas address,Declared on,Covers donations from,Status,Cancelled on,Email,Branch',
     );
   });
 
@@ -529,6 +583,7 @@ describe('registerToCsv', () => {
       {
         title: '',
         name: '=1+1',
+        maidenName: '',
         houseNameOrNumber: '12 High Street',
         postcode: 'SE1 2AB',
         overseasAddress: '',
@@ -548,6 +603,7 @@ describe('registerToCsv', () => {
       {
         title: '',
         name: 'Ade Bolarinwa',
+        maidenName: '',
         houseNameOrNumber: 'Flat 2, The Oaks',
         postcode: 'SE1 2AB',
         overseasAddress: '',

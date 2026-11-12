@@ -60,7 +60,7 @@ six-row purpose-to-basis table at `privacy/page.tsx:134-210`:
 | Attendance, discipleship tracking, rota co-ordination | Legitimate interests |
 | Pastoral care, prayer follow-up, safeguarding of vulnerable people including under-16s | Legitimate interests, and legal obligations under safeguarding law |
 | Optional newsletters, event invitations, outreach beyond one's own fellowships | **Explicit consent** |
-| Gift Aid claims, including keeping the declaration and any withdrawal | **Legal obligation** under UK tax law — expressly not consent, and expressly not stoppable on request |
+| Gift Aid claims, including keeping the declaration and any cancellation | **Legal obligation** under UK tax law — expressly not consent, and expressly not stoppable on request |
 | Fraud and abuse prevention, audit logs of consent and admin actions | Legitimate interests |
 
 The notice also states that there is no automated decision-making with

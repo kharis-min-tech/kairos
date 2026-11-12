@@ -251,7 +251,7 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium">Gift Aid</p>
                 <p className="text-xs text-muted-foreground">
-                  Let the church reclaim 25p for every 1 pound you give, or withdraw your
+                  Let the church reclaim 25p for every £1 you give, or cancel your
                   declaration.
                 </p>
               </div>

@@ -197,7 +197,7 @@ describe('member surface', () => {
     expect(res.status).toBe(201);
   });
 
-  it('withdraws without needing any capability', async () => {
+  it('cancels without needing any capability', async () => {
     (service.withdrawMine as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'cancelled' });
     const token = await signTestToken({ systemRole: 'member', memberId: TEST_IDS.memberId });
     const res = await app.request('/api/gift-aid/me/withdraw', {
@@ -235,7 +235,7 @@ describe('admin surface', () => {
     expect(service.getDeclaration).not.toHaveBeenCalled();
   });
 
-  it('requires both a method and a reachable declaration to record a withdrawal', async () => {
+  it('requires both a method and a reachable declaration to record a cancellation', async () => {
     const token = await signTestToken();
     const res = await app.request(`/api/gift-aid/${TEST_IDS.memberId}/withdraw`, {
       method: 'POST',

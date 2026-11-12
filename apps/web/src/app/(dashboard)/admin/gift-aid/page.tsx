@@ -53,7 +53,7 @@ function formatDate(iso: string | null): string {
 /**
  * The Gift Aid admin surface: the register, the review queue of declarations
  * not yet matched to a member, and the two actions that cannot be done by the
- * donor themselves (recording a withdrawal that arrived by phone or letter,
+ * donor themselves (recording a cancellation that arrived by phone or letter,
  * and marking a declaration invalid).
  *
  * Gated on `giftaid:admin` at CHURCH_SCOPE. A branch grant does not reach it,
@@ -155,7 +155,7 @@ export default function GiftAidAdminPage() {
               onValueChange={(v) => setStatus(v as GiftAidStatus | 'all')}
               options={[
                 { value: 'active', label: 'In force' },
-                { value: 'cancelled', label: 'Withdrawn' },
+                { value: 'cancelled', label: 'Cancelled' },
                 { value: 'invalid', label: 'Not valid' },
                 { value: 'all', label: 'All' },
               ]}
@@ -267,7 +267,7 @@ export default function GiftAidAdminPage() {
                               setInvalidId(null);
                             }}
                           >
-                            <Undo2 className="h-3.5 w-3.5" aria-hidden /> Withdraw
+                            <Undo2 className="h-3.5 w-3.5" aria-hidden /> Cancel
                           </Button>
                           <Button
                             variant="ghost"
@@ -293,7 +293,7 @@ export default function GiftAidAdminPage() {
               <p className="text-sm font-medium">Match this declaration to a member</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Matching links the declaration to a Kairos profile so the member can see and
-                withdraw it themselves. The name and address on the declaration are left exactly
+                cancel it themselves. The name and address on the declaration are left exactly
                 as the donor gave them, because those are the HMRC evidence and the profile may
                 well disagree with them.
               </p>
@@ -351,9 +351,9 @@ export default function GiftAidAdminPage() {
 
           {withdrawId && (
             <div className="space-y-3 rounded-lg border p-4">
-              <p className="text-sm font-medium">Record a withdrawal</p>
+              <p className="text-sm font-medium">Record a cancellation</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                HM Revenue and Customs requires the date and the method a withdrawal reached us.
+                HM Revenue and Customs requires the date and the method a cancellation reached us.
                 It takes effect from today and leaves earlier claims untouched.
               </p>
               <CustomSelect
@@ -373,7 +373,7 @@ export default function GiftAidAdminPage() {
                 <p className="text-xs text-destructive">
                   {recordWithdrawal.error instanceof Error
                     ? recordWithdrawal.error.message
-                    : 'Could not record the withdrawal.'}
+                    : 'Could not record the cancellation.'}
                 </p>
               )}
               <div className="flex gap-2">
@@ -390,7 +390,7 @@ export default function GiftAidAdminPage() {
                     setWithdrawNotes('');
                   }}
                 >
-                  {recordWithdrawal.isPending ? 'Recording…' : 'Record withdrawal'}
+                  {recordWithdrawal.isPending ? 'Recording…' : 'Record cancellation'}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setWithdrawId(null)}>
                   Cancel
