@@ -181,20 +181,26 @@ export default function PrivacyPage() {
                 <td className="py-2">Your explicit consent</td>
               </tr>
               {/*
-                DRAFT, awaiting legal sign-off. Gift Aid is the one purpose
-                here that is NOT legitimate interests or consent: the
-                declaration is kept to meet a tax obligation, which is why
-                erasure does not reach it. See requirements/gift-aid.md §8.
+                Reviewed by the legal and finance team on 11 November 2026.
+                The basis sentence below is THEIR wording, given verbatim:
+                do not reword it without going back to them. Gift Aid is the
+                one purpose here that is neither legitimate interests nor
+                consent, which is why erasure does not reach the declaration.
+                See requirements/gift-aid.md §8.
               */}
               <tr>
                 <td className="py-2 pr-4">
                   Claiming Gift Aid on your donations, including keeping your
-                  declaration and the record of any withdrawal
+                  declaration and the record of any cancellation
                 </td>
                 <td className="py-2">
-                  A legal obligation under UK tax law. This is not based on
-                  your consent, and it is not something we can stop doing at
-                  your request
+                  <span className="font-medium">
+                    Legal Obligation (Article 6(1)(c))
+                  </span>
+                  : Processing is necessary for us the controller to comply
+                  with the law (excluding contractual obligations). This is
+                  not based on your consent, and it is not something we can
+                  stop doing at your request
                 </td>
               </tr>
               <tr>
@@ -298,13 +304,13 @@ export default function PrivacyPage() {
             your account plus 6 years, because they are our evidence that we
             processed data lawfully.
           </li>
-          {/* DRAFT, awaiting legal sign-off. See requirements/gift-aid.md §8. */}
+          {/* Reviewed by the legal and finance team on 11 November 2026. See requirements/gift-aid.md §8. */}
           <li>
             <strong>Gift Aid declarations</strong> are kept for 6 years after
             the end of the accounting period containing the last donation they
             covered, and for longer if HM Revenue and Customs has an open
             enquiry. We keep the declaration, the name and home address you
-            gave on it, and the record of any withdrawal, because they are our
+            gave on it, and the record of any cancellation, because they are our
             evidence for the tax we reclaimed.
           </li>
           <li>
@@ -343,9 +349,9 @@ export default function PrivacyPage() {
             safeguarding or legal reasons
           </li>
           {/*
-            DRAFT, awaiting legal sign-off. The caveat above technically
-            covers Gift Aid, but a donor should not have to work that out
-            from it. See requirements/gift-aid.md §8.
+            Reviewed by the legal and finance team on 11 November 2026. The
+            caveat above technically covers Gift Aid, but a donor should not
+            have to work that out from it. See requirements/gift-aid.md §8.
           */}
           <li>
             If you have made a <strong>Gift Aid declaration</strong>, deleting

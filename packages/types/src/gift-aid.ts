@@ -73,8 +73,15 @@ export const GIFT_AID_BACKDATE_YEARS = 4;
  * donor: an enduring declaration stays valid until the donor cancels it. The
  * version exists so that, years later, we can reproduce the exact text each
  * donor agreed to.
+ *
+ * History:
+ *   2026-10-v1 — first version.
+ *   2026-11-v1 — "withdraw" became "cancel" throughout, which is HMRC's own
+ *     model phrasing. Asked for by finance and legal on 11 November 2026.
+ *     Nothing a donor agreed to changed in substance; declarations made
+ *     under 2026-10-v1 keep that version and stay in force.
  */
-export const GIFT_AID_WORDING_VERSION = '2026-10-v1';
+export const GIFT_AID_WORDING_VERSION = '2026-11-v1';
 
 // ── Coverage ───────────────────────────────────────────────
 
@@ -140,7 +147,7 @@ export const GIFT_AID_CHANNEL_LABEL: Record<GiftAidChannel, string> = {
  */
 export const GiftAidStatus = {
   Active: 'active',
-  /** Withdrawn by the donor. Prospective only: past claims stand. */
+  /** Cancelled by the donor. Prospective only: past claims stand. */
   Cancelled: 'cancelled',
   /**
    * Found not to meet HMRC's requirements: a missing or unusable address, or
@@ -158,11 +165,11 @@ export const GIFT_AID_STATUS_VALUES: readonly GiftAidStatus[] = [
 
 export const GIFT_AID_STATUS_LABEL: Record<GiftAidStatus, string> = {
   active: 'Active',
-  cancelled: 'Withdrawn',
+  cancelled: 'Cancelled',
   invalid: 'Not valid',
 };
 
-/** How a withdrawal reached us. HMRC requires the date AND the method. */
+/** How a cancellation reached us. HMRC requires the date AND the method. */
 export const GiftAidCancellationMethod = {
   Online: 'online',
   Email: 'email',
@@ -182,12 +189,36 @@ export const GIFT_AID_CANCELLATION_METHOD_VALUES: readonly GiftAidCancellationMe
 ];
 
 export const GIFT_AID_CANCELLATION_METHOD_LABEL: Record<GiftAidCancellationMethod, string> = {
-  online: 'Withdrawn online',
+  online: 'Cancelled online',
   email: 'By email',
   phone: 'By phone',
   letter: 'By letter',
   in_person: 'In person',
 };
+
+// ── Titles ─────────────────────────────────────────────────
+
+/**
+ * The titles the declaration form offers. A dropdown rather than a free-text
+ * box because finance asked for one: a typed title is the field most often
+ * filled with something HMRC's 4-character column cannot take ("Pastor",
+ * "Reverend Doctor"), and a title that will not fit the claim column is a
+ * line queried months later.
+ *
+ * Every value here fits GIFT_AID_TITLE_MAX. Title is optional on a
+ * declaration, so an empty choice is a real answer, not an unfilled field.
+ *
+ * The API deliberately does NOT validate against this list — it keeps the
+ * length check only. A declaration captured before a title was added here is
+ * still a valid tax document, and rejecting one would cost a donor to tidy a
+ * dropdown.
+ */
+export const GIFT_AID_TITLE_OPTIONS: readonly string[] = [
+  'Mr',
+  'Mrs',
+  'Miss',
+  'Ms',
+];
 
 // ── Claim-schedule limits ──────────────────────────────────
 //
@@ -335,7 +366,7 @@ export function renderDeclarationText(input: DeclarationTextInput): string {
     `I want to Gift Aid ${covered}.`,
     `I am a UK taxpayer. I understand that ${charity} will reclaim 25p of tax on every 1 pound I give, and that if I pay less Income Tax and/or Capital Gains Tax in a tax year than the amount of Gift Aid claimed on all my donations to all charities in that year, it is my responsibility to pay the difference to HM Revenue and Customs.`,
     `I confirm this is my own money, that it is not the proceeds of a collection or a payment from a company, and that I am not receiving anything in return for it.`,
-    `I will tell ${charity} if I change my name or home address, if I stop paying enough tax, or if I want to withdraw this declaration.`,
+    `I will tell ${charity} if I change my name or home address, if I stop paying enough tax, or if I want to cancel this declaration.`,
   ].join('\n\n');
 }
 
@@ -345,8 +376,8 @@ export function renderDeclarationNotes(): string {
     `${GIFT_AID_CHARITY_NAME} is a registered charity, number ${GIFT_AID_CHARITY_NUMBER}.`,
     'Your home address is needed so HM Revenue and Customs can identify you as a UK taxpayer. It is not used for anything else without your agreement.',
     'Gift Aid cannot be claimed on gifts made from a business account, on the proceeds of a collection, or on payments for tickets, courses or goods.',
-    'You can withdraw this declaration at any time. Withdrawing it stops Gift Aid on gifts you make from the day you tell us, and does not affect Gift Aid already claimed on earlier gifts.',
-    'We keep this declaration, and the record of any withdrawal, for as long as HM Revenue and Customs requires. That is why it is not removed if you later ask us to delete your profile.',
+    'You can cancel this declaration at any time. Cancelling it stops Gift Aid on gifts you make from the day you tell us, and does not affect Gift Aid already claimed on earlier gifts.',
+    'We keep this declaration, and the record of any cancellation, for as long as HM Revenue and Customs requires. That is why it is not removed if you later ask us to delete your profile.',
   ].join('\n\n');
 }
 
@@ -357,6 +388,14 @@ export interface GiftAidDeclarant {
   title: string | null;
   firstName: string;
   lastName: string;
+  /**
+   * Maiden or previous name. Optional, and NOT part of the declaration
+   * itself — HMRC's schedule has no column for it, and nothing here goes on
+   * a claim. It exists because the name on the bank account a donor gives
+   * from is often not the name they declare under, and without it finance
+   * cannot tie the two together when the claim is built.
+   */
+  maidenName: string | null;
   addressLine1: string;
   addressLine2: string | null;
   city: string | null;
@@ -393,11 +432,11 @@ export interface GiftAidDeclaration extends GiftAidDeclarant {
 export interface MyGiftAidStatus {
   /** The declaration currently in force, if any. */
   active: GiftAidDeclaration | null;
-  /** Earlier declarations and withdrawals, newest first. */
+  /** Earlier declarations and cancellations, newest first. */
   history: GiftAidDeclaration[];
   /**
    * False when a declaration is already in force. The profile then offers
-   * "update your details", which withdraws the old declaration and makes a
+   * "update your details", which cancels the old declaration and makes a
    * new one — HMRC's required route for changing what a declaration covers
    * (3.30.1), rather than editing one in place.
    */
@@ -411,6 +450,7 @@ export interface GiftAidDeclarantRequest {
   title?: string;
   firstName: string;
   lastName: string;
+  maidenName?: string;
   addressLine1: string;
   addressLine2?: string;
   city?: string;
@@ -468,6 +508,12 @@ export interface GiftAidDeclarationTextResponse {
 export interface GiftAidRegisterRow {
   title: string;
   name: string;
+  /**
+   * Blank for most donors. Not an HMRC column: it sits in the register so
+   * finance can match a bank payment made in a different name, and is
+   * dropped before anything is pasted into the claim schedule.
+   */
+  maidenName: string;
   houseNameOrNumber: string;
   postcode: string;
   /** Blank for UK donors; the full address for overseas ones. */

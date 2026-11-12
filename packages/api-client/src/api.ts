@@ -1766,7 +1766,7 @@ export function createApiClient(
           { memberId },
         ),
 
-      /** A withdrawal that arrived by phone, letter, email or in person. */
+      /** A cancellation that arrived by phone, letter, email or in person. */
       recordWithdrawal: (id: string, data: RecordGiftAidWithdrawalRequest) =>
         client.post<ApiResponse<GiftAidDeclaration>>(
           `/api/gift-aid/${encodeURIComponent(id)}/withdraw`,

@@ -462,7 +462,7 @@ they are wired into the two places an image stops being wanted:
   `photo_url` changes, so a replaced photo is not orphaned on a live URL.
 
 **CLOSED — the erasure is now evidence.** A new `member_erased` audit action
-(migration **0065**) records the outcome of the image deletion as `deleted`,
+(migration **0066**) records the outcome of the image deletion as `deleted`,
 `nothing-to-delete` or `failed`, and the audit row's `outcome` is **failure**
 when the image survived. This matters more than it looks: the row scrub is a
 local transaction that always succeeds, while the image deletion is a network

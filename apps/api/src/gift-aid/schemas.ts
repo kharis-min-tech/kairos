@@ -25,6 +25,9 @@ const declarantShape = {
   title: z.string().trim().max(GIFT_AID_TITLE_MAX).optional(),
   firstName: z.string().trim().min(1, 'First name is required').max(GIFT_AID_NAME_MAX),
   lastName: z.string().trim().min(1, 'Last name is required').max(GIFT_AID_NAME_MAX),
+  // Optional, and never claimed on. Sized to the name column so it cannot
+  // hold more than a name, not because HMRC has a column for it.
+  maidenName: z.string().trim().max(GIFT_AID_NAME_MAX).optional(),
   addressLine1: z
     .string()
     .trim()
@@ -135,12 +138,12 @@ export const myDeclarationSchema = z
     enforceCoverageRules(value, ctx);
   });
 
-/** Withdrawal recorded by the donor themselves. Method is always 'online'. */
+/** Cancellation recorded by the donor themselves. Method is always 'online'. */
 export const withdrawMineSchema = z.object({
   notes: z.string().trim().max(1000).optional(),
 });
 
-/** Withdrawal that reached us by phone, letter, email or in person. */
+/** Cancellation that reached us by phone, letter, email or in person. */
 export const recordWithdrawalSchema = z.object({
   method: z.enum(GIFT_AID_CANCELLATION_METHOD_VALUES as [string, ...string[]]),
   /** Defaults to now. Never earlier than the declaration itself. */

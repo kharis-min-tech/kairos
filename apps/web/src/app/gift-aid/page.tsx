@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Check, HandCoins } from 'lucide-react';
 import { Button, Card, CardContent } from '@kairos/ui';
 import {
@@ -51,8 +50,8 @@ export default function PublicGiftAidPage() {
               applying until you tell us otherwise, so there is nothing further to do.
             </p>
             <p>
-              You can withdraw it at any time by emailing the church office, or from your profile
-              once you have a Kairos account. Withdrawing it stops Gift Aid on gifts you make from
+              You can cancel it at any time by emailing the church office, or from your profile
+              once you have a Kairos account. Cancelling it stops Gift Aid on gifts you make from
               the day you tell us, and does not affect anything already claimed.
             </p>
             <p className="text-muted-foreground">
@@ -61,9 +60,13 @@ export default function PublicGiftAidPage() {
             </p>
           </CardContent>
         </Card>
-        <Link href="/">
+        {/*
+          kharis.org, not `/`. A donor who finishes this form has no Kairos
+          account, so the Kairos landing page is a dead end for them.
+        */}
+        <a href="https://kharis.org">
           <Button variant="outline">Back to Kharis Church</Button>
-        </Link>
+        </a>
       </div>
     );
   }
@@ -78,9 +81,9 @@ export default function PublicGiftAidPage() {
           <h1 className="text-2xl font-bold tracking-tight">Gift Aid declaration</h1>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          If you pay UK tax, Gift Aid lets the church reclaim 25p for every 1 pound you give, at no
-          extra cost to you. Making a declaration takes a minute and covers your future giving
-          until you withdraw it.
+          If you pay UK Income Tax or Capital Gains Tax, Gift Aid lets the church reclaim 25p for
+          every £1 you give, at no extra cost to you. Making a declaration takes a minute and can
+          cover your past four years&rsquo; and future giving until you cancel it.
         </p>
       </div>
 

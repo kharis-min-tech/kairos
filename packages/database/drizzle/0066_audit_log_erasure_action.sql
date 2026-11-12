@@ -1,4 +1,4 @@
--- 0065_audit_log_erasure_action.sql
+-- 0066_audit_log_erasure_action.sql
 --
 -- 0035 pinned audit_log.action; 0058, 0063 and 0064 widened it. One more:
 --

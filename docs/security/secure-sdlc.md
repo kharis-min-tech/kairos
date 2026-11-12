@@ -126,8 +126,8 @@ Said plainly, because a document that implies otherwise is worse than useless:
 
 **"The npm audit gate is green" needs one qualification, because on its own the
 sentence is misleading.** The gate is green *against a baseline*, and that
-baseline — `.github/npm-audit-baseline.json`, generated 8 November 2026 — holds
-**124 accepted advisories, of which 5 are critical**. It exists so CI can fire
+baseline — `.github/npm-audit-baseline.json`, generated 12 November 2026 — holds
+**133 accepted advisories, of which 5 are critical**. It exists so CI can fire
 on a *new* advisory rather than on the standing backlog of a monorepo this size,
 which is the right design. But a register that records "Next.js: Unauthenticated
 Remote Code Execution, accepted" with no rationale beside it is a finding in its
@@ -144,6 +144,47 @@ advisory being wrong.**
 | `GHSA-p293-qw3h-jr36` | `next` | **Windows-hosted servers only.** The API runs on Cloudflare Workers and the web app on Cloudflare Pages; there is no Windows host anywhere in the stack. |
 | `GHSA-5gmw-xhrv-c9v3`, `GHSA-85c8-ppgw-ccpr` | `tinypool` | Reached only via `vitest` — the test runner. It is a dev dependency and appears in no deployed bundle. Exploiting it requires already being able to run the test suite, which means already having the repository. |
 | `GHSA-pqg4-j6r4-53mv` | `shell-quote` | Reached via `drizzle-kit → gel` (a local CLI) and `react-native → react-devtools-core` (dev only). Neither ships. |
+
+### The node-forge batch, added 12 November 2026
+
+Nine `node-forge` advisories were published upstream on 12 November 2026 and
+turned the gate red on every open PR at once. **They entered against a lockfile
+nobody had touched** — which is exactly the regression the weekly schedule
+exists to surface, and the gate behaving correctly rather than a dependency
+anyone pulled in. Two are high (`GHSA-rhr8-3pm8-cq29`, ASN.1 resource exhaustion
+in `asn1.fromDer`; `GHSA-6qrw-m8cv-hcxf`, RSA PKCS#1 v1.5 signature forgery via
+non-canonical `DigestInfo`), the rest moderate and low.
+
+**Why they do not reach production.** `node-forge` is in the Expo/EAS build
+toolchain only — `eas-cli`, `expo-updates`, and `@expo/cli`, via
+`@expo/code-signing-certificates`, `@expo/pkcs12` and `jks-js`. It is reached
+when a mobile build is produced, on EAS's builders, and it appears in no
+deployed bundle: not the Worker, not the Pages app, not the shipped React Native
+binary. The signature-forgery advisory matters where `node-forge` verifies
+signatures on untrusted input; here the inputs are our own signing certificates
+and keystores.
+
+**The fix exists and we cannot take it yet.** `node-forge@1.4.3` closes all
+nine. Four of the six consumers declare caret ranges that `1.4.3` satisfies, but
+**`eas-cli@21.8.0` pins `node-forge` to exactly `1.4.0`**, and everything
+dedupes to that single hoisted copy. An `overrides` entry does not dislodge it
+without a full lockfile regeneration, which is a large, risky diff to carry for
+a build-time advisory.
+
+`eas-cli@27.7.2` pins `node-forge@1.4.3` — so **the real fix is bumping
+`eas-cli` from `^21.8.0`, and it clears all nine at once.** That is six major
+versions of the tool that produces the iOS and Android builds, and a breaking
+change there surfaces as a failed TestFlight build rather than as a red CI run.
+It needs its own change and its own test build.
+
+> **DECISION NEEDED: when to bump `eas-cli` from `^21.8.0` to `^27`.**
+> **Recommended:** do it as a standalone PR with a `preview` build on both
+> platforms before merge, and trim all nine entries from the baseline in the
+> same change.
+> **Trade-off:** until then the register carries nine build-tooling advisories,
+> two of them high, which has to be explained to anyone reading it. The
+> compensating control is real but narrow: the code is unreachable from any
+> deployed surface, and it only executes on EAS's builders.
 
 **Two things follow, and neither is "do nothing".**
 

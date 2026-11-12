@@ -9,10 +9,21 @@ import {
   GIFT_AID_COVERAGE_LABEL,
   GIFT_AID_NAME_MAX,
   GIFT_AID_TITLE_MAX,
+  GIFT_AID_TITLE_OPTIONS,
   type GiftAidCoverage,
   type GiftAidDeclarationTextResponse,
   isUkPostcode,
 } from '@kairos/types';
+
+/**
+ * Title is a dropdown, not a text box: finance asked for one, and HMRC's
+ * claim column is 4 characters, which a typed title overruns constantly.
+ * The leading blank is a real choice, because title is optional.
+ */
+const TITLE_SELECT_OPTIONS = [
+  { value: '', label: 'Not given' },
+  ...GIFT_AID_TITLE_OPTIONS.map((t) => ({ value: t, label: t })),
+];
 
 // Mirrors apps/api/src/gift-aid/schemas.ts. The widths are HMRC's claim
 // columns, not arbitrary limits: title is a 4-character column on the
@@ -26,6 +37,9 @@ const makeSchema = (requireEmail: boolean) => z
     title: z.string().trim().max(GIFT_AID_TITLE_MAX, 'Use a short title, like Mr or Dr').optional(),
     firstName: z.string().trim().min(1, 'Enter your first name').max(GIFT_AID_NAME_MAX),
     lastName: z.string().trim().min(1, 'Enter your last name').max(GIFT_AID_NAME_MAX),
+    // Optional, and never claimed on. It is here so a donor whose bank
+    // account is in a different name can say so.
+    maidenName: z.string().trim().max(GIFT_AID_NAME_MAX).optional(),
     addressLine1: z.string().trim().min(1, 'Enter your house name or number and street').max(200),
     addressLine2: z.string().trim().max(200).optional(),
     city: z.string().trim().max(100).optional(),
@@ -160,6 +174,7 @@ export function GiftAidDeclarationForm({
   });
 
   const coverage = watch('coverage');
+  const title = watch('title');
   const countryCode = watch('countryCode');
   const confirmed = watch('confirmedDeclaration');
   const isUk = (countryCode ?? 'GB').toUpperCase() === 'GB';
@@ -167,10 +182,35 @@ export function GiftAidDeclarationForm({
 
   return (
     <form onSubmit={handleSubmit((values) => onSubmit(stripBlanks(values)))} className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-[6rem_1fr_1fr]">
+      {/*
+        Above the name fields, not beneath them. It was at the bottom of the
+        form, which is after the point where a donor has already typed
+        "Maggie" and moved on; finance asked for it where it can still change
+        what gets typed.
+      */}
+      <div className="space-y-2 rounded-lg border border-[#5D3FD3]/25 bg-[#5D3FD3]/[0.05] px-4 py-3 text-sm leading-relaxed">
+        <p>
+          Please give your full first name and surname as HM Revenue and Customs would know them
+          (for example, &ldquo;Margaret Jones&rdquo; rather than &ldquo;Maggie Jones&rdquo; or
+          &ldquo;M Jones&rdquo;). This helps us make sure your Gift Aid claim is accepted.
+        </p>
+        <p className="text-muted-foreground">
+          If the name on the bank account or card you give from is different, for example a maiden
+          or previous name, please add it below as well. We need both to match your giving to this
+          declaration.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-[7rem_1fr_1fr]">
         <div className="space-y-1.5">
           <Label htmlFor="ga-title">Title</Label>
-          <Input id="ga-title" placeholder="Mr" {...register('title')} />
+          <CustomSelect
+            id="ga-title"
+            value={title ?? ''}
+            placeholder="Select"
+            onValueChange={(v) => setValue('title', v, { shouldValidate: true })}
+            options={TITLE_SELECT_OPTIONS}
+          />
           {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
         </div>
         <div className="space-y-1.5">
@@ -187,10 +227,20 @@ export function GiftAidDeclarationForm({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Please give your full name as HM Revenue and Customs would know it, not a shortened
-        version. Initials are not enough for a valid declaration.
-      </p>
+      <div className="space-y-1.5 sm:max-w-sm">
+        <Label htmlFor="ga-maiden">
+          Maiden or previous name <span className="text-muted-foreground">(optional)</span>
+        </Label>
+        <Input id="ga-maiden" autoComplete="off" {...register('maidenName')} />
+        {errors.maidenName && (
+          <p className="text-xs text-destructive">{errors.maidenName.message}</p>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Only needed if your bank account or card is in a different name from the one above. It
+          is used to match your giving, and is not part of your declaration to HM Revenue and
+          Customs.
+        </p>
+      </div>
 
       <div className="space-y-4">
         <div className="space-y-1.5">

@@ -664,7 +664,7 @@ async function seed() {
       {
         roleName: 'Gift Aid Admin',
         description:
-          'Church-wide administration of Gift Aid declarations. Reviews submissions, matches them to members, records withdrawals taken by phone or letter, and exports the HMRC claim register. Carries no branch, directory or safeguarding sight.',
+          'Church-wide administration of Gift Aid declarations. Reviews submissions, matches them to members, records cancellations taken by phone or letter, and exports the HMRC claim register. Carries no branch, directory or safeguarding sight.',
       },
     ])
     .returning();
