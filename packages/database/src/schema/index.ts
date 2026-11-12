@@ -4,6 +4,18 @@ export { members, membersRelations } from './members';
 export { branchLeadership, branchLeadershipRelations } from './branch-leadership';
 export { roles, rolesRelations } from './roles';
 export { memberRoles, memberRolesRelations } from './member-roles';
+export {
+  memberMfa,
+  memberMfaBackupCodes,
+  memberMfaRelations,
+  memberMfaBackupCodesRelations,
+} from './member-mfa';
+export type {
+  MemberMfa,
+  NewMemberMfa,
+  MemberMfaBackupCode,
+  NewMemberMfaBackupCode,
+} from './member-mfa';
 export { memberGuardians, memberGuardiansRelations } from './member-guardians';
 export { fellowships, fellowshipsRelations } from './fellowships';
 export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-members';

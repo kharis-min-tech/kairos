@@ -43,3 +43,16 @@ export {
   sendEmailChangedAlertEmail,
 } from './mailer';
 export type { MailerSecrets } from './mailer';
+export {
+  importSecretBoxKey,
+  generateSecretBoxKey,
+  seal,
+  open,
+} from './secret-box';
+export type { SealedSecret } from './secret-box';
+export {
+  generateBackupCodes,
+  hashBackupCode,
+  normaliseBackupCode,
+  BACKUP_CODE_COUNT,
+} from './backup-codes';
