@@ -295,12 +295,6 @@ export function GiftAidDeclarationForm({
             {errors.bankAccountName && (
               <p className="text-xs text-destructive">{errors.bankAccountName.message}</p>
             )}
-            <p className="text-xs text-muted-foreground">
-              Copy it exactly as it appears on your statement, initials and all. We use this only
-              to match your giving to this declaration. Your declaration is still made in the name
-              above, and that is the name we give to HM Revenue and Customs. A joint account is
-              fine, as long as the gift is your own money.
-            </p>
           </div>
         )}
       </div>
