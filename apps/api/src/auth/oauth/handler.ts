@@ -372,7 +372,7 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
       return auditFailureAndRedirect(c, providerId, 'account_inactive', mobile);
     }
 
-    const session = await issueAuthenticatedSession(db, member, getAuthSecrets(c));
+    const session = await issueAuthenticatedSession(db, member, getAuthSecrets(c), { c });
 
     const ctx = extractRequestContext(c);
 
@@ -438,12 +438,26 @@ export async function handleOAuthCallback(c: Context, providerId: ProviderId): P
 
     // Tokens go in the URL fragment — never in query/history/logs. The web
     // app's /oauth-callback page reads them from window.location.hash.
-    const fragment = new URLSearchParams({
-      accessToken: session.tokens.accessToken,
-      refreshToken: session.tokens.refreshToken,
-      method: providerId,
-      ...(payload.returnTo ? { returnTo: payload.returnTo } : {}),
-    });
+    // A second factor can be outstanding here exactly as it can after a
+    // password login. Signing in with Google proves the Google account, not
+    // possession of the authenticator, so this door gets the same treatment:
+    // the fragment carries the pre-MFA token instead of a session, and the
+    // callback page sends the user to the challenge.
+    const fragment = new URLSearchParams(
+      session.tokens
+        ? {
+            accessToken: session.tokens.accessToken,
+            refreshToken: session.tokens.refreshToken,
+            method: providerId,
+            ...(payload.returnTo ? { returnTo: payload.returnTo } : {}),
+          }
+        : {
+            mfaToken: session.mfa?.token ?? '',
+            mfaStage: session.mfa?.stage ?? 'challenge',
+            method: providerId,
+            ...(payload.returnTo ? { returnTo: payload.returnTo } : {}),
+          },
+    );
     return new Response(null, {
       status: 302,
       headers: {

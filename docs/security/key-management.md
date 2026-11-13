@@ -116,6 +116,7 @@ that this is deliberate, so a staging token cannot unlock production.
 | `SELF_CHECK_IN_QR_SECRET` | HMAC-SHA256 key over `` `${serviceId}.${bucket}` `` for the rotating check-in QR. | `attendance/router.ts:63` | 6 months, or immediately on leak. **Invalidates every QR on screen within 60s.** §4 |
 | `AWS_ACCESS_KEY_ID` | IAM key for SES `SendEmail`. | `worker.ts:61`, `packages/utils/src/mailer.ts:42` | 90 days (long-lived IAM key — see §5) |
 | `AWS_SECRET_ACCESS_KEY` | IAM secret for SES. | `worker.ts:62`, `mailer.ts:43` | 90 days, with `AWS_ACCESS_KEY_ID` |
+| `MFA_ENCRYPTION_KEY` | **AES-256 key, 32 bytes base64.** Seals the TOTP secrets in `member_mfa`. Deliberately not in the database, so a database backup on its own yields no working second factors. | `lib/mfa-key.ts:24` | On compromise only. **Rotation invalidates every enrolled factor at once** — nothing records which key a row was sealed with, so every privileged member re-enrols from a backup code or an admin reset. Treat it as a break-glass action, not a routine one. §4 |
 | `CF_IMAGES_TOKEN` | Cloudflare API token with `Images:Edit`. Mints direct-upload URLs for profile photos. | `media/router.ts:62` | 12 months |
 | `GOOGLE_CLIENT_SECRET` | Google SSO client secret. | `auth/oauth/providers.ts:48` | Provider-driven; no forced expiry |
 | `MICROSOFT_CLIENT_SECRET` | Microsoft/Entra client secret. | `auth/oauth/providers.ts:88` | **Forced: Entra caps these at 24 months.** Diarise. |
@@ -130,6 +131,8 @@ public config. Listed so nobody treats their exposure as an incident:
 | `CF_IMAGES_ACCOUNT_HASH` | The **public** delivery hash in every `imagedelivery.net` URL (`media/router.ts:59`) |
 | `GOOGLE_CLIENT_ID`, `MICROSOFT_CLIENT_ID` | Public OAuth client identifiers |
 | `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID` | Apple Services ID, team id, and the `kid` header of the client-secret JWT |
+| `MFA_REQUIRED_FROM` | The date after which a privileged member with no second factor is held at enrolment instead of signed in (`auth/service.ts`, `mfaCutoverPassed`). **Unset means not yet**, and an unparseable value also means not yet and logs loudly — a typo here must not lock the church out of its own system. |
+| `MFA_ISSUER` | The name an authenticator app shows next to the code. Defaults to `Kairos`. |
 | `EMAIL_FROM` | The From address on transactional mail |
 | `FRONTEND_URL` | Base URL for every email deep link, **and the OIDC issuer** (`oauth-server/config.ts:39-41`). Changing it breaks token validation for every OAuth client. |
 | `DEFAULT_HOME_BRANCH_ID` | Optional; the branch a new SSO signup is filed under |
@@ -401,3 +404,43 @@ Item 3 should not wait. With item 1 closed, **nothing on this list is a live
 vulnerability** — the remainder are missing controls and unnamed
 responsibilities, which is a materially different posture from the one this
 document opened with.
+
+---
+
+## 9. The MFA cutover date
+
+Added 12 November 2026, when TOTP for privileged accounts shipped.
+
+The mechanism is complete and enforced at all three doors — password login,
+the OAuth callback, and the OAuth confirm-link exchange — as well as at token
+refresh, so the mobile app's year-long biometric session is not exempt. What is
+**not** decided is when having a factor stops being optional.
+
+Today `MFA_REQUIRED_FROM` is unset, which means a privileged member with no
+authenticator is still signed in, and the response tells the client to nag.
+That is deliberate: on the day this shipped nobody was enrolled, so enforcing
+immediately would have locked every leader out of the system at once.
+
+> **DECISION NEEDED:** the date to set `MFA_REQUIRED_FROM` to.
+>
+> **Recommended: four weeks after the enrolment UI reaches the people who
+> need it**, not four weeks after it is merged. The set is wider than it
+> sounds — it is every holder of any grant, which includes fellowship leaders
+> and department deputies, who are volunteers rather than staff. The trade is
+> straightforward: too early and volunteers are locked out of a system they
+> use on a Sunday with nobody to call; too late and the control is advisory,
+> which is the state the checklist asked about in the first place.
+>
+> Setting it needs `wrangler secret put` or a `wrangler.jsonc` var and a
+> deploy, so it is reversible within one deploy if the first attempt is too
+> aggressive.
+
+Two things worth knowing before choosing a date:
+
+- **Enrolment is a support task, not a feature flag.** It needs a written
+  guide and, realistically, somebody walking people through it in person. A
+  date set without that attached is a date that will be moved.
+- **Backup codes are the recovery path, and they are shown once.** A member
+  who loses their phone and never saved the codes needs an admin to remove
+  the factor. For the single system admin there is no such admin, so their
+  codes genuinely must be kept somewhere offline.

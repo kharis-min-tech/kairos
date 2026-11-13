@@ -54,7 +54,7 @@ oauthRouter.post('/:provider/callback', async (c) => {
 oauthRouter.post('/confirm-link', zValidator('json', confirmLinkSchema), async (c) => {
   const { confirmationToken, password } = c.req.valid('json');
   const member = await confirmPasswordLink(db, confirmationToken, password);
-  const session = await issueAuthenticatedSession(db, member, getAuthSecrets(c));
+  const session = await issueAuthenticatedSession(db, member, getAuthSecrets(c), { c });
   const ctx = extractRequestContext(c);
   await recordAuditEvent(db, {
     actorMemberId: member.id,

@@ -13,6 +13,7 @@ import { UnauthorizedError, ForbiddenError } from '@kairos/utils';
 import { db } from '../db';
 import { resolveGrants, authHasCapability } from '../lib/grants';
 import { getAuthSecrets } from '../lib/auth-secrets';
+import { MFA_TOKEN_KIND } from '../lib/token-kinds';
 
 declare module 'hono' {
   interface ContextVariableMap {
@@ -46,6 +47,23 @@ export async function authMiddleware(c: Context, next: Next) {
     (payload as Record<string, unknown>)['kind'] === 'role-selection'
   ) {
     throw new UnauthorizedError('Session token cannot be used as an access token');
+  }
+
+  // Same guard, for the token issued between a correct password and a correct
+  // second-factor code. It is signed with the SAME secret as a real access
+  // token, so `jwtVerify` above is perfectly happy with it — this is the only
+  // thing standing between "knows the password" and "is signed in". Without
+  // it the entire MFA requirement is a screen the client could skip.
+  //
+  // The MFA router does not mount this middleware; it verifies the pre-MFA
+  // token itself, which is why these routes still work while every other
+  // `/api/*` route refuses the token.
+  if (
+    typeof payload === 'object' &&
+    payload !== null &&
+    (payload as Record<string, unknown>)['kind'] === MFA_TOKEN_KIND
+  ) {
+    throw new UnauthorizedError('Finish signing in before using this token');
   }
 
   // Phase 5 hardening: normalise legacy tokens so AuthContext consumers can

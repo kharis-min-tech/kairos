@@ -10,6 +10,20 @@ export {
 } from './logger';
 export { hashPassword, verifyPassword, randomTokenHex } from './password';
 export {
+  base32Encode,
+  base32Decode,
+  generateTotpSecret,
+  totpStepAt,
+  totpCodeAt,
+  verifyTotp,
+  totpEnrolmentUri,
+  TOTP_STEP_SECONDS,
+  TOTP_DIGITS,
+  TOTP_DRIFT_STEPS,
+  type VerifyTotpOptions,
+  type VerifyTotpResult,
+} from './totp';
+export {
   bindMailerEnv,
   isMailerLive,
   sendAccountVerificationEmail,
@@ -29,3 +43,16 @@ export {
   sendEmailChangedAlertEmail,
 } from './mailer';
 export type { MailerSecrets } from './mailer';
+export {
+  importSecretBoxKey,
+  generateSecretBoxKey,
+  seal,
+  open,
+} from './secret-box';
+export type { SealedSecret } from './secret-box';
+export {
+  generateBackupCodes,
+  hashBackupCode,
+  normaliseBackupCode,
+  BACKUP_CODE_COUNT,
+} from './backup-codes';

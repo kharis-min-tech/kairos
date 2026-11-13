@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
+import type { Context } from 'hono';
 import { eq, and, or, gt, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
@@ -16,10 +17,14 @@ import type {
   AuthTokens,
   LoginResponse,
   MemberProfile,
+  MfaChallenge,
 } from '@kairos/types';
 import type { SystemRole } from '@kairos/types';
 import { isMinorMember } from '@kairos/types';
 import { resolveGrants } from '../lib/grants';
+import { readSetting } from '../lib/secret-env';
+import { MFA_TOKEN_KIND } from '../lib/token-kinds';
+import { hasConfirmedFactor, mfaIsRequiredFor } from './mfa';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { dispatchNotification } from '../notifications/service';
 import { recordAuditEvent } from '../audit/service';
@@ -95,23 +100,100 @@ async function signAccessToken(payload: AuthContext, secrets: AuthSecrets): Prom
     .sign(key);
 }
 
-async function signRefreshToken(memberId: string, secrets: AuthSecrets): Promise<string> {
+/**
+ * `mfa` records whether the sign-in this token descends from actually passed
+ * a second factor.
+ *
+ * It has to live in the refresh token, because the refresh token is the only
+ * thing a long-lived session carries. On mobile it is sealed behind the
+ * keychain for a YEAR, so without this claim the biometric path would be
+ * permanently exempt from MFA: sign in once before enrolling, and every
+ * refresh for the next twelve months mints a full access token on the
+ * strength of a sign-in that never saw a code.
+ *
+ * Stamped honestly, including `false` for a member who did not need a factor
+ * at the time. If they are later granted a role and enrol, `refreshAccessToken`
+ * sees `mfa: false` against a now-enrolled account and makes them sign in
+ * again — which is right, because a token minted before the factor existed
+ * proves nothing about it.
+ */
+async function signRefreshToken(
+  memberId: string,
+  secrets: AuthSecrets,
+  mfa: boolean,
+): Promise<string> {
   const key = new TextEncoder().encode(secrets.refreshSecret);
-  return new SignJWT({ memberId })
+  return new SignJWT({ memberId, mfa })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(secrets.refreshTokenExpiry)
     .sign(key);
 }
 
-/** Generate a fresh access+refresh token pair for a given auth context. */
+/**
+ * The token kind issued between a correct password and a correct code.
+ *
+ * `authMiddleware` refuses it for every `/api/*` route, exactly as it already
+ * refuses the role-selection token, so holding one grants nothing except the
+ * right to finish signing in. Five minutes because it is a step in a flow a
+ * person is actively in the middle of, not a session.
+ */
+export { MFA_TOKEN_KIND };
+const MFA_TOKEN_EXPIRY = '5m';
+
+export async function signMfaToken(
+  memberId: string,
+  stage: 'challenge' | 'enrolment',
+  secrets: AuthSecrets,
+): Promise<string> {
+  const key = new TextEncoder().encode(secrets.accessSecret);
+  return new SignJWT({ kind: MFA_TOKEN_KIND, memberId, stage })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(MFA_TOKEN_EXPIRY)
+    .sign(key);
+}
+
+/** Verify a pre-MFA token. Throws 401 for anything else, including a real access token. */
+export async function verifyMfaToken(
+  token: string,
+  secrets: AuthSecrets,
+): Promise<{ memberId: string; stage: 'challenge' | 'enrolment' }> {
+  const key = new TextEncoder().encode(secrets.accessSecret);
+  try {
+    const { payload } = await jwtVerify(token, key);
+    // The kind check is the load-bearing half. Both token kinds are signed
+    // with the same secret, so without it an ordinary access token would be
+    // accepted here — and an expired-session user could walk through the MFA
+    // exchange to mint a fresh one.
+    if (payload['kind'] !== MFA_TOKEN_KIND) throw new Error('wrong kind');
+    const memberId = payload['memberId'];
+    const stage = payload['stage'];
+    if (typeof memberId !== 'string') throw new Error('invalid payload');
+    if (stage !== 'challenge' && stage !== 'enrolment') throw new Error('invalid stage');
+    return { memberId, stage };
+  } catch {
+    throw new UnauthorizedError('Your sign-in attempt has expired. Please sign in again.');
+  }
+}
+
+/**
+ * Generate a fresh access+refresh token pair for a given auth context.
+ *
+ * `mfaSatisfied` defaults to true because every caller is re-minting tokens
+ * for a session that is ALREADY past `authMiddleware` — the branch toggle is
+ * the only one. Defaulting it to false would silently demote such a session
+ * and 401 the user at their next refresh for doing nothing but switching
+ * branch.
+ */
 export async function generateTokenPair(
   authContext: AuthContext,
   secrets: AuthSecrets,
+  mfaSatisfied = true,
 ): Promise<{ accessToken: string; refreshToken: string }> {
   const [accessToken, refreshToken] = await Promise.all([
     signAccessToken(authContext, secrets),
-    signRefreshToken(authContext.memberId, secrets),
+    signRefreshToken(authContext.memberId, secrets, mfaSatisfied),
   ]);
   return { accessToken, refreshToken };
 }
@@ -328,7 +410,8 @@ export async function issueAuthenticatedSession(
   db: Database,
   member: typeof members.$inferSelect,
   secrets: AuthSecrets,
-): Promise<{ tokens: AuthTokens; member: MemberProfile }> {
+  options: { mfaSatisfied?: boolean; c?: Context } = {},
+): Promise<{ tokens?: AuthTokens; member: MemberProfile; mfa?: MfaChallenge; mfaSetupRecommended?: boolean }> {
   // Last line of defence: every sign-in door funnels through here — password
   // login, the OAuth callback and the OAuth confirm-link exchange. `login()`
   // rejects a deactivated member earlier with a friendlier message; the OAuth
@@ -344,6 +427,40 @@ export async function issueAuthenticatedSession(
   ]);
   const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = authority;
 
+  // The second factor, decided at the one place every sign-in door passes
+  // through. Password login, the OAuth callback and the OAuth confirm-link
+  // exchange all land here, so a factor required here is required by all
+  // three — there is no door left to walk around it.
+  const mfaRequired = mfaIsRequiredFor(member.systemRole as SystemRole, grants);
+  if (mfaRequired && !options.mfaSatisfied) {
+    const enrolled = await hasConfirmedFactor(db, member.id);
+
+    if (enrolled) {
+      return {
+        member: toMemberProfile(member),
+        mfa: {
+          token: await signMfaToken(member.id, 'challenge', secrets),
+          stage: 'challenge',
+        },
+      };
+    }
+
+    // No factor yet. Whether that blocks sign-in is a rollout decision, not a
+    // security one: on the day this ships nobody is enrolled, so blocking
+    // immediately would lock every leader out of the system at once. Before
+    // MFA_REQUIRED_FROM they are signed in and nagged; after it they must
+    // enrol before they get a usable token.
+    if (mfaCutoverPassed(options.c)) {
+      return {
+        member: toMemberProfile(member),
+        mfa: {
+          token: await signMfaToken(member.id, 'enrolment', secrets),
+          stage: 'enrolment',
+        },
+      };
+    }
+  }
+
   const authContext: AuthContext = {
     memberId: member.id,
     email: member.email,
@@ -357,7 +474,11 @@ export async function issueAuthenticatedSession(
 
   const [accessToken, refreshToken] = await Promise.all([
     signAccessToken(authContext, secrets),
-    signRefreshToken(member.id, secrets),
+    // Honest, not convenient: `false` for a privileged member signed in
+    // during the grace period with no factor. If they enrol later, this
+    // token stops working and they sign in again, because a token minted
+    // before the factor existed proves nothing about it.
+    signRefreshToken(member.id, secrets, Boolean(options.mfaSatisfied) || !mfaRequired),
   ]);
 
   await db
@@ -368,7 +489,31 @@ export async function issueAuthenticatedSession(
   return {
     tokens: { accessToken, refreshToken },
     member: toMemberProfile(member),
+    ...(mfaRequired && !options.mfaSatisfied ? { mfaSetupRecommended: true } : {}),
   };
+}
+
+/**
+ * Whether the church-wide deadline for having a factor has passed.
+ *
+ * Unset means "not yet", which is the deliberate default: a date nobody has
+ * chosen should not lock anybody out. `docs/security/` carries this as a
+ * decision for the church to make once enrolment has been walked through
+ * with the fellowship leaders.
+ */
+function mfaCutoverPassed(c?: Context): boolean {
+  const configured = readSetting(c, 'MFA_REQUIRED_FROM', '');
+  if (!configured) return false;
+  const cutover = Date.parse(configured);
+  // An unparseable date must not silently mean "enforce now" OR "never".
+  // Treating it as "not yet" is the safer of the two and the log says why.
+  if (Number.isNaN(cutover)) {
+    logger.error('MFA_REQUIRED_FROM is set but is not a parseable date; treating MFA as not yet mandatory', {
+      value: configured,
+    });
+    return false;
+  }
+  return Date.now() >= cutover;
 }
 
 export async function login(
@@ -376,6 +521,8 @@ export async function login(
   email: string,
   password: string,
   secrets: AuthSecrets,
+  // Carries the Worker's env bindings, which is where MFA_REQUIRED_FROM lives.
+  c?: Context,
 ): Promise<LoginResponse> {
   const [member] = await db
     .select()
@@ -423,7 +570,7 @@ export async function login(
     );
   }
 
-  const session = await issueAuthenticatedSession(db, member, secrets);
+  const session = await issueAuthenticatedSession(db, member, secrets, { c });
   return { ...session, isFirstLogin };
 }
 
@@ -434,12 +581,16 @@ export async function refreshAccessToken(
 ): Promise<AuthTokens> {
   const key = new TextEncoder().encode(secrets.refreshSecret);
   let memberId: string;
+  let mfaSatisfied: boolean;
   try {
     const { payload } = await jwtVerify(refreshToken, key);
     if (typeof payload['memberId'] !== 'string') {
       throw new Error('invalid payload');
     }
     memberId = payload['memberId'];
+    // Absent on every token minted before MFA existed, which is correct:
+    // those sessions never saw a code, so they must not inherit a pass.
+    mfaSatisfied = payload['mfa'] === true;
   } catch {
     throw new UnauthorizedError('Invalid or expired refresh token');
   }
@@ -459,6 +610,26 @@ export async function refreshAccessToken(
     resolveGrants(db, member.id),
   ]);
   const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = authority;
+
+  // Enforcement has to happen HERE as well as at login, or mobile is exempt
+  // from MFA entirely. The refresh token is sealed behind the keychain's
+  // biometric requirement for a year, and this endpoint mints a full access
+  // token from it without a password, let alone a code. A check only at
+  // login would mean a privileged user who signed in before enrolling keeps
+  // minting unchallenged tokens until the token expires in twelve months.
+  //
+  // The condition is "enrolled", not "privileged": a privileged member who
+  // has not set a factor up yet cannot be asked to produce one, and failing
+  // them here would log out every leader the moment this deploys.
+  if (!mfaSatisfied && mfaIsRequiredFor(member.systemRole as SystemRole, grants)) {
+    if (await hasConfirmedFactor(db, member.id)) {
+      // 401 rather than a challenge here on purpose. The api-client treats a
+      // failed refresh as terminal and sends the user to sign in, which is
+      // exactly where the challenge lives. Inventing a second challenge flow
+      // at refresh time would be a second place for it to be got wrong.
+      throw new UnauthorizedError('Please sign in again to confirm your authenticator.');
+    }
+  }
 
   const authContext: AuthContext = {
     memberId: member.id,
@@ -480,7 +651,9 @@ export async function refreshAccessToken(
 
   const [accessToken, newRefreshToken] = await Promise.all([
     signAccessToken(authContext, secrets),
-    signRefreshToken(member.id, secrets),
+    // Carried forward, not re-asserted. Rotation must not launder a session
+    // into a stronger one than the sign-in that created it.
+    signRefreshToken(member.id, secrets, mfaSatisfied),
   ]);
   return { accessToken, refreshToken: newRefreshToken };
 }

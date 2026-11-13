@@ -207,3 +207,40 @@ export function matchesCapability(
   }
   return false;
 }
+
+// ── Who must carry a second factor ────────────────────────────────────────
+
+/**
+ * Is this caller privileged, for the purposes of mandatory MFA?
+ *
+ * The cyber-security checklist asks two things: that MFA can be *enforced*
+ * organisation-wide, and that it is *mandatory* for privileged users. Neither
+ * is expressible without a definition of "privileged", and Kairos has no such
+ * flag — authority here is a set of scoped grants, not a tier. This is that
+ * definition, in one place, so the API gate and both clients agree on who is
+ * being asked for a code.
+ *
+ * **Deliberately broad: any grant at all counts.** Not "admin-ish roles", not
+ * a curated subset. A `FellowshipLeader` sees the unredacted records of the
+ * people in their fellowship; a `SafeguardingLead` sees children's
+ * safeguarding notes; a `GiftAidAdmin` sees home addresses and statements
+ * about donors' tax affairs. Every functional role in the catalog above
+ * carries sight of personal data that an ordinary member does not have, so
+ * drawing a line inside the set would mean arguing that some of that data
+ * does not warrant a second factor. There is no version of that argument
+ * worth making to an auditor.
+ *
+ * It follows that the population is larger than "the admins" — tens of
+ * people, not two — and the enrolment support burden should be planned for
+ * that number.
+ *
+ * **`BranchPastor` is why this takes grants rather than counting
+ * `member_roles` rows.** It is DERIVED by `resolveGrants` from
+ * `branch_leadership` and is never stored, so a query against `member_roles`
+ * misses every Main Pastor — the people with the widest sight in a branch.
+ * Always pass the resolved grants.
+ */
+export function isPrivileged(systemRole: SystemRole, grants: readonly Grant[]): boolean {
+  if (systemRole === 'admin') return true;
+  return grants.length > 0;
+}

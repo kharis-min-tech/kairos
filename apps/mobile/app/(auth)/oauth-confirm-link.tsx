@@ -72,6 +72,12 @@ export default function OAuthConfirmLinkScreen() {
       return res.data;
     },
     onSuccess: async ({ tokens, member }) => {
+      // Same as the password door: a privileged account is handed a
+      // second-factor challenge rather than a session. See login.tsx.
+      if (!tokens) {
+        setError('This account needs an authenticator code. Please sign in on the web for now.');
+        return;
+      }
       await setSession(tokens, member);
       router.replace('/(tabs)');
     },

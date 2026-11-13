@@ -46,7 +46,7 @@ There were **45 such markers** when these documents were drafted on 8 November
 2026, covering 43 distinct decisions — two appeared in more than one file
 because they were a prerequisite for both.
 
-**As of 12 November 2026 there are 36 open.** That figure is measured, not
+**As of 12 November 2026 there are 37 open.** That figure is measured, not
 derived from the original 45, and the two numbers deliberately are not
 reconciled: markers have both closed and been added since drafting, and an
 arithmetic chain across a fortnight of edits would be wrong within a week.
@@ -56,8 +56,9 @@ Count them the same way at any time with:
 grep -rn "DECISION NEEDED" docs/security/*.md | grep -v "~~"
 ```
 
-(Two lines that match are not markers: this file's description of the
-convention, and `data-retention.md`'s "collected in one place" cross-reference.)
+(Three lines that match are not markers: this file's description of the
+convention, the reproduction command just above, and `data-retention.md`'s
+"collected in one place" cross-reference. The command counts itself.)
 
 Closures are **struck through in place rather than deleted**, because the order
 things were decided in is itself audit evidence. Each document collects its own
