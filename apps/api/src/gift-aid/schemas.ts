@@ -4,6 +4,7 @@ import {
   GIFT_AID_COVERAGE_VALUES,
   GIFT_AID_HOUSE_MAX,
   GIFT_AID_NAME_MAX,
+  GIFT_AID_BANK_NAME_MAX,
   GIFT_AID_STATUS_VALUES,
   GIFT_AID_TITLE_MAX,
   isUkPostcode,
@@ -28,6 +29,9 @@ const declarantShape = {
   // Optional, and never claimed on. Sized to the name column so it cannot
   // hold more than a name, not because HMRC has a column for it.
   maidenName: z.string().trim().max(GIFT_AID_NAME_MAX).optional(),
+  // Not GIFT_AID_NAME_MAX: this is not an HMRC column, and a joint account
+  // name exceeds 35 characters routinely.
+  bankAccountName: z.string().trim().max(GIFT_AID_BANK_NAME_MAX).optional(),
   addressLine1: z
     .string()
     .trim()

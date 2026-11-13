@@ -68,7 +68,7 @@ The team reviewed the public form, the declaration wording and the privacy notic
 |---|---|---|
 | 1 | Title should be a dropdown, not a text box | `GIFT_AID_TITLE_OPTIONS` in `packages/types/src/gift-aid.ts`, rendered as a `CustomSelect` on the form. Mr, Mrs, Miss and Ms, each inside HMRC's 4-character column. The API still validates length only, so a declaration carrying a title that is not on the list is not rejected |
 | 2 | Add a maiden name, optional | `maiden_name` on `gift_aid_declarations` (migration `0065`), optional on both schemas and on the form, searchable in the admin match queue, and its own column in the register export |
-| 3 | Emphasise that the name should be the one on the donor's bank account where that differs | Second paragraph of the guidance block above the name fields, pointing at the maiden name field |
+| 3 | Emphasise that the name should be the one on the donor's bank account where that differs | **Superseded on 13 November 2026 by section 2c.** It first landed as a sentence in the guidance block pointing at the maiden name field. That conflated two different names and asked the donor to resolve the conflict in prose, so it is now a tick box and a field of its own |
 | 4 | Lawful basis wording: "Legal Obligation (Article 6(1)(c)): Processing is necessary for us the controller to comply with the law (excluding contractual obligations)" | Verbatim in the section 3 table of `apps/web/src/app/legal/privacy/page.tsx`, with the existing "not consent, not stoppable at your request" sentence kept after it |
 | 5 | Updated opening wording on the public form | The intro paragraph of `apps/web/src/app/gift-aid/page.tsx`, with the member's own Gift Aid page brought into line so the same claim is not made two ways |
 | 6 | HMRC name guidance, with the "Margaret Jones" example, moved above the name section | The guidance block now sits above the name fields rather than beneath them, where it was read after the donor had already typed |
@@ -86,6 +86,66 @@ What changed: the declaration text and the notes beside it, the status label (`C
 What did **not** change, deliberately: the route paths `POST /api/gift-aid/me/withdraw` and `POST /api/gift-aid/:id/withdraw`, and the function and hook names behind them. Pages and the Worker deploy from the same push but not atomically, so renaming a live path opens a window where the donor's cancel button 404s against the older half. The database has said `cancelled_at` / `cancellation_method` since 0059, so the stored data already uses the right word and nothing is ambiguous. Rename the paths in their own change if it is ever worth doing.
 
 **Still carried from before the review.** The two open questions in section 8 (the contact address for Gift Aid queries, and whether to name six years) were not answered, and section 1's accounting-period disagreement with Companies House is unresolved. None of the three blocks publishing the form.
+
+### 2c. The bank account name (decided 13 November 2026)
+
+Review change 3 asked the form to emphasise the bank-account name where it
+differs from the declared name. It was first met with a sentence: *"give your
+full first name and surname as appears on your bank account and as HM Revenue
+and Customs would know them."*
+
+**That sentence asked for two different things at once and left the donor to
+resolve it.** HMRC wants the donor's name as it appears on their tax record.
+The bank account name is whatever string the bank prints, which is frequently
+neither a legal name nor one person's: `M T JONES`, `MR & MRS JONES`. When
+those differ, the sentence gave no answer as to which to type, and the one
+field could only hold one of them. A donor following it literally would put
+their bank's rendering into the column that goes on the claim.
+
+So the two are now separate, and only one of them is the declaration:
+
+- **The name fields stay the HMRC name**, and the guidance block above them is
+  back to saying only that. This is what reaches the Charities Online
+  schedule.
+- **A tick box under the name section** — "Please only tick this box if the
+  name on your bank account is different from the name above. This is
+  important for us to match any bank transfer giving records." — reveals a
+  single **Name on your bank account** field. `bank_account_name` on
+  `gift_aid_declarations`, migration `0068`.
+
+  The wording above is the product owner's, set on 13 November 2026, and it
+  is the live copy. The test that finds this box deliberately matches a short
+  fragment rather than the sentence, so revising the copy does not fail the
+  suite.
+
+Decisions inside that, and why:
+
+| Decision | Why |
+|---|---|
+| Hidden behind a tick, not always shown | For most donors the names match. An always-visible field asks every one of them to stop, compare two strings, and type the same thing twice |
+| Ticking with an empty field is a validation error | This is the one state worse than never asking: finance is told the names differ and given nothing to reconcile with |
+| Unticking clears a name already typed | Ticking, typing and unticking is a donor changing their mind. Keeping the value would record a mismatch they explicitly took back |
+| `VARCHAR(70)`, not the 35 used elsewhere | 35 is HMRC's claim column and this is not an HMRC column. `MR M T JONES & MRS A JONES` is 26 characters before anyone has a long surname, and truncating the one string whose purpose is matching a statement exactly would defeat the field |
+| Null means "not told", never "confirmed to match" | Nothing downstream may read a blank as a positive match, because the donor was never asked to assert one |
+| Searchable in the admin match queue | An admin typing the name off a bank statement is the most common search that queue serves |
+| Its own register column, dropped before the claim schedule | Same treatment as the maiden name, for the same reason |
+
+**It is not a replacement for the maiden name, and the two are not
+interchangeable.** A maiden name is a previous *legal* name and could in
+principle have been declared under. This is a label a bank prints. Both are
+matching aids, neither is ever claimed on, and a test asserts this one does
+not reach the stored declaration wording — which matters more here than for
+the maiden name, since a declaration whose stored text carried a bank
+rendering would be a tax document naming the wrong person.
+
+**The helper text says the declared name is still what goes to HMRC**, so the
+field cannot be read as changing the claim, and it notes that a joint account
+is fine as long as the gift is the donor's own money. That last point is a
+genuine eligibility condition rather than reassurance: Gift Aid can only be
+claimed on the donor's own gift, so a payment from an account the donor has no
+interest in is not claimable however the names line up. The form does not try
+to adjudicate that, and should not; it records what the donor says and leaves
+the judgement to finance.
 
 ## 3. Defaults chosen, pending review
 

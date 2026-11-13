@@ -192,6 +192,12 @@ export default function GiftAidSettingsPage() {
                       title: active.title ?? undefined,
                       firstName: active.firstName,
                       lastName: active.lastName,
+                      // Carried across a re-declaration. Both are matching
+                      // aids finance relies on, and a donor who already told
+                      // us once should not have to work it out again; the
+                      // form derives the "names differ" tick from the second.
+                      maidenName: active.maidenName ?? undefined,
+                      bankAccountName: active.bankAccountName ?? undefined,
                       addressLine1: active.addressLine1,
                       addressLine2: active.addressLine2 ?? undefined,
                       city: active.city ?? undefined,

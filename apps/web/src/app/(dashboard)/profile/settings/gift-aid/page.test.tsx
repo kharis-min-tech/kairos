@@ -58,6 +58,7 @@ function declaration(over: Partial<GiftAidDeclaration> = {}): GiftAidDeclaration
     firstName: 'Ade',
     lastName: 'Bolarinwa',
     maidenName: null,
+    bankAccountName: null,
     addressLine1: '12 High Street',
     addressLine2: null,
     city: 'London',
