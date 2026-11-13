@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Button, Card, CardContent, Checkbox, CustomSelect, Input, Label } from '@kairos/ui';
 import {
   GIFT_AID_COVERAGE_LABEL,
+  GIFT_AID_BANK_NAME_MAX,
   GIFT_AID_NAME_MAX,
   GIFT_AID_TITLE_MAX,
   GIFT_AID_TITLE_OPTIONS,
@@ -37,9 +38,14 @@ const makeSchema = (requireEmail: boolean) => z
     title: z.string().trim().max(GIFT_AID_TITLE_MAX, 'Use a short title, like Mr or Dr').optional(),
     firstName: z.string().trim().min(1, 'Enter your first name').max(GIFT_AID_NAME_MAX),
     lastName: z.string().trim().min(1, 'Enter your last name').max(GIFT_AID_NAME_MAX),
-    // Optional, and never claimed on. It is here so a donor whose bank
-    // account is in a different name can say so.
+    // Optional, and never claimed on. A donor who declares under a married
+    // name may still have older records under this one.
     maidenName: z.string().trim().max(GIFT_AID_NAME_MAX).optional(),
+    // Not persisted. It exists only to reveal the field below, so that a
+    // donor whose bank account matches is never shown a box they would have
+    // to think about. What reaches the API is the name or nothing.
+    bankNameDiffers: z.boolean().optional(),
+    bankAccountName: z.string().trim().max(GIFT_AID_BANK_NAME_MAX).optional(),
     addressLine1: z.string().trim().min(1, 'Enter your house name or number and street').max(200),
     addressLine2: z.string().trim().max(200).optional(),
     city: z.string().trim().max(100).optional(),
@@ -67,6 +73,17 @@ const makeSchema = (requireEmail: boolean) => z
     }),
   })
   .superRefine((value, ctx) => {
+    // Ticking the box and leaving the field empty is the one way this can be
+    // worse than not asking at all: the donor has told us the names differ
+    // and we have recorded nothing, so finance now knows there is a mismatch
+    // and still cannot reconcile it.
+    if (value.bankNameDiffers && !value.bankAccountName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['bankAccountName'],
+        message: 'Enter the name as it appears on your bank account',
+      });
+    }
     const uk = value.countryCode.toUpperCase() === 'GB';
     if (uk && !value.postcode) {
       ctx.addIssue({
@@ -113,6 +130,14 @@ export type GiftAidFormValues = z.infer<ReturnType<typeof makeSchema>>;
  */
 function stripBlanks(values: GiftAidFormValues): GiftAidFormValues {
   const out = { ...values } as Record<string, unknown>;
+  // A donor who ticks the box, types a name, then unticks it has changed
+  // their mind. Without this the name they typed is still in the form state
+  // and gets submitted, so finance records a bank-name mismatch the donor
+  // explicitly withdrew.
+  if (!out['bankNameDiffers']) delete out['bankAccountName'];
+  // UI state, not a field. The API has no column for it and the answer it
+  // encodes is "is bankAccountName set".
+  delete out['bankNameDiffers'];
   for (const [key, value] of Object.entries(out)) {
     if (typeof value === 'string' && value.trim() === '') delete out[key];
   }
@@ -170,6 +195,12 @@ export function GiftAidDeclarationForm({
       countryCode: 'GB',
       coverage: 'past_and_future',
       ...defaults,
+      // Derived, never passed in. The tick is UI state with no column behind
+      // it, so the only honest source for it is whether a bank name was
+      // stored. A caller that prefilled a name without this would show an
+      // unticked box above a hidden field, and `stripBlanks` would then drop
+      // the name on submit — losing it silently on every re-declaration.
+      ...(defaults?.bankAccountName ? { bankNameDiffers: true } : {}),
     } as GiftAidFormValues,
   });
 
@@ -177,6 +208,7 @@ export function GiftAidDeclarationForm({
   const title = watch('title');
   const countryCode = watch('countryCode');
   const confirmed = watch('confirmedDeclaration');
+  const bankNameDiffers = watch('bankNameDiffers');
   const isUk = (countryCode ?? 'GB').toUpperCase() === 'GB';
   const declarationText = wording?.texts[coverage as 'past_and_future' | 'future'] ?? '';
 
@@ -190,7 +222,7 @@ export function GiftAidDeclarationForm({
       */}
       <div className="space-y-2 rounded-lg border border-[#5D3FD3]/25 bg-[#5D3FD3]/[0.05] px-4 py-3 text-sm leading-relaxed">
         <p>
-          Please give your full first name and surname as appears on your bank account and as HM Revenue and Customs would know them
+          Please give your full first name and surname as HM Revenue and Customs would know them
           (for example, &ldquo;Margaret Jones&rdquo; rather than &ldquo;Maggie Jones&rdquo; or
           &ldquo;M Jones&rdquo;). This helps us make sure your Gift Aid claim is accepted and matched to your giving records.
         </p>
@@ -229,6 +261,47 @@ export function GiftAidDeclarationForm({
         <Input id="ga-maiden" autoComplete="off" {...register('maidenName')} />
         {errors.maidenName && (
           <p className="text-xs text-destructive">{errors.maidenName.message}</p>
+        )}
+      </div>
+
+      {/*
+        Hidden behind a tick rather than shown to everyone. For most donors
+        the names match, and an always-visible "name on your bank account"
+        box asks all of them to stop and compare two strings in order to
+        type the same thing twice. The tick is the question; the field is
+        only the answer.
+      */}
+      <div className="space-y-3">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="ga-bank-differs"
+            checked={bankNameDiffers === true}
+            onChange={(e) => setValue('bankNameDiffers', e.target.checked, { shouldValidate: true })}
+          />
+          <Label htmlFor="ga-bank-differs" className="text-sm font-normal leading-snug">
+            The name on my bank account is different from the name above
+          </Label>
+        </div>
+
+        {bankNameDiffers && (
+          <div className="space-y-1.5 sm:max-w-sm">
+            <Label htmlFor="ga-bank-name">Name on your bank account</Label>
+            <Input
+              id="ga-bank-name"
+              autoComplete="off"
+              placeholder="M T Jones"
+              {...register('bankAccountName')}
+            />
+            {errors.bankAccountName && (
+              <p className="text-xs text-destructive">{errors.bankAccountName.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Copy it exactly as it appears on your statement, initials and all. We use this only
+              to match your giving to this declaration. Your declaration is still made in the name
+              above, and that is the name we give to HM Revenue and Customs. A joint account is
+              fine, as long as the gift is your own money.
+            </p>
+          </div>
         )}
       </div>
 

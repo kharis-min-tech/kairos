@@ -129,6 +129,7 @@ function row(overrides: Record<string, unknown> = {}) {
     firstName: 'Ade',
     lastName: 'Bolarinwa',
     maidenName: null,
+    bankAccountName: null,
     addressLine1: '12 High Street',
     addressLine2: null,
     city: 'London',
@@ -360,6 +361,53 @@ describe('submitPublicDeclaration', () => {
     expect((insertValues[0] as Record<string, unknown>)['maidenName']).toBeNull();
   });
 
+  it('stores a bank account name when one is given, and null when it is not', async () => {
+    setupSelects([]);
+    setupInsert([{ id: 'new', declaredAt: new Date() }]);
+    await submitPublicDeclaration(
+      mockDb,
+      {
+        ...declarantInput,
+        email: 'stranger@example.com',
+        bankAccountName: 'MR A T BOLARINWA',
+      } as never,
+      {},
+    );
+    expect((insertValues[0] as Record<string, unknown>)['bankAccountName']).toBe(
+      'MR A T BOLARINWA',
+    );
+
+    insertValues.length = 0;
+    setupSelects([]);
+    setupInsert([{ id: 'new2', declaredAt: new Date() }]);
+    await submitPublicDeclaration(
+      mockDb,
+      { ...declarantInput, email: 'stranger2@example.com' } as never,
+      {},
+    );
+    expect((insertValues[0] as Record<string, unknown>)['bankAccountName']).toBeNull();
+  });
+
+  it('leaves the declaration wording untouched by the bank account name', async () => {
+    // Same reason as the maiden name, and it matters more here: a bank
+    // account name is often not a legal name at all, so a declaration whose
+    // stored text carried it would be a tax document naming the wrong person.
+    setupSelects([]);
+    setupInsert([{ id: 'new', declaredAt: new Date() }]);
+    await submitPublicDeclaration(
+      mockDb,
+      {
+        ...declarantInput,
+        email: 'stranger@example.com',
+        bankAccountName: 'MR A T BOLARINWA',
+      } as never,
+      {},
+    );
+    const values = insertValues[0] as Record<string, unknown>;
+    expect(values['declarationText']).not.toContain('BOLARINWA');
+    expect(values['firstName']).toBe('Ade');
+  });
+
   it('leaves the declaration wording untouched by the maiden name', async () => {
     setupSelects([]);
     setupInsert([{ id: 'new', declaredAt: new Date() }]);
@@ -484,6 +532,26 @@ describe('exportRegister', () => {
     expect(rows[0]!.maidenName).toBe('');
   });
 
+  it('carries the bank account name in its own column, not in the claim name', async () => {
+    // The declaration is made in the declared name and that is what goes to
+    // HMRC. This column exists so finance can tie a payment on the statement
+    // back to the right declaration, which is a different job.
+    setupSelects([
+      { declaration: row({ bankAccountName: 'MR A T BOLARINWA' }), branchName: 'Peckham' },
+    ]);
+    const rows = await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never);
+    expect(rows[0]!.name).toBe('Ade Bolarinwa');
+    expect(rows[0]!.bankAccountName).toBe('MR A T BOLARINWA');
+  });
+
+  it('blanks the bank account column when the donor did not say it differs', async () => {
+    // Blank means "not told", not "confirmed to match". Nothing downstream
+    // may read it as the latter.
+    setupSelects([{ declaration: row(), branchName: 'Peckham' }]);
+    const rows = await exportRegister(mockDb, giftAidAdmin, { status: 'active' } as never);
+    expect(rows[0]!.bankAccountName).toBe('');
+  });
+
   it('blanks the postcode for an overseas donor and gives the full address', async () => {
     setupSelects([
       {
@@ -574,7 +642,7 @@ describe('registerToCsv', () => {
   it('writes the HMRC-shaped header row', () => {
     const csv = registerToCsv([]);
     expect(csv.split('\r\n')[0]).toBe(
-      'Title,Name,Maiden or previous name,House name or number,Postcode,Overseas address,Declared on,Covers donations from,Status,Cancelled on,Email,Branch',
+      'Title,Name,Maiden or previous name,Name on bank account,House name or number,Postcode,Overseas address,Declared on,Covers donations from,Status,Cancelled on,Email,Branch',
     );
   });
 
@@ -584,6 +652,7 @@ describe('registerToCsv', () => {
         title: '',
         name: '=1+1',
         maidenName: '',
+        bankAccountName: '',
         houseNameOrNumber: '12 High Street',
         postcode: 'SE1 2AB',
         overseasAddress: '',
@@ -604,6 +673,7 @@ describe('registerToCsv', () => {
         title: '',
         name: 'Ade Bolarinwa',
         maidenName: '',
+        bankAccountName: '',
         houseNameOrNumber: 'Flat 2, The Oaks',
         postcode: 'SE1 2AB',
         overseasAddress: '',

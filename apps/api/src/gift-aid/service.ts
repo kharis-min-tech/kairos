@@ -64,6 +64,7 @@ function toDto(row: Row): GiftAidDeclaration {
     firstName: row.firstName,
     lastName: row.lastName,
     maidenName: row.maidenName,
+    bankAccountName: row.bankAccountName,
     addressLine1: row.addressLine1,
     addressLine2: row.addressLine2,
     city: row.city,
@@ -107,6 +108,7 @@ interface DeclarantFields {
   firstName: string;
   lastName: string;
   maidenName?: string | undefined;
+  bankAccountName?: string | undefined;
   addressLine1: string;
   addressLine2?: string | undefined;
   city?: string | undefined;
@@ -145,6 +147,7 @@ function buildInsert(
     firstName: input.firstName,
     lastName: input.lastName,
     maidenName: input.maidenName ?? null,
+    bankAccountName: input.bankAccountName ?? null,
     addressLine1: input.addressLine1,
     addressLine2: input.addressLine2 ?? null,
     city: input.city ?? null,
@@ -366,6 +369,11 @@ export async function listDeclarations(
       // holding a bank payment in the donor's former name has nothing else
       // to search on.
       ilike(giftAidDeclarations.maidenName, needle),
+      // And the direct answer to the same problem. An admin typing the name
+      // off the bank statement is the single most common search this queue
+      // serves, so the column captured for exactly that has to be in here or
+      // it only helps once somebody has already found the right row.
+      ilike(giftAidDeclarations.bankAccountName, needle),
       ilike(giftAidDeclarations.email, needle),
       ilike(giftAidDeclarations.postcode, needle),
     );
@@ -612,6 +620,10 @@ export async function exportRegister(
     // Its own column, not folded into `name`: `name` is pasted straight into
     // HMRC's 35-character claim column and must stay the declared name.
     maidenName: d.maidenName ?? '',
+    // The column finance actually reconciles against. Also not an HMRC
+    // column, and dropped with the others before anything is pasted into a
+    // claim schedule.
+    bankAccountName: d.bankAccountName ?? '',
     houseNameOrNumber: d.addressLine1,
     // HMRC rejects a postcode for an overseas address, so it is blank there
     // and the full address travels in its own column instead.
@@ -633,6 +645,7 @@ const REGISTER_COLUMNS: readonly (keyof GiftAidRegisterRow)[] = [
   'title',
   'name',
   'maidenName',
+  'bankAccountName',
   'houseNameOrNumber',
   'postcode',
   'overseasAddress',
@@ -648,6 +661,7 @@ const REGISTER_HEADERS: Record<keyof GiftAidRegisterRow, string> = {
   title: 'Title',
   name: 'Name',
   maidenName: 'Maiden or previous name',
+  bankAccountName: 'Name on bank account',
   houseNameOrNumber: 'House name or number',
   postcode: 'Postcode',
   overseasAddress: 'Overseas address',

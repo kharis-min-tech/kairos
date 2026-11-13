@@ -70,6 +70,12 @@ export const giftAidDeclarations = pgTable('gift_aid_declarations', {
    * can never hold more than a name.
    */
   maidenName: varchar('maiden_name', { length: 35 }),
+  /**
+   * The name on the donor's bank account, when they said it differs from the
+   * name they declared under. 70 rather than 35 because this is not an HMRC
+   * column: joint accounts routinely exceed 35 characters.
+   */
+  bankAccountName: varchar('bank_account_name', { length: 70 }),
   /** House name or number first — it is the part HMRC actually matches on. */
   addressLine1: varchar('address_line1', { length: 200 }).notNull(),
   addressLine2: varchar('address_line2', { length: 200 }),

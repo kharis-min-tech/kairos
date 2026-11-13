@@ -232,6 +232,17 @@ export const GIFT_AID_TITLE_MAX = 4;
 export const GIFT_AID_NAME_MAX = 35;
 /** House name or number column. */
 export const GIFT_AID_HOUSE_MAX = 40;
+/**
+ * The name on the donor's bank account.
+ *
+ * Longer than the 35-character name column ON PURPOSE, because this one is
+ * not an HMRC column and the 35 does not apply to it. A joint account prints
+ * as something like "MR M T JONES & MRS A JONES", which is 26 characters
+ * before anybody has a long surname; capping it at 35 would force donors to
+ * truncate the one string whose whole value is matching a bank statement
+ * exactly.
+ */
+export const GIFT_AID_BANK_NAME_MAX = 70;
 /** One spreadsheet carries at most 1,000 donation lines. */
 export const GIFT_AID_SCHEDULE_ROW_LIMIT = 1000;
 
@@ -391,11 +402,26 @@ export interface GiftAidDeclarant {
   /**
    * Maiden or previous name. Optional, and NOT part of the declaration
    * itself — HMRC's schedule has no column for it, and nothing here goes on
-   * a claim. It exists because the name on the bank account a donor gives
-   * from is often not the name they declare under, and without it finance
-   * cannot tie the two together when the claim is built.
+   * a claim. A donor who declares under a married name may still have older
+   * records, and the match queue needs something to search on.
    */
   maidenName: string | null;
+  /**
+   * The name the donor's bank account is in, captured only when the donor
+   * says it differs from the name they are declaring under.
+   *
+   * Distinct from `maidenName`, and the two are not interchangeable. A maiden
+   * name is a previous LEGAL name and could in principle have been declared
+   * under; this is just the string a bank prints, which is frequently neither
+   * a legal name nor a person's ("M T JONES", "MR & MRS JONES", a sole trader
+   * style). It never reaches a claim — the declaration is still made in the
+   * declared name, and this exists so finance can tie a payment on the
+   * statement back to the right declaration.
+   *
+   * Null is the normal case, and means the donor did not say it differs,
+   * which is not the same as asserting that it matches.
+   */
+  bankAccountName: string | null;
   addressLine1: string;
   addressLine2: string | null;
   city: string | null;
@@ -451,6 +477,7 @@ export interface GiftAidDeclarantRequest {
   firstName: string;
   lastName: string;
   maidenName?: string;
+  bankAccountName?: string;
   addressLine1: string;
   addressLine2?: string;
   city?: string;
@@ -514,6 +541,12 @@ export interface GiftAidRegisterRow {
    * dropped before anything is pasted into the claim schedule.
    */
   maidenName: string;
+  /**
+   * The name on the donor's bank account, where they said it differs. Also
+   * not an HMRC column, and dropped before anything is pasted into the claim
+   * schedule. This is the column finance actually reconciles against.
+   */
+  bankAccountName: string;
   houseNameOrNumber: string;
   postcode: string;
   /** Blank for UK donors; the full address for overseas ones. */
