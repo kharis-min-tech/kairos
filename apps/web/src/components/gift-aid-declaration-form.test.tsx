@@ -34,8 +34,17 @@ function declarationBox(): HTMLElement {
   return screen.getByRole('checkbox', { name: /Yes, I want to Gift Aid my gifts/ });
 }
 
+/**
+ * Matched on a short fragment, not the whole sentence.
+ *
+ * This label is donor-facing copy that finance revises, and it already has
+ * been once. A matcher quoting the full sentence turns every wording tweak
+ * into a failing test suite, which teaches people to edit the test rather
+ * than read it. "bank account is different" is the part that cannot change
+ * without the control itself changing.
+ */
 function bankDiffersBox(): HTMLElement {
-  return screen.getByRole('checkbox', { name: /name on my bank account is different/i });
+  return screen.getByRole('checkbox', { name: /bank account is different/i });
 }
 
 function fillValidDonor() {

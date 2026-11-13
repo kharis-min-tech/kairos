@@ -107,10 +107,16 @@ So the two are now separate, and only one of them is the declaration:
 - **The name fields stay the HMRC name**, and the guidance block above them is
   back to saying only that. This is what reaches the Charities Online
   schedule.
-- **A tick box under the name section** — "The name on my bank account is
-  different from the name above" — reveals a single **Name on your bank
-  account** field. `bank_account_name` on `gift_aid_declarations`, migration
-  `0068`.
+- **A tick box under the name section** — "Please only tick this box if the
+  name on your bank account is different from the name above. This is
+  important for us to match any bank transfer giving records." — reveals a
+  single **Name on your bank account** field. `bank_account_name` on
+  `gift_aid_declarations`, migration `0068`.
+
+  The wording above is the product owner's, set on 13 November 2026, and it
+  is the live copy. The test that finds this box deliberately matches a short
+  fragment rather than the sentence, so revising the copy does not fail the
+  suite.
 
 Decisions inside that, and why:
 
