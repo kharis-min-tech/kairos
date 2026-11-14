@@ -18,7 +18,7 @@ Le tableau de bord est la première chose que vous voyez après la connexion. Il
 
 ## Une page, construite en blocs
 
-Le tableau de bord était autrefois sept pages différentes cachées derrière une seule adresse, chacune avec son jeu de chiffres figé. C'est désormais un ensemble de blocs, et ceux qui apparaissent dépendent de l'**altitude** à laquelle vos attributions vous placent.
+C'est désormais un ensemble de blocs, et ceux qui apparaissent dépendent de l'**altitude** à laquelle vos attributions vous placent.
 
 | Altitude | Qui s'y trouve | Ce qu'ils obtiennent |
 |----------|-------------|---------------|
@@ -74,11 +74,3 @@ Votre propre suite de cultes consécutifs.
 ### Verset du jour
 
 Une écriture, qui change chaque jour.
-
-## Ce qu'est devenu Mission Control
-
-Les versions antérieures du tableau de bord avaient une bande « Mission Control Reports » de six mini-graphiques et une bande d'engagement « Mission Summary ». Les deux ont disparu, remplacées par le Pouls et ses avertissements. Les chiffres sous-jacents n'ont pas disparu ; ils ont rejoint les endroits où on peut vraiment les interroger :
-
-- Tendances de présence et carte de chaleur par membre : [Rapports de présence](/fr/analytics/attendance-reports)
-- Croissance des adhésions et répartition de l'assemblée : [Rapports de croissance](/fr/analytics/growth-reports)
-- L'entonnoir des âmes : [Tableau de bord des âmes](/fr/platform/souls-dashboard)

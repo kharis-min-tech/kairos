@@ -2,17 +2,13 @@
 
 <SectionClip slug="getting-started/roles-permissions" />
 
-What you can see and do in Kairos is decided by the **grants** on your account, not by a job title. There is no role switcher, and no step after signing in where you pick who to be. Your permissions are set when your account is configured and take effect from your next sign-in.
+What you can see and do in Kairos is decided by the **grants** on your account, not by a job title. Your permissions are set when your account is configured and take effect from your next sign-in.
 
 ## The one thing to understand first
 
 Kairos stores only two system roles: `admin` and `member`. Everyone who is not on the small platform team is a `member`, including the Senior Pastor.
 
 Real authority comes from **grants**: a named role bundle pinned to one branch, one fellowship, one department, or the whole church. Hold a Fellowship Leader grant for Grace K-Group and you can run Grace K-Group. Hold nothing and you can manage your own profile. Hold several grants and you get all of them, each inside its own boundary.
-
-::: warning "Pastor" and "Leader" are not roles
-They are useful words for a *pattern* of grants, and this documentation uses them that way. But there is no Pastor role and no Leader role to assign. A member whose profile shows the honorific "Pastor" has exactly the permissions their grants give them, which may be none.
-:::
 
 ## The four shapes of access
 

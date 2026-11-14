@@ -28,11 +28,6 @@ Les voici toutes. Il n'y en a pas d'autres.
 | `membership:admin` | Tout l'administratif du [cours de membre](/fr/platform/membership) |
 | `membership:branch:read` | La vue en lecture seule d'un référent d'adhésion sur l'avancement d'une antenne |
 
-Deux absences sont délibérées :
-
-- **Il n'y a pas de `members:write`.** Les fiches de membres sont des données d'antenne : elles sont gardées par `branch:write`.
-- **`membership:admin` n'a pas de séparation lecture/écriture.** Aucun écran d'adhésion destiné aux membres ne demande de capacité, donc tout ce que la capacité garde est par définition de l'administration.
-
 ## Quelle habilitation porte quelle capacité
 
 | Habilitation | Capacités |
@@ -52,8 +47,6 @@ Deux absences sont délibérées :
 
 ### Pourquoi entraide et protection sont séparées
 
-`welfare:read` reposait autrefois sur `branch:write`. Cela voulait dire qu'un administrateur de données d'antenne — un rôle purement opérationnel, sans responsabilité pastorale — pouvait lire la boîte entraide *et* la boîte protection. Donner à l'entraide sa propre capacité a corrigé cela.
-
 L'arrangement actuel est délibéré des deux côtés :
 
 - `BranchAdmin` détient `welfare:read` mais **pas** `safeguarding:read`. L'entraide est du soin pastoral et revient à la direction de l'antenne.
@@ -62,8 +55,6 @@ L'arrangement actuel est délibéré des deux côtés :
 - `BranchDataAdmin` n'a ni l'une ni l'autre.
 
 ## Comment une vérification est tranchée
-
-Une seule fonction tranche toutes les vérifications de capacité du produit : `matchesCapability`, dans `packages/types/src/rbac.ts`. Le serveur l'applique, et l'application web comme l'application mobile y conditionnent leurs boutons : un bouton proposé par l'une ou l'autre est un bouton que le serveur honorera. Elle a été recopiée à la main à trois endroits jusqu'à l'arrivée de la portée église ; les copies ont disparu, et il ne doit plus en apparaître.
 
 Les règles, dans l'ordre :
 
@@ -75,38 +66,3 @@ Les règles, dans l'ordre :
 6. **Une cible d'église n'accepte pas de correspondance hiérarchique.** L'inclusion ne va que dans un sens. Aucune habilitation d'antenne, quel qu'en soit le nombre, ne satisfait une vérification à l'échelle de l'église. Seule une habilitation d'église, ou un administrateur de la plateforme, le fait.
 
 C'est la règle 6 qui surprend. Un membre qui est administrateur système de toutes les antennes de l'église ne peut toujours pas administrer le programme d'adhésion, parce que ce programme est à l'échelle de l'église et que l'église n'est à l'intérieur d'aucune antenne.
-
-## D'où viennent les habilitations
-
-Les habilitations sont résolues depuis la base à chaque requête, par `resolveGrants` dans `apps/api/src/lib/grants.ts`. Elle combine deux sources :
-
-1. **Les habilitations stockées** dans la table `member_roles` : les lignes créées quand vous attribuez un rôle. Les lignes à portée église stockent un identifiant de remplacement pour la portée, et l'antenne inscrite sur la ligne n'est qu'un repère de classement, pas la portée de l'habilitation.
-2. **L'habilitation déduite Pasteur d'antenne**, fabriquée pour qui occupe la ligne Pasteur principal dans `branch_leadership` pour une antenne. Elle n'est jamais écrite dans `member_roles` et n'apparaît jamais dans la liste des rôles.
-
-## Comment le code s'y branche
-
-Sur le serveur :
-
-```ts
-// One capability, scoped to a route parameter
-requireCapability('branch:write', (c) => c.req.param('branchId'))
-
-// Any one of a set is enough
-requireAnyCapability(['branch:write', 'safeguarding:read'])
-
-// Inside a service, where the entity is already loaded
-enforceBranchScope(auth, branchId)
-enforceLeaderOrAbove(auth, entity)
-```
-
-Dans l'application web :
-
-```ts
-const caps = useCapabilities()
-
-if (caps.has('branch:write', { kind: 'branch', id: branchId })) {
-  // show the edit control
-}
-```
-
-Les deux appellent le même comparateur. Notez que certains modules, celui de l'adhésion en particulier, font leur contrôle dans la couche service plutôt qu'en middleware de route, parce qu'une même route peut être légitimement atteinte par plusieurs détenteurs différents avec des restrictions différentes. Lisez le service, pas seulement le routeur, quand vous devez savoir qui peut appeler quoi.

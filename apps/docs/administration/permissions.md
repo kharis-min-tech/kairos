@@ -13,10 +13,6 @@ Every member row carries a `systemRole`, and it has only two possible values:
 | `admin` | The small platform team. Bypasses every check, in every branch. Treat it as break-glass access, not as a job title. |
 | `member` | Everyone else, from a first-time attendee to the Senior Pastor. All of their authority comes from grants. |
 
-::: warning There is no Pastor or Leader role
-Kairos used to have `pastor`, `leader`, and `elder` as system roles. They are gone. If a document, a spreadsheet, or an old screenshot refers to someone's "role" as Pastor or Leader, it is describing a **pattern of grants**, not a field in the database.
-:::
-
 ## Functional grants
 
 A grant is a named role bundle tied to a specific scope. Grants are what give a `member` any access beyond their own profile. A member can hold several at once and each one is independent.
@@ -98,7 +94,7 @@ The system refuses to remove the last active Branch System Admin from a branch. 
 
 Two things happen at different speeds, and it is worth knowing which is which.
 
-- **The API re-reads grants from the database on every single request.** The moment you save, the server stops honouring a revoked grant and starts honouring a new one. There is no window where stale permissions are still enforced.
+- The moment you save, the server stops honouring a revoked grant and starts honouring a new one. There is no window where stale permissions are still enforced.
 - **The person's own screen is driven by their sign-in token.** Buttons, menu items, and pages appear or disappear when that token is next renewed, which happens in the background during normal use, or immediately if they sign out and back in.
 
 So a revoked grant is enforced instantly, even if the now-forbidden button is briefly still on their screen; pressing it fails. A newly added grant is honoured by the server instantly, but the new menu items show up on the next token renewal. If someone says "you gave me access but I can't see it", ask them to sign out and back in.
@@ -110,7 +106,3 @@ So a revoked grant is enforced instantly, even if the now-forbidden button is br
 A member with the honorific "Pastor" who holds only a Fellowship Leader grant sees exactly what a fellowship leader sees. For branch-wide access they need a Branch System Admin grant.
 
 Note that the honorific is a separate thing from a branch **leadership** appointment. The honorific is how someone is addressed; the leadership record (Main Pastor or Minister) is who holds office in a branch, and only Main Pastor carries the derived safeguarding sight described above.
-
-## No role switcher
-
-There is no in-app role switcher and no "choose your role" step after signing in. A member cannot act as somebody else. One token carries all of their grants, and everything they see follows from it. If their access needs to change, change their grants.

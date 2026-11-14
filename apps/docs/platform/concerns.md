@@ -18,10 +18,6 @@ A single follow-up can be flagged as both and will appear in both tabs.
 
 ## Why the reader lists differ
 
-This is the part worth reading carefully, because it is the whole reason the split exists.
-
-**Welfare used to ride on general branch access.** That meant a Branch Data Admin, somebody whose job is records and registers and who has no pastoral standing at all, could read both the welfare and the safeguarding inbox. Giving welfare its own permission fixed that.
-
 **Safeguarding deliberately does not follow branch administration.** A Branch System Admin does not get the safeguarding tab from that grant. Safeguarding sight comes from one of three places:
 
 - **Being the branch's Main Pastor.** Kairos works this out from the branch's leadership record, automatically, every time you make a request. It is not a grant anybody assigns.

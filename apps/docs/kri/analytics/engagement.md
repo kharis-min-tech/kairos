@@ -4,10 +4,6 @@
 
 Ɛngejmɛnt de aks difrɛn kwɛshɔn frɔm atɛndans. Atɛndans de aks if pɔsin kam. Ɛngejmɛnt de aks if i tru-tru de insay di chɔch layf, ɛn na dat kin disayd if i go stil de ya nɛks ia.
 
-::: warning Dɛn dɔn pul di old ɛngejmɛnt kad
-Old vɔshɔn fɔ di dashbɔd bin gɛt wan **Mɛmba Ɛngejmɛnt** kad we bin de sho wan skɔ: Ay / Midul / Lo. I dɔn gɔn, wit di rɛst fɔ di Mishɔn Kɔntrol strip. Di mɛzhɔ dɛn we de dɔng ya na wetin tek in ples, ɛn na plɛnti nɔmba pɔposli, nɔto wan.
-:::
-
 ## Di onɛs dinomineta
 
 Ɔltin pan dis pej de stan pan wan ayidia: **ɛngejd mɛmba** na pɔsin we kam at lis wan tɛm insay wan windo we yu pik, we yu kin sɛt to 3, 6, ɔ 12 mont frɔm di ɛda fɔ [Atɛndans Ripɔt dɛn](/kri/analytics/attendance-reports#di-ɛngejd-mɛmba-dinomineta).

@@ -18,7 +18,7 @@ The dashboard is the first thing you see after logging in. It gives you an at-a-
 
 ## One page, built from blocks
 
-The dashboard used to be seven different pages hidden behind one URL, each with its own hard-coded set of numbers. It is now one set of blocks, and which of them appear is decided by the **altitude** your grants put you at.
+It is now one set of blocks, and which of them appear is decided by the **altitude** your grants put you at.
 
 | Altitude | Who is at it | What they get |
 |----------|-------------|---------------|
@@ -74,11 +74,3 @@ Your own run of consecutive services attended.
 ### Daily verse
 
 A scripture, rotating by day.
-
-## What happened to Mission Control
-
-Earlier versions of the dashboard had a "Mission Control Reports" strip of six mini-charts and a "Mission Summary" engagement band. Both are gone, replaced by Pulse and its warnings. The underlying figures did not disappear; they moved to where they can be interrogated properly:
-
-- Attendance trends and the per-member heatmap: [Attendance Reports](/analytics/attendance-reports)
-- Membership growth and the congregation breakdown: [Growth Reports](/analytics/growth-reports)
-- The souls funnel: [Souls Dashboard](/platform/souls-dashboard)

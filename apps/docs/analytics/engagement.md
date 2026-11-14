@@ -4,10 +4,6 @@
 
 Engagement asks a different question from attendance. Attendance asks whether somebody came. Engagement asks whether they are actually embedded in church life, which is what tends to decide whether they are still here next year.
 
-::: warning The old engagement card has been removed
-Earlier versions of the dashboard carried a **Member Engagement** card showing a single High / Medium / Low score. It is gone, along with the rest of the Mission Control strip. The measures below are what replaced it, and they are deliberately several numbers rather than one.
-:::
-
 ## The honest denominator
 
 Everything on this page rests on one idea: an **engaged member** is somebody who has attended at least once within a chosen window, which you set to 3, 6, or 12 months from the header of [Attendance Reports](/analytics/attendance-reports#the-engaged-member-denominator).

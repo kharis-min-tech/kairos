@@ -2,17 +2,13 @@
 
 <SectionClip slug="getting-started/roles-permissions" />
 
-Wetin yu kin si ɛn du insay Kairos, na di **grant** dɛn pan yu akawnt de disayd am, nɔto job taytul. No rol swicha nɔ de, ɛn no stɛp nɔ de afta yu sayn in usay yu de pik udat yu go bi. Dɛn de sɛt yu pamishɔn we dɛn mek yu akawnt ɛn dɛn de wok frɔm yu nɛks sayn in.
+Wetin yu kin si ɛn du insay Kairos, na di **grant** dɛn pan yu akawnt de disayd am, nɔto job taytul. Dɛn de sɛt yu pamishɔn we dɛn mek yu akawnt ɛn dɛn de wok frɔm yu nɛks sayn in.
 
 ## Di wan tin fɔ ɔndastand fɔs
 
 Kairos de sev tu sistem rol nɔmɔ: `admin` ɛn `member`. Ɛvribɔdi we nɔ de na di smɔl platfɔm tim na `member`, ivin di Sinio Pasto.
 
 Tru ɔtoriti de kam frɔm **grant**: wan nem rol bɔndul we tay to wan branch, wan fɛloship, wan dipatmɛnt, ɔ di ful chɔch. If yu ol Fɛloship Lida grant fɔ Grace K-Group, yu kin ron Grace K-Group. If yu nɔ ol nɔtin, yu kin manej yu yon prɔfayl. If yu ol plɛnti grant, yu gɛt ɔl, ɛvri wan insay in yon bawndri.
-
-::: warning "Pasto" ɛn "Lida" nɔto rol
-Dɛn na gud wɔd fɔ tɔk bɔt wan *patan* fɔ grant, ɛn dis dokyumɛnteshɔn de yuz dɛn so. Bɔt no Pasto rol ɛn no Lida rol nɔ de fɔ asayn. Mɛmba we in prɔfayl de sho di onorifik "Pasto" gɛt ɛgzakli di pamishɔn dɛn we in grant de gi am, we kin bi nɔtin.
-:::
 
 ## Di fɔ shep fɔ akses
 

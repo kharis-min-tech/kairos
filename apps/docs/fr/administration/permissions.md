@@ -13,10 +13,6 @@ Chaque fiche de membre porte un `systemRole`, qui n'a que deux valeurs possibles
 | `admin` | La petite équipe de la plateforme. Contourne toutes les vérifications, dans toutes les antennes. À traiter comme un accès de secours, pas comme un titre. |
 | `member` | Tout le monde, de la première visite au pasteur principal. Toute leur autorité vient des habilitations. |
 
-::: warning Il n'y a pas de rôle Pasteur ni Responsable
-Kairos avait autrefois `pastor`, `leader` et `elder` comme rôles système. Ils ont disparu. Si un document, un tableur ou une vieille capture parle du « rôle » de quelqu'un comme Pasteur ou Responsable, il décrit un **ensemble d'habilitations**, pas un champ en base.
-:::
-
 ## Les habilitations fonctionnelles
 
 Une habilitation est un lot de droits nommé, attaché à une portée précise. Ce sont elles qui donnent à un `member` un accès au-delà de sa propre fiche. Un membre peut en détenir plusieurs, et chacune est indépendante.
@@ -98,7 +94,7 @@ Le système refuse de retirer le dernier administrateur système d'une antenne. 
 
 Deux choses vont à des vitesses différentes, et il vaut mieux savoir laquelle est laquelle.
 
-- **L'API relit les habilitations en base à chaque requête.** Dès que vous enregistrez, le serveur cesse d'honorer une habilitation retirée et commence à honorer une nouvelle. Il n'y a aucune fenêtre où des permissions périmées s'appliquent encore.
+- Dès que vous enregistrez, le serveur cesse d'honorer une habilitation retirée et commence à honorer une nouvelle. Il n'y a aucune fenêtre où des permissions périmées s'appliquent encore.
 - **L'écran de la personne est piloté par son jeton de connexion.** Boutons, entrées de menu et pages apparaissent ou disparaissent au prochain renouvellement du jeton, qui se fait en arrière-plan pendant l'usage normal, ou tout de suite si elle se déconnecte et se reconnecte.
 
 Donc une habilitation retirée s'applique immédiatement, même si le bouton désormais interdit reste brièvement à l'écran : l'appuyer échoue. Une habilitation ajoutée est honorée par le serveur immédiatement, mais les nouvelles entrées de menu arrivent au renouvellement du jeton. Si quelqu'un dit « vous m'avez donné l'accès mais je ne le vois pas », demandez-lui de se déconnecter et de se reconnecter.
@@ -110,7 +106,3 @@ Donc une habilitation retirée s'applique immédiatement, même si le bouton dé
 Un membre portant le titre « Pasteur » qui ne détient qu'une habilitation de responsable de cellule voit exactement ce que voit un responsable de cellule. Pour un accès à toute l'antenne, il lui faut une habilitation d'administrateur système d'antenne.
 
 Notez que le titre est une chose distincte d'une **nomination** à la direction d'une antenne. Le titre dit comment on s'adresse à quelqu'un ; la fiche de direction (pasteur principal ou ministre) dit qui occupe la fonction dans une antenne, et seul le pasteur principal porte la vue protection déduite décrite plus haut.
-
-## Pas de sélecteur de rôle
-
-Il n'y a pas de sélecteur de rôle dans l'application, ni d'étape « choisissez votre rôle » après la connexion. Un membre ne peut pas agir au nom d'un autre. Un seul jeton porte toutes ses habilitations, et tout ce qu'il voit en découle. Si son accès doit changer, changez ses habilitations.

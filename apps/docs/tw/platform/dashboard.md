@@ -18,7 +18,7 @@ Dashboard no ne adeɛ a ɛdi kan a wohunu bere a wohyɛ mu. Ɛma wohunu deɛ ɛr
 
 ## Kratafa baako, a wɔde afaafa asi
 
-Kane no, dashboard no yɛ nkratafa nson a ɛhinta adres baako akyi, na biara wɔ n'akontaa a ɛnsesa. Seesei ɛyɛ afaafa kuo baako, na deɛ wobɛhunu gyina **gyinabea** a w'akyɛdeɛ de wo si so.
+Seesei ɛyɛ afaafa kuo baako, na deɛ wobɛhunu gyina **gyinabea** a w'akyɛdeɛ de wo si so.
 
 | Gyinabea | Hwan na ɔwɔ hɔ | Deɛ wɔnya |
 |----------|-------------|---------------|
@@ -74,11 +74,3 @@ W'ankasa wo ɔsom a wokɔ no a ɛdi so.
 ### Ɛda biara kyerɛwsɛm
 
 Twerɛsɛm bi, a ɛsesa ɛda biara.
-
-## Deɛ ɛtoo Mission Control
-
-Dashboard a ɛdii kan no wɔ "Mission Control Reports" a mfonini nketewa nsia wɔ mu ne "Mission Summary" nkitahodie nsensaneɛ. Ne mmienu nyinaa kɔeɛ, na Nkwa ne ne kɔkɔbɔ sii wɔn anan mu. Akontaa no ankɔ: wɔtu kɔɔ baabi a wobɛtumi ahwɛ wɔn yie:
-
-- Mmaeɛ nkɔsoɔ ne ɔmanfoɔ biara nhwɛsoɔ: [Mmaeɛ Amanneɛbɔ](/tw/analytics/attendance-reports)
-- Asɔrefoɔ nkɔsoɔ ne asafo no nkyekyɛmu: [Nkɔsoɔ Amanneɛbɔ](/tw/analytics/growth-reports)
-- Akra kwan no: [Akra Dashboard](/tw/platform/souls-dashboard)

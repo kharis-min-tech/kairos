@@ -4,10 +4,6 @@
 
 Ahokeka bisa asɛm foforɔ sene mmaeɛ. Mmaeɛ bisa sɛ obi baeɛ anaa. Ahokeka bisa sɛ ɔwɔ asɔre asetena mu ankasa anaa, na ɛno na ɛtaa si gyinae sɛ ɔbɛwɔ hɔ afe a ɛreba no anaa.
 
-::: warning Wɔayi ahokeka kaad dada no
-Dashbɔd no mu tete no na **Asɔremufoɔ Ahokeka** kaad a ɛkyerɛ gyinabea baako — Ɛkorɔn / Mfimfini / Ɛba fam — wɔ so. Ɛnni hɔ bio, ne Mishɔn Kɔntrol fa no nyinaa. Nsusuiɛ a ɛdidi so yi na ɛsii ananmu, na ɛyɛ dodoɔ pii hyɛ da na ɛnyɛ baako.
-:::
-
 ## Deɛ wɔde kyekyɛ a ɛyɛ nokorɛ
 
 Biribiara a ɛwɔ kratafa yi so gyina adwene baako so: **ahokekani** yɛ obi a ɔabɛyɛ pɛnkorɔ wɔ bere a woyi mu, a wotumi yi abosome 3, 6, anaa 12 firi [Mmaeɛ Nkaeɛbɔ](/tw/analytics/attendance-reports#ahokekafoɔ-dodoɔ-a-wɔde-kyekyɛ) atifi.

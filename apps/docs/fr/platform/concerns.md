@@ -18,10 +18,6 @@ Un même suivi peut porter les deux signalements et apparaîtra dans les deux on
 
 ## Pourquoi les listes de lecteurs diffèrent
 
-C'est la partie à lire attentivement, parce que c'est toute la raison d'être de la séparation.
-
-**L'entraide reposait autrefois sur l'accès général à l'antenne.** Cela voulait dire qu'un administrateur de données d'antenne — quelqu'un dont le travail est les fiches et les registres, et qui n'a aucune responsabilité pastorale — pouvait lire la boîte entraide *et* la boîte protection. Donner à l'entraide sa propre permission a corrigé cela.
-
 **La protection, délibérément, ne suit pas l'administration de l'antenne.** Un administrateur système d'antenne n'obtient pas l'onglet protection par cette habilitation. La vue protection vient de l'un de ces trois endroits :
 
 - **Être le pasteur principal de l'antenne.** Kairos le déduit de la fiche de direction de l'antenne, automatiquement, à chaque requête. Ce n'est pas une habilitation que l'on attribue.

@@ -18,10 +18,6 @@ Nkɔdi akyi baako tumi nya agyiraeɛ mmienu nyinaa na ɛbɛpue tab mmienu no nyi
 
 ## Deɛ enti a wɔn a wɔkenkan no nyɛ pɛ
 
-Yei ne fa a ɛsɛ sɛ wokenkan no yie, ɛfiri sɛ ɛno ne deɛ enti a nkyekyɛmu no wɔ hɔ.
-
-**Kane no na mmoa gyina asɔre baa akwannya a ɛda hɔ so.** Ɛno kyerɛ sɛ Asɔre Baa Nkrataa Sohwɛfoɔ — obi a n'adwuma ne nkrataa ne mmaeɛ nhwɛmu, na ɔnni ɔhwɛ ho tumi biara — na ɔtumi kenkan mmoa ne ahobammɔ nkrataa beaeɛ nyinaa. Sɛ wɔmaa mmoa ɔno ankasa akwannya no, ɛsiesieeɛ.
-
 **Ahobammɔ nni asɔre baa nhyehyɛeɛ akyi, na ɛyɛ hyɛ da.** Asɔre Baa Nhyehyɛeɛ Sohwɛfoɔ nnya ahobammɔ tab no mfiri saa tumi no mu. Ahobammɔ ani firi baabi mmiɛnsa yi mu baako:
 
 - **Sɛ woyɛ asɔre baa no Sɔfopanin.** Kairos hunu yei firi asɔre baa no akannifoɔ nkrataa mu, ne ho ara, bere biara a wobisa. Ɛnyɛ tumi a obi de ma.

@@ -18,10 +18,6 @@ Wan fɔlo ɔp kin gɛt ɔltu flag ɛn i go sho insay ɔltu tab.
 
 ## Wetin mek di rida lis dɛn difrɛn
 
-Dis na di pat we yu fɔ rid gud gud, bikɔs na di ful rizin wetin mek di split de.
-
-**Wɛlfɛa bin de rayd pan jɛnɛral branch akses.** Dat bin min se Branch Data Admin — pɔsin we in wok na rɛkɔd ɛn rɛjista, ɛn we nɔ gɛt no pastɔral stanin at ɔl — bin kin rid di wɛlfɛa ɛn di sefgadin inbɔks ɔltu. We dɛn gi wɛlfɛa in yon pamishɔn, dat fiks am.
-
 **Sefgadin nɔ de fɔlo branch administreshɔn, pɔposli.** Branch Sistem Admin nɔ de gɛt di sefgadin tab frɔm dat grant. Sefgadin say de kam frɔm wan pan tri ples:
 
 - **Fɔ bi di branch in Mayn Pasto.** Kairos de wok am awt frɔm di branch in lidaship rɛkɔd, insɛf, ɛvri tɛm yu mek rikwɛst. Nɔto grant we ɛnibɔdi de asayn.

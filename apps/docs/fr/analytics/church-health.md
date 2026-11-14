@@ -4,10 +4,6 @@
 
 « La santé de l'église » n'est pas un seul chiffre dans Kairos. C'est une poignée de chiffres à une poignée d'endroits, et cette page dit quel chiffre répond à quelle question.
 
-::: warning Si vous cherchez l'ancien score d'engagement
-Les versions précédentes du tableau de bord portaient une bande « Résumé de mission » avec un score d'engagement unique Élevé / Moyen / Faible, et une bande « Rapports du centre de pilotage » de six mini-graphiques. Les deux ont été retirées. Un score composite unique cachait plus qu'il ne montrait : deux antennes pouvaient obtenir le même score pour des raisons complètement différentes, et aucune des deux raisons n'était visible. Ce qui l'a remplacé est un petit ensemble de chiffres sur lesquels on peut vraiment agir, chacun à l'endroit où l'on agirait.
-:::
-
 ## Où chaque question trouve sa réponse
 
 | La question | Où regarder |

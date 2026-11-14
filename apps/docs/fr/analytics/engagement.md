@@ -4,10 +4,6 @@
 
 L'engagement pose une autre question que la présence. La présence demande si quelqu'un est venu. L'engagement demande s'il est réellement inséré dans la vie de l'église, et c'est cela qui décide le plus souvent s'il sera encore là l'an prochain.
 
-::: warning L'ancienne carte d'engagement a été retirée
-Les versions précédentes du tableau de bord portaient une carte **Engagement des membres** affichant un score unique Élevé / Moyen / Faible. Elle a disparu, avec le reste de la bande Centre de pilotage. Les mesures ci-dessous l'ont remplacée, et ce sont délibérément plusieurs chiffres plutôt qu'un seul.
-:::
-
 ## Le dénominateur honnête
 
 Tout sur cette page repose sur une idée : un **membre engagé** est quelqu'un venu au moins une fois dans une fenêtre choisie, que vous réglez sur 3, 6 ou 12 mois depuis l'en-tête des [Rapports de présence](/fr/analytics/attendance-reports#le-denominateur-des-membres-engages).

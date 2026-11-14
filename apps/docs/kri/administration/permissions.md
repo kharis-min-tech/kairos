@@ -13,10 +13,6 @@ Pamishɔn insay Kairos de kam frɔm **fɔnkshɔnal grant**, nɔto frɔm job tayt
 | `admin` | Di smɔl platfɔm tim. I de pas ɛvri chɛk, insay ɛvri branch. Tek am as brek-glas akses, nɔto as job taytul. |
 | `member` | Ɔlman ɛls, frɔm fɔs-tɛm pɔsin te di Sinio Pasto. Ɔl dɛn ɔtoriti de kam frɔm grant. |
 
-::: warning No Pasto ɔ Lida rol nɔ de
-Kairos bin gɛt `pastor`, `leader`, ɛn `elder` as sistem rol. Dɛn dɔn gɔn. If dokyumɛnt, sprɛdshit, ɔ old skrinshɔt tɔk bɔt pɔsin in "rol" as Pasto ɔ Lida, i de tɔk bɔt wan **patan fɔ grant**, nɔto fil insay di databes.
-:::
-
 ## Fɔnkshɔnal grant dɛn
 
 Grant na wan nem rol bɔndul we tay to wan spɛshal skop. Na grant de gi `member` akses pas in yon prɔfayl. Mɛmba kin ol plɛnti wan tɛm ɛn ɛvri wan sɛpret.
@@ -98,7 +94,7 @@ Di sistem nɔ go gri fɔ pul di las aktiv Branch Sistem Admin pan wan branch. Br
 
 Tu tin de apin pan difrɛn spid, ɛn i gud fɔ no us wan na us wan.
 
-- **Di API de rid di grant dɛn frɔm di databes ɛvri wan rikwɛst.** Di minit we yu sev, di sava de stɔp fɔ ɔnɔ di grant we yu pul ɛn i de stat fɔ ɔnɔ di nyu wan. No windo nɔ de we old pamishɔn de stil wok.
+- Di minit we yu sev, di sava de stɔp fɔ ɔnɔ di grant we yu pul ɛn i de stat fɔ ɔnɔ di nyu wan. No windo nɔ de we old pamishɔn de stil wok.
 - **Di pɔsin in yon skrin de kam frɔm in sayn-in tokin.** Bɔtin, mɛnyu, ɛn pej de sho ɔ ayd we di tokin rinyu, we de apin bakgrawnd we yu de yuz di ap, ɔ wan tɛm if i sayn awt ɛn sayn in bak.
 
 So grant we yu pul de stɔp wan tɛm, ivin if di bɔtin we dɔn fɔbid de stil pan in skrin smɔl tɛm; if i prɛs am, i nɔ go wok. Grant we yu ad, di sava de ɔnɔ am wan tɛm, bɔt di nyu mɛnyu de sho we di tokin rinyu. If pɔsin se "yu gi mi akses bɔt a nɔ de si am", aks am fɔ sayn awt ɛn sayn in bak.
@@ -110,7 +106,3 @@ So grant we yu pul de stɔp wan tɛm, ivin if di bɔtin we dɔn fɔbid de stil p
 Mɛmba we gɛt di onorifik "Pasto" bɔt i ol Fɛloship Lida grant nɔmɔ de si ɛgzakli wetin fɛloship lida de si. Fɔ branch-wayd akses, i nid Branch Sistem Admin grant.
 
 No se di onorifik na sɛpret tin frɔm branch **lidaship** apɔyntmɛnt. Di onorifik na aw dɛn de kɔl pɔsin; di lidaship rɛkɔd (Mayn Pasto ɔ Minista) na udat ol ɔfis insay branch, ɛn na Mayn Pasto nɔmɔ kɛr di sefgadin say we wi tɔk bɔt ɔp de.
-
-## No rol swicha
-
-No rol swicha nɔ de insay di ap ɛn no "pik yu rol" stɛp nɔ de afta yu sayn in. Mɛmba nɔ kin akt as sɔmbɔdi ɛls. Wan tokin de kɛr ɔl in grant dɛn, ɛn ɔltin we i de si de kam frɔm de. If in akses fɔ chenj, chenj in grant dɛn.

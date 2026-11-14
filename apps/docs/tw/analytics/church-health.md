@@ -4,10 +4,6 @@
 
 "Asɔre apɔwmuden" nyɛ dodoɔ baako wɔ Kairos mu. Ɛyɛ dodoɔ kakra wɔ mmeaeɛ kakra, na kratafa yi kyerɛ dodoɔ a ɛbua asɛm bɛn.
 
-::: warning Sɛ worehwehwɛ ahokeka gyinabea dada no a
-Dashbɔd no mu tete no na "Mishɔn Mpɔmu" fa a ɛwɔ ahokeka gyinabea baako — Ɛkorɔn / Mfimfini / Ɛba fam — ne "Mishɔn Kɔntrol Nkaeɛbɔ" fa a ɛwɔ mfonini nketewa nsia wɔ so. Wɔayi mmienu nyinaa. Gyinabea baako a ɛka nneɛma nyinaa bom no de pii sieeɛ sene deɛ ɛkyerɛeɛ: asɔre mmaa mmienu tumi nya gyinabea korɔ no ara wɔ nneɛma a ɛsono emu biara nti, na emu biara anna adi. Deɛ ɛsii ananmu ne dodoɔ kakra a wotumi yɛ ho adeɛ ankasa, na emu biara wɔ baabi a wobɛyɛ ho adeɛ.
-:::
-
 ## Baabi a asɛm biara nya mmuaeɛ
 
 | Asɛmmisa | Baabi a wohwɛ |

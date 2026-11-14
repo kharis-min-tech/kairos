@@ -2,17 +2,13 @@
 
 <SectionClip slug="getting-started/roles-permissions" />
 
-Ce que vous pouvez voir et faire dans Kairos est décidé par les **habilitations** de votre compte, pas par un titre. Il n'y a pas de sélecteur de rôle, et pas d'étape après la connexion où vous choisissez qui être. Vos permissions sont posées à la configuration de votre compte et prennent effet dès votre prochaine connexion.
+Ce que vous pouvez voir et faire dans Kairos est décidé par les **habilitations** de votre compte, pas par un titre. Vos permissions sont posées à la configuration de votre compte et prennent effet dès votre prochaine connexion.
 
 ## La première chose à comprendre
 
 Kairos ne stocke que deux rôles système : `admin` et `member`. Toute personne qui n'est pas dans la petite équipe de la plateforme est un `member`, y compris le pasteur principal.
 
 L'autorité réelle vient des **habilitations** : un lot de droits nommé, fixé à une antenne, une cellule, un département ou l'église entière. Détenez une habilitation Responsable de cellule pour Grace K-Group et vous pouvez animer Grace K-Group. N'en détenez aucune et vous gérez votre propre fiche. Détenez-en plusieurs et vous les avez toutes, chacune dans sa frontière.
-
-::: warning « Pasteur » et « Responsable » ne sont pas des rôles
-Ce sont des mots utiles pour désigner un *ensemble* d'habilitations, et cette documentation les emploie ainsi. Mais il n'y a pas de rôle Pasteur ni de rôle Responsable à attribuer. Un membre dont la fiche porte le titre « Pasteur » a exactement les permissions que ses habilitations lui donnent, c'est-à-dire parfois aucune.
-:::
 
 ## Les quatre formes d'accès
 

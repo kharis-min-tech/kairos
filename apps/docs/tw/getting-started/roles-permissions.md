@@ -2,17 +2,13 @@
 
 <SectionClip slug="getting-started/roles-permissions" />
 
-Deɛ wotumi hunu na woyɛ wɔ Kairos mu no, **tumi** a ɛwɔ w'akawnt so na ɛsi gyinae, na ɛnyɛ dibea din. Dibea nsesaeɛ biara nni hɔ, na afa biara nni hɔ wɔ akawnt bue akyi a wopaw onipa a wobɛyɛ. Wɔhyɛ w'akwannya bere a wɔsiesie w'akawnt na ɛfiri wo bue a ɛdi so mu kɔ so.
+Deɛ wotumi hunu na woyɛ wɔ Kairos mu no, **tumi** a ɛwɔ w'akawnt so na ɛsi gyinae, na ɛnyɛ dibea din. Wɔhyɛ w'akwannya bere a wɔsiesie w'akawnt na ɛfiri wo bue a ɛdi so mu kɔ so.
 
 ## Adeɛ a ɛdi kan a ɛsɛ sɛ wote aseɛ
 
 Kairos kora nhyehyɛeɛ dibea mmienu pɛ: `admin` ne `member`. Obiara a ɔnni nhyehyɛeɛ kuo ketewa no mu no yɛ `member`, a Sɔfopanin ka ho.
 
 Tumi ankasa firi **tumi a wɔde ma** mu: dibea bagua a wɔato din na ɛbata asɔre baa baako, fekuo baako, adwumakuo baako, anaa asɔre no nyinaa ho. Sɛ wokura Fekuo Kannifoɔ tumi ma Grace K-Group a, wotumi hwɛ Grace K-Group so. Sɛ wonkura hwee a, wotumi hwɛ w'ankasa nkrataa so. Sɛ wokura pii a, wonya ne nyinaa, emu biara wɔ n'ankasa ɛhyeɛ mu.
-
-::: warning "Ɔsɔfoɔ" ne "Kannifoɔ" nyɛ dibea
-Ɛyɛ nsɛmfua a mfasoɔ wɔ so a ɛka tumi *ahodoɔ* a obi wɔ ho asɛm, na nkrataa yi de di dwuma saa. Nanso Ɔsɔfoɔ dibea anaa Kannifoɔ dibea nni hɔ a wɔde ma. Ɔmanfoɔ a ne nkrataa kyerɛ dibea din "Ɔsɔfoɔ" no wɔ akwannya a ne tumi de ama no pɛpɛɛpɛ, a ebia ɛnyɛ hwee.
-:::
 
 ## Akwannya su nnan
 

@@ -18,7 +18,7 @@ Di dashbɔd na di fɔs tin we yu de si afta yu sayn in. I de gi yu wan kwik vyu 
 
 ## Wan pej, we dɛn bil wit blɔk dɛn
 
-Di dashbɔd bin na sɛvin difrɛn pej we ayd bihayn wan URL, ɛn ɛvri wan bin gɛt in yon nɔmba dɛn we nɔ kin chenj. Naw na wan sɛt blɔk, ɛn wetin yu de si dipɛnd pan di **altitud** we yu grant dɛn put yu.
+Naw na wan sɛt blɔk, ɛn wetin yu de si dipɛnd pan di **altitud** we yu grant dɛn put yu.
 
 | Altitud | Udat de de | Wetin dɛn de gɛt |
 |----------|-------------|---------------|
@@ -74,11 +74,3 @@ Yu yon ron fɔ sɛvis dɛn we yu kam wan afta di ɔda.
 ### Di de in vas
 
 Wan skripchɔ, we de chenj ɛvri de.
-
-## Wetin apin to Mission Control
-
-Di old dashbɔd bin gɛt wan «Mission Control Reports» strip wit siks smɔl chat ɛn wan «Mission Summary» ɛngejmɛnt ban. Ɔltu dɔn go, ɛn Pɔls wit in wɔnin dɛn tek dɛn ples. Di nɔmba dɛn nɔ lɔs; dɛn muv go usay yu kin aks dɛn prɔpa kwɛstyɔn:
-
-- Atɛndans trɛnd ɛn di itmap pɛ mɛmba: [Atɛndans Ripɔt](/kri/analytics/attendance-reports)
-- Mɛmbaship groth ɛn aw di kɔngrigeshɔn brok dɔŋ: [Groth Ripɔt](/kri/analytics/growth-reports)
-- Di sol fɔnul: [Sol Dashbɔd](/kri/platform/souls-dashboard)

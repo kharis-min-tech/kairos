@@ -28,11 +28,6 @@ These are all of them. There are no others.
 | `membership:admin` | Everything administrative on the [membership class programme](/platform/membership) |
 | `membership:branch:read` | A Membership Champion's read-only view of one branch's membership progress |
 
-Two absences are deliberate:
-
-- **There is no `members:write`.** Member records are branch data, so they are gated by `branch:write`.
-- **`membership:admin` has no read/write split.** Every member-facing membership surface needs no capability at all, so anything the capability gates is by definition administration.
-
 ## Which grant carries which capability
 
 | Grant | Capabilities |
@@ -52,8 +47,6 @@ Two absences are deliberate:
 
 ### Why welfare and safeguarding are separate
 
-`welfare:read` used to ride on `branch:write`. That meant a Branch Data Admin, a pure operations role with no pastoral standing, could read both the welfare and the safeguarding inbox. Splitting welfare into its own capability fixed that.
-
 The current arrangement is deliberate on both sides:
 
 - `BranchAdmin` holds `welfare:read` but **not** `safeguarding:read`. Welfare is pastoral care and belongs to branch leadership.
@@ -62,8 +55,6 @@ The current arrangement is deliberate on both sides:
 - `BranchDataAdmin` holds neither.
 
 ## How a check is decided
-
-One function decides every capability check in the product: `matchesCapability` in `packages/types/src/rbac.ts`. The server enforces with it, and the web app and the mobile app gate their buttons with it, so a button either app offers is a button the server will honour. It was hand-copied into three places until the church scope arrived; the copies are gone, and new copies should not appear.
 
 The rules, in order:
 
@@ -75,38 +66,3 @@ The rules, in order:
 6. **A church target takes no hierarchical match.** Containment runs one way. No branch-scoped grant, however many of them somebody holds, ever satisfies a church-scoped check. Only a church grant, or a platform admin, does.
 
 Rule 6 is the one that surprises people. A member who is Branch System Admin of every branch in the church still cannot administer the membership programme, because the programme is church-scoped and the church is not inside any branch.
-
-## Where grants come from
-
-Grants are resolved from the database on every request, by `resolveGrants` in `apps/api/src/lib/grants.ts`. It combines two sources:
-
-1. **Stored grants** in the `member_roles` table: the rows you create when you assign a role. Church-scoped rows store a placeholder id for the scope, and the branch recorded on the row is only a filing handle, not the grant's reach.
-2. **The derived Branch Pastor grant**, synthesised for whoever currently holds the Main Pastor row in `branch_leadership` for a branch. It is never written to `member_roles` and never appears in the roles list.
-
-## How code gates on this
-
-On the server:
-
-```ts
-// One capability, scoped to a route parameter
-requireCapability('branch:write', (c) => c.req.param('branchId'))
-
-// Any one of a set is enough
-requireAnyCapability(['branch:write', 'safeguarding:read'])
-
-// Inside a service, where the entity is already loaded
-enforceBranchScope(auth, branchId)
-enforceLeaderOrAbove(auth, entity)
-```
-
-In the web app:
-
-```ts
-const caps = useCapabilities()
-
-if (caps.has('branch:write', { kind: 'branch', id: branchId })) {
-  // show the edit control
-}
-```
-
-Both call into the same matcher. Note that some modules, the membership module in particular, do their gating inside the service layer rather than as route middleware, because one route can be legitimately reachable by several different holders with different narrowing applied. Read the service, not just the router, when you need to know who can call something.

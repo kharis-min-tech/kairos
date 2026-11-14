@@ -4,10 +4,6 @@
 
 "Church health" is not one number in Kairos. It is a handful of figures in a handful of places, and this page says which figure answers which question.
 
-::: warning If you are looking for the old engagement score
-Earlier versions of the dashboard carried a "Mission Summary" band with a single High / Medium / Low engagement score, and a "Mission Control Reports" strip of six mini-charts. Both have been removed. A single composite score hid more than it showed: two branches could score the same for completely different reasons, and neither reason was visible. What replaced it is a small set of figures you can actually act on, each in the place where you would act.
-:::
-
 ## Where each question is answered
 
 | The question | Where to look |

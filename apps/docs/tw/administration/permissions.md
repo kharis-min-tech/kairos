@@ -13,10 +13,6 @@ Akwannya wɔ Kairos mu gyina **tumi a wɔde ma adwuma ho** so, na ɛnyɛ dibea d
 | `admin` | Nhyehyɛeɛ kuo ketewa no. Ɔfa nhwɛsoɔ biara so wɔ asɔre baa biara mu. Fa no sɛ ntɛmpɛ akwannya, na ɛnyɛ dibea din. |
 | `member` | Obiara foforɔ, ɛfiri ɔhɔhoɔ foforɔ kɔsi Sɔfopanin. Wɔn tumi nyinaa firi tumi a wɔde ma mu. |
 
-::: warning Ɔsɔfoɔ anaa Kannifoɔ dibea nni hɔ
-Kane no na Kairos wɔ `pastor`, `leader`, ne `elder` sɛ nhyehyɛeɛ dibea. Ɛnni hɔ bio. Sɛ krataa, tebo, anaa mfonini dada bi ka obi "dibea" sɛ Ɔsɔfoɔ anaa Kannifoɔ a, ɛreka **tumi ahodoɔ a ɔwɔ** ho asɛm, na ɛnyɛ beaeɛ a ɛwɔ nkrataakoraeɛ mu.
-:::
-
 ## Tumi a wɔde ma adwuma ho
 
 Tumi yɛ dibea bagua a wɔato din na ɛbata beaeɛ pɔtee ho. Tumi na ɛma `member` nya akwannya a ɛboro ɔno ankasa nkrataa so. Ɔmanfoɔ tumi kura pii bere korɔ mu na emu biara ne ne ho.
@@ -98,7 +94,7 @@ Nhyehyɛeɛ no mpene sɛ wɔbɛyi Asɔre Baa Nhyehyɛeɛ Sohwɛfoɔ a ɔtwa toɔ
 
 Nneɛma mmienu kɔ ahoɔhare soronko so, na ɛyɛ sɛ wohunu emu nsonsonoeɛ.
 
-- **API no san kenkan tumi firi nkrataakoraeɛ mu bisadeɛ biara mu.** Bere a wosie no, sɛɛva no gyae tumi a woayi no die na ɛfiri aseɛ di tumi foforɔ no. Bere biara nni hɔ a akwannya dada da so yɛ adwuma.
+- Bere a wosie no, sɛɛva no gyae tumi a woayi no die na ɛfiri aseɛ di tumi foforɔ no. Bere biara nni hɔ a akwannya dada da so yɛ adwuma.
 - **Onipa no ankasa skrin firi n'akawnt bue nsɛnkyerɛnneɛ mu.** Bɔtin, nkyekyɛmu, ne nkratafa pue anaa ɛyera bere a nsɛnkyerɛnneɛ no yɛ foforɔ, a ɛkɔ so wɔ akyire bere a ɔde di dwuma, anaa ntɛm ara sɛ ɔfiri mu na ɔsan bue a.
 
 Enti tumi a woayi no gyae adwuma ntɛm ara, sɛ bɔtin a wɔabra no da so wɔ ne skrin so kakra mpo a; sɛ ɔmia a, ɛnyɛ adwuma. Tumi foforɔ a wode kaa ho no, sɛɛva no di so ntɛm ara, nanso nkyekyɛmu foforɔ no pue bere a nsɛnkyerɛnneɛ no yɛ foforɔ. Sɛ obi ka sɛ "wode akwannya maa me nanso menhunu" a, ka kyerɛ no sɛ ɔmfiri mu na ɔnsan mmue.
@@ -110,7 +106,3 @@ Enti tumi a woayi no gyae adwuma ntɛm ara, sɛ bɔtin a wɔabra no da so wɔ ne
 Ɔmanfoɔ a ɔwɔ dibea din "Ɔsɔfoɔ" na ɔkura Fekuo Kannifoɔ tumi nko ara no hunu deɛ fekuo kannifoɔ hunu pɛpɛɛpɛ. Sɛ ɔpɛ asɔre baa no nyinaa akwannya a, ɛsɛ sɛ ɔnya Asɔre Baa Nhyehyɛeɛ Sohwɛfoɔ tumi.
 
 Hunu sɛ dibea din no ne asɔre baa **akannidie** a wɔde ma no nyɛ adeɛ korɔ. Dibea din no ne sɛdeɛ wɔfrɛ obi; akannifoɔ nkrataa no (Sɔfopanin anaa Ɔsɔfoɔ) na ɛkyerɛ hwan na ɔwɔ dibea wɔ asɔre baa mu, na Sɔfopanin nko ara na ɔkura ahobammɔ ani a yɛkaa ho asɛm wɔ soro hɔ no.
-
-## Dibea nsesaeɛ nni hɔ
-
-Dibea nsesaeɛ biara nni app no mu, na "yi wo dibea" afa biara nni hɔ wɔ akawnt bue akyi. Ɔmanfoɔ ntumi nyɛ obi foforɔ. Nsɛnkyerɛnneɛ baako kura ne tumi nyinaa, na biribiara a ɔhunu firi mu ba. Sɛ ɛsɛ sɛ n'akwannya sesa a, sesa ne tumi.

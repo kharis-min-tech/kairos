@@ -4,10 +4,6 @@
 
 "Chɔch ɛlt" nɔto wan nɔmba insay Kairos. Na sɔm nɔmba insay sɔm ples, ɛn dis pej de tɛl yu us nɔmba de ansa us kwɛshɔn.
 
-::: warning If yu de luk fɔ di old ɛngejmɛnt skɔ
-Old vɔshɔn fɔ di dashbɔd bin gɛt wan "Mishɔn Sɔmari" band wit wan ɛngejmɛnt skɔ: Ay / Midul / Lo, ɛn wan "Mishɔn Kɔntrol Ripɔt" strip wit siks smɔl chat. Dɛn dɔn pul ɔltu. Wan kɔmbayn skɔ bin de ayd mɔ pas wetin i bin de sho: tu branch kin gɛt di sem skɔ fɔ tu difrɛn rizin, ɛn yu nɔ bin kin si nɔn pan di tu rizin. Wetin tek in ples na wan smɔl sɛt nɔmba we yu kin tru-tru akt pan, ɛvri wan na di ples usay yu go akt.
-:::
-
 ## Usay ɛvri kwɛshɔn de gɛt ansa
 
 | Di kwɛshɔn | Usay fɔ luk |
