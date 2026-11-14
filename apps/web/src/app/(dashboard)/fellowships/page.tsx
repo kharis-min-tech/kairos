@@ -16,17 +16,27 @@ import type { FellowshipListParams } from '@kairos/types';
 import { FellowshipType } from '@kairos/types';
 import type { FellowshipWithBranch } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
-const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
-  ssr: false,
-  loading: () => (
+/**
+ * next/dynamic's `loading` runs at module scope, so it cannot call
+ * useTranslation inline -- it has to render a component that can.
+ */
+function MapPreviewLoading() {
+  const { t } = useTranslation(['fellowships', 'common']);
+  return (
     <div className="flex h-[500px] items-center justify-center rounded-xl border border-border bg-muted/30">
       <div className="text-center">
         <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="mt-3 text-sm text-muted-foreground">Loading map...</p>
+        <p className="mt-3 text-sm text-muted-foreground">{t('fellowships:loadingMap')}</p>
       </div>
     </div>
-  ),
+  );
+}
+
+const FellowshipMap = dynamic(() => import('@/components/fellowship-map'), {
+  ssr: false,
+  loading: () => <MapPreviewLoading />,
 });
 
 function FellowshipsListSkeleton() {
@@ -52,6 +62,10 @@ function FellowshipsListSkeleton() {
   );
 }
 
+// The ministry names below are Kharis's own brands and stay as written in
+// every language; only the 'All' entry is interface copy, keyed at the call site.
+// i18n-ignore(8): the ministry names are Kharis brands; 'All' is keyed at
+// the call site because only it is interface copy.
 const FELLOWSHIP_TYPES = [
   { label: 'All', value: '' },
   { label: 'K-Groups', value: FellowshipType.KGroups },
@@ -69,7 +83,8 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
   [FellowshipType.KharisOnCampusColleges]: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
 };
 
-function FellowshipsContent() {
+function FellowshipsContent() {  const { t } = useTranslation(['fellowships', 'common']);
+
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -120,14 +135,16 @@ function FellowshipsContent() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Fellowships</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('fellowships:fellowships')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Fellowship groups{pagination ? ` — ${pagination.total} total` : ''}
+            {pagination
+              ? t('fellowships:fellowshipGroupsWithTotal', { count: pagination.total })
+              : t('fellowships:fellowshipGroups')}
           </p>
         </div>
         {(caps.has('branch:write')) && (
           <Link href="/fellowships/new">
-            <Button size="sm">+ New Fellowship</Button>
+            <Button size="sm">+ {t('fellowships:newFellowship')}</Button>
           </Link>
         )}
       </div>
@@ -144,7 +161,7 @@ function FellowshipsContent() {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
             </svg>
-            {showMap ? 'Hide Map' : 'Find on Map'}
+            {showMap ? t('fellowships:hideMap') : t('fellowships:findMap')}
           </Button>
         </div>
 
@@ -154,13 +171,17 @@ function FellowshipsContent() {
               <svg className="h-4 w-4 text-[#5D3FD3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
               </svg>
-              <span className="text-xs font-semibold text-[#5D3FD3] dark:text-[#a392ed]">{pagination.total} Fellowships</span>
+              <span className="text-xs font-semibold text-[#5D3FD3] dark:text-[#a392ed]">
+                {t('fellowships:fellowshipsCount', { count: pagination.total })}
+              </span>
             </div>
             <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5">
               <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{fellowships?.filter(f => f.isActive).length ?? 0} Active</span>
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                {t('fellowships:activeCount', { count: fellowships?.filter((f) => f.isActive).length ?? 0 })}
+              </span>
             </div>
           </div>
         )}
@@ -194,7 +215,7 @@ function FellowshipsContent() {
                   : 'text-muted-foreground hover:text-foreground'
               ) + ' flex-1 whitespace-nowrap rounded-lg px-3 py-1 text-xs font-semibold transition-all duration-150'}
             >
-              {type.label}
+              {type.value === '' ? t('common:all') : type.label}
             </button>
           ))}
         </div>
@@ -203,9 +224,9 @@ function FellowshipsContent() {
             size="sm"
             value={params.branchId ?? ''}
             onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
-            placeholder="All Branches"
+            placeholder={t('fellowships:allBranches')}
             options={[
-              { value: '', label: 'All Branches' },
+              { value: '', label: t('fellowships:allBranches') },
               ...(branchesResult ?? []).map((b) => ({ value: b.id, label: b.branchName })),
             ]}
           />
@@ -217,13 +238,11 @@ function FellowshipsContent() {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             {(caps.has('fellowship:write') || caps.has('department:write')) ? (
               <>
-                <p className="font-medium">You don’t lead a fellowship</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  The leader view shows fellowships you lead or co-lead. Switch to your member view to browse and request to join one.
-                </p>
+                <p className="font-medium">{t('fellowships:youDonTLeadAFellowship')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('fellowships:theLeaderViewShowsFellowshipsYou')}</p>
               </>
             ) : (
-              <p className="text-muted-foreground">No fellowships found.</p>
+              <p className="text-muted-foreground">{t('fellowships:noFellowshipsFound')}</p>
             )}
           </CardContent>
         </Card>
@@ -278,20 +297,18 @@ function FellowshipsContent() {
                             e.preventDefault();
                             e.stopPropagation();
                             const ok = await confirm({
-                              title: `Deactivate ${fellowship.fellowshipName}?`,
-                              description: 'It will be hidden from the directory. You can restore it from the API if needed.',
-                              confirmLabel: 'Deactivate',
+                              title: t('fellowships:deactivateV12', { v1: fellowship.fellowshipName }),
+                              description: t('fellowships:itWillBeHiddenFromThe'),
+                              confirmLabel: t('fellowships:deactivate'),
                               variant: 'destructive',
                             });
                             if (!ok) return;
                             deleteFellowship.mutate(fellowship.id, {
-                              onSuccess: () => toast.success('Fellowship deactivated.'),
-                              onError: () => toast.error('Failed to deactivate fellowship. Please try again.'),
+                              onSuccess: () => toast.success(t('fellowships:fellowshipDeactivated')),
+                              onError: () => toast.error(t('fellowships:failedDeactivateFellowshipTryAgain')),
                             });
                           }}
-                        >
-                          Deactivate
-                        </Button>
+                        >{t('fellowships:deactivate')}</Button>
                       </div>
                     )}
                   </CardContent>
@@ -310,9 +327,7 @@ function FellowshipsContent() {
                 size="sm"
                 disabled={pagination.page <= 1}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) - 1 }))}
-              >
-                Previous
-              </Button>
+              >{t('fellowships:previous')}</Button>
               <span className="text-sm text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
@@ -321,9 +336,7 @@ function FellowshipsContent() {
                 size="sm"
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) + 1 }))}
-              >
-                Next
-              </Button>
+              >{t('fellowships:next')}</Button>
             </div>
           )}
         </>

@@ -1,0 +1,19 @@
+{
+  "role": "platform-concerns",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Welfare and safeguarding",
+      "caption": "Two inboxes, deliberately separate.",
+      "speech": "Concerns holds two inboxes. Welfare and safeguarding are kept apart on purpose, and read by deliberately different people."
+    },
+    {
+      "n": 2,
+      "title": "Reading one",
+      "caption": "The record, and who raised it.",
+      "speech": "Opening a concern shows the follow-up it came from, who raised it, and what has been done about it since."
+    }
+  ]
+}

@@ -175,7 +175,7 @@ function renderDigest(
     }
   });
 
-  const subject = `Your ${categoryLabel} digest — ${rows.length} update${rows.length === 1 ? '' : 's'}`;
+  const subject = `Your ${categoryLabel} digest: ${rows.length} update${rows.length === 1 ? '' : 's'}`;
   const bullets = lines
     .map((line) => `<li style="margin: 6px 0;">${escapeHtml(line)}</li>`)
     .join('');

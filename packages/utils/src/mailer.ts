@@ -13,6 +13,11 @@ export interface MailerSecrets {
   awsRegion: string;
   emailFrom: string;
   frontendUrl: string;
+  // Optional SES configuration set. When set, every send tags against this
+  // config set so bounce/complaint metrics + suppression are per-environment.
+  // Prod uses `kairos-transactional`; staging uses `kairos-staging`.
+  // When unset, SES falls back to the identity's default configuration set.
+  configurationSetName?: string;
 }
 
 let _secrets: MailerSecrets | null = null;
@@ -25,6 +30,7 @@ export function bindMailerEnv(secrets: Partial<MailerSecrets>): void {
     awsRegion: secrets.awsRegion ?? 'eu-west-2',
     emailFrom: secrets.emailFrom ?? '"Kharis Church" <noreply@kharis.org>',
     frontendUrl: secrets.frontendUrl ?? 'http://localhost:3002',
+    configurationSetName: secrets.configurationSetName,
   };
   _awsClient = null;
 }
@@ -38,10 +44,22 @@ function getSecrets(): MailerSecrets {
       awsRegion: process.env['AWS_REGION'] ?? 'eu-west-2',
       emailFrom: process.env['EMAIL_FROM'] ?? '"Kharis Church" <noreply@kharis.org>',
       frontendUrl: process.env['FRONTEND_URL'] ?? 'http://localhost:3002',
+      configurationSetName: process.env['SES_CONFIGURATION_SET'] || undefined,
     };
     return _secrets;
   }
   throw new Error('Mailer not configured — call bindMailerEnv() or set AWS_* env vars');
+}
+
+/**
+ * True when both AWS keys are bound — i.e. the mailer will actually try to
+ * hit SES rather than fall back to log-only. Signup uses this to decide
+ * whether it's safe to omit the plaintext verification token from the
+ * response body (live mailer → email is the canonical delivery path).
+ */
+export function isMailerLive(): boolean {
+  const s = getSecrets();
+  return Boolean(s.awsAccessKeyId && s.awsSecretAccessKey);
 }
 
 function getAwsClient(): AwsClient | null {
@@ -71,7 +89,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   }
 
   const url = `https://email.${s.awsRegion}.amazonaws.com/v2/email/outbound-emails`;
-  const payload = {
+  const payload: Record<string, unknown> = {
     FromEmailAddress: s.emailFrom,
     Destination: { ToAddresses: [to] },
     Content: {
@@ -81,6 +99,9 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
       },
     },
   };
+  if (s.configurationSetName) {
+    payload['ConfigurationSetName'] = s.configurationSetName;
+  }
 
   const res = await aws.fetch(url, {
     method: 'POST',
@@ -123,7 +144,7 @@ export async function sendEmailChangeConfirmEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    'Confirm your new email — Kharis Church',
+    'Confirm your new email | Kharis Church',
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Confirm your new email</h2>
@@ -188,6 +209,39 @@ export async function sendEmailChangedAlertEmail(
 
 // ── Account / Auth emails ──────────────────────────────────────
 
+export async function sendAccountVerificationEmail(
+  to: string,
+  memberName: string,
+  verifyLink: string,
+): Promise<void> {
+  await sendEmail(
+    to,
+    'Verify your email | Kharis Church',
+    `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #5D3FD3;">Confirm your email address</h2>
+        <p>Hi ${memberName},</p>
+        <p>Welcome to Kharis Church. Click the button below to confirm your email
+           address and complete your registration. This link expires in
+           <strong>24 hours</strong>.</p>
+        <p style="text-align: center; margin: 32px 0;">
+          <a href="${verifyLink}"
+             style="background:#5D3FD3;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;">
+            Verify email
+          </a>
+        </p>
+        <p>If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="word-break:break-all;color:#5D3FD3;font-size:12px;">${verifyLink}</p>
+        <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
+        <p style="font-size:12px;color:#6b7280;">
+          After you verify, an administrator will review your registration.
+          You'll get a second email once your account is approved.
+        </p>
+      </div>
+    `,
+  );
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   resetLink: string,
@@ -195,7 +249,7 @@ export async function sendPasswordResetEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    'Reset Your Password — Kharis Church',
+    'Reset Your Password | Kharis Church',
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Reset Your Password</h2>
@@ -231,7 +285,7 @@ export async function sendAccountApprovedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Account Approved!</h2>
         <p>Hi ${memberName},</p>
-        <p>Great news — your Kharis Church account has been reviewed and approved by an administrator.</p>
+        <p>Great news: your Kharis Church account has been reviewed and approved by an administrator.</p>
         <p>You can now log in to access your full member portal, view fellowships, meetings, and more.</p>
         <p style="text-align: center; margin: 32px 0;">
           <a href="${getFrontendUrl()}/login"
@@ -276,13 +330,13 @@ export async function sendJoinRequestReceivedEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `Join Request Received — ${fellowshipName}`,
+    `Join Request Received: ${fellowshipName}`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Request Received</h2>
         <p>Hi ${memberName},</p>
         <p>We've received your request to join <strong>${fellowshipName}</strong>.</p>
-        <p>Our team reviews requests as soon as possible — while we aim to respond within 14 days,
+        <p>Our team reviews requests as soon as possible. While we aim to respond within 14 days,
            this is an estimate and not a guarantee; responses may take longer during busy periods.</p>
         <p>We'll be in touch once your request has been reviewed.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
@@ -304,7 +358,7 @@ export async function sendJoinRequestApprovedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Welcome to ${fellowshipName}!</h2>
         <p>Hi ${memberName},</p>
-        <p>Great news — your request to join <strong>${fellowshipName}</strong> has been approved.
+        <p>Great news: your request to join <strong>${fellowshipName}</strong> has been approved.
            You are now an active member of the fellowship.</p>
         <p>Log in to the Kharis Church portal to view fellowship details, meetings, and more.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
@@ -345,7 +399,7 @@ export async function sendMentorAssignedEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `You've been assigned as a mentor — Kharis Church`,
+    `You've been assigned as a mentor | Kharis Church`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Mentor Assignment</h2>
@@ -373,7 +427,7 @@ export async function sendInterviewScheduledEmail(
 
   await sendEmail(
     to,
-    `Interview scheduled — ${departmentName}`,
+    `Interview scheduled: ${departmentName}`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Interview Scheduled</h2>
@@ -429,10 +483,10 @@ export async function sendProbationStartedEmail(
 ): Promise<void> {
   await sendEmail(
     to,
-    `Welcome to ${departmentName} — probation started`,
+    `Welcome to ${departmentName}: probation started`,
     `
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-        <h2 style="color: #059669;">Welcome — probation started</h2>
+        <h2 style="color: #059669;">Welcome, probation started</h2>
         <p>Hi ${memberName},</p>
         <p>You're now part of <strong>${departmentName}</strong> on a
            <strong>${details.probationDays}-day probation</strong>.</p>
@@ -456,7 +510,7 @@ export async function sendProbationPassedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #059669;">Probation passed</h2>
         <p>Hi ${memberName},</p>
-        <p>Congratulations — you've completed probation and are now a full member of
+        <p>Congratulations, you've completed probation and are now a full member of
            <strong>${departmentName}</strong>.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
         <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button } from '@kairos/ui';
 import { useBranches } from '@/hooks/use-branches';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useMyDepartments } from '@/hooks/use-departments';
+import { useTranslation } from 'react-i18next';
 
 // ── Derived "friendly role line" ───────────────────────────────────────────
 // Replaces the raw `systemRole: "member"` exposure on /profile with a sentence
@@ -15,6 +16,7 @@ export function useFriendlyRoleLines(opts: {
   homeBranchId?: string | null;
 }): string[] {
   const { systemRole, memberId, homeBranchId } = opts;
+  const { t } = useTranslation(['settings', 'common']);
   const { data: branches } = useBranches();
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
@@ -24,9 +26,7 @@ export function useFriendlyRoleLines(opts: {
   // Top-level church role lines
   const lines: string[] = [];
   if (systemRole === 'admin') {
-    lines.push('Church administrator');
-  } else if ((systemRole as string) === 'pastor') {
-    lines.push(homeBranchName ? `Pastor of ${homeBranchName} branch` : 'Pastor');
+    lines.push(t('settings:roleChurchAdministrator'));
   }
 
   // Fellowship leadership
@@ -37,8 +37,10 @@ export function useFriendlyRoleLines(opts: {
     coLeaderId?: string | null;
   }>;
   for (const f of fellowships) {
-    if (memberId && f.leaderId === memberId) lines.push(`Lead of ${f.fellowshipName} fellowship`);
-    else if (memberId && f.coLeaderId === memberId) lines.push(`Co-lead of ${f.fellowshipName} fellowship`);
+    if (memberId && f.leaderId === memberId)
+      lines.push(t('settings:roleFellowshipLead', { name: f.fellowshipName }));
+    else if (memberId && f.coLeaderId === memberId)
+      lines.push(t('settings:roleFellowshipCoLead', { name: f.fellowshipName }));
   }
 
   // Department leadership
@@ -49,17 +51,19 @@ export function useFriendlyRoleLines(opts: {
     deputyMemberId?: string | null;
   }>;
   for (const d of depts) {
-    const name = d.departmentName ?? 'Department';
-    if (memberId && d.leadMemberId === memberId) lines.push(`Lead of ${name} department`);
-    else if (memberId && d.deputyMemberId === memberId) lines.push(`Deputy of ${name} department`);
+    const name = d.departmentName ?? t('settings:roleDepartmentFallbackName');
+    if (memberId && d.leadMemberId === memberId)
+      lines.push(t('settings:roleDepartmentLead', { name }));
+    else if (memberId && d.deputyMemberId === memberId)
+      lines.push(t('settings:roleDepartmentDeputy', { name }));
   }
 
   // Plain member fallback — only when no other role line exists at all
   if (lines.length === 0) {
     lines.push(
       homeBranchName
-        ? `Member of Kharis Church — ${homeBranchName} branch`
-        : 'Member of Kharis Church',
+        ? t('settings:roleMemberOfBranch', { branch: homeBranchName })
+        : t('settings:roleMemberOfChurch'),
     );
   }
 
@@ -81,7 +85,8 @@ export function WhereIBelongCard({
   onSwitchBranch?: () => void;
   switchPending?: boolean;
   switchError?: string | null;
-}) {
+}) {  const { t } = useTranslation(['settings', 'common']);
+
   const { data: branches } = useBranches();
   const home = branches?.find((b) => b.id === homeBranchId);
   const secondary = branches?.find((b) => b.id === secondaryBranchId);
@@ -89,27 +94,29 @@ export function WhereIBelongCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Where I belong</CardTitle>
+        <CardTitle className="text-base">{t('settings:whereIBelong')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-sm text-muted-foreground">Home branch</p>
+          <p className="text-sm text-muted-foreground">{t('settings:homeBranch')}</p>
           <p className="mt-0.5 font-medium">{home?.branchName ?? '—'}</p>
         </div>
 
         {secondary && (
           <>
             <div className="border-t pt-3">
-              <p className="text-sm text-muted-foreground">Secondary branch</p>
+              <p className="text-sm text-muted-foreground">{t('settings:secondaryBranch')}</p>
               <p className="mt-0.5 font-medium">{secondary.branchName}</p>
             </div>
             <div className="flex items-center justify-between border-t pt-3">
               <div>
-                <p className="text-sm font-medium">Active branch</p>
+                <p className="text-sm font-medium">{t('settings:activeBranch')}</p>
                 <p className="text-xs text-muted-foreground">
                   {isAtSecondaryBranch
-                    ? `Currently at ${secondary.branchName} (secondary)`
-                    : `Currently at ${home?.branchName ?? 'home branch'}`}
+                    ? t('settings:currentlyAtSecondary', { name: secondary.branchName })
+                    : t('settings:currentlyAt', {
+                        name: home?.branchName ?? t('settings:homeBranchFallback'),
+                      })}
                 </p>
               </div>
               {onSwitchBranch && (
@@ -121,7 +128,7 @@ export function WhereIBelongCard({
                   onClick={onSwitchBranch}
                   disabled={switchPending}
                 >
-                  {switchPending ? 'Switching…' : 'Switch'}
+                  {switchPending ? t('settings:switching') : t('settings:switch')}
                 </Button>
               )}
             </div>
@@ -136,7 +143,8 @@ export function WhereIBelongCard({
 }
 
 // ── "My community" — fellowships + departments ────────────────────────────
-export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
+export function MyCommunityCard({ memberId }: { memberId?: string | null }) {  const { t } = useTranslation(['settings', 'common']);
+
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
 
@@ -155,13 +163,13 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">My community</CardTitle>
+        <CardTitle className="text-base">{t('settings:myCommunity')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         {fellowships.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              My Fellowships ({fellowships.length})
+              {t('settings:myFellowshipsCount', { count: fellowships.length })}
             </p>
             <ul className="mt-2 space-y-1.5">
               {fellowships.map((f) => (
@@ -174,7 +182,7 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
                     {f.fellowshipName}
                     {f.fellowshipType && (
                       <span className="text-xs text-muted-foreground">
-                        · {f.fellowshipType}
+                        {`· ${f.fellowshipType}`}
                       </span>
                     )}
                   </Link>
@@ -187,7 +195,7 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
         {depts.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              My Departments ({depts.length})
+              {t('settings:myDepartmentsCount', { count: depts.length })}
             </p>
             <ul className="mt-2 space-y-1.5">
               {depts.map((d) => (
@@ -213,14 +221,11 @@ export function MyCommunityCard({ memberId }: { memberId?: string | null }) {
 export function MyLeadershipCard({
   memberId,
   showAdminRole = false,
-  showPastorRole = false,
-  homeBranchName,
 }: {
   memberId?: string | null;
   showAdminRole?: boolean;
-  showPastorRole?: boolean;
-  homeBranchName?: string | null;
-}) {
+}) {  const { t } = useTranslation(['settings', 'common']);
+
   const { data: fellowshipsRes } = useFellowships(memberId ? { memberId, limit: 100 } : undefined);
   const { data: myDepts } = useMyDepartments();
 
@@ -239,27 +244,25 @@ export function MyLeadershipCard({
 
   const fellowshipRoles = fellowships.flatMap((f) => {
     if (!memberId) return [];
-    if (f.leaderId === memberId) return [{ key: f.id, label: `Lead — ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
-    if (f.coLeaderId === memberId) return [{ key: f.id, label: `Co-lead — ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
+    if (f.leaderId === memberId) return [{ key: f.id, label: `Lead, ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
+    if (f.coLeaderId === memberId) return [{ key: f.id, label: `Co-lead, ${f.fellowshipName} fellowship`, href: `/fellowships/${f.id}` }];
     return [];
   });
 
   const deptRoles = depts.flatMap((d) => {
     if (!memberId) return [];
     const name = d.departmentName ?? 'Department';
-    if (d.leadMemberId === memberId) return [{ key: d.id, label: `Lead — ${name} department`, href: `/departments/${d.id}` }];
-    if (d.deputyMemberId === memberId) return [{ key: d.id, label: `Deputy — ${name} department`, href: `/departments/${d.id}` }];
+    if (d.leadMemberId === memberId) return [{ key: d.id, label: `Lead, ${name} department`, href: `/departments/${d.id}` }];
+    if (d.deputyMemberId === memberId) return [{ key: d.id, label: `Deputy, ${name} department`, href: `/departments/${d.id}` }];
     return [];
   });
 
   const churchRoles: { key: string; label: string; href?: string }[] = [];
-  if (showAdminRole) churchRoles.push({ key: 'admin', label: 'Church administrator' });
-  if (showPastorRole) {
-    churchRoles.push({
-      key: 'pastor',
-      label: homeBranchName ? `Pastor — ${homeBranchName} branch` : 'Pastor',
-    });
-  }
+  if (showAdminRole) churchRoles.push({ key: 'admin', label: t('settings:churchAdministrator') });
+  // A "Pastor, X branch" row used to sit here behind a systemRole === 'pastor'
+  // test that has been unreachable since the RBAC rebuild. Pastor is an
+  // identity on branch_leadership, not a system role — if this row comes back
+  // it reads from there, never from a role string.
 
   const total = churchRoles.length + fellowshipRoles.length + deptRoles.length;
   if (total === 0) return null;
@@ -267,7 +270,7 @@ export function MyLeadershipCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">My leadership</CardTitle>
+        <CardTitle className="text-base">{t('settings:myLeadership')}</CardTitle>
       </CardHeader>
       <CardContent>
         <ul className="space-y-2 text-sm">

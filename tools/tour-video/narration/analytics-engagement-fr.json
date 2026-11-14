@@ -1,0 +1,19 @@
+{
+  "role": "analytics-engagement-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Qui est engagé",
+      "caption": "Plus que simplement venir.",
+      "speech": "L’engagement compte plus que la présence. Appartenir à un groupe, servir dans une équipe, et faire l’objet d’un suivi."
+    },
+    {
+      "n": 2,
+      "title": "La vue engagement",
+      "caption": "Où les gens décrochent.",
+      "speech": "La répartition montre où les gens se désengagent. Cela arrive généralement avant qu’ils cessent de venir, pas après."
+    }
+  ]
+}

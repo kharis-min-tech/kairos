@@ -1,0 +1,120 @@
+'use client';
+
+import { BarChart3 } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@kairos/ui';
+import { useFrequencyBuckets } from '@/hooks/use-attendance';
+import { useTranslation } from 'react-i18next';
+
+interface Props {
+  branchId?: string;
+  departmentId?: string;
+  fellowshipId?: string;
+  engagedWindowMonths: number;
+}
+
+/**
+ * How often engaged members are showing up. Uses the same engagement window
+ * as the branch-rate denominator, so a bucket labelled "Weekly" over a 3-month
+ * window means ≥75% of the last ~12–13 services.
+ */
+export function FrequencyBucketsCard({
+  branchId,
+  departmentId,
+  fellowshipId,
+  engagedWindowMonths,
+}: Props) {  const { t } = useTranslation(['attendance', 'common']);
+
+  const q = useFrequencyBuckets({
+    branchId,
+    departmentId,
+    fellowshipId,
+    engagedWindowMonths,
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <BarChart3 className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:attendanceFrequency')}</CardTitle>
+        <CardDescription>
+          {t('attendance:frequencyBucketsCaption', {
+            months: q.data?.windowMonths ?? engagedWindowMonths,
+            services: q.data?.servicesConsidered ?? '…',
+          })}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {q.isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-6 animate-pulse rounded bg-foreground/5" />
+            ))}
+          </div>
+        ) : q.isError ? (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {q.error instanceof Error
+              ? q.error.message
+              : t('attendance:couldNotLoadFrequencyBuckets')}
+          </p>
+        ) : (q.data?.servicesConsidered ?? 0) === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">{t('attendance:noServicesOnTheBranchIn')}</p>
+        ) : (
+          <BucketBars buckets={q.data!.buckets} />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function BucketBars({
+  buckets,
+}: {
+  buckets: {
+    key: string;
+    label: string;
+    members: number;
+    description: string;
+  }[];
+}) {
+  const { t } = useTranslation(['attendance', 'common']);
+  // The API composes these in English. Translate by the stable `key` and keep
+  // the server's wording as the fallback so a new bucket still renders.
+  const localise = (prefix: string, key: string, fallback: string) =>
+    t(`attendance:bucket_${prefix}_${key}`, { defaultValue: fallback });
+  const max = Math.max(1, ...buckets.map((b) => b.members));
+  return (
+    <ul className="space-y-2.5">
+      {buckets.map((b) => {
+        const pct = (b.members / max) * 100;
+        return (
+          <li key={b.key}>
+            <div className="mb-1 flex items-baseline justify-between text-sm">
+              <span
+                className="font-medium text-foreground"
+                title={localise('desc', b.key, b.description)}
+              >
+                {localise('label', b.key, b.label)}
+              </span>
+              <span className="tabular-nums text-muted-foreground">{b.members}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-foreground/5">
+              <div
+                className={`h-full rounded-full ${
+                  b.key === 'dormant' ? 'bg-foreground/30' : 'bg-gradient-to-r from-[#451ebb] to-[#5d3fd3]'
+                }`}
+                style={{ width: `${pct}%` }}
+                aria-label={t('attendance:v1Members', { v1: b.members })}
+              />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

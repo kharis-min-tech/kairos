@@ -2,8 +2,20 @@
  * Seed script for local development.
  * Populates the database with realistic test data.
  *
- * Usage:  npm run db:seed  (from repo root)
- *    or:  npx tsx src/seed.ts  (from packages/database)
+ * ⚠ THIS SCRIPT IS DESTRUCTIVE. It opens with
+ * `TRUNCATE regions, roles, departments CASCADE`, and because regions cascade
+ * to branches, branches to members and members to very nearly everything,
+ * that wipes the database. The name does not say so, which is why it now
+ * refuses to run against a database that already holds members unless you
+ * pass --force.
+ *
+ * To apply schema changes to a database with real accounts on it, use
+ * `db:bootstrap` instead — it only runs pending migrations, each in its own
+ * transaction, and destroys nothing.
+ *
+ * Usage:  npm run db:seed            (from repo root — refuses if not empty)
+ *         npm run db:seed -- --force (wipe and reseed anyway)
+ *    or:  npx tsx src/seed.ts        (from packages/database)
  *
  * All passwords: "Password1!"
  */
@@ -14,6 +26,7 @@ import {
   members,
   roles,
   memberRoles,
+  memberGuardians,
   memberHealthRecords,
   services,
   serviceAttendance,
@@ -28,7 +41,6 @@ import {
   branchDepartments,
   departmentMembers,
   departmentJoinRequests,
-  departmentFollowups,
   departmentUniformOutfits,
   departmentUniformSchedule,
   rotaTemplates,
@@ -37,20 +49,68 @@ import {
   rotaInstances,
   rotaAssignments,
   rotaSwapRequests,
+  notificationEvents,
+  auditLog,
+  consentRecords,
+  fellowshipMeetings,
+  fellowshipMeetingAttendance,
+  fellowshipJoinRequests,
+  memberFollowups,
+  newBelieverEnrollments,
+  newBelieverSessions,
+  newBelieverAttendance,
+  mentorFollowups,
+  notificationPreferences,
 } from './schema';
-import { sql } from 'drizzle-orm';
+import { sql, count, eq } from 'drizzle-orm';
 import { hashPassword } from '@kairos/utils';
 
 const DATABASE_URL =
   process.env['DATABASE_URL'] ?? 'postgresql://kairos:kairos@localhost:5432/kairos';
 
+/**
+ * Refuse to wipe a database that someone is using.
+ *
+ * The truncate below is how this script stays idempotent, but it means a
+ * mistyped DATABASE_URL destroys every account on whatever it pointed at.
+ * Staging carries real tester accounts; production carries a church. Neither
+ * should be one shell-history arrow key away from being erased.
+ */
+async function guardNonEmpty(db: ReturnType<typeof createDb>, force: boolean) {
+  const [row] = await db.select({ n: count() }).from(members);
+  const existing = Number(row?.n ?? 0);
+  if (existing === 0 || force) {
+    if (existing > 0) {
+      console.warn(`⚠ --force: wiping a database that holds ${existing} members.\n`);
+    }
+    return;
+  }
+
+  console.error('');
+  console.error(`Refusing to seed: this database already holds ${existing} members.`);
+  console.error('');
+  console.error('  db:seed TRUNCATEs regions, roles and departments CASCADE, which');
+  console.error('  removes every branch, member, grant and record in the database.');
+  console.error('');
+  console.error('  To apply pending migrations without destroying anything:');
+  console.error('      npm run db:bootstrap --workspace=@kairos/database');
+  console.error('');
+  console.error('  If you genuinely meant to wipe and reseed:');
+  console.error('      npm run db:seed --workspace=@kairos/database -- --force');
+  console.error('');
+  process.exit(1);
+}
+
 async function seed() {
   const db = createDb(DATABASE_URL);
+  await guardNonEmpty(db, process.argv.includes('--force'));
+
   const password = await hashPassword('Password1!');
 
   console.log('Seeding database...\n');
 
-  // Clean existing data so seed is idempotent
+  // Clean existing data so seed is idempotent. See guardNonEmpty above — this
+  // is why the script will not run against a populated database unguarded.
   await db.execute(sql`TRUNCATE regions, roles, departments CASCADE`);
   console.log('✓ Cleared existing data');
 
@@ -449,7 +509,6 @@ async function seed() {
       gender: 'Female',
       dateOfBirth: '2015-09-14', // ~10 years old → under 16
       homeBranchId: london!.id,
-      guardianMemberId: guardianEmma.id,
       memberType: 'child',
       passwordHash: password,
       emailVerified: false,
@@ -470,7 +529,6 @@ async function seed() {
       gender: 'Male',
       dateOfBirth: '2014-03-02', // ~11 → under 16
       homeBranchId: london!.id,
-      guardianMemberId: null,
       memberType: 'child',
       passwordHash: password,
       emailVerified: false,
@@ -491,7 +549,6 @@ async function seed() {
       gender: 'Female',
       dateOfBirth: '2012-11-20', // ~13 → under 16
       homeBranchId: london!.id,
-      guardianMemberId: guardianEmma.id,
       memberType: 'child',
       passwordHash: password,
       emailVerified: true,
@@ -500,13 +557,36 @@ async function seed() {
     });
   console.log(`✓ 1 login-ready minor (for minor-login-block demo)`);
 
+  // ── 3d. Guardianship ────────────────────────────────────────
+  // Lily has one guardian; Maya has two, because 0056 exists precisely so a
+  // child can, and a seed that only ever shows one would never exercise it.
+  // Noah is deliberately left with none — he is the "no guardian" row the
+  // /members/safeguarding review page is built to surface.
+  const [mayaBello] = await db
+    .select()
+    .from(members)
+    .where(eq(members.email, 'maya.bello@kairos.local'))
+    .limit(1);
+
+  await db.insert(memberGuardians).values([
+    { memberId: childLily!.id, guardianMemberId: guardianEmma.id, relationship: 'Mother', isPrimary: true },
+    { memberId: mayaBello!.id, guardianMemberId: guardianEmma.id, relationship: 'Mother', isPrimary: true },
+    { memberId: mayaBello!.id, guardianMemberId: pastorLondon!.id, relationship: 'Father' },
+  ]);
+  console.log(`✓ 3 guardian links (Lily 1, Maya 2, Noah deliberately none)`);
+
   // ── 4. Roles ────────────────────────────────────────────────
   const [
     worshipLeadRole,
     youthCoordRole,
     mediaTeamRole,
     welcomeTeamRole,
-    safeguardingLeadRole,
+    // Elisions — these roles ARE granted, but from section 14c, which looks
+    // them up by name out of the roles table rather than relying on position.
+    // This bindings list is POSITIONAL: a new row in `.values([...])` must get
+    // a slot here or every binding below it silently points at the wrong role.
+    /* safeguardingLeadRole */,
+    /* safeguardingHeadRole */,
     branchSystemAdminRole,
     branchDataAdminRole,
     fellowshipLeaderRole,
@@ -514,6 +594,8 @@ async function seed() {
     departmentDeputyRole,
     /* newBelieversMentorRole */,
     /* newBelieversTeacherRole */,
+    membershipAdminRole,
+    /* membershipChampionRole */,
   ] = await db
     .insert(roles)
     .values([
@@ -523,7 +605,11 @@ async function seed() {
       { roleName: 'Welcome Team', description: 'Greets and assists visitors at services' },
       {
         roleName: 'Safeguarding Lead',
-        description: 'Authorised to view and manage safeguarding and health records for minors',
+        description: 'Authorised to view and manage safeguarding and health records for minors. Branch-scoped, and deliberately independent of branch leadership.',
+      },
+      {
+        roleName: 'Safeguarding Head',
+        description: 'Church-wide safeguarding oversight. Reads and acts on safeguarding concerns in every branch; the escalation path above each branch Safeguarding Lead. Carries no welfare, directory or branch-operations sight.',
       },
       {
         roleName: 'Branch System Admin',
@@ -553,9 +639,21 @@ async function seed() {
         roleName: 'New Believers Teacher',
         description: 'Teaches new-believer sessions in a branch. Authority is branch-scoped.',
       },
+      // The only CHURCH-scoped role. Membership cohorts run church-wide, so no
+      // branch grant can describe authority over one — see migration 0048.
+      {
+        roleName: 'Membership Admin',
+        description:
+          'Runs the church-wide membership class: cohorts, sessions, the interest pool, admission, marking and graduation. Church-scoped, not branch-scoped.',
+      },
+      {
+        roleName: 'Membership Champion',
+        description:
+          'The branch-side liaison for the church-wide membership class: encourages people into the pool and keeps their branch\u2019s cohort moving. Reads at personal altitude \u2014 it confers no lens of its own.',
+      },
     ])
     .returning();
-  console.log(`✓ 12 roles`);
+  console.log(`\u2713 14 roles`);
 
   // ── 4b. Global Departments (master catalogue) ───────────────
   const [
@@ -581,9 +679,13 @@ async function seed() {
     { departmentName: "Children's Ministry", description: 'Sunday school and kids ministry', iconKey: 'baby' },
     { departmentName: 'Design', description: 'Graphic design and print', iconKey: 'palette' },
     { departmentName: 'Social Media', description: 'Online presence and content', iconKey: 'share' },
-    { departmentName: 'Admin', description: 'Branch operations — operational data, service-day registers, first-timer captures. Lead and deputy hold branch data admin authority.', iconKey: 'clipboard' },
+    { departmentName: 'Admin', description: 'Branch operations: operational data, service-day registers, first-timer captures. Lead and deputy hold branch data admin authority.', iconKey: 'clipboard' },
+    // Owns the follow-up of first-timers and of members who aren't in any
+    // group yet. Distinct from Host Team, which greets guests on the day —
+    // this team makes contact during the week.
+    { departmentName: 'Follow-Up Team', description: 'Contacts first-timers after their visit and members who are not yet in a fellowship or department', iconKey: 'phone' },
   ]).returning();
-  console.log(`✓ 14 global departments`);
+  console.log(`✓ 15 global departments`);
 
   // ── 4c. Branch Departments (smoke seed: 4 active instances) ─
   const [choirLondon, ushersAccra, /* hospitalityLondon */, hostTeamLondon, adminLondon, /* adminManchester */, /* adminAccra */] = await db.insert(branchDepartments).values([
@@ -604,14 +706,14 @@ async function seed() {
       branchId: london!.id,
       departmentId: hospitalityDept!.id,
       leadMemberId: leaderSarah!.id,
-      description: 'London hospitality team — currently recruiting.',
+      description: 'London hospitality team, currently recruiting.',
     },
     {
       // Used to demo the member-side "Accept / Decline Offer" flow (see seed below).
       branchId: london!.id,
       departmentId: hostDept!.id,
       leadMemberId: leaderSarah!.id,
-      description: 'London first-time guest host team — interviewing applicants.',
+      description: 'London first-time guest host team, interviewing applicants.',
     },
     {
       // London admin desk — members here can record service attendance.
@@ -619,15 +721,20 @@ async function seed() {
       // Pastor + system admin retain write access as a fallback per the Admin-dept gate.
       branchId: london!.id,
       departmentId: adminDept!.id,
-      leadMemberId: leaderSarah!.id,
+      // Emma Thompson, not Sarah. The Admin-desk lead derives Branch Data
+      // Admin, which is pure operational authority with no pastoral standing
+      // — it must not land on the Minister, who already holds BranchAdmin and
+      // would then carry both the welfare queue and the data desk.
+      leadMemberId: regularMembers[0]!.id,
       description: 'London admin desk — service-day registers and first-timer captures.',
     },
     {
       // Manchester admin desk — lead = Branch Data Admin for Manchester.
-      // Pastor Grace Mensah is the only seeded Manchester leader, so she doubles up here.
+      // John Smith, not Pastor Grace: the data desk is a separate person from
+      // the Main Pastor everywhere, including the smaller branches.
       branchId: manchester!.id,
       departmentId: adminDept!.id,
-      leadMemberId: pastorManchester!.id,
+      leadMemberId: regularMembers[3]!.id,
       description: 'Manchester admin desk — service-day registers and first-timer captures.',
     },
     {
@@ -646,7 +753,6 @@ async function seed() {
     { branchDepartmentId: choirLondon!.id, memberId: leaderSarah!.id },
     { branchDepartmentId: choirLondon!.id, memberId: regularMembers[0]!.id },
     { branchDepartmentId: choirLondon!.id, memberId: regularMembers[2]!.id },
-    { branchDepartmentId: choirLondon!.id, memberId: pastorLondon!.id },
     { branchDepartmentId: ushersAccra!.id, memberId: leaderDavid!.id },
     { branchDepartmentId: ushersAccra!.id, memberId: regularMembers[1]!.id },
     // Admin-dept (London) — gives at least one non-pastor/non-admin caller write access.
@@ -707,9 +813,9 @@ async function seed() {
   console.log(`✓ 4 department join requests (incl. 1 offered awaiting Emma)`);
 
   // Followups (one current week, one prior month, one overdue >30 days, one never-followed-up via no entry)
-  await db.insert(departmentFollowups).values([
+  await db.insert(memberFollowups).values([
     {
-      branchDepartmentId: choirLondon!.id,
+      departmentId: choirLondon!.id, branchId: choirLondon!.branchId, contextKind: 'department',
       memberId: regularMembers[0]!.id, // Emma — recent
       recordedById: leaderSarah!.id,
       assignedToId: leaderSarah!.id,
@@ -720,7 +826,7 @@ async function seed() {
       contactedAt: new Date('2026-05-02T18:00:00Z'),
     },
     {
-      branchDepartmentId: choirLondon!.id,
+      departmentId: choirLondon!.id, branchId: choirLondon!.branchId, contextKind: 'department',
       memberId: regularMembers[2]!.id, // Priscilla — overdue
       recordedById: leaderSarah!.id,
       assignedToId: leaderSarah!.id,
@@ -731,7 +837,7 @@ async function seed() {
       nextFollowUpDate: '2026-04-01',
     },
     {
-      branchDepartmentId: choirLondon!.id,
+      departmentId: choirLondon!.id, branchId: choirLondon!.branchId, contextKind: 'department',
       memberId: pastorLondon!.id, // Pastor — pastoral check-in
       recordedById: leaderSarah!.id,
       contactMethod: 'In-Person',
@@ -909,8 +1015,6 @@ async function seed() {
     { memberId: regularMembers[0]!.id, roleId: welcomeTeamRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: leaderDavid!.id, roleId: youthCoordRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
     { memberId: regularMembers[1]!.id, roleId: mediaTeamRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
-    // Safeguarding Lead in London — grants full access to London minors' records.
-    { memberId: leaderSarah!.id, roleId: safeguardingLeadRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
   ]);
   console.log(`✓ 5 member-role assignments`);
 
@@ -920,6 +1024,8 @@ async function seed() {
   // access is explicit — every pastor who needs branch authority gets a BSA
   // grant here so the dev demo continues to work post-cutover.
   await db.insert(memberRoles).values([
+    // Sarah is the London Minister: ministers support the Main Pastor and
+    // typically carry BranchAdmin alongside him.
     { memberId: leaderSarah!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: pastorLondon!.id, roleId: branchSystemAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
     { memberId: pastorManchester!.id, roleId: branchSystemAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
@@ -927,6 +1033,32 @@ async function seed() {
     { memberId: pastorKumasi!.id, roleId: branchSystemAdminRole!.id, branchId: kumasi!.id, scopeKind: 'branch', scopeId: kumasi!.id },
   ]);
   console.log(`✓ 5 branch system admin assignments`);
+
+  // ── 5a-ii. Membership Admin (church-scoped) ─────────────────
+  // The demo case the church scope exists for: someone who runs the
+  // membership class across the whole church WITHOUT being a platform admin
+  // or holding branch authority. Sarah is a branch leader in London, so we
+  // use a plain member instead to prove the grant stands on its own.
+  //
+  // Church grants store the nil UUID in scope_id (the column is NOT NULL and
+  // a church scope has no entity to point at) and the grantee's home branch
+  // in branch_id, which is only a query handle. See migration 0048.
+  await db.insert(memberRoles).values([
+    {
+      // Fatima Kamara, Freetown. A plain member with no branch authority and
+      // no leadership anywhere, in a branch that is not HQ — which is exactly
+      // what proves a church grant stands on its own rather than riding on
+      // something else the holder happens to have.
+      memberId: regularMembers[4]!.id,
+      roleId: membershipAdminRole!.id,
+      branchId: freetown!.id,
+      scopeKind: 'church',
+      // The nil UUID. Mirrors CHURCH_SCOPE_ID in @kairos/types, inlined
+      // because this package sits below @kairos/types and must not import it.
+      scopeId: '00000000-0000-0000-0000-000000000000',
+    },
+  ]);
+  console.log(`✓ 1 membership admin assignment (church-scoped)`);
 
   // ── 5b. Minor health record ─────────────────────────────────
   // Health/safeguarding record for Lily (the seeded child). Visible only to
@@ -1004,10 +1136,10 @@ async function seed() {
   // ── 6. Branch Leadership ────────────────────────────────────
   await db.insert(branchLeadership).values([
     { branchId: london!.id, memberId: pastorLondon!.id, role: 'Main Pastor', isCurrent: true },
-    { branchId: london!.id, memberId: leaderSarah!.id, role: 'Elder', isCurrent: true },
+    { branchId: london!.id, memberId: leaderSarah!.id, role: 'Minister', isCurrent: true },
     { branchId: manchester!.id, memberId: pastorManchester!.id, role: 'Main Pastor', isCurrent: true },
     { branchId: accra!.id, memberId: pastorAccra!.id, role: 'Main Pastor', isCurrent: true },
-    { branchId: accra!.id, memberId: leaderDavid!.id, role: 'Elder', isCurrent: true },
+    { branchId: accra!.id, memberId: leaderDavid!.id, role: 'Minister', isCurrent: true },
     { branchId: kumasi!.id, memberId: pastorKumasi!.id, role: 'Main Pastor', isCurrent: true },
   ]);
   console.log(`✓ 6 leadership assignments`);
@@ -1034,7 +1166,11 @@ async function seed() {
         branchId: london!.id,
         fellowshipType: 'Kharis Express',
         description: 'Friday evening young professionals fellowship',
-        leaderId: pastorLondon!.id,
+        // NOT the Main Pastor. A branch's Main Pastor oversees every
+        // fellowship and leads none of them — making him the leader of one
+        // would give him a scoped grant that says less than the branch grant
+        // he already holds, and would misrepresent how Kharis actually runs.
+        leaderId: regularMembers[0]!.id,
         meetingSchedule: 'Every Friday, 6:30 PM',
         meetingDay: 'Friday',
         meetingTime: '18:30',
@@ -1060,7 +1196,7 @@ async function seed() {
         branchId: accra!.id,
         fellowshipType: 'New Breeds',
         description: 'New members integration fellowship',
-        leaderId: pastorAccra!.id,
+        leaderId: regularMembers[2]!.id,
         meetingSchedule: 'Every Saturday, 10:00 AM',
         meetingDay: 'Saturday',
         meetingTime: '10:00',
@@ -1073,7 +1209,7 @@ async function seed() {
         branchId: kumasi!.id,
         fellowshipType: 'K-Groups',
         description: 'Tuesday evening small group fellowship',
-        leaderId: pastorKumasi!.id,
+        leaderId: amaBoateng!.id,
         meetingSchedule: 'Every Tuesday, 6:30 PM',
         meetingDay: 'Tuesday',
         meetingTime: '18:30',
@@ -1095,19 +1231,22 @@ async function seed() {
     // FellowshipLeader grants (one per leader/co-leader; only `leaderId` is
     // set in the seed today).
     { memberId: leaderSarah!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: kGroupLondon!.id },
-    { memberId: pastorLondon!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: expressLondon!.id },
+    { memberId: regularMembers[0]!.id, roleId: fellowshipLeaderRole!.id, branchId: london!.id, scopeKind: 'fellowship', scopeId: expressLondon!.id },
     { memberId: leaderDavid!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: kGroupAccra!.id },
-    { memberId: pastorAccra!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: newBreedsAccra!.id },
-    { memberId: pastorKumasi!.id, roleId: fellowshipLeaderRole!.id, branchId: kumasi!.id, scopeKind: 'fellowship', scopeId: kGroupKumasi!.id },
+    { memberId: regularMembers[2]!.id, roleId: fellowshipLeaderRole!.id, branchId: accra!.id, scopeKind: 'fellowship', scopeId: newBreedsAccra!.id },
+    { memberId: amaBoateng!.id, roleId: fellowshipLeaderRole!.id, branchId: kumasi!.id, scopeKind: 'fellowship', scopeId: kGroupKumasi!.id },
     // DepartmentLead grants (no deputies seeded today; lead-only).
     { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: choirLondon!.id },
     { memberId: leaderDavid!.id, roleId: departmentLeadRole!.id, branchId: accra!.id, scopeKind: 'department', scopeId: ushersAccra!.id },
     { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: hostTeamLondon!.id },
-    { memberId: leaderSarah!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: adminLondon!.id },
-    // Branch Data Admin (derived from being the lead of the Admin dept).
-    // London → Sarah, Manchester → Grace, Accra → David.
-    { memberId: leaderSarah!.id, roleId: branchDataAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
-    { memberId: pastorManchester!.id, roleId: branchDataAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
+    { memberId: regularMembers[0]!.id, roleId: departmentLeadRole!.id, branchId: london!.id, scopeKind: 'department', scopeId: adminLondon!.id },
+    // Branch Data Admin, derived from leading the Admin dept. Always someone
+    // other than the branch's Main Pastor and other than its Minister: this
+    // role is branch operations with no pastoral standing, and since the
+    // welfare/safeguarding split it can read neither concerns queue.
+    // London → Emma, Manchester → John, Accra → David.
+    { memberId: regularMembers[0]!.id, roleId: branchDataAdminRole!.id, branchId: london!.id, scopeKind: 'branch', scopeId: london!.id },
+    { memberId: regularMembers[3]!.id, roleId: branchDataAdminRole!.id, branchId: manchester!.id, scopeKind: 'branch', scopeId: manchester!.id },
     { memberId: leaderDavid!.id, roleId: branchDataAdminRole!.id, branchId: accra!.id, scopeKind: 'branch', scopeId: accra!.id },
   ]);
   console.log(`✓ 12 RBAC grants (FellowshipLeader/DepartmentLead/BDA)`);
@@ -1120,14 +1259,14 @@ async function seed() {
   await db.insert(fellowshipMembers).values([
     { fellowshipId: kGroupLondon!.id, memberId: leaderSarah!.id },
     { fellowshipId: kGroupLondon!.id, memberId: regularMembers[0]!.id },
-    { fellowshipId: kGroupLondon!.id, memberId: pastorLondon!.id },
+    // No pastorLondon and no admin here, deliberately. A Main Pastor belongs
+    // to no fellowship — he is over all of them — and the HQ system admin is
+    // a platform operator rather than a congregant of any one branch.
     { fellowshipId: expressLondon!.id, memberId: regularMembers[0]!.id },
-    { fellowshipId: expressLondon!.id, memberId: admin!.id },
     { fellowshipId: kGroupAccra!.id, memberId: leaderDavid!.id },
     { fellowshipId: kGroupAccra!.id, memberId: regularMembers[1]!.id },
     { fellowshipId: kGroupAccra!.id, memberId: regularMembers[2]!.id },
     { fellowshipId: newBreedsAccra!.id, memberId: regularMembers[2]!.id },
-    { fellowshipId: kGroupKumasi!.id, memberId: pastorKumasi!.id },
     { fellowshipId: kGroupKumasi!.id, memberId: abenaOsei!.id },
     { fellowshipId: kGroupKumasi!.id, memberId: amaBoateng!.id },
   ]);
@@ -1387,6 +1526,765 @@ async function seed() {
     },
   ]);
   console.log(`✓ 5 follow-ups`);
+
+  // ── 13. Consent, audit, notification history (visible on /profile/settings/*) ──
+  // Testers landing in staging see non-empty history on the security + legal
+  // settings pages instead of an empty state. Every seeded consent record is at
+  // version '1.0' — matches the CONSENT_VERSION_* env defaults so the banner
+  // stays quiet until you bump those.
+  const consentSeedUsers = [
+    admin!,
+    pastorLondon!,
+    pastorManchester!,
+    leaderSarah!,
+    leaderDavid!,
+    regularMembers[0]!,
+  ];
+  await db.insert(consentRecords).values(
+    consentSeedUsers.flatMap((m, i) =>
+      (['terms', 'privacy', 'marketing'] as const).map((t) => ({
+        memberId: m.id,
+        consentType: t,
+        version: '1.0',
+        granted: true,
+        grantedAt: new Date(Date.now() - (30 - i * 3) * 24 * 60 * 60 * 1000),
+      })),
+    ),
+  );
+  console.log(`✓ ${consentSeedUsers.length * 3} consent records (3 types × ${consentSeedUsers.length} users)`);
+
+  const desktopUA =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+  const mobileUA =
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+  await db.insert(auditLog).values([
+    ...consentSeedUsers.flatMap((m, i) => [
+      {
+        actorMemberId: m.id,
+        action: 'signin_success',
+        outcome: 'success',
+        ip: '203.0.113.42',
+        userAgent: desktopUA,
+        country: 'GB',
+        createdAt: new Date(Date.now() - (3 + i) * 24 * 60 * 60 * 1000),
+      },
+      {
+        actorMemberId: m.id,
+        action: 'signin_success',
+        outcome: 'success',
+        ip: '198.51.100.15',
+        userAgent: mobileUA,
+        country: 'GB',
+        createdAt: new Date(Date.now() - (1 + i) * 24 * 60 * 60 * 1000),
+      },
+    ]),
+    {
+      actorMemberId: admin!.id,
+      action: 'password_change',
+      outcome: 'success',
+      ip: '203.0.113.42',
+      userAgent: desktopUA,
+      country: 'GB',
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+    },
+    {
+      actorMemberId: leaderSarah!.id,
+      action: 'role_granted',
+      outcome: 'success',
+      targetType: 'member',
+      targetId: leaderSarah!.id,
+      metadata: { role: 'SafeguardingLead', scope: `branch:${london!.id}` },
+      createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+    },
+  ]);
+  console.log(`✓ ${consentSeedUsers.length * 2 + 2} audit log entries`);
+
+  await db.insert(notificationEvents).values([
+    {
+      memberId: admin!.id,
+      category: 'workflow',
+      eventType: 'workflow.fellowship_join_request_received',
+      subjectType: 'fellowship_join_request',
+      payload: { fellowshipName: 'Youth Fellowship', requesterName: 'A new member' },
+      sentAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: admin!.id,
+      category: 'lifecycle',
+      eventType: 'lifecycle.visitor_promoted',
+      payload: { memberName: 'Grace Newcomer', reason: '6 services in 90 days' },
+      sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: pastorLondon!.id,
+      category: 'workflow',
+      eventType: 'workflow.fellowship_join_request_received',
+      payload: { fellowshipName: 'Prayer Warriors' },
+      sentAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: pastorLondon!.id,
+      category: 'forms',
+      eventType: 'forms.submission_received',
+      payload: { formType: 'first_timer', submitterName: 'Anonymous visitor' },
+      sentAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: leaderSarah!.id,
+      category: 'rota',
+      eventType: 'rota.assignment_confirmed',
+      payload: { rotaName: 'Choir Sunday Service', slotDate: '2026-08-03' },
+      sentAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: leaderSarah!.id,
+      category: 'uniform',
+      eventType: 'uniform.schedule_set',
+      payload: { departmentName: 'Choir', outfitName: 'Summer whites' },
+      sentAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+    {
+      memberId: regularMembers[0]!.id,
+      category: 'security',
+      eventType: 'security.password_changed',
+      payload: { changedAt: new Date().toISOString() },
+      sentAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    },
+    {
+      memberId: regularMembers[0]!.id,
+      category: 'workflow',
+      eventType: 'workflow.fellowship_join_request_decided',
+      payload: { fellowshipName: 'Youth Fellowship', outcome: 'approved' },
+      sentAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      branchId: london!.id,
+    },
+  ]);
+  console.log(`✓ 8 notification events (mixed categories, all sent)`);
+
+  // ── 14. Realistic tester hydration ──────────────────────────
+  // Extends the smoke seed so every module renders realistically on staging:
+  // more members per branch, backfilled leadership, additional departments +
+  // members + join requests + followups, uniforms, rota with historical +
+  // upcoming instances, 8 weeks of Sunday services + attendance across the
+  // 4 branches London didn't already cover, fellowship meetings + attendance +
+  // join requests + followups, new-believer pipeline, and notification
+  // preferences. Active-branch scoping honored throughout — every dept /
+  // fellowship / rota / attendance row uses a member whose home branch matches
+  // the parent row's branch.
+  const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+  const daysAhead = (n: number) => new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  const dateStr = (d: Date) => d.toISOString().slice(0, 10);
+  // Sunday of relative week `offset` at 10:00 local time (0 = this week's Sunday).
+  const sundayOffset = (offset: number): Date => {
+    const now = new Date();
+    const sun = new Date(now);
+    sun.setDate(now.getDate() - now.getDay() + offset * 7);
+    sun.setHours(10, 0, 0, 0);
+    return sun;
+  };
+
+  // ── 14a. Extra members ──
+  const extraMemberSpecs: Array<{ firstName: string; lastName: string; email: string; branchId: string; gender: 'Male' | 'Female'; dob: string; phone: string; honorific?: string }> = [
+    { firstName: 'Chidera', lastName: 'Nnamani', email: 'chidera.nnamani@kairos.local', branchId: london!.id,     gender: 'Male',   dob: '1993-11-02', phone: '+447700000101' },
+    { firstName: 'Ruth',    lastName: 'Adeleke', email: 'ruth.adeleke@kairos.local',    branchId: london!.id,     gender: 'Female', dob: '1997-04-19', phone: '+447700000102' },
+    { firstName: 'Tobi',    lastName: 'Balogun', email: 'tobi.balogun@kairos.local',    branchId: london!.id,     gender: 'Male',   dob: '1985-09-30', phone: '+447700000103' },
+    { firstName: 'Amina',   lastName: 'Bello',   email: 'amina.bello@kairos.local',     branchId: london!.id,     gender: 'Female', dob: '2001-02-06', phone: '+447700000104' },
+    { firstName: 'Elijah',  lastName: 'Owoyele', email: 'elijah.owoyele@kairos.local',  branchId: manchester!.id, gender: 'Male',   dob: '1979-01-17', phone: '+447700000201' },
+    { firstName: 'Hannah',  lastName: 'Peters',  email: 'hannah.peters@kairos.local',   branchId: manchester!.id, gender: 'Female', dob: '1994-06-24', phone: '+447700000202' },
+    { firstName: 'Micah',   lastName: 'Odumosu', email: 'micah.odumosu@kairos.local',   branchId: manchester!.id, gender: 'Male',   dob: '1990-08-11', phone: '+447700000203' },
+    { firstName: 'Deborah', lastName: 'Fashina', email: 'deborah.fashina@kairos.local', branchId: manchester!.id, gender: 'Female', dob: '1996-12-05', phone: '+447700000204' },
+    { firstName: 'Isaac',   lastName: 'Ojewale', email: 'isaac.ojewale@kairos.local',   branchId: manchester!.id, gender: 'Male',   dob: '1988-03-22', phone: '+447700000205' },
+    { firstName: 'Naomi',   lastName: 'Adebayo', email: 'naomi.adebayo@kairos.local',   branchId: manchester!.id, gender: 'Female', dob: '1999-07-14', phone: '+447700000206' },
+    { firstName: 'Kojo',    lastName: 'Boateng', email: 'kojo.boateng@kairos.local',    branchId: accra!.id,      gender: 'Male',   dob: '1986-05-08', phone: '+233201234701' },
+    { firstName: 'Efua',    lastName: 'Danquah', email: 'efua.danquah@kairos.local',    branchId: accra!.id,      gender: 'Female', dob: '1991-10-30', phone: '+233201234702' },
+    { firstName: 'Kwesi',   lastName: 'Frimpong',email: 'kwesi.frimpong@kairos.local',  branchId: accra!.id,      gender: 'Male',   dob: '1995-02-14', phone: '+233201234703' },
+    { firstName: 'Afia',    lastName: 'Sarpong', email: 'afia.sarpong@kairos.local',    branchId: accra!.id,      gender: 'Female', dob: '2000-11-11', phone: '+233201234704' },
+    { firstName: 'Kofi',    lastName: 'Owusu',   email: 'kofi.owusu@kairos.local',      branchId: kumasi!.id,     gender: 'Male',   dob: '1984-04-01', phone: '+233551234701' },
+    { firstName: 'Adjoa',   lastName: 'Antwi',   email: 'adjoa.antwi@kairos.local',     branchId: kumasi!.id,     gender: 'Female', dob: '1989-09-15', phone: '+233551234702' },
+    { firstName: 'Kwabena', lastName: 'Osei',    email: 'kwabena.osei@kairos.local',    branchId: kumasi!.id,     gender: 'Male',   dob: '1992-01-27', phone: '+233551234703' },
+    { firstName: 'Akosua',  lastName: 'Gyasi',   email: 'akosua.gyasi@kairos.local',    branchId: kumasi!.id,     gender: 'Female', dob: '1997-08-03', phone: '+233551234704' },
+    { firstName: 'Nana',    lastName: 'Amoah',   email: 'nana.amoah@kairos.local',      branchId: kumasi!.id,     gender: 'Male',   dob: '1980-12-20', phone: '+233551234705' },
+    { firstName: 'Sahr',    lastName: 'Koroma',  email: 'sahr.koroma@kairos.local',     branchId: freetown!.id,   gender: 'Male',   dob: '1983-07-05', phone: '+23276123501', honorific: 'Pastor' },
+    { firstName: 'Adama',   lastName: 'Turay',   email: 'adama.turay@kairos.local',     branchId: freetown!.id,   gender: 'Female', dob: '1990-03-18', phone: '+23276123502' },
+    { firstName: 'Foday',   lastName: 'Sesay',   email: 'foday.sesay@kairos.local',     branchId: freetown!.id,   gender: 'Male',   dob: '1986-10-12', phone: '+23276123503' },
+    { firstName: 'Isatu',   lastName: 'Conteh',  email: 'isatu.conteh@kairos.local',    branchId: freetown!.id,   gender: 'Female', dob: '1993-05-29', phone: '+23276123504' },
+    { firstName: 'Mohamed', lastName: 'Bangura', email: 'mohamed.bangura@kairos.local', branchId: freetown!.id,   gender: 'Male',   dob: '1995-11-22', phone: '+23276123505' },
+  ];
+  const extraMembers = await db.insert(members).values(
+    extraMemberSpecs.map((s, i) => ({
+      firstName: s.firstName,
+      lastName: s.lastName,
+      email: s.email,
+      phone: s.phone,
+      gender: s.gender,
+      dateOfBirth: s.dob,
+      homeBranchId: s.branchId,
+      passwordHash: password,
+      emailVerified: true,
+      approvalStatus: 'approved',
+      systemRole: 'member',
+      memberType: 'member',
+      honorific: s.honorific,
+      membershipDate: dateStr(daysAgo(400 + i * 20)),
+      membershipClassCompletedAt: daysAgo(180 + i * 10),
+    })),
+  ).returning();
+  const findExtra = (email: string) => extraMembers.find((m) => m.email === email)!;
+  console.log(`✓ ${extraMembers.length} extra members (Manchester ${extraMemberSpecs.filter(s => s.branchId === manchester!.id).length}, Accra ${extraMemberSpecs.filter(s => s.branchId === accra!.id).length}, Kumasi ${extraMemberSpecs.filter(s => s.branchId === kumasi!.id).length}, Freetown ${extraMemberSpecs.filter(s => s.branchId === freetown!.id).length}, London ${extraMemberSpecs.filter(s => s.branchId === london!.id).length})`);
+
+  // Branch-scoped adult pools (approved, verified, active-branch).
+  const inBranch = (bId: string) => extraMembers.filter((m) => m.homeBranchId === bId);
+  const londonAdults     = [admin!, pastorLondon!, leaderSarah!, regularMembers[0]!, ...inBranch(london!.id)];
+  void londonAdults; // built for symmetry; London already covered by the smoke seed's services + attendance
+  const manchesterAdults = [pastorManchester!, regularMembers[3]!, ...inBranch(manchester!.id)];
+  const accraAdults      = [pastorAccra!, leaderDavid!, regularMembers[1]!, regularMembers[2]!, ...inBranch(accra!.id)];
+  const kumasiAdults     = [pastorKumasi!, abenaOsei!, amaBoateng!, ...inBranch(kumasi!.id)];
+  const freetownAdults   = [regularMembers[4]!, ...inBranch(freetown!.id)];
+
+  // ── 14b. Branch leadership backfill ──
+  const manchesterMinister = findExtra('elijah.owoyele@kairos.local');
+  const kumasiMinister     = findExtra('nana.amoah@kairos.local');
+  const freetownPastor  = findExtra('sahr.koroma@kairos.local');
+  const freetownMinister   = findExtra('foday.sesay@kairos.local');
+  await db.insert(branchLeadership).values([
+    { branchId: manchester!.id, memberId: manchesterMinister.id, role: 'Minister',       startDate: '2023-01-15' },
+    { branchId: kumasi!.id,     memberId: kumasiMinister.id,     role: 'Minister',       startDate: '2022-06-01' },
+    { branchId: freetown!.id,   memberId: freetownPastor.id,  role: 'Main Pastor', startDate: '2020-01-10' },
+    { branchId: freetown!.id,   memberId: freetownMinister.id,   role: 'Minister',       startDate: '2021-03-05' },
+  ]);
+  console.log(`✓ 4 leadership backfill entries`);
+
+  // ── 14c. Persona grants: safeguarding, discipleship, membership ──
+  //
+  // These roles were in the catalogue but nobody held them, so every surface
+  // they gate was unreachable in the demo. Each one follows the rule that the
+  // role exists to express: a reach, over one domain, held by the right
+  // person — and specifically NOT by whoever happens to be nearest.
+  const allRoles = await db.select().from(roles);
+  const roleByName = new Map(allRoles.map((r) => [r.roleName, r]));
+  const roleId = (name: string) => roleByName.get(name)!.id;
+
+  // Safeguarding Lead — one per branch, and never that branch's Main Pastor.
+  // The role's whole value is independence from branch leadership: a concern
+  // raised about the leadership has to reach someone outside it.
+  const safeguardingLeads = [
+    { member: findExtra('ruth.adeleke@kairos.local'),    branch: london! },
+    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester! },
+    { member: findExtra('efua.danquah@kairos.local'),    branch: accra! },
+    { member: findExtra('adjoa.antwi@kairos.local'),     branch: kumasi! },
+    // Freetown is small enough that the Minister doubles as safeguarding lead.
+    // The matrix allows it — the rule is that the lead is never the MAIN
+    // PASTOR, not that they hold nothing else — and a branch where one person
+    // wears two hats is worth having in the seed, because the UI meets it.
+    { member: freetownMinister,                          branch: freetown! },
+  ];
+
+  // Safeguarding Head — church-scoped, so the escalation path above every
+  // branch lead goes somewhere that is not a platform admin. Church grants
+  // carry the nil UUID in scope_id and the holder's home branch in branch_id,
+  // which is a query handle and not the grant's reach.
+  const CHURCH_SCOPE_ID = '00000000-0000-0000-0000-000000000000';
+  const safeguardingHead = findExtra('tobi.balogun@kairos.local');
+
+  // Membership Champion — the per-branch liaison for the church-wide class.
+  // Read-only, and distinct from the church-scoped Membership Admin.
+  const membershipChampions = [
+    { member: findExtra('chidera.nnamani@kairos.local'), branch: london! },
+    { member: findExtra('hannah.peters@kairos.local'),   branch: manchester! },
+    { member: findExtra('kwesi.frimpong@kairos.local'),  branch: accra! },
+    { member: findExtra('kofi.owusu@kairos.local'),      branch: kumasi! },
+    { member: findExtra('adama.turay@kairos.local'),     branch: freetown! },
+  ];
+
+  await db.insert(memberRoles).values([
+    ...safeguardingLeads.map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('Safeguarding Lead'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+    {
+      memberId: safeguardingHead.id,
+      roleId: roleId('Safeguarding Head'),
+      branchId: london!.id,
+      scopeKind: 'church',
+      scopeId: CHURCH_SCOPE_ID,
+    },
+    ...membershipChampions.map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('Membership Champion'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+  ]);
+  console.log(`✓ 5 safeguarding leads + 1 church safeguarding head + 5 membership champions`);
+
+  // New Believers teachers and mentors — two different jobs, and at Kharis two
+  // different people. Kumasi is the deliberate exception where one person
+  // holds both, because small branches do that and the UI must cope.
+  const nbTeacherLondon     = findExtra('chidera.nnamani@kairos.local');
+  const nbMentorLondon      = leaderSarah!;
+  const nbTeacherManchester = findExtra('isaac.ojewale@kairos.local');
+  const nbMentorManchester  = findExtra('micah.odumosu@kairos.local');
+  const nbTeacherAccra      = findExtra('kojo.boateng@kairos.local');
+  const nbMentorAccra       = leaderDavid!;
+  const nbBothKumasi        = findExtra('kwabena.osei@kairos.local');
+  const nbTeacherFreetown   = findExtra('adama.turay@kairos.local');
+  const nbMentorFreetown    = findExtra('mohamed.bangura@kairos.local');
+
+  await db.insert(memberRoles).values([
+    ...[
+      { member: nbTeacherLondon, branch: london! },
+      { member: nbTeacherManchester, branch: manchester! },
+      { member: nbTeacherAccra, branch: accra! },
+      { member: nbBothKumasi, branch: kumasi! },
+      { member: nbTeacherFreetown, branch: freetown! },
+    ].map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('New Believers Teacher'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+    ...[
+      { member: nbMentorLondon, branch: london! },
+      { member: nbMentorManchester, branch: manchester! },
+      { member: nbMentorAccra, branch: accra! },
+      { member: nbBothKumasi, branch: kumasi! },
+      { member: nbMentorFreetown, branch: freetown! },
+    ].map(({ member, branch }) => ({
+      memberId: member.id,
+      roleId: roleId('New Believers Mentor'),
+      branchId: branch.id,
+      scopeKind: 'branch',
+      scopeId: branch.id,
+    })),
+  ]);
+  console.log(`✓ 5 NB teachers + 5 NB mentors (Kumasi deliberately holds both)`);
+
+  // ── 15. Additional branch departments ──
+  const allDepts = await db.select().from(departments);
+  const deptByName = new Map(allDepts.map((d) => [d.departmentName, d]));
+  const newBranchDeptSpecs = [
+    { branch: manchester!, deptName: 'Choir',             lead: manchesterMinister,                             description: 'Manchester choir under Minister Elijah.' },
+    { branch: manchester!, deptName: 'Ushers',            lead: findExtra('hannah.peters@kairos.local'),     description: 'Manchester welcome and seating team.' },
+    { branch: manchester!, deptName: 'Sanctuary Keepers', lead: findExtra('micah.odumosu@kairos.local'),     description: 'Manchester sanctuary care.' },
+    { branch: accra!,      deptName: 'Choir',             lead: findExtra('kojo.boateng@kairos.local'),      description: 'Accra choir ministry.' },
+    { branch: accra!,      deptName: 'Sound',             lead: findExtra('kwesi.frimpong@kairos.local'),    description: 'Accra sound engineering.' },
+    // (accra, Admin) already created by the smoke seed above — do not re-add.
+    { branch: kumasi!,     deptName: 'Choir',             lead: findExtra('kwabena.osei@kairos.local'),      description: 'Kumasi choir ministry.' },
+    { branch: kumasi!,     deptName: 'Ushers',            lead: kumasiMinister,                                 description: 'Kumasi ushers under Minister Nana.' },
+    { branch: kumasi!,     deptName: 'Admin',             lead: findExtra('adjoa.antwi@kairos.local'),       description: 'Kumasi admin desk.' },
+    { branch: freetown!,   deptName: 'Choir',             lead: findExtra('adama.turay@kairos.local'),       description: 'Freetown choir.' },
+    { branch: freetown!,   deptName: 'Admin',             lead: freetownMinister,                               description: 'Freetown admin desk.' },
+    // Follow-up teams — the owners of first-timer and no-group follow-ups.
+    { branch: london!,     deptName: 'Follow-Up Team',    lead: leaderSarah!,                                description: 'London follow-up team: first-timers and members not yet in a group.' },
+    { branch: manchester!, deptName: 'Follow-Up Team',    lead: manchesterMinister,                             description: 'Manchester follow-up team.' },
+  ];
+  const newBranchDepts = await db.insert(branchDepartments).values(
+    newBranchDeptSpecs.map((s) => ({
+      branchId: s.branch.id,
+      departmentId: deptByName.get(s.deptName)!.id,
+      leadMemberId: s.lead.id,
+      description: s.description,
+    })),
+  ).returning();
+  console.log(`✓ ${newBranchDepts.length} additional branch departments`);
+
+  // DepartmentLead grants for the new leads (so /profile/roles surfaces them).
+  await db.insert(memberRoles).values(
+    newBranchDepts.map((bd) => ({
+      memberId: bd.leadMemberId!,
+      roleId: departmentLeadRole!.id,
+      branchId: bd.branchId,
+      scopeKind: 'department',
+      scopeId: bd.id,
+    })),
+  );
+  console.log(`✓ ${newBranchDepts.length} DepartmentLead grants`);
+
+  const findBd = (branchId: string, deptName: string) =>
+    newBranchDepts.find((bd) => bd.branchId === branchId && bd.departmentId === deptByName.get(deptName)!.id)!;
+  const choirManchester     = findBd(manchester!.id, 'Choir');
+  const ushersManchester    = findBd(manchester!.id, 'Ushers');
+  const sanctuaryManchester = findBd(manchester!.id, 'Sanctuary Keepers');
+  const choirAccra          = findBd(accra!.id, 'Choir');
+  const soundAccra          = findBd(accra!.id, 'Sound');
+  const choirKumasi         = findBd(kumasi!.id, 'Choir');
+  const ushersKumasi        = findBd(kumasi!.id, 'Ushers');
+  const adminKumasi         = findBd(kumasi!.id, 'Admin');
+  const choirFreetown       = findBd(freetown!.id, 'Choir');
+  const adminFreetown       = findBd(freetown!.id, 'Admin');
+
+  // ── 15a. Department members ── lead + up to 4 more from the same branch pool.
+  const buildDmRows = (bd: { id: string }, lead: { id: string }, pool: Array<{ id: string }>, startDaysAgo: number) => {
+    const list = [lead, ...pool.filter((m) => m.id !== lead.id)].slice(0, 5);
+    return list.map((m, i) => ({
+      branchDepartmentId: bd.id,
+      memberId: m.id,
+      joinDate: dateStr(daysAgo(startDaysAgo - i * 8)),
+      membershipStatus: 'active' as const,
+    }));
+  };
+  const dmRows = [
+    ...buildDmRows(choirManchester,     manchesterMinister,                             manchesterAdults, 90),
+    ...buildDmRows(ushersManchester,    findExtra('hannah.peters@kairos.local'),     manchesterAdults, 75),
+    ...buildDmRows(sanctuaryManchester, findExtra('micah.odumosu@kairos.local'),     manchesterAdults, 60),
+    ...buildDmRows(choirAccra,          findExtra('kojo.boateng@kairos.local'),      accraAdults,      100),
+    ...buildDmRows(soundAccra,          findExtra('kwesi.frimpong@kairos.local'),    accraAdults,      80),
+    ...buildDmRows(choirKumasi,         findExtra('kwabena.osei@kairos.local'),      kumasiAdults,     90),
+    ...buildDmRows(ushersKumasi,        kumasiMinister,                                 kumasiAdults,     70),
+    ...buildDmRows(adminKumasi,         findExtra('adjoa.antwi@kairos.local'),       kumasiAdults,     110),
+    ...buildDmRows(choirFreetown,       findExtra('adama.turay@kairos.local'),       freetownAdults,   80),
+    ...buildDmRows(adminFreetown,       freetownMinister,                               freetownAdults,   130),
+    // Extend existing ushersAccra with more members so its rota pool has depth.
+    { branchDepartmentId: ushersAccra!.id, memberId: findExtra('efua.danquah@kairos.local').id,   joinDate: dateStr(daysAgo(72)), membershipStatus: 'active' as const },
+    { branchDepartmentId: ushersAccra!.id, memberId: findExtra('kwesi.frimpong@kairos.local').id, joinDate: dateStr(daysAgo(65)), membershipStatus: 'active' as const },
+  ];
+  await db.insert(departmentMembers).values(dmRows);
+  console.log(`✓ ${dmRows.length} additional department members`);
+
+  // ── 15b. Join requests (mid-flight recruitment states) ──
+  await db.insert(departmentJoinRequests).values([
+    { branchDepartmentId: choirManchester.id, memberId: manchesterAdults[6]!.id, status: 'applied',              notes: 'Auditioning next Sunday' },
+    { branchDepartmentId: choirManchester.id, memberId: manchesterAdults[7]!.id, status: 'offered',              notes: 'Offer sent',      offeredAt: daysAgo(2), offerExpiresAt: daysAhead(5), offerMessage: 'Come join us this Sunday.' },
+    { branchDepartmentId: ushersKumasi.id,    memberId: kumasiAdults[6]!.id,     status: 'interview_scheduled',  notes: 'First interview', interviewScheduledAt: daysAhead(3), interviewFormat: 'in_person', interviewLocation: 'Kumasi meeting room' },
+    { branchDepartmentId: choirAccra.id,      memberId: accraAdults[6]!.id,      status: 'rejected',             notes: 'Not yet a confirmed member', reviewedAt: daysAgo(10) },
+  ]);
+
+  // ── 15c. Followups (contact activity per dept) ──
+  await db.insert(memberFollowups).values([
+    { departmentId: choirAccra.id, branchId: choirAccra.branchId, contextKind: 'department',       memberId: accraAdults[3]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(7), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 15, notes: 'Rehearsal reminder' },
+    { departmentId: choirAccra.id, branchId: choirAccra.branchId, contextKind: 'department',       memberId: accraAdults[4]!.id,      recordedById: findExtra('kojo.boateng@kairos.local').id,  contactedAt: daysAgo(3), contactMethod: 'WhatsApp',   contactStatus: 'Unreachable', notes: 'No response yet' },
+    { departmentId: ushersManchester.id, branchId: ushersManchester.branchId, contextKind: 'department', memberId: manchesterAdults[3]!.id, recordedById: findExtra('hannah.peters@kairos.local').id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 8,  notes: 'Rota confirmation' },
+    { departmentId: adminKumasi.id, branchId: adminKumasi.branchId, contextKind: 'department',      memberId: kumasiAdults[2]!.id,     recordedById: findExtra('adjoa.antwi@kairos.local').id,   contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 20, notes: 'Audit prep review' },
+  ]);
+  console.log(`✓ 4 dept join requests + 4 dept followups`);
+
+  // ── 16. Uniforms for 3 more departments ──
+  // Colored SVG data URIs so the gallery renders visible swatches without any
+  // network fetch (broken-image icons look bad in a demo).
+  const swatch = (hex: string) =>
+    `data:image/svg+xml;utf8,${encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><rect width='300' height='300' fill='${hex}'/></svg>`,
+    )}`;
+  const [ushersAccraOutfit, ushersKumasiOutfit, choirManchesterOutfit] = await db.insert(departmentUniformOutfits).values([
+    { branchDepartmentId: ushersAccra!.id,     name: 'Sunday burgundy', imageUrl: swatch('#800020'), genderTarget: 'Unisex', notes: 'Full Sunday service dress', uploadedById: leaderDavid!.id },
+    { branchDepartmentId: ushersKumasi.id,     name: 'Sunday navy',     imageUrl: swatch('#000080'), genderTarget: 'Unisex',                                     uploadedById: kumasiMinister.id },
+    { branchDepartmentId: choirManchester.id,  name: 'Blue robes',      imageUrl: swatch('#4169e1'), genderTarget: 'Unisex',                                     uploadedById: manchesterMinister.id },
+  ]).returning();
+  await db.insert(departmentUniformSchedule).values([
+    { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
+    { branchDepartmentId: ushersAccra!.id,     outfitId: ushersAccraOutfit!.id,     serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: leaderDavid!.id },
+    { branchDepartmentId: ushersKumasi.id,     outfitId: ushersKumasiOutfit!.id,    serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: kumasiMinister.id },
+    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(0)), genderTarget: 'Unisex', assignedById: manchesterMinister.id },
+    { branchDepartmentId: choirManchester.id,  outfitId: choirManchesterOutfit!.id, serviceDate: dateStr(sundayOffset(1)), genderTarget: 'Unisex', assignedById: manchesterMinister.id },
+  ]);
+  console.log(`✓ 3 more uniforms + 5 schedule entries`);
+
+  // ── 17. Rota expansion — 3 more templates + 6 weeks history + 2 upcoming ──
+  const rotaExpansionSpecs = [
+    { bd: choirManchester, name: 'Sunday choir rota',  startTime: '10:00:00', poolIds: dmRows.filter((r) => r.branchDepartmentId === choirManchester.id).map((r) => r.memberId),  slotDefs: [{ n: 'Lead singer', p: 1 }, { n: 'Backing', p: 2 }] },
+    { bd: ushersAccra!,    name: 'Sunday ushers rota', startTime: '09:30:00', poolIds: dmRows.filter((r) => r.branchDepartmentId === ushersAccra!.id).map((r) => r.memberId).concat([leaderDavid!.id, regularMembers[1]!.id]),
+      slotDefs: [{ n: 'Door usher', p: 2 }, { n: 'Seating usher', p: 2 }] },
+    { bd: adminKumasi,     name: 'Sunday admin rota',  startTime: '10:00:00', poolIds: dmRows.filter((r) => r.branchDepartmentId === adminKumasi.id).map((r) => r.memberId),      slotDefs: [{ n: 'Register keeper', p: 1 }, { n: 'First-timer capture', p: 1 }] },
+  ];
+  const newTemplates = await db.insert(rotaTemplates).values(
+    rotaExpansionSpecs.map((s) => ({
+      branchDepartmentId: s.bd.id,
+      name: s.name,
+      recurrence: 'Weekly' as const,
+      weekday: 0,
+      defaultStartTime: s.startTime,
+    })),
+  ).returning();
+  const newSlots = await db.insert(rotaTemplateSlots).values(
+    rotaExpansionSpecs.flatMap((spec, tIdx) =>
+      spec.slotDefs.map((sd, sortOrder) => ({
+        templateId: newTemplates[tIdx]!.id,
+        roleName: sd.n,
+        positionsRequired: sd.p,
+        sortOrder,
+      })),
+    ),
+  ).returning();
+  await db.insert(rotaPoolMembers).values(
+    rotaExpansionSpecs.flatMap((spec, tIdx) =>
+      // dedupe pool IDs — same member could appear twice via concat above
+      Array.from(new Set(spec.poolIds)).map((mid) => ({
+        templateId: newTemplates[tIdx]!.id,
+        memberId: mid,
+      })),
+    ),
+  );
+  const newInstances = await db.insert(rotaInstances).values(
+    newTemplates.flatMap((tmpl, tIdx) => {
+      const spec = rotaExpansionSpecs[tIdx]!;
+      const rows = [];
+      for (let w = -6; w <= 1; w++) {
+        rows.push({
+          templateId: tmpl.id,
+          branchDepartmentId: spec.bd.id,
+          serviceDate: dateStr(sundayOffset(w)),
+          startTime: spec.startTime,
+          status: w < 0 ? 'Completed' : 'Published',
+          publishedAt: daysAgo(Math.max(1, Math.abs(w) * 7 + 1)),
+        });
+      }
+      return rows;
+    }),
+  ).returning();
+  // Assignments: round-robin the pool across slot positions, skipping duplicate
+  // (instance, member) — unique index would otherwise reject.
+  const asnRows: Array<{ instanceId: string; slotId: string; memberId: string; status: string }> = [];
+  for (const inst of newInstances) {
+    const spec = rotaExpansionSpecs.find((s) => s.bd.id === inst.branchDepartmentId)!;
+    const uniquePool = Array.from(new Set(spec.poolIds));
+    const slotsForTmpl = newSlots.filter((s) => s.templateId === inst.templateId);
+    let poolPos = newInstances.indexOf(inst); // rotate start per instance
+    for (const slot of slotsForTmpl) {
+      for (let p = 0; p < slot.positionsRequired; p++) {
+        if (uniquePool.length === 0) break;
+        let attempts = 0;
+        while (attempts < uniquePool.length) {
+          const mid = uniquePool[poolPos % uniquePool.length]!;
+          poolPos++;
+          attempts++;
+          if (asnRows.some((r) => r.instanceId === inst.id && r.memberId === mid)) continue;
+          asnRows.push({
+            instanceId: inst.id,
+            slotId: slot.id,
+            memberId: mid,
+            status: inst.status === 'Completed' ? 'Confirmed' : p === 0 ? 'Confirmed' : 'Assigned',
+          });
+          break;
+        }
+      }
+    }
+  }
+  if (asnRows.length) await db.insert(rotaAssignments).values(asnRows);
+  console.log(`✓ ${newTemplates.length} rota templates + ${newInstances.length} instances + ${asnRows.length} assignments`);
+
+  // ── 18. Services + attendance for 4 branches × 8 Sundays ──
+  // London already has 3 services from the smoke seed — skip to avoid the
+  // (branchId, serviceDate, serviceType) unique index tripping.
+  const otherBranchInfo = [
+    { branch: manchester!, adults: manchesterAdults, recorder: pastorManchester!, preacher: pastorManchester! },
+    { branch: accra!,      adults: accraAdults,      recorder: leaderDavid!,      preacher: pastorAccra!    },
+    { branch: kumasi!,     adults: kumasiAdults,     recorder: pastorKumasi!,     preacher: pastorKumasi!   },
+    { branch: freetown!,   adults: freetownAdults,   recorder: freetownPastor,    preacher: freetownPastor  },
+  ];
+  const topics = ['The living hope', 'Faith like a mustard seed', "God's covenant faithfulness", 'A living sacrifice'];
+  const newServices = await db.insert(services).values(
+    otherBranchInfo.flatMap((info) =>
+      Array.from({ length: 8 }, (_, i) => {
+        const w = i + 1;
+        return {
+          branchId: info.branch.id,
+          serviceDate: sundayOffset(-w),
+          serviceType: 'Sunday',
+          serviceTitle: 'Sunday service',
+          topic: topics[w % topics.length]!,
+          preacherId: info.preacher.id,
+          expectedAttendance: 40 + info.adults.length * 5,
+          createdBy: info.recorder.id,
+        };
+      }),
+    ),
+  ).returning();
+  // Attendance per service: keep ~75% turnout, but rotate WHICH members attend
+  // each week so cohort compare has real divergence. Previously every service
+  // used the same first-N adults, so "present in A but absent from B" always
+  // returned 0 rows — /attendance/reports demos broke.
+  const attendanceRows: Array<{ serviceId: string; memberId: string; attendanceStatus: string; arrivalTime: Date; recordedBy: string }> = [];
+  const servicesByBranch = new Map<string, typeof newServices>();
+  for (const svc of newServices) {
+    const bucket = servicesByBranch.get(svc.branchId) ?? [];
+    bucket.push(svc);
+    servicesByBranch.set(svc.branchId, bucket);
+  }
+  for (const [branchId, branchServices] of servicesByBranch) {
+    // Sort ascending by date so weekIdx=0 is the oldest, weekIdx=N-1 the most
+    // recent — deterministic offsets across re-seeds.
+    branchServices.sort((a, b) => a.serviceDate.getTime() - b.serviceDate.getTime());
+    const info = otherBranchInfo.find((b) => b.branch.id === branchId)!;
+    const total = info.adults.length;
+    const attendeeCount = Math.max(3, Math.min(total, Math.round(total * 0.75)));
+    branchServices.forEach((svc, weekIdx) => {
+      const offset = weekIdx % total;
+      for (let i = 0; i < attendeeCount; i++) {
+        const adultIdx = (offset + i) % total;
+        attendanceRows.push({
+          serviceId: svc.id,
+          memberId: info.adults[adultIdx]!.id,
+          attendanceStatus: i === attendeeCount - 1 && attendeeCount > 3 ? 'Late' : 'Present',
+          arrivalTime: svc.serviceDate,
+          recordedBy: info.recorder.id,
+        });
+      }
+    });
+  }
+  await db.insert(serviceAttendance).values(attendanceRows);
+  console.log(`✓ ${newServices.length} services + ${attendanceRows.length} attendance rows (4 branches × 8 Sundays)`);
+
+  // ── 19. Fellowship expansion — meetings + attendance + join requests + followups ──
+  // Grow existing fellowship rosters with a few extras so meeting attendance
+  // has depth. `(fellowshipId, memberId, joinDate)` unique => distinct pairs.
+  await db.insert(fellowshipMembers).values([
+    { fellowshipId: kGroupLondon!.id,   memberId: findExtra('ruth.adeleke@kairos.local').id },
+    { fellowshipId: kGroupLondon!.id,   memberId: findExtra('chidera.nnamani@kairos.local').id },
+    { fellowshipId: expressLondon!.id,  memberId: findExtra('tobi.balogun@kairos.local').id },
+    { fellowshipId: kGroupAccra!.id,    memberId: findExtra('kojo.boateng@kairos.local').id },
+    { fellowshipId: kGroupAccra!.id,    memberId: findExtra('efua.danquah@kairos.local').id },
+    { fellowshipId: newBreedsAccra!.id, memberId: findExtra('afia.sarpong@kairos.local').id },
+    { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('kofi.owusu@kairos.local').id },
+    { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('adjoa.antwi@kairos.local').id },
+  ]);
+
+  const fellowshipInfo = [
+    { fellowship: kGroupLondon!,   day: 3, hour: 19, minute: 0,  location: "Sarah's home — SW London", leader: leaderSarah!,  pool: [leaderSarah!, regularMembers[0]!, pastorLondon!, findExtra('ruth.adeleke@kairos.local'), findExtra('chidera.nnamani@kairos.local')] },
+    { fellowship: expressLondon!,  day: 5, hour: 18, minute: 30, location: 'Central London hub',       leader: pastorLondon!, pool: [regularMembers[0]!, admin!, findExtra('tobi.balogun@kairos.local')] },
+    { fellowship: kGroupAccra!,    day: 4, hour: 18, minute: 0,  location: "David's home — Accra",     leader: leaderDavid!,  pool: [leaderDavid!, regularMembers[1]!, regularMembers[2]!, findExtra('kojo.boateng@kairos.local'), findExtra('efua.danquah@kairos.local')] },
+    { fellowship: newBreedsAccra!, day: 6, hour: 10, minute: 0,  location: 'Accra youth centre',       leader: pastorAccra!,  pool: [regularMembers[2]!, findExtra('afia.sarpong@kairos.local')] },
+    { fellowship: kGroupKumasi!,   day: 2, hour: 18, minute: 30, location: 'Kumasi meeting room',      leader: pastorKumasi!, pool: [pastorKumasi!, abenaOsei!, findExtra('kofi.owusu@kairos.local'), findExtra('adjoa.antwi@kairos.local')] },
+  ];
+  const meetingTopics = ['Prayer & fellowship', 'Bible study — Romans', 'Testimony night', 'Worship & word'];
+  const newMeetings = await db.insert(fellowshipMeetings).values(
+    fellowshipInfo.flatMap((info) =>
+      Array.from({ length: 8 }, (_, i) => {
+        const w = i + 1;
+        const dt = new Date();
+        dt.setDate(dt.getDate() - dt.getDay() + info.day - 7 * (w - 1));
+        dt.setHours(info.hour, info.minute, 0, 0);
+        return {
+          fellowshipId: info.fellowship.id,
+          meetingDate: dt,
+          meetingTitle: `${info.fellowship.fellowshipName} — ${dateStr(dt)}`,
+          meetingTopic: meetingTopics[w % meetingTopics.length]!,
+          location: info.location,
+          durationMinutes: 90,
+          createdBy: info.leader.id,
+        };
+      }),
+    ),
+  ).returning();
+
+  const fmaRows: Array<{ meetingId: string; memberId: string; attendanceStatus: string; recordedBy: string }> = [];
+  for (const meeting of newMeetings) {
+    const info = fellowshipInfo.find((i) => i.fellowship.id === meeting.fellowshipId)!;
+    const attendeeCount = Math.max(2, Math.min(info.pool.length, Math.round(info.pool.length * 0.8)));
+    for (let i = 0; i < attendeeCount; i++) {
+      fmaRows.push({
+        meetingId: meeting.id,
+        memberId: info.pool[i]!.id,
+        attendanceStatus: i === attendeeCount - 1 && attendeeCount > 2 ? 'Late' : 'Present',
+        recordedBy: info.leader.id,
+      });
+    }
+  }
+  await db.insert(fellowshipMeetingAttendance).values(fmaRows);
+  console.log(`✓ 8 fellowship-member expansions + ${newMeetings.length} meetings + ${fmaRows.length} meeting attendance rows`);
+
+  await db.insert(fellowshipJoinRequests).values([
+    { fellowshipId: kGroupLondon!.id,   memberId: findExtra('tobi.balogun@kairos.local').id,   status: 'pending',  notes: 'Wants to join K-Group as well' },
+    { fellowshipId: expressLondon!.id,  memberId: findExtra('amina.bello@kairos.local').id,    status: 'approved', reviewedBy: pastorLondon!.id, reviewedAt: daysAgo(3) },
+    { fellowshipId: kGroupAccra!.id,    memberId: findExtra('kwesi.frimpong@kairos.local').id, status: 'pending',  notes: 'Wants to join weekly study' },
+    { fellowshipId: newBreedsAccra!.id, memberId: findExtra('efua.danquah@kairos.local').id,   status: 'rejected', reviewedBy: pastorAccra!.id,  reviewedAt: daysAgo(10), notes: 'Already committed to another fellowship' },
+    { fellowshipId: kGroupKumasi!.id,   memberId: findExtra('akosua.gyasi@kairos.local').id,   status: 'pending' },
+  ]);
+  await db.insert(memberFollowups).values([
+    { fellowshipId: kGroupLondon!.id, branchId: kGroupLondon!.branchId, contextKind: 'fellowship',   memberId: regularMembers[0]!.id,                   recordedById: leaderSarah!.id, contactedAt: daysAgo(5), contactMethod: 'Phone Call', contactStatus: 'Successful',  durationMinutes: 20, notes: 'Prayer request for family' },
+    { fellowshipId: kGroupAccra!.id, branchId: kGroupAccra!.branchId, contextKind: 'fellowship',    memberId: regularMembers[2]!.id,                   recordedById: leaderDavid!.id, contactedAt: daysAgo(2), contactMethod: 'WhatsApp',   contactStatus: 'Successful',                       notes: 'Sunday meet confirmed' },
+    { fellowshipId: newBreedsAccra!.id, branchId: newBreedsAccra!.branchId, contextKind: 'fellowship', memberId: findExtra('afia.sarpong@kairos.local').id, recordedById: pastorAccra!.id, contactedAt: daysAgo(1), contactMethod: 'In Person',  contactStatus: 'Successful',  durationMinutes: 15 },
+  ]);
+  console.log(`✓ 5 fellowship join requests + 3 fellowship followups`);
+
+  // ── 20. New Believers pipeline (spread across stages, all 5 branches) ──
+  // Teacher and mentor are different jobs and, at Kharis, different people:
+  // one runs the sessions, the other walks alongside the new believer. The
+  // Main Pastor is neither — he oversees the pipeline rather than staffing it.
+  // Kumasi is the deliberate exception where one person does both, because
+  // that does happen in smaller branches and the UI has to survive it.
+  const nbSpecs = [
+    { member: findExtra('amina.bello@kairos.local'),     branch: london!,     teacher: nbTeacherLondon,     mentor: nbMentorLondon,     stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('ruth.adeleke@kairos.local'),    branch: london!,     teacher: nbTeacherLondon,     mentor: nbMentorLondon,     stage: 'session-3',  enrolledDaysAgo: 35 },
+    { member: findExtra('naomi.adebayo@kairos.local'),   branch: manchester!, teacher: nbTeacherManchester, mentor: nbMentorManchester, stage: 'session-1',  enrolledDaysAgo: 10 },
+    { member: findExtra('deborah.fashina@kairos.local'), branch: manchester!, teacher: nbTeacherManchester, mentor: nbMentorManchester, stage: 'session-4',  enrolledDaysAgo: 42 },
+    { member: findExtra('afia.sarpong@kairos.local'),    branch: accra!,      teacher: nbTeacherAccra,      mentor: nbMentorAccra,      stage: 'completed',  enrolledDaysAgo: 60 },
+    { member: findExtra('akosua.gyasi@kairos.local'),    branch: kumasi!,     teacher: nbBothKumasi,        mentor: nbBothKumasi,       stage: 'session-1',  enrolledDaysAgo: 7  },
+    { member: findExtra('isatu.conteh@kairos.local'),    branch: freetown!,   teacher: nbTeacherFreetown,   mentor: nbMentorFreetown,   stage: 'session-2',  enrolledDaysAgo: 21 },
+    { member: findExtra('mohamed.bangura@kairos.local'), branch: freetown!,   teacher: nbTeacherFreetown,   mentor: nbMentorFreetown,   stage: 'integrated', enrolledDaysAgo: 90 },
+  ];
+  const stageOrder = ['session-1', 'session-2', 'session-3', 'session-4', 'completed', 'integrated'];
+  const newBelievers = await db.insert(newBelieverEnrollments).values(
+    nbSpecs.map((s) => {
+      const stageIdx = stageOrder.indexOf(s.stage);
+      const sessionCompletedAt: Record<string, string> = {};
+      for (let i = 0; i < stageIdx && i < 4; i++) {
+        sessionCompletedAt[stageOrder[i]!] = daysAgo(s.enrolledDaysAgo - (i + 1) * 7).toISOString();
+      }
+      return {
+        memberId: s.member.id,
+        branchId: s.branch.id,
+        teacherId: s.teacher.id,
+        mentorId: s.mentor.id,
+        stage: s.stage,
+        enrolledAt: daysAgo(s.enrolledDaysAgo),
+        completedAt: s.stage === 'completed' || s.stage === 'integrated' ? daysAgo(Math.max(1, s.enrolledDaysAgo - 28)) : null,
+        sessionCompletedAt: Object.keys(sessionCompletedAt).length ? sessionCompletedAt : null,
+      };
+    }),
+  ).returning();
+  await db.insert(mentorFollowups).values([
+    { enrollmentId: newBelievers[0]!.id, mentorMemberId: leaderSarah!.id,    note: 'Great session — reading through Genesis this week', contactedAt: daysAgo(6) },
+    { enrollmentId: newBelievers[0]!.id, mentorMemberId: leaderSarah!.id,    note: 'Confirmed for Sunday class',                        contactedAt: daysAgo(1) },
+    { enrollmentId: newBelievers[3]!.id, mentorMemberId: manchesterMinister.id, note: 'Ready for baptism conversation',                    contactedAt: daysAgo(3) },
+    { enrollmentId: newBelievers[4]!.id, mentorMemberId: leaderDavid!.id,    note: 'Encouraged to join Ushers',                         contactedAt: daysAgo(5) },
+  ]);
+
+  // NB sessions (one recent per branch) + attendance for currently-enrolled students at or beyond that stage.
+  const nbSessions = await db.insert(newBelieverSessions).values([
+    { branchId: london!.id,     teacherId: pastorLondon!.id,     sessionStage: 'session-2', sessionDate: daysAgo(3),  topic: 'Foundations — session 2', location: 'London teaching room',    createdBy: pastorLondon!.id },
+    { branchId: manchester!.id, teacherId: pastorManchester!.id, sessionStage: 'session-1', sessionDate: daysAgo(2),  topic: 'Welcome — session 1',    location: 'Manchester teaching room', createdBy: pastorManchester!.id },
+    { branchId: accra!.id,      teacherId: pastorAccra!.id,      sessionStage: 'session-4', sessionDate: daysAgo(5),  topic: 'Finishing well',          location: 'Accra teaching room',     createdBy: pastorAccra!.id },
+    { branchId: kumasi!.id,     teacherId: pastorKumasi!.id,     sessionStage: 'session-1', sessionDate: daysAgo(1),  topic: 'Welcome — session 1',    location: 'Kumasi teaching room',    createdBy: pastorKumasi!.id },
+    { branchId: freetown!.id,   teacherId: freetownPastor.id,    sessionStage: 'session-2', sessionDate: daysAgo(4),  topic: 'Foundations',             location: 'Freetown teaching room',  createdBy: freetownPastor.id },
+  ]).returning();
+  const nbAttendanceRows: Array<{ sessionId: string; enrollmentId: string; attended: boolean; recordedBy: string }> = [];
+  for (const session of nbSessions) {
+    const sIdx = stageOrder.indexOf(session.sessionStage);
+    for (const enrollment of newBelievers) {
+      if (enrollment.branchId !== session.branchId) continue;
+      const eIdx = stageOrder.indexOf(enrollment.stage);
+      if (eIdx >= sIdx) {
+        nbAttendanceRows.push({
+          sessionId: session.id,
+          enrollmentId: enrollment.id,
+          attended: true,
+          recordedBy: session.teacherId!,
+        });
+      }
+    }
+  }
+  if (nbAttendanceRows.length) await db.insert(newBelieverAttendance).values(nbAttendanceRows);
+  console.log(`✓ ${newBelievers.length} new-believer enrollments + 4 mentor followups + ${nbSessions.length} NB sessions + ${nbAttendanceRows.length} NB attendance rows`);
+
+  // ── 21. Notification-preference overrides (a couple per lens) ──
+  await db.insert(notificationPreferences).values([
+    { memberId: admin!.id,             category: 'uniform',   enabled: false, cadence: 'immediate' },
+    { memberId: pastorLondon!.id,      category: 'forms',     enabled: true,  cadence: 'digest_daily' },
+    { memberId: leaderSarah!.id,       category: 'rota',      enabled: true,  cadence: 'immediate' },
+    { memberId: regularMembers[0]!.id, category: 'lifecycle', enabled: false, cadence: 'immediate' },
+  ]);
+  console.log(`✓ 4 notification-preference overrides`);
 
   console.log('\n✅ Seed complete!\n');
   console.log('Test accounts (all passwords: "Password1!"):');

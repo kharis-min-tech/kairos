@@ -19,12 +19,13 @@ import {
 } from 'recharts';
 import { Button, Card, CardContent } from '@kairos/ui';
 import { useEnrollmentAlerts, useNewBelieversHealth } from '@/hooks/use-new-believers';
-import { formatDate, formatShortDate } from '@/lib/date-format';
+import { formatDate, formatShortDate } from '@kairos/core';
 import type {
   NewBelieverEnrollmentWithMember,
   NewBelieverHealthSummary,
   NewBelieverStageFunnel,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   branchId?: string;
@@ -96,13 +97,14 @@ function daysSince(iso: string): number {
   return Math.max(0, Math.floor(ms / 86_400_000));
 }
 
-export function ProgramHealthStrip({ branchId }: Props) {
+export function ProgramHealthStrip({ branchId }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const [expanded, setExpanded] = useState(false);
   const { data, isLoading } = useNewBelieversHealth(branchId);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3" aria-label="Programme health loading">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3" aria-label={t('newBelievers:programmeHealthLoading')}>
         {[0, 1, 2].map((i) => (
           <div
             key={i}
@@ -125,15 +127,15 @@ export function ProgramHealthStrip({ branchId }: Props) {
   const staleIsRed = data.stale.count >= RAG_STALE_THRESHOLD;
 
   return (
-    <section aria-label="Programme health" className="space-y-3">
+    <section aria-label={t('newBelievers:programmeHealth')} className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Programme health
-          </h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:programmeHealth')}</h2>
           <p className="text-xs text-muted-foreground">
-            Last {data.attendanceTrend.length || 0} session
-            {data.attendanceTrend.length === 1 ? '' : 's'} · {data.summary.activeEnrollments} active
+            {t('newBelievers:lastSessionsActive', {
+              sessions: data.attendanceTrend.length || 0,
+              active: data.summary.activeEnrollments,
+            })}
           </p>
         </div>
         <Button
@@ -142,18 +144,14 @@ export function ProgramHealthStrip({ branchId }: Props) {
           size="sm"
           onClick={() => setExpanded((value) => !value)}
           aria-pressed={expanded}
-          aria-label={expanded ? 'Collapse programme health' : 'Expand programme health'}
+          aria-label={expanded ? t('newBelievers:collapseProgrammeHealth') : t('newBelievers:expandProgrammeHealth')}
         >
           {expanded ? (
             <>
-              <Minimize2 className="mr-1.5 h-3.5 w-3.5" />
-              Collapse
-            </>
+              <Minimize2 className="mr-1.5 h-3.5 w-3.5" />{t('newBelievers:collapse')}</>
           ) : (
             <>
-              <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
-              Expand
-            </>
+              <Maximize2 className="mr-1.5 h-3.5 w-3.5" />{t('newBelievers:expand')}</>
           )}
         </Button>
       </div>
@@ -209,18 +207,19 @@ interface TrendTileProps {
   chartData: ReturnType<typeof trendChartData>;
 }
 
-function TrendTile({ avgAttendanceRate, windowSize, chartData }: TrendTileProps) {
+function TrendTile({ avgAttendanceRate, windowSize, chartData }: TrendTileProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   return (
     <Card className="border border-border/60 bg-card">
       <CardContent className="p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Attendance
-        </p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('newBelievers:attendance')}</p>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="text-2xl font-semibold tracking-tight text-foreground">
             {toPercent(avgAttendanceRate)}
           </span>
-          <span className="text-xs text-muted-foreground">avg · last {windowSize}</span>
+          <span className="text-xs text-muted-foreground">
+            {t('newBelievers:avgLastWindow', { count: windowSize })}
+          </span>
         </div>
         <div className="mt-3 h-12 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -253,18 +252,17 @@ interface FunnelTileProps {
   chartData: ReturnType<typeof funnelChartData>;
 }
 
-function FunnelTile({ activeEnrollments, chartData }: FunnelTileProps) {
+function FunnelTile({ activeEnrollments, chartData }: FunnelTileProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   return (
     <Card className="border border-border/60 bg-card">
       <CardContent className="p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Stage funnel
-        </p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('newBelievers:stageFunnel')}</p>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="text-2xl font-semibold tracking-tight text-foreground">
             {activeEnrollments}
           </span>
-          <span className="text-xs text-muted-foreground">active</span>
+          <span className="text-xs text-muted-foreground">{t('newBelievers:active')}</span>
         </div>
         <div className="mt-3 h-12 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -298,7 +296,8 @@ interface StaleTileProps {
   isRed: boolean;
 }
 
-function StaleTile({ count, thresholdDays, isRed }: StaleTileProps) {
+function StaleTile({ count, thresholdDays, isRed }: StaleTileProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const surface = isRed ? 'bg-rose-500/15' : 'bg-[#f8b537]/15';
   const accent = isRed ? 'text-rose-600 dark:text-rose-400' : 'text-[#9a6b04] dark:text-[#f8b537]';
   return (
@@ -310,18 +309,16 @@ function StaleTile({ count, thresholdDays, isRed }: StaleTileProps) {
         <Link
           href="/new-believers?filter=stale"
           className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f8b537]"
-          aria-label={`${count} stale enrollments — view list`}
+          aria-label={t('newBelievers:v1StaleEnrollmentsViewList', { v1: count })}
         >
-          <p className={`text-xs font-medium uppercase tracking-wide ${accent}`}>Stale</p>
+          <p className={`text-xs font-medium uppercase tracking-wide ${accent}`}>{t('newBelievers:stale')}</p>
           <div className="mt-1 flex items-baseline gap-2">
             <span className={`text-2xl font-semibold tracking-tight ${accent}`}>{count}</span>
             <span className="text-xs text-muted-foreground">
               {thresholdDays}+ days no progress
             </span>
           </div>
-          <p className="mt-3 inline-flex items-center text-xs font-medium text-primary group-hover:underline">
-            View stale list
-            <ChevronRight className="ml-0.5 h-3 w-3" />
+          <p className="mt-3 inline-flex items-center text-xs font-medium text-primary group-hover:underline">{t('newBelievers:viewStaleList')}<ChevronRight className="ml-0.5 h-3 w-3" />
           </p>
         </Link>
       </CardContent>
@@ -331,7 +328,8 @@ function StaleTile({ count, thresholdDays, isRed }: StaleTileProps) {
 
 // ── Expanded (full insights) ──────────────────────────────
 
-function ExpandedView({ data, staleIsRed }: ViewProps) {
+function ExpandedView({ data, staleIsRed }: ViewProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const trend = trendChartData(data.attendanceTrend);
   const funnel = funnelChartData(data.stageFunnel);
   const alerts = useEnrollmentAlerts();
@@ -346,19 +344,15 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
     <Card className="border border-border/60 bg-card">
       <CardContent className="grid gap-6 p-4 lg:grid-cols-[1fr_1fr_minmax(220px,280px)]">
         {/* Attendance trend */}
-        <section aria-label="Attendance trend" className="space-y-2">
+        <section aria-label={t('newBelievers:attendanceTrend')} className="space-y-2">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Attendance trend
-            </h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:attendanceTrend')}</h3>
             <span className="text-sm font-medium text-foreground">
-              {toPercent(data.summary.avgAttendanceRate)} avg
+              {t('newBelievers:avgRate', { rate: toPercent(data.summary.avgAttendanceRate) })}
             </span>
           </div>
           {data.attendanceTrend.length === 0 ? (
-            <p className="rounded border border-dashed border-border/60 p-4 text-xs text-muted-foreground">
-              No sessions yet.
-            </p>
+            <p className="rounded border border-dashed border-border/60 p-4 text-xs text-muted-foreground">{t('newBelievers:noSessionsYet')}</p>
           ) : (
             <div className="h-44 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -383,7 +377,7 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
                   />
                   <Tooltip
                     contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value) => [`${value}%`, 'Attendance']}
+                    formatter={(value) => [`${value}%`, t('newBelievers:attendance')]}
                     labelFormatter={(label, payload) => {
                       const point = payload?.[0]?.payload as
                         | { date: string; topic: string | null; attended: number; eligible: number }
@@ -408,13 +402,11 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
         </section>
 
         {/* Full funnel */}
-        <section aria-label="Stage funnel" className="space-y-2">
+        <section aria-label={t('newBelievers:stageFunnel')} className="space-y-2">
           <div className="flex items-baseline justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Stage funnel
-            </h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:stageFunnel')}</h3>
             <span className="text-sm font-medium text-foreground">
-              {data.summary.activeEnrollments} active
+              {t('newBelievers:activeEnrollmentsCount', { count: data.summary.activeEnrollments })}
             </span>
           </div>
           <div className="h-44 w-full">
@@ -454,14 +446,12 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
 
         {/* Stale list */}
         <section
-          aria-label="Stale enrollments preview"
+          aria-label={t('newBelievers:staleEnrollmentsPreview')}
           data-stale-rag={staleIsRed ? 'red' : 'amber'}
           className="space-y-2"
         >
           <div className="flex items-baseline justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Stale
-            </h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('newBelievers:stale')}</h3>
             <span
               className={`text-sm font-medium ${
                 staleIsRed ? 'text-rose-600 dark:text-rose-400' : 'text-[#9a6b04] dark:text-[#f8b537]'
@@ -471,11 +461,9 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
             </span>
           </div>
           {alerts.isLoading ? (
-            <p className="text-xs text-muted-foreground">Loading…</p>
+            <p className="text-xs text-muted-foreground">{t('newBelievers:loading')}</p>
           ) : topStale.length === 0 ? (
-            <p className="rounded border border-dashed border-border/60 p-3 text-xs text-muted-foreground">
-              Nobody is stale right now.
-            </p>
+            <p className="rounded border border-dashed border-border/60 p-3 text-xs text-muted-foreground">{t('newBelievers:nobodyIsStaleRightNow')}</p>
           ) : (
             <ul className="space-y-1.5">
               {topStale.map((row) => (
@@ -499,9 +487,7 @@ function ExpandedView({ data, staleIsRed }: ViewProps) {
           <Link
             href="/new-believers?filter=stale"
             className="inline-flex items-center text-xs font-medium text-primary hover:underline"
-          >
-            View all stale enrollments
-            <ChevronRight className="ml-0.5 h-3 w-3" />
+          >{t('newBelievers:viewAllStaleEnrollments')}<ChevronRight className="ml-0.5 h-3 w-3" />
           </Link>
         </section>
       </CardContent>

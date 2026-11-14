@@ -1,0 +1,19 @@
+{
+  "role": "church-management-department-administration",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Rosters and rotas",
+      "caption": "Who serves, and when.",
+      "speech": "A department keeps a roster of who serves on it and a rota of who serves when, published a few weeks ahead."
+    },
+    {
+      "n": 2,
+      "title": "Recruitment",
+      "caption": "Apply, interview, probation.",
+      "speech": "Recruitment runs from application through interview and offer to probation, with each candidate visible at their stage."
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
+
 function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
   return (
     <div className={`flex items-center gap-2 text-xs ${met ? 'text-emerald-600' : 'text-muted-foreground'}`}>
@@ -16,11 +18,14 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
 }
 
 export function PasswordStrength({ password }: { password: string }) {
+  const { t } = useTranslation(['auth', 'common']);
+  // `id` keys the list so the rows keep their identity when the language
+  // changes; the label is what the reader sees.
   const checks = [
-    { label: 'At least 8 characters', met: password.length >= 8 },
-    { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
-    { label: 'One number', met: /[0-9]/.test(password) },
-    { label: 'One special character', met: /[^A-Za-z0-9]/.test(password) },
+    { id: 'length', label: t('auth:passwordRules.minLength'), met: password.length >= 8 },
+    { id: 'upper', label: t('auth:passwordRules.uppercase'), met: /[A-Z]/.test(password) },
+    { id: 'number', label: t('auth:passwordRules.number'), met: /[0-9]/.test(password) },
+    { id: 'special', label: t('auth:passwordRules.special'), met: /[^A-Za-z0-9]/.test(password) },
   ];
   const strength = checks.filter((c) => c.met).length;
 
@@ -43,7 +48,7 @@ export function PasswordStrength({ password }: { password: string }) {
       </div>
       <ul className="space-y-1.5">
         {checks.map((check) => (
-          <li key={check.label}>
+          <li key={check.id}>
             <PasswordRequirement met={check.met} label={check.label} />
           </li>
         ))}

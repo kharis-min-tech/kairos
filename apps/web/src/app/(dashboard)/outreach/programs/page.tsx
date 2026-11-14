@@ -9,11 +9,13 @@ import { Button, Input, Badge, Table, TableHeader, TableBody, TableRow, TableHea
 import { Plus, Search, UserPlus, CheckCircle2, Users } from 'lucide-react';
 import { useAuthStore } from '@/lib/auth-store';
 import { useToast } from '@/hooks/use-toast';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 type ProgramTab = 'active' | 'completed';
 
-export default function OutreachProgramsPage() {
+export default function OutreachProgramsPage() {  const { t } = useTranslation(['outreach', 'common']);
+
   const caps = useCapabilities();
   const router = useRouter();
   const api = useApi();
@@ -99,15 +101,15 @@ export default function OutreachProgramsPage() {
       });
 
       toast({
-        title: 'Registration successful',
-        description: 'You have been registered for this outreach program',
+        title: t('outreach:registrationSuccessful'),
+        description: t('outreach:youHaveBeenRegisteredForThis2'),
       });
 
       // Refresh programs list to update registration status
       await fetchPrograms(api);
     } catch (error: unknown) {
       toast({
-        title: 'Registration failed',
+        title: t('outreach:registrationFailed'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -136,14 +138,12 @@ export default function OutreachProgramsPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Outreach Programs</h1>
-          <p className="text-muted-foreground">Manage evangelism programs and activities</p>
+          <h1 className="text-3xl font-bold">{t('outreach:outreachPrograms')}</h1>
+          <p className="text-muted-foreground">{t('outreach:manageEvangelismProgramsAndActivities')}</p>
         </div>
         {canCreateProgram && (
           <Button onClick={handleCreateProgram}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Program
-          </Button>
+            <Plus className="mr-2 h-4 w-4" />{t('outreach:createProgram')}</Button>
         )}
       </div>
 
@@ -156,9 +156,7 @@ export default function OutreachProgramsPage() {
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           }`}
-        >
-          Active Programs
-          <Badge variant={activeTab === 'active' ? 'default' : 'secondary'} className="ml-1">
+        >{t('outreach:activePrograms')}<Badge variant={activeTab === 'active' ? 'default' : 'secondary'} className="ml-1">
             {activeCount}
           </Badge>
         </button>
@@ -169,9 +167,7 @@ export default function OutreachProgramsPage() {
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           }`}
-        >
-          Past Programs
-          <Badge variant={activeTab === 'completed' ? 'default' : 'secondary'} className="ml-1">
+        >{t('outreach:pastPrograms')}<Badge variant={activeTab === 'completed' ? 'default' : 'secondary'} className="ml-1">
             {completedCount}
           </Badge>
         </button>
@@ -181,7 +177,7 @@ export default function OutreachProgramsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search programs..."
+            placeholder={t('outreach:searchPrograms')}
             value={filters.search || ''}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-10"
@@ -199,15 +195,15 @@ export default function OutreachProgramsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Program Name</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Coordinator</TableHead>
-              {!isMember && <TableHead>Souls Reached</TableHead>}
-              {!isMember && <TableHead>Registered</TableHead>}
-              <TableHead>Status</TableHead>
-              {canRegister && <TableHead>Registration</TableHead>}
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('outreach:programName')}</TableHead>
+              <TableHead>{t('outreach:date')}</TableHead>
+              <TableHead>{t('outreach:location')}</TableHead>
+              <TableHead>{t('outreach:coordinator')}</TableHead>
+              {!isMember && <TableHead>{t('outreach:soulsReached')}</TableHead>}
+              {!isMember && <TableHead>{t('outreach:registered')}</TableHead>}
+              <TableHead>{t('outreach:status')}</TableHead>
+              {canRegister && <TableHead>{t('outreach:registration')}</TableHead>}
+              <TableHead>{t('outreach:actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -230,8 +226,8 @@ export default function OutreachProgramsPage() {
               <TableRow>
                 <TableCell colSpan={canRegister ? 8 : 7} className="text-center py-8">
                   {activeTab === 'active' 
-                    ? 'No active programs currently.' 
-                    : 'No past programs found.'}
+                    ? t('outreach:noActiveProgramsCurrently')
+: t('outreach:noPastProgramsFound')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -244,7 +240,8 @@ export default function OutreachProgramsPage() {
                 const userCreatedProgram = program.createdBy && program.createdBy === user?.id;
                 
                 // For pastor/leader: can only register if admin created it AND coordinator is "Kharis"
-                const isKharisCoordinator = program.coordinatorName === 'Kharis';
+                // No member coordinator means the church itself runs it.
+                const isKharisCoordinator = !program.coordinatorId;
                 const canRegisterForProgram = isMember || 
                   (canRegister && !userCreatedProgram && program.creatorRole === 'admin' && isKharisCoordinator);
 
@@ -292,9 +289,9 @@ export default function OutreachProgramsPage() {
                   )}
                   <TableCell>
                     {program.isCompleted ? (
-                      <Badge variant="secondary">Completed</Badge>
+                      <Badge variant="secondary">{t('outreach:completed')}</Badge>
                     ) : (
-                      <Badge variant="default">Active</Badge>
+                      <Badge variant="default">{t('outreach:active')}</Badge>
                     )}
                   </TableCell>
                   {canRegister && (
@@ -302,15 +299,13 @@ export default function OutreachProgramsPage() {
                       {/* Show registration status */}
                       {program.isRegistered ? (
                         <Badge variant="default" className="bg-emerald-600">
-                          <CheckCircle2 className="mr-1 h-3 w-3" />
-                          Registered
-                        </Badge>
+                          <CheckCircle2 className="mr-1 h-3 w-3" />{t('outreach:registered')}</Badge>
                       ) : userCreatedProgram ? (
-                        <span className="text-xs text-muted-foreground">You created this</span>
+                        <span className="text-xs text-muted-foreground">{t('outreach:youCreatedThis')}</span>
                       ) : program.createdByName ? (
                         <span className="text-xs text-muted-foreground">Created by {program.createdByName}</span>
                       ) : (
-                        <Badge variant="outline">Not Registered</Badge>
+                        <Badge variant="outline">{t('outreach:notRegistered')}</Badge>
                       )}
                     </TableCell>
                   )}
@@ -325,7 +320,7 @@ export default function OutreachProgramsPage() {
                           disabled={registering === program.id}
                         >
                           <UserPlus className="mr-1 h-3 w-3" />
-                          {registering === program.id ? 'Registering...' : 'Register'}
+                          {registering === program.id ? t('outreach:registering') : t('outreach:register')}
                         </Button>
                       )}
                       
@@ -338,9 +333,7 @@ export default function OutreachProgramsPage() {
                       
                       {/* Show "Registration closed" for completed programs */}
                       {program.isCompleted && !program.isRegistered && (
-                        <span className="text-xs text-muted-foreground">
-                          Registration closed
-                        </span>
+                        <span className="text-xs text-muted-foreground">{t('outreach:registrationClosed')}</span>
                       )}
                       
                       <Button
@@ -350,9 +343,7 @@ export default function OutreachProgramsPage() {
                           e.stopPropagation();
                           handleViewProgram(program.id);
                         }}
-                      >
-                        View
-                      </Button>
+                      >{t('outreach:view')}</Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -369,9 +360,7 @@ export default function OutreachProgramsPage() {
             variant="outline"
             disabled={pagination.page === 1}
             onClick={() => setPage(pagination.page - 1)}
-          >
-            Previous
-          </Button>
+          >{t('outreach:previous')}</Button>
           <span className="flex items-center px-4">
             Page {pagination.page} of {pagination.totalPages}
           </span>
@@ -379,9 +368,7 @@ export default function OutreachProgramsPage() {
             variant="outline"
             disabled={pagination.page === pagination.totalPages}
             onClick={() => setPage(pagination.page + 1)}
-          >
-            Next
-          </Button>
+          >{t('outreach:next')}</Button>
         </div>
       )}
     </div>

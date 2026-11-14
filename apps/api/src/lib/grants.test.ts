@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
+  CHURCH_SCOPE,
+  CHURCH_SCOPE_ID,
   FunctionalRole,
   type Capability,
   type Grant,
@@ -223,6 +225,69 @@ describe('hasCapability — SafeguardingLead', () => {
   });
 });
 
+// ── hasCapability — the church scope ───────────────────────
+//
+// `church` is the only scope that names no entity, and the only one with no
+// hierarchy. The church CONTAINS every branch, so a branch grant must never
+// satisfy a church-scoped check — that direction of reasoning is what the
+// membership module would silently get wrong if it ever inverted.
+
+describe('hasCapability — church scope', () => {
+  const membershipAdmin: Grant = {
+    role: FunctionalRole.MembershipAdmin,
+    scope: CHURCH_SCOPE,
+    branchId: 'B-1',
+  };
+  const branchAdmin: Grant = {
+    role: FunctionalRole.BranchAdmin,
+    scope: { kind: 'branch', id: 'B-1' },
+    branchId: 'B-1',
+  };
+
+  it('a church grant satisfies a church-scoped check', () => {
+    expect(
+      hasCapability([membershipAdmin], 'member', 'membership:admin', CHURCH_SCOPE),
+    ).toBe(true);
+  });
+
+  it('a branch admin does NOT satisfy a church-scoped check', () => {
+    expect(hasCapability([branchAdmin], 'member', 'membership:admin', CHURCH_SCOPE)).toBe(
+      false,
+    );
+  });
+
+  it('a branch grant cannot reach a church target even with branchId supplied', () => {
+    // Defensive: the hierarchy rule climbs from branch DOWN to fellowship and
+    // department. Passing a parent branch on a church scope must not open a
+    // path upward.
+    expect(
+      hasCapability([branchAdmin], 'member', 'membership:admin', {
+        ...CHURCH_SCOPE,
+        branchId: 'B-1',
+      }),
+    ).toBe(false);
+  });
+
+  it('a church grant does not leak into branch-scoped capabilities', () => {
+    expect(
+      hasCapability([membershipAdmin], 'member', 'branch:write', {
+        kind: 'branch',
+        id: 'B-1',
+      }),
+    ).toBe(false);
+  });
+
+  it('a church grant does not cover a different capability at church scope', () => {
+    expect(hasCapability([membershipAdmin], 'member', 'branch:rbac', CHURCH_SCOPE)).toBe(
+      false,
+    );
+  });
+
+  it('a platform admin still bypasses the church scope', () => {
+    expect(hasCapability([], 'admin', 'membership:admin', CHURCH_SCOPE)).toBe(true);
+  });
+});
+
 // ── resolveGrants ──────────────────────────────────────────
 
 function createChain(result: unknown = []) {
@@ -244,7 +309,11 @@ function setupSelectSequence(...results: unknown[]) {
   selectResults = results;
   selectIdx = 0;
   (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
-    const r = selectResults[selectIdx] ?? selectResults[selectResults.length - 1] ?? [];
+    // Each db.select() consumes the next result; anything past the end is
+    // empty rather than a repeat of the last. resolveGrants issues two
+    // queries — member_roles, then branch_leadership — and repeating would
+    // feed role rows to the leadership query and mint phantom pastors.
+    const r = selectResults[selectIdx] ?? [];
     selectIdx++;
     return createChain(r);
   });
@@ -351,6 +420,38 @@ describe('resolveGrants', () => {
     const grants = await resolveGrants(mockDb, memberId);
     expect(grants).toHaveLength(3);
   });
+
+  it('resolves a church-scoped Membership Admin row', async () => {
+    setupSelectSequence([
+      {
+        roleName: 'Membership Admin',
+        branchId: 'B-1',
+        scopeKind: 'church',
+        scopeId: CHURCH_SCOPE_ID,
+      },
+    ]);
+    const grants = await resolveGrants(mockDb, memberId);
+    // `branchId` is only a query handle on a church grant, never its reach.
+    expect(grants).toEqual([
+      { role: FunctionalRole.MembershipAdmin, scope: CHURCH_SCOPE, branchId: 'B-1' },
+    ]);
+  });
+
+  it('normalises a church row that carries a stray scope_id', async () => {
+    // Belt and braces: a church scope has no entity, so whatever sits in
+    // scope_id must resolve to the one church scope rather than a grant that
+    // matches nothing.
+    setupSelectSequence([
+      {
+        roleName: 'Membership Admin',
+        branchId: 'B-1',
+        scopeKind: 'church',
+        scopeId: 'B-1',
+      },
+    ]);
+    const grants = await resolveGrants(mockDb, memberId);
+    expect(grants[0]?.scope).toEqual(CHURCH_SCOPE);
+  });
 });
 
 // ── Post-Phase-4c access matrix ────────────────────────────
@@ -379,3 +480,78 @@ const _capabilityRef: Capability | undefined = undefined;
 const _systemRoleRef: SystemRole | undefined = undefined;
 void _capabilityRef;
 void _systemRoleRef;
+
+// ── The derived BranchPastor grant ────────────────────────
+//
+// Safeguarding sight follows identity, not authority. A Main Pastor and a
+// Minister carry the same BranchAdmin grant, so only `branch_leadership` can
+// tell them apart — resolveGrants reads it and synthesises the difference.
+
+describe('resolveGrants — Main Pastor', () => {
+  const memberId = 'M-1';
+
+  it('synthesises a BranchPastor grant for a current Main Pastor row', async () => {
+    setupSelectSequence([], [{ branchId: 'B-1' }]);
+    const grants = await resolveGrants(mockDb, memberId);
+    expect(grants).toEqual([
+      { role: 'BranchPastor', scope: { kind: 'branch', id: 'B-1' }, branchId: 'B-1' },
+    ]);
+  });
+
+  it('carries safeguarding sight that a plain BranchAdmin grant does not', async () => {
+    setupSelectSequence(
+      [{ roleName: 'Branch System Admin', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' }],
+      [{ branchId: 'B-1' }],
+    );
+    const pastor = await resolveGrants(mockDb, memberId);
+
+    // Same grants minus the leadership row — this is the Minister.
+    setupSelectSequence(
+      [{ roleName: 'Branch System Admin', branchId: 'B-1', scopeKind: 'branch', scopeId: 'B-1' }],
+      [],
+    );
+    const minister = await resolveGrants(mockDb, memberId);
+
+    const scope = { kind: 'branch', id: 'B-1' } as const;
+    expect(hasCapability(pastor, 'member', 'safeguarding:read', scope)).toBe(true);
+    expect(hasCapability(minister, 'member', 'safeguarding:read', scope)).toBe(false);
+    // Both keep welfare: that one does ride on the BranchAdmin grant.
+    expect(hasCapability(pastor, 'member', 'welfare:read', scope)).toBe(true);
+    expect(hasCapability(minister, 'member', 'welfare:read', scope)).toBe(true);
+  });
+
+  it('mints one grant per branch a member pastors', async () => {
+    setupSelectSequence([], [{ branchId: 'B-1' }, { branchId: 'B-2' }]);
+    const grants = await resolveGrants(mockDb, memberId);
+    expect(grants.map((g) => g.scope.id)).toEqual(['B-1', 'B-2']);
+  });
+});
+
+describe('resolveGrants — Safeguarding Head', () => {
+  it('maps the church-scoped role and reaches every branch', async () => {
+    setupSelectSequence(
+      [
+        {
+          roleName: 'Safeguarding Head',
+          branchId: 'B-1',
+          scopeKind: 'church',
+          scopeId: '00000000-0000-0000-0000-000000000000',
+        },
+      ],
+      [],
+    );
+    const grants = await resolveGrants(mockDb, 'M-2');
+    expect(grants).toHaveLength(1);
+    expect(grants[0]!.role).toBe('SafeguardingHead');
+    expect(grants[0]!.scope.kind).toBe('church');
+
+    // Reach, in a branch that is not their home branch.
+    expect(
+      hasCapability(grants, 'member', 'safeguarding:read', { kind: 'branch', id: 'B-7' }),
+    ).toBe(true);
+    // Reach is not power: still nothing outside safeguarding.
+    expect(hasCapability(grants, 'member', 'branch:write', { kind: 'branch', id: 'B-7' })).toBe(
+      false,
+    );
+  });
+});

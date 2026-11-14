@@ -1,0 +1,19 @@
+{
+  "role": "platform-attendance-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Cultes",
+      "caption": "Chaque rassemblement et sa feuille.",
+      "speech": "La présence liste les cultes. Chacun indique combien de personnes ont été enregistrées, et si la feuille est encore ouverte."
+    },
+    {
+      "n": 2,
+      "title": "Noter les présents",
+      "caption": "L’accueil, ou la personne elle-même.",
+      "speech": "Ouvrez un culte pour noter présent, en retard, ou en ligne. Chacun peut aussi s’enregistrer avec le QR code à l’entrée."
+    }
+  ]
+}

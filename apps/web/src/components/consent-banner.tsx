@@ -1,23 +1,35 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@kairos/ui';
-import {
-  CONSENT_TYPE_LABEL,
-  CONSENT_TYPE_DESCRIPTION,
-  type ConsentType,
-} from '@kairos/types';
+import { CONSENT_TYPE_LABEL, ConsentType } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
 import { useAuthStore } from '@/lib/auth-store';
+import { useTranslation } from 'react-i18next';
 
 /**
- * Dashboard-level banner. Renders when any REQUIRED consent (terms / privacy)
- * needs accepting — either it's never been granted or the env-driven version
- * has bumped since the last acceptance. Marketing is optional and surfaces
- * on /profile/settings/legal, not here.
+ * Dashboard-level banner. Renders when any REQUIRED consent needs accepting —
+ * either it's never been granted or the env-driven version has bumped since
+ * the last acceptance. Marketing is optional and surfaces on
+ * /profile/settings/legal, not here.
+ *
+ * Required set is driven by the API's `status.required` flag, which the API
+ * computes per-user: terms + privacy + acceptable_use for everyone, plus
+ * admin_confidentiality for anyone holding a leadership / administrative
+ * role.
  */
-export function ConsentBanner() {
+
+const LEGAL_DOC_HREF: Record<ConsentType, string> = {
+  [ConsentType.Terms]: '/legal/terms',
+  [ConsentType.Privacy]: '/legal/privacy',
+  [ConsentType.Marketing]: '/profile/settings/legal',
+  [ConsentType.AcceptableUse]: '/legal/acceptable-use',
+  [ConsentType.AdminConfidentiality]: '/legal/confidentiality',
+};
+export function ConsentBanner() {  const { t } = useTranslation(['security', 'common']);
+
   const { user } = useAuthStore();
   const { data, isLoading } = useMyConsentStatuses();
   const record = useRecordConsent();
@@ -44,14 +56,35 @@ export function ConsentBanner() {
         <div className="flex items-start gap-3">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-[#5D3FD3]" aria-hidden />
           <div>
-            <p className="text-sm font-semibold">Please review our policies</p>
+            <p className="text-sm font-semibold">{t('security:pleaseReviewOurPolicies')}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {pending
-                .map((s) => `${CONSENT_TYPE_LABEL[s.consentType]} (v${s.currentVersion})`)
+                .map((s) =>
+                  t('legal:docWithVersion', {
+                    name: t(`legal:consentType.${s.consentType}`, {
+                      defaultValue: CONSENT_TYPE_LABEL[s.consentType],
+                    }),
+                    version: s.currentVersion,
+                  }),
+                )
                 .join(' · ')}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {pending.map((s) => CONSENT_TYPE_DESCRIPTION[s.consentType]).join(' ')}
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              {pending.map((s) => (
+                <Link
+                  key={s.consentType}
+                  href={LEGAL_DOC_HREF[s.consentType]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-[#5D3FD3] underline underline-offset-2 hover:opacity-80"
+                >
+                  {t('legal:readTheDoc', {
+                    name: t(`legal:consentType.${s.consentType}`, {
+                      defaultValue: CONSENT_TYPE_LABEL[s.consentType],
+                    }),
+                  })}
+                </Link>
+              ))}
             </p>
           </div>
         </div>
@@ -61,7 +94,7 @@ export function ConsentBanner() {
           onClick={acceptAll}
           disabled={record.isPending || accepting !== null}
         >
-          {record.isPending ? 'Saving…' : 'Accept & continue'}
+          {record.isPending ? t('security:saving') : t('security:acceptContinue')}
         </Button>
       </div>
     </div>

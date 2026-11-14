@@ -6,7 +6,7 @@ import {
   type Grant,
   type RoleScope,
   type SystemRole,
-  RoleCapabilities,
+  matchesCapability,
 } from '@kairos/types';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -53,31 +53,11 @@ export function useCapabilities() {
       payload?.systemRole ?? (storeRole as SystemRole | null) ?? 'member';
     const grants = payload?.grants ?? [];
 
-    function has(
-      cap: Capability,
-      scope?: RoleScope & { branchId?: string },
-    ): boolean {
-      // Admin shim — matches the server's hasCapability.
-      if (systemRole === 'admin') return true;
-
-      const targetBranchId =
-        scope?.kind === 'branch' ? scope.id : scope?.branchId;
-
-      for (const grant of grants) {
-        if (!RoleCapabilities[grant.role].includes(cap)) continue;
-        if (!scope) return true;
-        if (grant.scope.kind === scope.kind && grant.scope.id === scope.id) {
-          return true;
-        }
-        if (
-          grant.scope.kind === 'branch' &&
-          targetBranchId &&
-          grant.scope.id === targetBranchId
-        ) {
-          return true;
-        }
-      }
-      return false;
+    // Delegates to the ONE matcher, which lives in @kairos/types beside the
+    // role/capability catalog it reads and is what the API enforces with.
+    // This client cannot drift from what the server will allow.
+    function has(cap: Capability, scope?: RoleScope & { branchId?: string }): boolean {
+      return matchesCapability(grants, systemRole, cap, scope);
     }
 
     /** Returns grants of a specific role (for picker UIs). */

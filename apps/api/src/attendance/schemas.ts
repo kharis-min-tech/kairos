@@ -101,6 +101,10 @@ export const trendsQuerySchema = z.object({
   fellowshipId: z.string().uuid().optional(),
 });
 
+// Engagement window (months) applied wherever "engaged member" is a denominator.
+// User-facing selector on the reports page; default 3.
+const engagedWindowMonthsField = z.coerce.number().int().positive().max(60).default(3);
+
 export const missingMembersQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   services: z.coerce.number().int().positive().max(52).default(4),
@@ -111,6 +115,30 @@ export const missingMembersQuerySchema = z.object({
 export const byBranchQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   weeks: z.coerce.number().int().positive().max(52).default(4),
+  engagedWindowMonths: engagedWindowMonthsField,
+});
+
+export const heatmapQuerySchema = z.object({
+  branchId: z.string().uuid(),
+  weeks: z.coerce.number().int().positive().max(26).default(13),
+  departmentId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
+  engagedWindowMonths: engagedWindowMonthsField,
+  engagedOnly: z.coerce.boolean().default(true),
+});
+
+export const frequencyBucketsQuerySchema = z.object({
+  branchId: z.string().uuid().optional(),
+  engagedWindowMonths: engagedWindowMonthsField,
+  departmentId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
+});
+
+export const firstTimeReturningQuerySchema = z.object({
+  branchId: z.string().uuid().optional(),
+  weeks: z.coerce.number().int().positive().max(52).default(12),
+  departmentId: z.string().uuid().optional(),
+  fellowshipId: z.string().uuid().optional(),
 });
 
 export const summaryQuerySchema = z.object({
@@ -128,6 +156,13 @@ export const myAttendanceQuerySchema = z.object({
 // Department / fellowship attendance breakdown (Phase 4a/b).
 export const groupAttendanceQuerySchema = z.object({
   weeks: z.coerce.number().int().positive().max(52).default(12),
+});
+
+// Rotating QR — admin polls a token every ~30s to display; member's scan
+// posts it back for verification. Signature check lives in self-check-in-qr.ts;
+// this only enforces the shape of the request body.
+export const selfCheckInQrBodySchema = z.object({
+  token: z.string().min(1, 'QR token is required').max(200),
 });
 
 // Cohort comparison — set-difference between any two service selections.

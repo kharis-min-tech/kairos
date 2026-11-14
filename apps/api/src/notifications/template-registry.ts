@@ -14,12 +14,14 @@ import {
   renderRoleGranted,
   renderRoleRevoked,
   renderSigninNewDevice,
+  renderOAuthProviderLinked,
   renderProfileUpdatedByAdmin,
   digestPasswordResetRequested,
   digestPasswordChanged,
   digestRoleGranted,
   digestRoleRevoked,
   digestSigninNewDevice,
+  digestOAuthProviderLinked,
   digestProfileUpdatedByAdmin,
 } from './templates/security';
 import {
@@ -29,12 +31,20 @@ import {
   renderSoulStatusChanged,
   renderNewBelieverStageMoved,
   renderNewBelieverRemoved,
+  renderMembershipInterestExpressed,
+  renderMembershipCohortAdmitted,
+  renderMembershipCohortGraduated,
+  renderMembershipInterestEnded,
   digestJoinRequestReceived,
   digestJoinRequestDecided,
   digestSoulAssigned,
   digestSoulStatusChanged,
   digestNewBelieverStageMoved,
   digestNewBelieverRemoved,
+  digestMembershipInterestExpressed,
+  digestMembershipCohortAdmitted,
+  digestMembershipCohortGraduated,
+  digestMembershipInterestEnded,
 } from './templates/workflow';
 import {
   renderVisitorPromoted,
@@ -94,6 +104,11 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
     render: renderSigninNewDevice,
     digestLine: digestSigninNewDevice,
   },
+  [NotificationEventType.SecurityOAuthProviderLinked]: {
+    category: NotificationCategory.Security,
+    render: renderOAuthProviderLinked,
+    digestLine: digestOAuthProviderLinked,
+  },
   [NotificationEventType.SecurityProfileUpdatedByAdmin]: {
     category: NotificationCategory.Security,
     render: renderProfileUpdatedByAdmin,
@@ -138,6 +153,26 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
     category: NotificationCategory.Workflow,
     render: renderNewBelieverRemoved,
     digestLine: digestNewBelieverRemoved,
+  },
+  [NotificationEventType.WorkflowMembershipInterestExpressed]: {
+    category: NotificationCategory.Workflow,
+    render: renderMembershipInterestExpressed,
+    digestLine: digestMembershipInterestExpressed,
+  },
+  [NotificationEventType.WorkflowMembershipCohortAdmitted]: {
+    category: NotificationCategory.Workflow,
+    render: renderMembershipCohortAdmitted,
+    digestLine: digestMembershipCohortAdmitted,
+  },
+  [NotificationEventType.WorkflowMembershipCohortGraduated]: {
+    category: NotificationCategory.Workflow,
+    render: renderMembershipCohortGraduated,
+    digestLine: digestMembershipCohortGraduated,
+  },
+  [NotificationEventType.WorkflowMembershipInterestEnded]: {
+    category: NotificationCategory.Workflow,
+    render: renderMembershipInterestEnded,
+    digestLine: digestMembershipInterestEnded,
   },
   [NotificationEventType.LifecycleVisitorPromoted]: {
     category: NotificationCategory.Lifecycle,

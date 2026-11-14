@@ -1,0 +1,19 @@
+{
+  "role": "administration-approvals-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "La file",
+      "caption": "Les personnes en attente d’accès.",
+      "speech": "La file d’approbation contient toute personne inscrite, mais pas encore approuvée. Tant qu’elle ne l’est pas, elle ne peut pas se connecter."
+    },
+    {
+      "n": 2,
+      "title": "Approuver quelqu’un",
+      "caption": "Vérifiez l’antenne, puis approuvez.",
+      "speech": "Vérifiez l’antenne choisie, et les informations fournies. Puis approuvez. La personne peut se connecter dès cet instant."
+    }
+  ]
+}

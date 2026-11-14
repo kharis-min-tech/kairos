@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,27 +10,31 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { PasswordStrength } from '@/components/password-strength';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
-const changePasswordSchema = z
+const makeChangePasswordSchema = (t: (key: string) => string) =>
+  z
   .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
+    currentPassword: z.string().min(1, t('auth:vCurrentPasswordIsRequired')),
     newPassword: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[a-z]/, 'Must contain a lowercase letter')
-      .regex(/[0-9]/, 'Must contain a number')
-      .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+      .min(8, t('auth:vPasswordMustBeAtLeastCharacters'))
+      .regex(/[A-Z]/, t('auth:vMustContainAnUppercaseLetter'))
+      .regex(/[a-z]/, t('auth:vMustContainALowercaseLetter'))
+      .regex(/[0-9]/, t('auth:vMustContainANumber'))
+      .regex(/[^A-Za-z0-9]/, t('auth:vMustContainASpecialCharacter')),
+    confirmPassword: z.string().min(1, t('auth:vPleaseConfirmYourPassword')),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: t('auth:vPasswordsDoNotMatch'),
     path: ['confirmPassword'],
   });
 
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+type ChangePasswordFormData = z.infer<ReturnType<typeof makeChangePasswordSchema>>;
 
-export default function ChangePasswordPage() {
+export default function ChangePasswordPage() {  const { t } = useTranslation(['auth', 'common']);
+  const changePasswordSchema = useMemo(() => makeChangePasswordSchema(t), [t]);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const mustChangePassword = useAuthStore((s) => s.mustChangePassword);
@@ -74,11 +78,11 @@ export default function ChangePasswordPage() {
     <>
       {/* Heading — outside card */}
       <KharisCardHeader
-        heading="Change your password"
-        subtitle={<>Hi {user?.firstName ?? 'there'} — your account has a temporary password. Set a new one to continue.</>}
+        heading={t('auth:changeYourPassword')}
+        subtitle={<>Hi {user?.firstName ?? 'there'}, your account has a temporary password. Set a new one to continue.</>}
       />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {error && (
             <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -90,27 +94,23 @@ export default function ChangePasswordPage() {
           )}
 
           <div className="rounded-lg bg-[#f8b537]/10 p-3">
-            <p className="text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
-              Enter the temporary password you received, then choose a new secure password.
-            </p>
+            <p className="text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">{t('auth:enterTheTemporaryPasswordYouReceived')}</p>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="currentPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Temporary Password
-            </label>
+            <label htmlFor="currentPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:temporaryPassword')}</label>
             <div className="relative">
               <Input
                 id="currentPassword"
                 type={showCurrentPassword ? 'text' : 'password'}
                 className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
-                placeholder="Enter temporary password"
+                placeholder={t('auth:enterTemporaryPassword')}
                 {...register('currentPassword')}
               />
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                aria-label={showCurrentPassword ? 'Hide temporary password' : 'Show temporary password'}
+                aria-label={showCurrentPassword ? t('auth:hideTemporaryPassword') : t('auth:showTemporaryPassword')}
                 aria-pressed={showCurrentPassword}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -132,21 +132,19 @@ export default function ChangePasswordPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              New Password
-            </label>
+            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:newPassword')}</label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showNewPassword ? 'text' : 'password'}
                 className="h-11 rounded-lg border-muted-foreground/15 bg-transparent pr-10 focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
-                placeholder="Choose a strong password"
+                placeholder={t('auth:chooseAStrongPassword')}
                 {...register('newPassword')}
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                aria-label={showNewPassword ? t('auth:hideNewPassword') : t('auth:showNewPassword')}
                 aria-pressed={showNewPassword}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -174,14 +172,12 @@ export default function ChangePasswordPage() {
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Confirm New Password
-            </label>
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:confirmNewPassword')}</label>
             <Input
               id="confirmPassword"
               type="password"
               className="h-11 rounded-lg border-muted-foreground/15 bg-transparent focus-visible:border-[#f8b537] focus-visible:ring-1 focus-visible:ring-[#f8b537]/20 focus-visible:ring-offset-0"
-              placeholder="Re-enter new password"
+              placeholder={t('auth:reEnterNewPassword')}
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
@@ -194,7 +190,7 @@ export default function ChangePasswordPage() {
             disabled={isSubmitting}
             className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {isSubmitting ? 'Updating...' : 'Set New Password'}
+            {isSubmitting ? t('auth:updating') : t('auth:setNewPassword')}
           </button>
         </form>
       </div>

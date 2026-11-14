@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,15 +17,17 @@ import {
   Label,
 } from '@kairos/ui';
 import { useCreateEnrollment } from '@/hooks/use-new-believers';
+import { useTranslation } from 'react-i18next';
 
-const enrollFormSchema = z.object({
-  memberId: z.string().min(1, 'Member is required'),
+const makeEnrollFormSchema = (t: (key: string) => string) =>
+  z.object({
+  memberId: z.string().min(1, t('newBelievers:vMemberIsRequired')),
   teacherId: z.string().optional(),
   mentorId: z.string().optional(),
   notes: z.string().max(1000).optional(),
 });
 
-type EnrollFormValues = z.infer<typeof enrollFormSchema>;
+type EnrollFormValues = z.infer<ReturnType<typeof makeEnrollFormSchema>>;
 
 interface MemberOption {
   id: string;
@@ -56,7 +58,9 @@ export function EnrollDialog({
   teacherPool,
   mentorPool,
   allBranchMembers,
-}: EnrollDialogProps) {
+}: EnrollDialogProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+  const enrollFormSchema = useMemo(() => makeEnrollFormSchema(t), [t]);
+
   const createEnrollment = useCreateEnrollment();
   const { handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EnrollFormValues>({
     resolver: zodResolver(enrollFormSchema),
@@ -107,7 +111,7 @@ export function EnrollDialog({
         mentorId: values.mentorId || undefined,
         notes: notes.trim() || undefined,
       });
-      toast.success('Member enrolled in New Believers programme');
+      toast.success(t('newBelievers:memberEnrolledNewBelieversProgramme'));
       onOpenChange(false);
     } catch (err: unknown) {
       const apiStatus = (err as { status?: number } | null)?.status;
@@ -120,18 +124,18 @@ export function EnrollDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Enrol Member in New Believers</DialogTitle>
+          <DialogTitle>{t('newBelievers:enrolMemberInNewBelievers')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="enrol-member">Member</Label>
+            <Label htmlFor="enrol-member">{t('newBelievers:member')}</Label>
             <CustomSelect
               id="enrol-member"
               value={memberId}
               onValueChange={(v) => setValue('memberId', v, { shouldValidate: true })}
               options={memberPool.map(toOption)}
-              placeholder={memberPool.length === 0 ? 'No members available' : 'Select a member...'}
+              placeholder={memberPool.length === 0 ? t('newBelievers:noMembersAvailable') : t('newBelievers:selectMember')}
               disabled={memberPool.length === 0}
             />
             {errors.memberId && (
@@ -140,34 +144,32 @@ export function EnrollDialog({
           </div>
 
           <div>
-            <Label htmlFor="enrol-teacher">Assign Teacher</Label>
+            <Label htmlFor="enrol-teacher">{t('newBelievers:assignTeacher')}</Label>
             <CustomSelect
               id="enrol-teacher"
               value={teacherId ?? ''}
               onValueChange={(v) => setValue('teacherId', v)}
               options={teacherOptions}
-              placeholder="Select a teacher..."
+              placeholder={t('newBelievers:selectATeacher')}
             />
           </div>
 
           <div>
-            <Label htmlFor="enrol-mentor">Assign Mentor</Label>
+            <Label htmlFor="enrol-mentor">{t('newBelievers:assignMentor')}</Label>
             <CustomSelect
               id="enrol-mentor"
               value={mentorId ?? ''}
               onValueChange={(v) => setValue('mentorId', v)}
               options={mentorOptions}
-              placeholder="Select a mentor..."
+              placeholder={t('newBelievers:selectAMentor')}
             />
             {mentorHasNoEmail && (
-              <p className="mt-1 text-xs font-medium text-[#f8b537]">
-                This member has no email on file — they won&apos;t receive an assignment notification.
-              </p>
+              <p className="mt-1 text-xs font-medium text-[#f8b537]">{t('newBelievers:thisMemberEmailFileSoThey')}</p>
             )}
           </div>
 
           <div>
-            <Label htmlFor="enrol-notes">Notes <span className="font-normal text-muted-foreground">(optional)</span></Label>
+            <Label htmlFor="enrol-notes">{t('newBelievers:notes')}<span className="font-normal text-muted-foreground">(optional)</span></Label>
             <Textarea
               id="enrol-notes"
               rows={2}
@@ -177,15 +179,13 @@ export function EnrollDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('newBelievers:cancel')}</Button>
             <Button
               type="submit"
               disabled={!memberId || createEnrollment.isPending}
               className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0"
             >
-              {createEnrollment.isPending ? 'Enrolling...' : 'Enrol'}
+              {createEnrollment.isPending ? t('newBelievers:enrolling') : t('newBelievers:enrol')}
             </Button>
           </DialogFooter>
         </form>

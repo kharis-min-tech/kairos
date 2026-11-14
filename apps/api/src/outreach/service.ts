@@ -371,7 +371,7 @@ export async function listPrograms(
 
   return {
     data: programsWithRegistration,
-    pagination: {
+    meta: {
       page: query.page,
       limit: query.limit,
       total: total!.count,

@@ -4,6 +4,7 @@ import { TimeSelect, cn } from '@kairos/ui';
 import { MemberAvatar } from '@/components/member-avatar';
 import { ServiceAttendanceStatus } from '@kairos/types';
 import type { ServiceAttendanceStatus as Status } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 export interface MarkState {
   status: Status;
@@ -40,7 +41,8 @@ export function RosterRow({
   onSetStatus,
   onSetArrival,
   onClear,
-}: RosterRowProps) {
+}: RosterRowProps) {  const { t } = useTranslation(['attendance', 'common']);
+
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-foreground/[0.03]">
       <MemberAvatar photoUrl={photoUrl} firstName={firstName} lastName={lastName} size="sm" />
@@ -56,7 +58,7 @@ export function RosterRow({
               key={s}
               type="button"
               aria-pressed={active}
-              aria-label={`Mark ${firstName} ${lastName} ${s}`}
+              aria-label={t('attendance:markV1V2V3', { v1: firstName, v2: lastName, v3: s })}
               onClick={() => (active ? onClear() : onSetStatus(s))}
               className={cn(
                 'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
@@ -73,7 +75,7 @@ export function RosterRow({
 
       {mark?.status === ServiceAttendanceStatus.Late && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">Arrived</span>
+          <span className="text-xs text-muted-foreground">{t('attendance:arrived')}</span>
           <TimeSelect
             value={mark.arrivalTime ?? ''}
             onValueChange={onSetArrival}

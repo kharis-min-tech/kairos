@@ -1,0 +1,531 @@
+import { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+} from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronRight, Check } from 'lucide-react-native';
+import {
+  AddressAutofillInput,
+  Button,
+  Card,
+  Input,
+  TimePicker,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import type { CreateFellowshipRequest, FellowshipType } from '@kairos/types';
+import { FellowshipType as FellowshipTypeEnum } from '@kairos/types';
+import { api } from '@/lib/api-client';
+import { mapboxPublicToken } from '@/lib/config';
+import { useTranslation } from 'react-i18next';
+
+const DAY_OPTIONS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+] as const;
+
+const SCHEDULE_OPTIONS = ['Weekly', 'Fortnightly', 'Monthly'] as const;
+
+export interface FellowshipFormValues {
+  fellowshipName: string;
+  branchId: string;
+  fellowshipType: FellowshipType | '';
+  description: string;
+  meetingDay: string;
+  meetingTime: string;
+  meetingSchedule: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export const EMPTY_FELLOWSHIP_FORM: FellowshipFormValues = {
+  fellowshipName: '',
+  branchId: '',
+  fellowshipType: '',
+  description: '',
+  meetingDay: '',
+  meetingTime: '',
+  meetingSchedule: '',
+  address: '',
+  city: '',
+  postalCode: '',
+  latitude: null,
+  longitude: null,
+};
+
+interface FellowshipFormProps {
+  initial?: Partial<FellowshipFormValues>;
+  submitLabel: string;
+  submitPendingLabel?: string;
+  submitting: boolean;
+  serverError?: string | null;
+  onSubmit: (payload: CreateFellowshipRequest) => void | Promise<void>;
+  /** Optional footer content — e.g. a destructive Delete row on the edit form. */
+  footer?: React.ReactNode;
+}
+
+export function FellowshipForm({
+  initial,
+  submitLabel,
+  submitPendingLabel,
+  submitting,
+  serverError,
+  onSubmit,
+  footer,
+}: FellowshipFormProps) {  const { t } = useTranslation(['fellowships', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const branches = useQuery({
+    queryKey: ['branches', 'listPublic'],
+    queryFn: async () => (await api.branches.listPublic()).data ?? [],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [name, setName] = useState(initial?.fellowshipName ?? '');
+  const [branchId, setBranchId] = useState(initial?.branchId ?? '');
+  const [fellowshipType, setFellowshipType] = useState<FellowshipType | ''>(
+    initial?.fellowshipType ?? '',
+  );
+  const [description, setDescription] = useState(initial?.description ?? '');
+  const [meetingDay, setMeetingDay] = useState(initial?.meetingDay ?? '');
+  const [meetingTime, setMeetingTime] = useState(initial?.meetingTime ?? '');
+  const [meetingSchedule, setMeetingSchedule] = useState(initial?.meetingSchedule ?? '');
+  const [address, setAddress] = useState(initial?.address ?? '');
+  const [city, setCity] = useState(initial?.city ?? '');
+  const [postalCode, setPostalCode] = useState(initial?.postalCode ?? '');
+  const [latitude, setLatitude] = useState<number | null>(initial?.latitude ?? null);
+  const [longitude, setLongitude] = useState<number | null>(initial?.longitude ?? null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [openPicker, setOpenPicker] = useState<
+    'branch' | 'type' | 'day' | 'schedule' | null
+  >(null);
+
+  const branchOptions = useMemo(
+    () => (branches.data ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+    [branches.data],
+  );
+
+  const branchLabel = useMemo(
+    () => branchOptions.find((b) => b.value === branchId)?.label ?? '',
+    [branchOptions, branchId],
+  );
+
+  function clearError(key: string) {
+    setErrors((p) => {
+      const next = { ...p };
+      delete next[key];
+      return next;
+    });
+  }
+
+  function validate(): boolean {
+    const next: Record<string, string> = {};
+    if (!name.trim()) next['name'] = 'Fellowship name is required';
+    if (!branchId) next['branchId'] = 'Choose a branch';
+    if (!fellowshipType) next['fellowshipType'] = 'Choose a type';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
+  function handleSubmit() {
+    if (!validate()) return;
+    const payload: CreateFellowshipRequest = {
+      fellowshipName: name.trim(),
+      branchId,
+      fellowshipType: fellowshipType as string,
+    };
+    if (description.trim()) payload.description = description.trim();
+    if (meetingDay) payload.meetingDay = meetingDay;
+    if (meetingTime.trim()) payload.meetingTime = meetingTime.trim();
+    if (meetingSchedule) payload.meetingSchedule = meetingSchedule;
+    if (address.trim()) payload.address = address.trim();
+    if (city.trim()) payload.city = city.trim();
+    if (postalCode.trim()) payload.postalCode = postalCode.trim();
+    if (latitude != null) payload.latitude = latitude;
+    if (longitude != null) payload.longitude = longitude;
+    void onSubmit(payload);
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Card padding="md" style={{ gap: spacing.md }}>
+          <Text style={styles.sectionEyebrow}>{t('fellowships:details')}</Text>
+
+          <FieldLabel label={t('fellowships:fellowshipName')} required />
+          <Input
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              clearError('name');
+            }}
+            placeholder={t('fellowships:eGCentralKGroup')}
+            autoCapitalize="words"
+            error={errors['name']}
+          />
+
+          <FieldLabel label={t('fellowships:branch')} required />
+          <PickerField
+            value={branchLabel}
+            placeholder={t('fellowships:chooseABranch')}
+            onPress={() => setOpenPicker('branch')}
+            error={errors['branchId']}
+          />
+
+          <FieldLabel label={t('fellowships:type')} required />
+          <PickerField
+            value={fellowshipType}
+            placeholder={t('fellowships:chooseAFellowshipType')}
+            onPress={() => setOpenPicker('type')}
+            error={errors['fellowshipType']}
+          />
+
+          <FieldLabel label={t('fellowships:description')} />
+          <Input
+            value={description}
+            onChangeText={setDescription}
+            placeholder={t('fellowships:shortDescriptionShownOnTheFellowship')}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            containerStyle={{ minHeight: 80 }}
+          />
+        </Card>
+
+        <Card padding="md" style={{ gap: spacing.md }}>
+          <Text style={styles.sectionEyebrow}>{t('fellowships:meeting')}</Text>
+
+          <FieldLabel label={t('fellowships:meetingDay')} />
+          <PickerField
+            value={meetingDay}
+            placeholder={t('fellowships:chooseADay')}
+            onPress={() => setOpenPicker('day')}
+          />
+
+          <FieldLabel label={t('fellowships:meetingTime')} />
+          <TimePicker
+            value={meetingTime}
+            onChange={setMeetingTime}
+            minuteInterval={5}
+          />
+
+          <FieldLabel label={t('fellowships:schedule')} />
+          <PickerField
+            value={meetingSchedule}
+            placeholder={t('fellowships:chooseACadence')}
+            onPress={() => setOpenPicker('schedule')}
+          />
+        </Card>
+
+        <Card padding="md" style={{ gap: spacing.md }}>
+          <Text style={styles.sectionEyebrow}>{t('fellowships:meetingLocation')}</Text>
+          <Text style={styles.hint}>{t('fellowships:optionalLeaveBlankIfTheFellowship')}</Text>
+          <AddressAutofillInput
+            accessToken={mapboxPublicToken}
+            value={{
+              line1: address,
+              city,
+              postalCode,
+              latitude: latitude ?? undefined,
+              longitude: longitude ?? undefined,
+            }}
+            onChange={(v) => {
+              setAddress(v.line1);
+              setCity(v.city);
+              setPostalCode(v.postalCode);
+              if (typeof v.latitude === 'number') setLatitude(v.latitude);
+              if (typeof v.longitude === 'number') setLongitude(v.longitude);
+            }}
+          />
+        </Card>
+
+        {serverError ? <Text style={styles.errorLine}>{serverError}</Text> : null}
+
+        <Button
+          label={submitting ? submitPendingLabel ?? 'Saving…' : submitLabel}
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={submitting}
+          onPress={handleSubmit}
+        />
+
+        {footer}
+      </ScrollView>
+
+      <PickerSheet
+        open={openPicker === 'branch'}
+        title={t('fellowships:branch')}
+        onClose={() => setOpenPicker(null)}
+        options={branchOptions}
+        selected={branchId}
+        onSelect={(v) => {
+          setBranchId(v);
+          clearError('branchId');
+        }}
+      />
+
+      <PickerSheet
+        open={openPicker === 'type'}
+        title={t('fellowships:fellowshipType')}
+        onClose={() => setOpenPicker(null)}
+        options={Object.values(FellowshipTypeEnum).map((t) => ({ value: t, label: t }))}
+        selected={fellowshipType}
+        onSelect={(v) => {
+          setFellowshipType(v as FellowshipType);
+          clearError('fellowshipType');
+        }}
+      />
+
+      <PickerSheet
+        open={openPicker === 'day'}
+        title={t('fellowships:meetingDay')}
+        onClose={() => setOpenPicker(null)}
+        options={DAY_OPTIONS.map((d) => ({ value: d, label: d }))}
+        selected={meetingDay}
+        onSelect={setMeetingDay}
+      />
+
+      <PickerSheet
+        open={openPicker === 'schedule'}
+        title={t('fellowships:schedule')}
+        onClose={() => setOpenPicker(null)}
+        options={SCHEDULE_OPTIONS.map((s) => ({ value: s, label: s }))}
+        selected={meetingSchedule}
+        onSelect={setMeetingSchedule}
+      />
+    </KeyboardAvoidingView>
+  );
+}
+
+function FieldLabel({ label, required }: { label: string; required?: boolean }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <View style={styles.fieldLabelRow}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      {required ? <Text style={styles.requiredMark}>*</Text> : null}
+    </View>
+  );
+}
+
+function PickerField({
+  value,
+  placeholder,
+  onPress,
+  error,
+}: {
+  value: string;
+  placeholder: string;
+  onPress: () => void;
+  error?: string;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <View style={{ gap: 4 }}>
+      <Pressable
+        style={[styles.pickerField, error ? styles.pickerFieldError : null]}
+        onPress={onPress}
+      >
+        <Text style={value ? styles.pickerValue : styles.pickerPlaceholder}>
+          {value || placeholder}
+        </Text>
+        <ChevronRight color={c.inkFaded} size={16} strokeWidth={1.5} />
+      </Pressable>
+      {error ? <Text style={styles.errorLine}>{error}</Text> : null}
+    </View>
+  );
+}
+
+function PickerSheet({
+  open,
+  title,
+  onClose,
+  options,
+  selected,
+  onSelect,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  options: { value: string; label: string }[];
+  selected: string;
+  onSelect: (value: string) => void;
+}) {  const { t } = useTranslation(['fellowships', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <Modal visible={open} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <View style={styles.sheetHandle} />
+          <Text style={styles.sheetTitle}>{title}</Text>
+          <ScrollView style={{ maxHeight: 380 }}>
+            {options.map((opt) => {
+              const isSelected = opt.value === selected;
+              return (
+                <Pressable
+                  key={opt.value}
+                  style={[styles.sheetOption, isSelected && styles.sheetOptionActive]}
+                  onPress={() => {
+                    onSelect(opt.value);
+                    onClose();
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.sheetOptionLabel,
+                      isSelected && styles.sheetOptionLabelActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                  {isSelected ? (
+                    <Check color={c.primary} size={16} strokeWidth={2} />
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+          <Pressable style={styles.sheetCancel} onPress={onClose}>
+            <Text style={styles.sheetCancelLabel}>{t('fellowships:cancel')}</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  container: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
+  },
+  sectionEyebrow: {
+    ...typography.eyebrow,
+    color: c.inkMuted,
+  },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  fieldLabel: {
+    ...typography.eyebrow,
+    color: c.ink,
+    opacity: 0.6,
+  },
+  requiredMark: {
+    ...typography.eyebrow,
+    color: c.danger,
+  },
+  pickerField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: c.card,
+    borderWidth: 1,
+    borderColor: c.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    minHeight: 44,
+  },
+  pickerFieldError: {
+    borderColor: c.danger,
+    borderWidth: 1.5,
+  },
+  pickerValue: { ...typography.body, color: c.ink, flex: 1 },
+  pickerPlaceholder: {
+    ...typography.body,
+    color: c.inkFaded,
+    flex: 1,
+  },
+  errorLine: {
+    ...typography.meta,
+    color: c.danger,
+  },
+  hint: {
+    ...typography.meta,
+    color: c.inkFaded,
+    lineHeight: 16,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(10,10,15,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: c.card,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    paddingTop: spacing.md,
+    gap: spacing.md,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: c.inkGhost,
+    alignSelf: 'center',
+  },
+  sheetTitle: {
+    ...typography.cardTitle,
+    color: c.ink,
+  },
+  sheetOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: c.divider,
+  },
+  sheetOptionActive: {
+    backgroundColor: 'rgba(93,63,211,0.06)',
+  },
+  sheetOptionLabel: { ...typography.body, color: c.ink },
+  sheetOptionLabelActive: {
+    color: c.primary,
+    fontWeight: '600',
+  },
+  sheetCancel: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  sheetCancelLabel: {
+    ...typography.button,
+    color: c.primary,
+  },
+});
+}
+

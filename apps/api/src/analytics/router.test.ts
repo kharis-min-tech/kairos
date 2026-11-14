@@ -65,7 +65,8 @@ describe('GET /api/analytics/admin', () => {
       .mockReturnValueOnce(chainTo([{ value: 10 }]))    // breakdown.visitors
       .mockReturnValueOnce(chainTo([{ value: 3 }]))     // breakdown.children
       .mockReturnValueOnce(chainTo([{ value: 158 }]))   // breakdown.total
-      .mockReturnValueOnce(chainTo([{ value: 15 }]));   // fellowships
+      .mockReturnValueOnce(chainTo([{ value: 15 }]))    // fellowships
+      .mockReturnValueOnce(chainTo([{ value: 22 }]));   // pendingApprovals
 
     // approvalStats
     mockDb.select.mockReturnValueOnce(
@@ -95,6 +96,7 @@ describe('GET /api/analytics/admin', () => {
     expect(body.data.memberBreakdown).toEqual({ members: 120, returners: 25, visitors: 10, children: 3 });
     expect(body.data.totalMembers).toBe(120);
     expect(body.data.totalFellowships).toBe(15);
+    expect(body.data.pendingApprovals).toBe(22);
   });
 });
 

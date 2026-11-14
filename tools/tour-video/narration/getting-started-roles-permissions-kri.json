@@ -1,0 +1,19 @@
+{
+  "role": "getting-started-roles-permissions-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Udat Kin Du Wetin",
+      "caption": "Tu sistem rol, plɛnti grant.",
+      "speech": "Kairos de kip tu sistem rol nɔmɔ, admin ɛn mɛmba. Ɔl di ɔda tin na grant: wan rol we tay to wan spɛshal ples."
+    },
+    {
+      "n": 2,
+      "title": "Si am pan Akawnt",
+      "caption": "Opin di pɔsin, rid di grant dɛn.",
+      "speech": "Opin sɔmbɔdi ɛn yu kin si ɛvri grant we dɛn gɛt ɛn usay i de wok, we na di trutru ansa to wetin mek dɛn kin si wan pej."
+    }
+  ]
+}

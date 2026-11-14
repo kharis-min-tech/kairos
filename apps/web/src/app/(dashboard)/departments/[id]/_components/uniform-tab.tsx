@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Button,
@@ -15,6 +15,7 @@ import {
   Textarea,
 } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
+import { ImageUpload } from '@/components/image-upload';
 import {
   useDepartmentOutfits,
   useUniformSchedule,
@@ -26,6 +27,7 @@ import {
 import { UniformGenderTarget } from '@kairos/types';
 import type { DepartmentUniformOutfit, DepartmentUniformScheduleWithOutfit } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 const GENDER_TARGETS = Object.values(UniformGenderTarget);
 
@@ -43,43 +45,6 @@ function GenderPill({ value, className = '' }: { value: string; className?: stri
       {value}
     </span>
   );
-}
-
-const MAX_IMAGE_BYTES = 500_000;
-
-function resizeImageToBase64(file: File, maxDim = 800, quality = 0.85): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas context unavailable'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('Image load failed'));
-    };
-    img.src = objectUrl;
-  });
 }
 
 function formatDateLong(iso: string): string {
@@ -131,7 +96,8 @@ interface UniformTabProps {
   canManage: boolean;
 }
 
-export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
+export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const today = todayIso();
   const todayDate = new Date(today);
   const fromIso = today;
@@ -168,7 +134,7 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
       {todaysAssignments.length > 0 && (
         <Card className="border-[#f8b537]/40 bg-[#f8b537]/5">
           <CardHeader>
-            <CardTitle className="text-base">Today&apos;s uniform</CardTitle>
+            <CardTitle className="text-base">{t('departments:todaysUniform')}</CardTitle>
             <CardDescription>{formatDateLong(today)}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -191,8 +157,8 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Upcoming uniforms</CardTitle>
-            <CardDescription>Next 90 days</CardDescription>
+            <CardTitle className="text-base">{t('departments:upcomingUniforms')}</CardTitle>
+            <CardDescription>{t('departments:nextDays')}</CardDescription>
           </div>
           {canManage && (
             <Button
@@ -214,11 +180,11 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
             />
           )}
           {scheduleQuery.isLoading ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Loading…</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loading')}</p>
           ) : upcomingAssignments.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No upcoming assignments.{' '}
-              {canManage && outfits.length > 0 && 'Use “Assign date” to schedule one.'}
+              {t('departments:noUpcomingAssignments2')}{' '}
+              {canManage && outfits.length > 0 && t('departments:useAssignDateToSchedule')}
               {canManage && outfits.length === 0 && 'Upload an outfit first.'}
             </p>
           ) : (
@@ -240,9 +206,9 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Outfit gallery</CardTitle>
+            <CardTitle className="text-base">{t('departments:outfitGallery')}</CardTitle>
             <CardDescription>
-              {outfits.length} {outfits.length === 1 ? 'outfit' : 'outfits'} available
+              {t('departments:outfitsAvailableCount', { count: outfits.length })}
             </CardDescription>
           </div>
           {canManage && (
@@ -287,16 +253,14 @@ export function UniformTab({ branchDeptId, canManage }: UniformTabProps) {
             </div>
           )}
           {outfitsQuery.isLoading ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Loading gallery…</p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loadingGallery')}</p>
           ) : outfits.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No outfits yet.{' '}
-              {canManage ? 'Upload your first outfit to start scheduling.' : ''}
+              {t('departments:noOutfitsYet2')}{' '}
+              {canManage ? t('departments:uploadFirstOutfit') : ''}
             </p>
           ) : filteredOutfits.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No outfits in this category.
-            </p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:noOutfitsInThisCategory')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {filteredOutfits.map((o) => (
@@ -325,21 +289,22 @@ function OutfitCard({
   outfit: DepartmentUniformOutfit;
   canManage: boolean;
   branchDeptId: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const deactivate = useDeactivateOutfit();
   const { confirm, dialog: confirmDialog } = useConfirm();
   const handleArchive = async () => {
     const ok = await confirm({
-      title: `Archive “${outfit.name}”?`,
-      description: 'The outfit will no longer be available for new uniform schedules.',
-      confirmLabel: 'Archive',
+      title: t('departments:archiveV1', { v1: outfit.name }),
+      description: t('departments:theOutfitWillNoLongerBe'),
+      confirmLabel: t('departments:archive'),
       variant: 'destructive',
     });
     if (!ok) return;
     deactivate.mutate(
       { branchDeptId, outfitId: outfit.id },
       {
-        onSuccess: () => toast.success('Outfit archived'),
+        onSuccess: () => toast.success(t('departments:outfitArchived')),
         onError: (e) => toast.error(e instanceof Error ? e.message : 'Archive failed'),
       },
     );
@@ -369,9 +334,7 @@ function OutfitCard({
             onClick={handleArchive}
             disabled={deactivate.isPending}
             className="mt-auto justify-start px-0 text-xs text-muted-foreground hover:text-destructive"
-          >
-            Archive
-          </Button>
+          >{t('departments:archive')}</Button>
         )}
       </div>
     </div>
@@ -390,21 +353,22 @@ function AssignmentCard({
   canManage: boolean;
   branchDeptId: string;
   highlight?: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const remove = useRemoveUniformAssignment();
   const { confirm, dialog: confirmDialog } = useConfirm();
   const handleRemove = async () => {
     const ok = await confirm({
-      title: `Remove uniform assignment for ${formatDateLong(assignment.serviceDate)}?`,
-      description: 'The assignment will be cleared from the schedule. You can add it again later.',
-      confirmLabel: 'Remove',
+      title: t('departments:removeUniformAssignmentV1', { v1: formatDateLong(assignment.serviceDate) }),
+      description: t('departments:theAssignmentWillBeClearedFrom'),
+      confirmLabel: t('departments:remove'),
       variant: 'destructive',
     });
     if (!ok) return;
     remove.mutate(
       { branchDeptId, assignmentId: assignment.id },
       {
-        onSuccess: () => toast.success('Assignment removed'),
+        onSuccess: () => toast.success(t('departments:assignmentRemoved')),
         onError: (e) => toast.error(e instanceof Error ? e.message : 'Remove failed'),
       },
     );
@@ -445,7 +409,7 @@ function AssignmentCard({
           <GenderPill value={assignment.genderTarget} />
           <span className="text-[11px] text-muted-foreground">
             Affects {assignment.affectsCount}{' '}
-            {assignment.affectsCount === 1 ? 'member' : 'members'}
+            {t('departments:memberWord', { count: assignment.affectsCount })}
           </span>
         </div>
         {assignment.notes && (
@@ -458,9 +422,7 @@ function AssignmentCard({
             onClick={handleRemove}
             disabled={remove.isPending}
             className="mt-auto justify-start px-0 text-xs text-muted-foreground hover:text-destructive"
-          >
-            Remove
-          </Button>
+          >{t('departments:remove')}</Button>
         )}
       </div>
     </div>
@@ -475,35 +437,18 @@ function UploadForm({
 }: {
   branchDeptId: string;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const create = useCreateOutfit();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [genderTarget, setGenderTarget] = useState<string>(UniformGenderTarget.Unisex);
   const [notes, setNotes] = useState('');
-  const [uploading, setUploading] = useState(false);
-
-  const handleFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const dataUri = await resizeImageToBase64(file);
-      if (dataUri.length > MAX_IMAGE_BYTES) {
-        toast.error(`Image too large after compression (${Math.round(dataUri.length / 1024)} KB > 500 KB). Try a smaller source.`);
-        return;
-      }
-      setImageUrl(dataUri);
-    } catch {
-      toast.error('Failed to read image');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !imageUrl) {
-      toast.error('Name and image are required');
+      toast.error(t('departments:nameImageRequired'));
       return;
     }
     const trimmedNotes = notes.trim();
@@ -519,7 +464,7 @@ function UploadForm({
       },
       {
         onSuccess: () => {
-          toast.success('Outfit added');
+          toast.success(t('departments:outfitAdded'));
           setName('');
           setImageUrl('');
           setGenderTarget(UniformGenderTarget.Unisex);
@@ -538,18 +483,18 @@ function UploadForm({
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="outfit-name">Name</Label>
+          <Label htmlFor="outfit-name">{t('departments:name')}</Label>
           <Input
             id="outfit-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. White on white"
+            placeholder={t('departments:eGWhiteOnWhite')}
             maxLength={150}
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Gender target</Label>
+          <Label>{t('departments:genderTarget')}</Label>
           <CustomSelect
             value={genderTarget}
             onValueChange={setGenderTarget}
@@ -559,73 +504,41 @@ function UploadForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label>Image</Label>
-        <div className="flex items-center gap-3">
-          {imageUrl ? (
-            <div className="h-20 w-20 overflow-hidden rounded-[4px] bg-surface-container-low">
-              <img src={imageUrl} alt="preview" className="h-full w-full object-cover" />
-            </div>
-          ) : (
-            <div className="flex h-20 w-20 items-center justify-center rounded-[4px] bg-surface-container-low text-xs text-muted-foreground">
-              No image
-            </div>
-          )}
-          <div className="flex flex-col gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void handleFile(file);
-              }}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? 'Processing…' : imageUrl ? 'Replace image' : 'Choose image'}
-            </Button>
-            {imageUrl && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setImageUrl('')}
-                className="text-xs text-muted-foreground"
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          JPG/PNG/WebP, auto-resized to ≤800px and ≤500KB.
-        </p>
+        <Label>{t('departments:image')}</Label>
+        <ImageUpload
+          purpose="uniform-outfit"
+          previewUrl={imageUrl || null}
+          onUploaded={setImageUrl}
+          onError={(msg) => toast.error(msg)}
+        />
+        {imageUrl && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setImageUrl('')}
+            className="text-xs text-muted-foreground"
+          >{t('departments:clear')}</Button>
+        )}
+        <p className="text-xs text-muted-foreground">{t('departments:jpgPngWebpResizedBeforeUpload')}</p>
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="outfit-notes">Notes (optional)</Label>
+        <Label htmlFor="outfit-notes">{t('departments:notesOptional')}</Label>
         <Textarea
           id="outfit-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Fabric, accessories, sourcing…"
+          placeholder={t('departments:fabricAccessoriesSourcing')}
           rows={2}
           maxLength={2000}
         />
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onDone} disabled={create.isPending}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={create.isPending || uploading || !imageUrl}>
-          {create.isPending ? 'Saving…' : 'Add outfit'}
+        <Button type="button" variant="ghost" onClick={onDone} disabled={create.isPending}>{t('departments:cancel')}</Button>
+        <Button type="submit" disabled={create.isPending || !imageUrl}>
+          {create.isPending ? t('departments:saving') : t('departments:addOutfit')}
         </Button>
       </div>
     </form>
@@ -642,7 +555,8 @@ function AssignForm({
   branchDeptId: string;
   outfits: DepartmentUniformOutfit[];
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const assign = useAssignUniform();
   const [outfitId, setOutfitId] = useState<string>(outfits[0]?.id ?? '');
   const [serviceDate, setServiceDate] = useState<string>(nextSundayIso());
@@ -653,7 +567,7 @@ function AssignForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!outfitId || !serviceDate) {
-      toast.error('Outfit and date are required');
+      toast.error(t('departments:outfitDateRequired'));
       return;
     }
     assign.mutate(
@@ -668,7 +582,7 @@ function AssignForm({
       },
       {
         onSuccess: () => {
-          toast.success('Uniform scheduled');
+          toast.success(t('departments:uniformScheduled'));
           setNotes('');
           onDone();
         },
@@ -684,7 +598,7 @@ function AssignForm({
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>Outfit</Label>
+          <Label>{t('departments:outfit')}</Label>
           <CustomSelect
             value={outfitId}
             onValueChange={setOutfitId}
@@ -695,29 +609,27 @@ function AssignForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Service date</Label>
+          <Label>{t('departments:serviceDate')}</Label>
           <DateSelect value={serviceDate} onChange={setServiceDate} minDate={todayIso()} />
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="assign-notes">Notes (optional)</Label>
+        <Label htmlFor="assign-notes">{t('departments:notesOptional')}</Label>
         <Textarea
           id="assign-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Special instructions for the team"
+          placeholder={t('departments:specialInstructionsForTheTeam')}
           rows={2}
           maxLength={2000}
         />
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onDone} disabled={assign.isPending}>
-          Cancel
-        </Button>
+        <Button type="button" variant="ghost" onClick={onDone} disabled={assign.isPending}>{t('departments:cancel')}</Button>
         <Button type="submit" disabled={assign.isPending}>
-          {assign.isPending ? 'Saving…' : 'Schedule'}
+          {assign.isPending ? t('departments:saving') : t('departments:schedule')}
         </Button>
       </div>
     </form>

@@ -1,0 +1,14 @@
+node_modules/
+out/
+public/capture/
+public/voice/
+timings/
+marks-*.json
+
+# The Deepgram key. The root .gitignore already covers `.env` at any depth;
+# repeated here so it is visible to anyone reading this folder.
+.env
+
+# Playwright writes the raw recording here under a hashed name and record.mjs
+# renames it into public/capture. One of these was committed by accident.
+.capture-tmp/

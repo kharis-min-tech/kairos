@@ -9,9 +9,14 @@ import type {
   ResetPasswordRequest,
   VerifyEmailRequest,
   RefreshRequest,
+  OAuthConnection,
+  OAuthConfirmLinkRequest,
+  OAuthProviderId,
+  CompleteOAuthProfileRequest,
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
+  UpdateRegionRequest,
   GetLeadershipParams,
   AssignLeadershipRequest,
   UpdateMemberRequest,
@@ -50,6 +55,7 @@ import type {
   SwitchActiveBranchResponse,
   // New Believers
   NewBelieverEnrollment,
+  NewBelieverEnrollmentDetail,
   NewBelieverEnrollmentWithMember,
   NewBelieverSession,
   NewBelieverAttendanceWithMember,
@@ -78,11 +84,19 @@ import type {
   DormantAttendee,
   ListDormantAttendeesParams,
   ArchiveAttendeesRequest,
+  MintUploadUrlRequest,
+  MintUploadUrlResponse,
   ArchiveAttendeesResult,
   DormantVisitor,
   ListDormantVisitorsParams,
   FormsCapabilities,
   // Me / Leadership
+  MeActivityItem,
+  MeApprovalItem,
+  MeFollowupItem,
+  FollowupQueueRow,
+  DueFollowupRow,
+  MeHomeResponse,
   MeLeadershipResponse,
   ListNotificationPreferencesResponse,
   NotificationPreferencePayload,
@@ -91,6 +105,8 @@ import type {
   ListMyConsentResponse,
   ConsentStatus,
   RecordConsentRequest,
+  DeleteAccountRequest,
+  MyDataExport,
   // Branch role management
   BranchRoleAssignment,
   AssignBranchRoleRequest,
@@ -105,6 +121,10 @@ import type {
   RecordServiceAttendanceRequest,
   RecordAttendanceResult,
   ServiceAttendanceRow,
+  SelfCheckInResult,
+  SelfCheckInCandidate,
+  QrTokenPayload,
+  SelfCheckInQrRequest,
   AttendanceTrendPoint,
   AttendanceTrendsParams,
   MissingMember,
@@ -118,9 +138,44 @@ import type {
   MyAttendanceSnapshot,
   DepartmentAttendanceReport,
   FellowshipAttendanceReport,
+  AttendanceHeatmap,
+  AttendanceHeatmapParams,
+  FrequencyBucketReport,
+  FrequencyBucketParams,
+  FirstTimeReturningPoint,
+  FirstTimeReturningParams,
 } from '@kairos/types';
 
-import type { FormType } from '@kairos/types';
+import type {
+  FormType,
+  MemberFollowupHistoryItem,
+  ConcernInboxItem,
+} from '@kairos/types';
+
+import type {
+  MembershipCohort,
+  MembershipCohortSummary,
+  MembershipInterest,
+  MembershipInterestWithMember,
+  MembershipSession,
+  MembershipEnrollment,
+  MembershipEnrollmentWithMember,
+  MembershipEnrollmentDetail,
+  MembershipGraduationReadiness,
+  MembershipBranchViewResponse,
+  CreateMembershipCohortRequest,
+  UpdateMembershipCohortRequest,
+  UpsertMembershipSessionRequest,
+  AdmitMembersRequest,
+  ListMembershipInterestQuery,
+  SaveMembershipSessionRecordsRequest,
+  RecordFinalTestRequest,
+  RecordInductionRequest,
+  GraduateMembersRequest,
+  WithdrawMembershipEnrollmentRequest,
+  MembershipCohortStatus,
+  MembershipEnrollmentStatus,
+} from '@kairos/types';
 
 import type {
   Branch,
@@ -183,7 +238,7 @@ export function createApiClient(
   return {
     auth: {
       signup: (data: SignupRequest) =>
-        client.post<ApiResponse<{ member: MemberProfile; verificationToken: string }>>('/api/auth/signup', data),
+        client.post<ApiResponse<{ member: MemberProfile; verificationToken?: string }>>('/api/auth/signup', data),
       login: (data: LoginRequest) =>
         client.post<ApiResponse<LoginResponse>>('/api/auth/login', data),
       refresh: (data: RefreshRequest) =>
@@ -202,6 +257,28 @@ export function createApiClient(
         client.post<ApiResponse<void>>('/api/auth/email-change/confirm', data),
       undoEmailChange: (data: { token: string }) =>
         client.post<ApiResponse<{ resetToken: string }>>('/api/auth/email-change/undo', data),
+      completeOauthProfile: (data: CompleteOAuthProfileRequest) =>
+        client.post<ApiResponse<{ member: MemberProfile }>>(
+          '/api/auth/complete-oauth-profile',
+          data,
+        ),
+      oauth: {
+        /**
+         * Compose a top-level redirect URL to the provider handshake. NOT a
+         * fetch — callers `window.location.assign(...)` this. Kept here so
+         * base-URL construction lives with the rest of the auth surface.
+         */
+        startUrl: (provider: OAuthProviderId, returnTo?: string) => {
+          const qs = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+          return `${baseUrl.replace(/\/$/, '')}/api/auth/oauth/${provider}/start${qs}`;
+        },
+        listConnections: () =>
+          client.get<ApiResponse<OAuthConnection[]>>('/api/auth/oauth/connections'),
+        disconnect: (provider: OAuthProviderId) =>
+          client.delete<ApiResponse<OAuthConnection[]>>(`/api/auth/oauth/connections/${provider}`),
+        confirmLink: (data: OAuthConfirmLinkRequest) =>
+          client.post<ApiResponse<LoginResponse>>('/api/auth/oauth/confirm-link', data),
+      },
     },
 
     branches: {
@@ -224,6 +301,10 @@ export function createApiClient(
         client.get<ApiResponse<Region[]>>('/api/branches/regions'),
       create: (data: CreateRegionRequest) =>
         client.post<ApiResponse<Region>>('/api/branches/regions', data),
+      update: (id: string, data: UpdateRegionRequest) =>
+        client.patch<ApiResponse<Region>>(`/api/branches/regions/${encodeURIComponent(id)}`, data),
+      delete: (id: string) =>
+        client.delete<ApiResponse<void>>(`/api/branches/regions/${encodeURIComponent(id)}`),
     },
 
     leadership: {
@@ -261,6 +342,7 @@ export function createApiClient(
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.approvalStatus) qs.set('approvalStatus', params.approvalStatus);
         if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        if (params?.memberType) qs.set('memberType', params.memberType);
         const query = qs.toString();
         return client.get<ApiResponse<PaginatedResponse<MemberWithBranchProtected>>>(`/api/members${query ? `?${query}` : ''}`);
       },
@@ -287,6 +369,10 @@ export function createApiClient(
         ),
       stats: (id: string) =>
         client.get<ApiResponse<MemberDashboardStats>>(`/api/members/${encodeURIComponent(id)}/stats`),
+      followupHistory: (id: string) =>
+        client.get<ApiResponse<MemberFollowupHistoryItem[]>>(
+          `/api/members/${encodeURIComponent(id)}/followups`,
+        ),
       me: () =>
         client.get<ApiResponse<Member>>('/api/members/me'),
       switchActiveBranch: (id: string) =>
@@ -578,15 +664,7 @@ export function createApiClient(
         create: (
           branchDeptId: string,
           memberId: string,
-          data: {
-            contactedAt?: string;
-            contactMethod: string;
-            contactStatus: string;
-            durationMinutes?: number | null;
-            notes?: string | null;
-            nextFollowUpDate?: string | null;
-            assignedToId?: string | null;
-          },
+          data: CreateFellowshipFollowupRequest,
         ) =>
           client.post<ApiResponse<DepartmentFollowup>>(`/api/departments/${encodeURIComponent(branchDeptId)}/members/${encodeURIComponent(memberId)}/followups`, data),
         update: (
@@ -796,6 +874,41 @@ export function createApiClient(
       },
     },
 
+    /**
+     * Cross-cutting follow-ups. Fellowship- and department-context writes live
+     * on their own module routes, where the route itself declares the context;
+     * these are the branch context and the queues of people who need a
+     * follow-up but belong to no group.
+     */
+    followups: {
+      createBranchFollowup: (data: Record<string, unknown>) =>
+        client.post<ApiResponse<Record<string, unknown>>>('/api/followups', data),
+      firstTimerQueue: (params?: { branchId?: string; limit?: number }) => {
+        const query = new URLSearchParams(
+          Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][],
+        ).toString();
+        return client.get<ApiResponse<FollowupQueueRow[]>>(
+          `/api/followups/queues/first-timers${query ? `?${query}` : ''}`,
+        );
+      },
+      noGroupQueue: (params?: { branchId?: string; limit?: number }) => {
+        const query = new URLSearchParams(
+          Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][],
+        ).toString();
+        return client.get<ApiResponse<FollowupQueueRow[]>>(
+          `/api/followups/queues/no-group${query ? `?${query}` : ''}`,
+        );
+      },
+      due: (params?: { branchId?: string; limit?: number }) => {
+        const query = new URLSearchParams(
+          Object.entries(params ?? {}).filter(([, v]) => v !== undefined) as [string, string][],
+        ).toString();
+        return client.get<ApiResponse<DueFollowupRow[]>>(
+          `/api/followups/due${query ? `?${query}` : ''}`,
+        );
+      },
+    },
+
     me: {
       rota: (params?: { from?: string; to?: string }) => {
         const qs = new URLSearchParams();
@@ -815,8 +928,22 @@ export function createApiClient(
           instanceStatus: string;
         }>>>(`/api/me/rota${query ? `?${query}` : ''}`);
       },
+      /** The control-centre payload — one request per home-screen render. */
+      home: () => client.get<ApiResponse<MeHomeResponse>>('/api/me/home'),
       leadership: () =>
         client.get<ApiResponse<MeLeadershipResponse>>('/api/me/leadership'),
+      approvals: () =>
+        client.get<ApiResponse<MeApprovalItem[]>>('/api/me/approvals'),
+      followups: () =>
+        client.get<ApiResponse<MeFollowupItem[]>>('/api/me/followups'),
+      welfareInbox: () =>
+        client.get<ApiResponse<ConcernInboxItem[]>>('/api/me/followups/welfare'),
+      safeguardingInbox: () =>
+        client.get<ApiResponse<ConcernInboxItem[]>>(
+          '/api/me/followups/safeguarding',
+        ),
+      activity: () =>
+        client.get<ApiResponse<MeActivityItem[]>>('/api/me/activity'),
       notificationPreferences: {
         list: () =>
           client.get<ApiResponse<ListNotificationPreferencesResponse>>(
@@ -836,6 +963,10 @@ export function createApiClient(
         record: (data: RecordConsentRequest) =>
           client.post<ApiResponse<ConsentStatus>>('/api/me/consent', data),
       },
+      exportData: () =>
+        client.get<ApiResponse<MyDataExport>>('/api/me/export'),
+      deleteAccount: (data: DeleteAccountRequest) =>
+        client.post<ApiResponse<{ deleted: true }>>('/api/me/delete-account', data),
     },
 
     analytics: {
@@ -1030,7 +1161,7 @@ export function createApiClient(
         alerts: () =>
           client.get<ApiResponse<{ data: NewBelieverEnrollmentWithMember[]; total: number; page: number; limit: number }>>('/api/new-believers/enrollments/alerts'),
         get: (id: string) =>
-          client.get<ApiResponse<NewBelieverEnrollmentWithMember>>(`/api/new-believers/enrollments/${id}`),
+          client.get<ApiResponse<NewBelieverEnrollmentDetail>>(`/api/new-believers/enrollments/${id}`),
         create: (data: CreateEnrollmentRequest) =>
           client.post<ApiResponse<NewBelieverEnrollment>>('/api/new-believers/enrollments', data),
         update: (id: string, data: UpdateEnrollmentRequest) =>
@@ -1063,10 +1194,182 @@ export function createApiClient(
       },
     },
 
+    // Membership classes. Cohorts are church-wide, so nothing here takes a
+    // branchId — see packages/database/src/schema/membership.ts.
+    membership: {
+      /**
+       * The caller's own membership. Always allowed, never gated.
+       *
+       * `interest` is their most recent pool entry of ANY status, so the
+       * screen can say "your place lapsed" rather than silently offering the
+       * sign-up button again as though nothing had happened.
+       */
+      me: () =>
+        client.get<
+          ApiResponse<{
+            enrollment: MembershipEnrollmentDetail | null;
+            readiness: MembershipGraduationReadiness | null;
+            interest: MembershipInterest | null;
+            confirmedAt: string | null;
+          }>
+        >('/api/membership/me'),
+
+      /**
+       * Champion's / admin's read-only view of their branch's waitlist +
+       * admitted members. Multi-branch Champions see the union.
+       */
+      branchView: () =>
+        client.get<ApiResponse<MembershipBranchViewResponse>>(
+          '/api/membership/branch-view',
+        ),
+
+      /**
+       * The interest pool. Enrolment is not self-service: a member expresses
+       * interest here and an admin later admits them into a cohort.
+       */
+      interest: {
+        /** Join the pool. The caller's own action; needs no capability. */
+        express: () =>
+          client.post<ApiResponse<MembershipInterest>>('/api/membership/interest', {}),
+        /** Leave the pool. Terminal — re-joining later starts a fresh wait. */
+        withdraw: () =>
+          client.delete<ApiResponse<MembershipInterest>>('/api/membership/interest'),
+        /** The admin's view of who is waiting. Defaults to status=waiting. */
+        list: (params?: ListMembershipInterestQuery) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.search) qs.set('search', params.search);
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          const q = qs.toString();
+          return client.get<
+            ApiResponse<{
+              interest: MembershipInterestWithMember[];
+              pagination: { page: number; limit: number; total: number; totalPages: number };
+            }>
+          >(`/api/membership/interest${q ? `?${q}` : ''}`);
+        },
+      },
+
+      cohorts: {
+        list: (params?: {
+          status?: MembershipCohortStatus;
+          enrolmentOpen?: boolean;
+          includeInactive?: boolean;
+          page?: number;
+          limit?: number;
+        }) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          if (params?.enrolmentOpen !== undefined)
+            qs.set('enrolmentOpen', String(params.enrolmentOpen));
+          if (params?.includeInactive) qs.set('includeInactive', 'true');
+          if (params?.page) qs.set('page', String(params.page));
+          if (params?.limit) qs.set('limit', String(params.limit));
+          const q = qs.toString();
+          return client.get<
+            ApiResponse<{
+              cohorts: MembershipCohortSummary[];
+              pagination: { page: number; limit: number; total: number; totalPages: number };
+            }>
+          >(`/api/membership/cohorts${q ? `?${q}` : ''}`);
+        },
+        // Teachers come back on the sessions, not the cohort: each session
+        // names whoever taught it, and that varies within one cohort.
+        get: (id: string) =>
+          client.get<ApiResponse<MembershipCohort & { sessions: MembershipSession[] }>>(
+            `/api/membership/cohorts/${id}`,
+          ),
+        create: (data: CreateMembershipCohortRequest) =>
+          client.post<ApiResponse<MembershipCohort>>('/api/membership/cohorts', data),
+        update: (id: string, data: UpdateMembershipCohortRequest) =>
+          client.patch<ApiResponse<MembershipCohort>>(`/api/membership/cohorts/${id}`, data),
+        archive: (id: string) =>
+          client.delete<ApiResponse<MembershipCohort>>(`/api/membership/cohorts/${id}`),
+
+        /**
+         * Upsert by session number: one session 3 per cohort, always.
+         * `teacherId` names whoever is teaching that single session and
+         * confers no permissions.
+         */
+        saveSession: (id: string, data: UpsertMembershipSessionRequest) =>
+          client.put<ApiResponse<MembershipSession>>(
+            `/api/membership/cohorts/${id}/sessions`,
+            data,
+          ),
+
+        /**
+         * Admit people into this cohort. The only way in. Named members who
+         * hold a waiting pool entry have it closed in the same call.
+         */
+        admit: (id: string, data: AdmitMembersRequest) =>
+          client.post<ApiResponse<MembershipEnrollment[]>>(
+            `/api/membership/cohorts/${id}/admit`,
+            data,
+          ),
+        enrollments: (
+          id: string,
+          params?: { status?: MembershipEnrollmentStatus; branchId?: string; search?: string },
+        ) => {
+          const qs = new URLSearchParams();
+          if (params?.status) qs.set('status', params.status);
+          if (params?.branchId) qs.set('branchId', params.branchId);
+          if (params?.search) qs.set('search', params.search);
+          const q = qs.toString();
+          return client.get<ApiResponse<MembershipEnrollmentWithMember[]>>(
+            `/api/membership/cohorts/${id}/enrollments${q ? `?${q}` : ''}`,
+          );
+        },
+
+        recordInduction: (id: string, data: RecordInductionRequest) =>
+          client.post<ApiResponse<{ updated: number; enrollments: MembershipEnrollment[] }>>(
+            `/api/membership/cohorts/${id}/induction`,
+            data,
+          ),
+        graduate: (id: string, data: GraduateMembersRequest) =>
+          client.post<
+            ApiResponse<{
+              graduated: number;
+              graduatedIds: string[];
+              blocked: { enrollmentId: string; outstanding: string[] }[];
+            }>
+          >(`/api/membership/cohorts/${id}/graduate`, data),
+      },
+
+      sessions: {
+        /** One write for the whole register: attendance plus homework and quiz. */
+        saveRecords: (sessionId: string, data: SaveMembershipSessionRecordsRequest) =>
+          client.put<ApiResponse<{ saved: number }>>(
+            `/api/membership/sessions/${sessionId}/records`,
+            data,
+          ),
+      },
+
+      recordFinalTest: (data: RecordFinalTestRequest) =>
+        client.post<ApiResponse<MembershipEnrollment>>('/api/membership/final-test', data),
+
+      enrollments: {
+        get: (enrollmentId: string) =>
+          client.get<ApiResponse<MembershipEnrollmentDetail>>(
+            `/api/membership/enrollments/${enrollmentId}`,
+          ),
+        withdraw: (enrollmentId: string, data: WithdrawMembershipEnrollmentRequest) =>
+          client.post<ApiResponse<MembershipEnrollment>>(
+            `/api/membership/enrollments/${enrollmentId}/withdraw`,
+            data,
+          ),
+      },
+    },
+
     forms: {
       // Caller capabilities — drives /forms landing + filter gating.
       myCapabilities: () =>
         client.get<ApiResponse<FormsCapabilities>>('/api/forms/me/capabilities'),
+
+      // Caller's own submissions — personal paper trail across branches.
+      mySubmissions: () =>
+        client.get<ApiResponse<FormSubmission[]>>('/api/forms/me/submissions'),
 
       // Submit a form (any logged-in member). Branch is forced server-side.
       submit: (formType: FormType, data: SubmitFormRequest) =>
@@ -1163,6 +1466,24 @@ export function createApiClient(
         client.post<ApiResponse<RecordAttendanceResult>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`, data),
       listAttendance: (serviceId: string) =>
         client.get<ApiResponse<ServiceAttendanceRow[]>>(`/api/attendance/services/${encodeURIComponent(serviceId)}/records`),
+      selfCheckIn: (serviceId: string) =>
+        client.post<ApiResponse<SelfCheckInResult>>(
+          `/api/attendance/services/${encodeURIComponent(serviceId)}/self-check-in`,
+        ),
+      selfCheckInCandidates: () =>
+        client.get<ApiResponse<SelfCheckInCandidate[]>>('/api/attendance/self-check-in/candidates'),
+      // Rotating QR pair: admin polls `getQrToken`; member scan posts to `selfCheckInQr`.
+      // Verifier accepts the current or previous 30s bucket so a scan on the
+      // second before rotation still succeeds.
+      getQrToken: (serviceId: string) =>
+        client.get<ApiResponse<QrTokenPayload>>(
+          `/api/attendance/services/${encodeURIComponent(serviceId)}/qr-token`,
+        ),
+      selfCheckInQr: (params: { serviceId: string } & SelfCheckInQrRequest) =>
+        client.post<ApiResponse<SelfCheckInResult>>(
+          `/api/attendance/services/${encodeURIComponent(params.serviceId)}/self-check-in-qr`,
+          { token: params.token },
+        ),
 
       trends: (params?: AttendanceTrendsParams) => {
         const qs = new URLSearchParams();
@@ -1186,8 +1507,37 @@ export function createApiClient(
         const qs = new URLSearchParams();
         if (params?.branchId) qs.set('branchId', params.branchId);
         if (params?.weeks) qs.set('weeks', String(params.weeks));
+        if (params?.engagedWindowMonths) qs.set('engagedWindowMonths', String(params.engagedWindowMonths));
         const query = qs.toString();
         return client.get<ApiResponse<BranchAttendanceRate[]>>(`/api/attendance/reports/by-branch${query ? `?${query}` : ''}`);
+      },
+      heatmap: (params: AttendanceHeatmapParams) => {
+        const qs = new URLSearchParams();
+        qs.set('branchId', params.branchId);
+        if (params.weeks) qs.set('weeks', String(params.weeks));
+        if (params.departmentId) qs.set('departmentId', params.departmentId);
+        if (params.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        if (params.engagedWindowMonths) qs.set('engagedWindowMonths', String(params.engagedWindowMonths));
+        if (params.engagedOnly !== undefined) qs.set('engagedOnly', String(params.engagedOnly));
+        return client.get<ApiResponse<AttendanceHeatmap>>(`/api/attendance/reports/heatmap?${qs.toString()}`);
+      },
+      frequencyBuckets: (params?: FrequencyBucketParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.engagedWindowMonths) qs.set('engagedWindowMonths', String(params.engagedWindowMonths));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        const query = qs.toString();
+        return client.get<ApiResponse<FrequencyBucketReport>>(`/api/attendance/reports/frequency-buckets${query ? `?${query}` : ''}`);
+      },
+      firstTimeReturning: (params?: FirstTimeReturningParams) => {
+        const qs = new URLSearchParams();
+        if (params?.branchId) qs.set('branchId', params.branchId);
+        if (params?.weeks) qs.set('weeks', String(params.weeks));
+        if (params?.departmentId) qs.set('departmentId', params.departmentId);
+        if (params?.fellowshipId) qs.set('fellowshipId', params.fellowshipId);
+        const query = qs.toString();
+        return client.get<ApiResponse<FirstTimeReturningPoint[]>>(`/api/attendance/reports/first-time-returning${query ? `?${query}` : ''}`);
       },
       summary: (params?: AttendanceSummaryParams) => {
         const qs = new URLSearchParams();
@@ -1228,6 +1578,10 @@ export function createApiClient(
           `/api/attendance/reports/fellowship/${encodeURIComponent(fellowshipId)}${query ? `?${query}` : ''}`,
         );
       },
+    },
+    media: {
+      mintUploadUrl: (data: MintUploadUrlRequest) =>
+        client.post<ApiResponse<MintUploadUrlResponse>>('/api/media/upload-url', data),
     },
   };
 }

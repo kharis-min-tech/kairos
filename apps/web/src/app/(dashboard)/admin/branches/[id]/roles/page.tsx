@@ -10,7 +10,7 @@ import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
 import { useConfirm } from '@/components/confirm-dialog';
 import { MemberAvatar } from '@/components/member-avatar';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import {
   Button,
   Card,
@@ -28,8 +28,10 @@ import {
   Input,
   Label,
 } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
-export default function BranchRolesPage() {
+export default function BranchRolesPage() {  const { t } = useTranslation(['branches', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const activeRole = useAuthStore((s) => s.activeRole);
@@ -84,7 +86,7 @@ export default function BranchRolesPage() {
       <div aria-busy="true" aria-live="polite" className="mx-auto max-w-2xl space-y-6">
         <div className="h-9 w-72 animate-pulse rounded bg-muted/60" />
         <div className="h-56 animate-pulse rounded-lg bg-muted/60" />
-        <span className="sr-only">Loading branch roles</span>
+        <span className="sr-only">{t('branches:loadingBranchRoles')}</span>
       </div>
     );
   }
@@ -97,7 +99,7 @@ export default function BranchRolesPage() {
   if (!branch) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm font-medium text-destructive">Branch not found or access denied.</p>
+        <p className="text-sm font-medium text-destructive">{t('branches:branchNotFoundOrAccessDenied')}</p>
       </div>
     );
   }
@@ -109,32 +111,26 @@ export default function BranchRolesPage() {
         <div>
           <p className="text-xs font-medium text-muted-foreground">
             <Link href={`/admin/branches/${id}`} className="hover:underline">{branch.branchName}</Link>
-            <span className="mx-1.5 text-muted-foreground/60">/</span>
-            Roles
-          </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">Branch System Admins</h1>
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-            Branch System Admins can assign and revoke roles, manage access, and configure branch settings.
-          </p>
+            <span className="mx-1.5 text-muted-foreground/60">/</span>{t('branches:roles')}</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">{t('branches:branchSystemAdmins')}</h1>
+          <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t('branches:branchSystemAdminsCanAssignAnd')}</p>
         </div>
         {canManage && (
           <Button
             variant="success"
             onClick={() => setShowAssign(true)}
-          >
-            Assign Admin
-          </Button>
+          >{t('branches:assignAdmin')}</Button>
         )}
       </div>
 
       {/* List */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Branch System Admins</CardTitle>
+          <CardTitle>{t('branches:currentBranchSystemAdmins')}</CardTitle>
           <CardDescription>
             {isBDA && !canManage
-              ? 'You can view who holds this role, but assigning or revoking requires Branch System Admin authority.'
-              : 'These members have full administrative control over this branch.'}
+              ? t('branches:youViewWhoHoldsRoleBut')
+: t('branches:theseMembersFullAdministrativeControlOver')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -149,7 +145,8 @@ export default function BranchRolesPage() {
             </div>
           ) : activeRoles.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No Branch System Admins assigned yet. {canManage ? 'Add one to get started.' : ''}
+              {t('branches:noBranchSystemAdminsYet')}{' '}
+              {canManage ? t('branches:addOneToGetStarted') : ''}
             </p>
           ) : (
             <ul className="space-y-3">
@@ -172,7 +169,9 @@ export default function BranchRolesPage() {
                         <p className="truncate font-medium">{fullName}</p>
                         <p className="truncate text-sm text-muted-foreground">{assignment.member.email}</p>
                         <p className="text-xs text-muted-foreground">
-                          Assigned {formatShortDate(assignment.assignedDate)}
+                          {t('branches:assignedOn', {
+                            date: formatShortDate(assignment.assignedDate),
+                          })}
                         </p>
                       </div>
                     </div>
@@ -183,21 +182,18 @@ export default function BranchRolesPage() {
                         className="text-destructive hover:bg-destructive/10"
                         disabled={cannotRevoke || revokeBranchRole.isPending}
                         title={cannotRevoke ? 'Cannot revoke the last active Branch System Admin' : undefined}
-                        aria-label={`Revoke Branch System Admin from ${fullName}`}
+                        aria-label={t('branches:revokeBranchSystemAdminV12', { v1: fullName })}
                         onClick={async () => {
                           const ok = await confirm({
-                            title: `Revoke Branch System Admin from ${fullName}?`,
-                            description:
-                              'They will lose access to admin-level branch tools. You can reassign them later.',
-                            confirmLabel: 'Revoke',
+                            title: t('branches:revokeBranchSystemAdminV1', { v1: fullName }),
+                            description: t('branches:revokeBranchAdminDescription'),
+                            confirmLabel: t('branches:revoke'),
                             variant: 'destructive',
                           });
                           if (!ok) return;
                           revokeBranchRole.mutate({ branchId: id, assignmentId: assignment.id });
                         }}
-                      >
-                        Revoke
-                      </Button>
+                      >{t('branches:revoke')}</Button>
                     )}
                   </li>
                 );
@@ -227,24 +223,24 @@ export default function BranchRolesPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign Branch System Admin</DialogTitle>
+            <DialogTitle>{t('branches:assignBranchSystemAdmin')}</DialogTitle>
             <DialogDescription>
-              Select a member of {branch.branchName} to grant Branch System Admin authority.
+              {t('branches:selectMemberToGrantBsa', { branch: branch.branchName })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="member-search">Search members</Label>
+              <Label htmlFor="member-search">{t('branches:searchMembers')}</Label>
               <Input
                 id="member-search"
                 value={memberSearch}
                 onChange={(e) => setMemberSearch(e.target.value)}
-                placeholder="Name or email"
+                placeholder={t('branches:nameOrEmail')}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="assign-member">Member</Label>
+              <Label htmlFor="assign-member">{t('branches:member')}</Label>
               <CustomSelect
                 id="assign-member"
                 value={assignMemberId}
@@ -253,18 +249,16 @@ export default function BranchRolesPage() {
                   membersLoading
                     ? 'Loading members...'
                     : assignableMembers.length === 0
-                      ? 'No assignable members found'
-                      : 'Select a member'
+                      ? t('branches:noAssignableMembersFound')
+: t('branches:selectMember')
                 }
                 options={assignableMembers.map((m) => ({
                   value: m.id,
-                  label: `${m.firstName} ${m.lastName}${m.email ? ` — ${m.email}` : ''}`,
+                  label: `${m.firstName} ${m.lastName}${m.email ? `, ${m.email}` : ''}`,
                 }))}
               />
               {!membersLoading && assignableMembers.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Everyone in this branch is already an admin, or no members match.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('branches:everyoneInThisBranchIsAlready')}</p>
               )}
             </div>
             {assignBranchRole.error && (
@@ -280,9 +274,7 @@ export default function BranchRolesPage() {
               variant="outline"
               disabled={assignBranchRole.isPending}
               onClick={() => setShowAssign(false)}
-            >
-              Cancel
-            </Button>
+            >{t('branches:cancel')}</Button>
             <Button
               type="button"
               variant="success"
@@ -301,7 +293,7 @@ export default function BranchRolesPage() {
                 );
               }}
             >
-              {assignBranchRole.isPending ? 'Assigning...' : 'Assign'}
+              {assignBranchRole.isPending ? t('branches:assigning') : t('branches:assign')}
             </Button>
           </DialogFooter>
         </DialogContent>

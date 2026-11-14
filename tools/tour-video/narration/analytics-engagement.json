@@ -1,0 +1,19 @@
+{
+  "role": "analytics-engagement",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Who is engaged",
+      "caption": "More than just turning up.",
+      "speech": "Engagement counts more than attendance: whether somebody is in a group, serving on a team, and being followed up."
+    },
+    {
+      "n": 2,
+      "title": "The engagement view",
+      "caption": "Where people are falling out.",
+      "speech": "The breakdown shows where people disengage, which is usually before they stop attending rather than after."
+    }
+  ]
+}

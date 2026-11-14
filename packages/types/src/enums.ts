@@ -18,7 +18,7 @@ export type Gender = (typeof Gender)[keyof typeof Gender];
 
 export const LeadershipRole = {
   MainPastor: 'Main Pastor',
-  Elder: 'Elder',
+  Minister: 'Minister',
 } as const;
 export type LeadershipRole = (typeof LeadershipRole)[keyof typeof LeadershipRole];
 

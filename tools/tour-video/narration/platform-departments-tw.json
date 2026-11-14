@@ -1,0 +1,19 @@
+{
+  "role": "platform-departments-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Asomdwuma Akuo",
+      "caption": "Kuo biara, ne hwan na ɔdi anim.",
+      "speech": "Adwumakuo ne asomdwuma akuo no. Biara kyerɛ ne kannifoɔ, ne boafoɔ, ne dodoɔ a wɔsom wɔ mu."
+    },
+    {
+      "n": 2,
+      "title": "Adwumakuo bi mu",
+      "caption": "Mufoɔ, nnwuma, adwumayɛfoɔ pɛ, atadeɛ.",
+      "speech": "Bue bi na wobɛnya ne mufoɔ, ne nnwuma nhyehyɛeɛ, wɔn a wɔpɛ sɛ wɔka ho, ne atadeɛ a ɛwɔ ɔsom a ɛreba no ho."
+    }
+  ]
+}

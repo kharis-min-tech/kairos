@@ -8,14 +8,16 @@ import {
   CardTitle,
 } from '@kairos/ui';
 import { useDepartmentAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { DepartmentAttendanceReport } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
 interface DepartmentAttendanceTabProps {
   branchDepartmentId: string;
 }
 
-export function DepartmentAttendanceTab({ branchDepartmentId }: DepartmentAttendanceTabProps) {
+export function DepartmentAttendanceTab({ branchDepartmentId }: DepartmentAttendanceTabProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data, isLoading, isError, error } = useDepartmentAttendance(branchDepartmentId, { weeks: 12 });
 
   if (isLoading) {
@@ -23,7 +25,7 @@ export function DepartmentAttendanceTab({ branchDepartmentId }: DepartmentAttend
       <div aria-busy="true" aria-live="polite" className="space-y-3">
         <div className="h-32 animate-pulse rounded-xl bg-muted/60" />
         <div className="h-64 animate-pulse rounded-xl bg-muted/60" />
-        <span className="sr-only">Loading department attendance</span>
+        <span className="sr-only">{t('departments:loadingDepartmentAttendance')}</span>
       </div>
     );
   }
@@ -38,7 +40,8 @@ export function DepartmentAttendanceTab({ branchDepartmentId }: DepartmentAttend
   return <Body report={data} />;
 }
 
-function Body({ report }: { report: DepartmentAttendanceReport }) {
+function Body({ report }: { report: DepartmentAttendanceReport }) {  const { t } = useTranslation(['departments', 'common']);
+
   const ratePct = Math.round(report.rate * 100);
   const tone =
     report.activeMembers === 0
@@ -54,12 +57,17 @@ function Body({ report }: { report: DepartmentAttendanceReport }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {report.department.name} · {report.windowWeeks}-week service attendance
+            {t('departments:weekServiceAttendanceFor', {
+              name: report.department.name,
+              weeks: report.windowWeeks,
+            })}
           </CardTitle>
           <CardDescription>
-            Of {report.activeMembers} active member{report.activeMembers === 1 ? '' : 's'},{' '}
-            {report.distinctAttendees} attended at least one of the{' '}
-            {report.totalServices} services in the window.
+            {t('departments:ofActiveMembersAttended', {
+              count: report.activeMembers,
+              attendees: report.distinctAttendees,
+              services: report.totalServices,
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-6">
@@ -67,7 +75,7 @@ function Body({ report }: { report: DepartmentAttendanceReport }) {
             <p className={`text-5xl font-bold ${tone}`}>
               {report.activeMembers === 0 ? '—' : `${ratePct}%`}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">distinct attendees</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('departments:distinctAttendees')}</p>
           </div>
           <TrendSparkline trend={report.trend} />
         </CardContent>
@@ -75,23 +83,21 @@ function Body({ report }: { report: DepartmentAttendanceReport }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Per-member breakdown</CardTitle>
-          <CardDescription>Lowest rate first — focus where it matters.</CardDescription>
+          <CardTitle className="text-base">{t('departments:perMemberBreakdown')}</CardTitle>
+          <CardDescription>{t('departments:lowestRateFirstSoFocusWhere')}</CardDescription>
         </CardHeader>
         <CardContent>
           {report.members.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No active members in this department.
-            </p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:noActiveMembersInThisDepartment')}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="pb-2 font-medium">Member</th>
-                  <th className="pb-2 text-right font-medium">Attended</th>
-                  <th className="pb-2 text-right font-medium">Late</th>
-                  <th className="pb-2 text-right font-medium">Rate</th>
-                  <th className="pb-2 text-right font-medium">Last attended</th>
+                  <th className="pb-2 font-medium">{t('departments:member')}</th>
+                  <th className="pb-2 text-right font-medium">{t('departments:attended')}</th>
+                  <th className="pb-2 text-right font-medium">{t('departments:late')}</th>
+                  <th className="pb-2 text-right font-medium">{t('departments:rate')}</th>
+                  <th className="pb-2 text-right font-medium">{t('departments:lastAttended')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -132,24 +138,28 @@ function Body({ report }: { report: DepartmentAttendanceReport }) {
   );
 }
 
-function TrendSparkline({ trend }: { trend: Array<{ weekStart: string; attendees: number }> }) {
+function TrendSparkline({ trend }: { trend: Array<{ weekStart: string; attendees: number }> }) {  const { t } = useTranslation(['departments', 'common']);
+
   if (trend.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground">No attended services in this window yet.</p>
+      <p className="text-xs text-muted-foreground">{t('departments:noAttendedServicesInThisWindow')}</p>
     );
   }
   const max = Math.max(...trend.map((t) => t.attendees), 1);
   return (
-    <div className="flex h-16 items-end gap-1" aria-label="Weekly attended count">
+    <div className="flex items-end gap-3" aria-label={t('departments:weeklyAttendedCount')}>
       {trend.map((t) => {
-        const h = Math.max(4, Math.round((t.attendees / max) * 64));
+        const h = Math.max(4, Math.round((t.attendees / max) * 56));
         return (
-          <div
-            key={t.weekStart}
-            className="w-4 rounded-t bg-[#5D3FD3]/70"
-            style={{ height: `${h}px` }}
-            title={`${formatShortDate(t.weekStart)}: ${t.attendees} attendees`}
-          />
+          <div key={t.weekStart} className="flex flex-col items-center gap-1">
+            <span className="text-xs font-semibold text-foreground tabular-nums">{t.attendees}</span>
+            <div
+              className="w-6 rounded-t bg-[#5D3FD3]/70"
+              style={{ height: `${h}px` }}
+              title={`${formatShortDate(t.weekStart)}: ${t.attendees} attendees`}
+            />
+            <span className="text-[10px] text-muted-foreground tabular-nums">{formatShortDate(t.weekStart)}</span>
+          </div>
         );
       })}
     </div>

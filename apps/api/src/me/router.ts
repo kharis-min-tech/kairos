@@ -5,8 +5,17 @@ import { db } from '../db';
 import { successResponse } from '@kairos/utils';
 import { listMyRotaQuerySchema } from '../departments/schemas';
 import { listMyUpcomingRota } from '../departments/rota-service';
-import { getMyLeadership } from './service';
-import { meLeadershipResponseSchema } from './schemas';
+import {
+  getMyLeadership,
+  deleteMyAccount,
+  exportMyData,
+  hasPrivilegedRole,
+  listMyActivity,
+  listMyApprovals,
+  listMyFollowups,
+} from './service';
+import { meLeadershipResponseSchema, deleteAccountSchema } from './schemas';
+import { getMyHome } from './home-service';
 import {
   listEffectivePreferences,
   upsertPreference,
@@ -14,10 +23,19 @@ import {
 import { updateNotificationPreferenceSchema, recordConsentSchema } from './schemas';
 import { listMyAuditLog } from '../audit/service';
 import { listConsentStatuses, recordConsent } from '../consent/service';
+import { listConcernFollowups } from '../members/followups-history-service';
 
 export const meRouter = new Hono();
 
 meRouter.use('*', authMiddleware);
+
+// The control-centre payload for both clients. Composition only — see
+// home-service.ts. Static path, so it sits above anything parameterised.
+meRouter.get('/home', async (c) => {
+  const auth = getAuth(c);
+  const home = await getMyHome(db, auth);
+  return c.json(successResponse(home));
+});
 
 meRouter.get('/rota', zValidator('query', listMyRotaQuerySchema), async (c) => {
   const auth = getAuth(c);
@@ -51,6 +69,38 @@ meRouter.put(
   },
 );
 
+meRouter.get('/approvals', async (c) => {
+  const auth = getAuth(c);
+  const items = await listMyApprovals(db, auth);
+  return c.json(successResponse(items));
+});
+
+meRouter.get('/followups', async (c) => {
+  const auth = getAuth(c);
+  const items = await listMyFollowups(db, auth);
+  return c.json(successResponse(items));
+});
+
+// 0046: welfare + safeguarding inboxes — surface flagged follow-ups to
+// leaders / safeguarding leads. Gating lives inside the service function.
+meRouter.get('/followups/welfare', async (c) => {
+  const auth = getAuth(c);
+  const items = await listConcernFollowups(db, auth, 'welfare');
+  return c.json(successResponse(items));
+});
+
+meRouter.get('/followups/safeguarding', async (c) => {
+  const auth = getAuth(c);
+  const items = await listConcernFollowups(db, auth, 'safeguarding');
+  return c.json(successResponse(items));
+});
+
+meRouter.get('/activity', async (c) => {
+  const auth = getAuth(c);
+  const items = await listMyActivity(db, auth);
+  return c.json(successResponse(items));
+});
+
 meRouter.get('/audit-log', async (c) => {
   const auth = getAuth(c);
   const entries = await listMyAuditLog(db, auth.memberId);
@@ -59,7 +109,8 @@ meRouter.get('/audit-log', async (c) => {
 
 meRouter.get('/consent', async (c) => {
   const auth = getAuth(c);
-  const statuses = await listConsentStatuses(db, auth.memberId);
+  const isPrivileged = await hasPrivilegedRole(db, auth);
+  const statuses = await listConsentStatuses(db, auth.memberId, isPrivileged);
   return c.json(successResponse({ statuses }));
 });
 
@@ -71,5 +122,22 @@ meRouter.post(
     const body = c.req.valid('json');
     const updated = await recordConsent(db, auth.memberId, body.consentType, body.granted);
     return c.json(successResponse(updated));
+  },
+);
+
+meRouter.get('/export', async (c) => {
+  const auth = getAuth(c);
+  const data = await exportMyData(db, auth.memberId);
+  return c.json(successResponse(data));
+});
+
+meRouter.post(
+  '/delete-account',
+  zValidator('json', deleteAccountSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const body = c.req.valid('json');
+    await deleteMyAccount(db, auth.memberId, body.currentPassword);
+    return c.json(successResponse({ deleted: true }));
   },
 );

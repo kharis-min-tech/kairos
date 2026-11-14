@@ -1,0 +1,52 @@
+appId: ${APP_ID}
+name: Members CRUD — new-member form (no submit)
+tags:
+  - smoke
+  - wave3
+  - members
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent. The Members directory nav is covered by 44-members-directory.yaml;
+# this one specifically enters the new-member form and asserts the four
+# section cards render, then dismisses. Does NOT submit — that would create a
+# real member row + email a generated password.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Members directory"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Members directory"
+
+- extendedWaitUntil:
+    visible:
+      text: "Members"
+    timeout: 8000
+
+- tapOn:
+    id: "new-member-btn"
+
+- extendedWaitUntil:
+    visible:
+      text: "New member"
+    timeout: 8000
+- assertVisible: "IDENTITY"
+- assertVisible: "CONTACT"
+- assertVisible: "BRANCH"
+- assertVisible: "EMERGENCY CONTACT"
+- assertVisible: "Create member"
+
+- pressKey: Back
+- extendedWaitUntil:
+    visible:
+      text: "Members"
+    timeout: 8000
+- pressKey: Back

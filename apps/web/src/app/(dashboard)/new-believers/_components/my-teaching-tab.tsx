@@ -2,15 +2,17 @@
 
 import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { getStageByValue } from './stage-config';
 import type { EnrollmentCardData } from './types';
+import { useTranslation } from 'react-i18next';
 
 interface MyTeachingTabProps {
   enrollments: EnrollmentCardData[];
 }
 
-export function MyTeachingTab({ enrollments }: MyTeachingTabProps) {
+export function MyTeachingTab({ enrollments }: MyTeachingTabProps) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   if (enrollments.length === 0) {
     return (
       <div
@@ -18,18 +20,14 @@ export function MyTeachingTab({ enrollments }: MyTeachingTabProps) {
         role="status"
       >
         <GraduationCap className="mx-auto mb-2 h-6 w-6 text-muted-foreground" aria-hidden />
-        <p className="text-sm font-medium text-muted-foreground">
-          You are not currently assigned as a teacher on any enrollment.
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Speak to your NB department leader if this is wrong.
-        </p>
+        <p className="text-sm font-medium text-muted-foreground">{t('newBelievers:youAreNotCurrentlyAssignedAs')}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{t('newBelievers:speakToYourNbDepartmentLeader')}</p>
       </div>
     );
   }
 
   return (
-    <ul className="space-y-2" aria-label="Enrollments I teach">
+    <ul className="space-y-2" aria-label={t('newBelievers:enrollmentsITeach')}>
       {enrollments.map((e) => {
         const stage = getStageByValue(e.stage);
         return (
@@ -57,9 +55,7 @@ export function MyTeachingTab({ enrollments }: MyTeachingTabProps) {
               <span
                 className="text-xs font-medium text-[#5D3FD3] hover:underline"
                 aria-hidden
-              >
-                Open
-              </span>
+              >{t('newBelievers:open')}</span>
             </Link>
           </li>
         );

@@ -1,0 +1,257 @@
+'use client';
+
+import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
+import { formatEffectiveDate } from '@/components/legal/effective-date';
+import { TranslationNotice } from '@/components/legal/translation-notice';
+
+
+const PRIVACY_VERSION = '2026-07-v1';
+const PRIVACY_EFFECTIVE_DATE = '2026-07-23';
+
+export function PrivacyBody() {  const { t, i18n } = useTranslation(['legalPrivacy', 'common']);
+
+  return (
+    <article className="space-y-8 text-[15px] leading-relaxed text-foreground">
+      <TranslationNotice />
+      <header className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#5D3FD3]">{t('legalPrivacy:legal')}</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('legalPrivacy:privacyNotice')}</h1>
+        <p className="text-sm text-muted-foreground">
+          {t('legalPrivacy:effectiveVersion', { date: formatEffectiveDate(PRIVACY_EFFECTIVE_DATE, i18n.language), version: PRIVACY_VERSION })}
+        </p>
+      </header>
+
+      <section className="space-y-3">
+        <p>{t('legalPrivacy:intro')}</p>
+        <p>{t('legalPrivacy:kharisChurchIsThe')}<strong>{t('legalPrivacy:dataController')}</strong> {t('legalPrivacy:forPersonalDataProcessedInKairos')}{' '}
+          <a
+            href="mailto:privacy@kharis.org"
+            className="font-medium text-[#5D3FD3] hover:underline"
+          >{t('legalPrivacy:privacyKharisOrg')}</a>
+          .
+        </p>
+      </section>
+
+      <Section title={t('legalPrivacy:whoThisNoticeAppliesTo')}>
+        <p>{t('legalPrivacy:appliesToMembersWhoCreateAnAccount')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:whatPersonalDataWeCollect')}>
+        <p>{t('legalPrivacy:weCollectAndHoldTheFollowing')}</p>
+
+        <SubHeading>{t('legalPrivacy:sub21InformationYouGiveAtSignUp')}</SubHeading>
+        <ul className="list-disc space-y-1 pl-6">
+          <li>{t('legalPrivacy:fullNameAndHonorific')}</li>
+          <li>{t('legalPrivacy:emailAddressAndPhoneNumber')}</li>
+          <li>{t('legalPrivacy:dateOfBirthAndGender')}</li>
+          <li>{t('legalPrivacy:homeAndSecondaryAddress')}</li>
+          <li>{t('legalPrivacy:theKharisChurchBranchYouAttend')}</li>
+          <li>{t('legalPrivacy:emergencyContactNameRelationshipAndPhone')}</li>
+          <li>{t('legalPrivacy:aPasswordStoredAsAHash')}</li>
+        </ul>
+
+        <SubHeading>{t('legalPrivacy:sub22InformationYouCanAddLater')}</SubHeading>
+        <ul className="list-disc space-y-1 pl-6">
+          <li>{t('legalPrivacy:aProfilePhoto')}</li>
+          <li>{t('legalPrivacy:maritalStatusOccupationPriorChurchBackground')}</li>
+          <li>{t('legalPrivacy:notificationPreferences')}</li>
+        </ul>
+
+        <SubHeading>{t('legalPrivacy:sub23InformationGeneratedByActivity')}</SubHeading>
+        <ul className="list-disc space-y-1 pl-6">
+          <li>{t('legalPrivacy:serviceAndFellowshipAttendanceRecords')}</li>
+          <li>{t('legalPrivacy:fellowshipGroupMembershipAndAnyLeadership')}</li>
+          <li>{t('legalPrivacy:departmentMembershipRotaAssignmentsAndUnifor')}</li>
+          <li>{t('legalPrivacy:newBelieverDiscipleshipPipelineStageIf')}</li>
+          <li>{t('legalPrivacy:formSubmissionsYouMake')}</li>
+          <li>{t('legalPrivacy:prayerRequestsFollowUpNotesOr')}</li>
+          <li>{t('legalPrivacy:recordsOfConsentsGivenOrWithdrawn')}</li>
+        </ul>
+
+        <SubHeading>{t('legalPrivacy:sub24TechnicalInformation')}</SubHeading>
+        <ul className="list-disc space-y-1 pl-6">
+          <li>{t('legalPrivacy:signInTimestampsSessionTokensAnd')}</li>
+          <li>{t('legalPrivacy:ipAddressAndCoarseDeviceInformation')}</li>
+          <li>{t('legalPrivacy:errorReportsAutomaticallyGeneratedIfPart')}</li>
+        </ul>
+
+        <SubHeading>{t('legalPrivacy:sub25SpecialCategoryData')}</SubHeading>
+        <p>{t('legalPrivacy:whereAFormAsksAboutHealth')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:whyWeUseYourDataAnd')}>
+        <p>{t('legalPrivacy:underUkGdprWeCanOnly')}</p>
+
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="py-2 pr-4">{t('legalPrivacy:purpose')}</th>
+                <th className="py-2">{t('legalPrivacy:lawfulBasis')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              <tr>
+                <td className="py-2 pr-4">{t('legalPrivacy:administeringChurchMembershipAllowingYouTo')}</td>
+                <td className="py-2">{t('legalPrivacy:legitimateInterestsOfTheChurchIn')}</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4">{t('legalPrivacy:recordingAttendanceTrackingDiscipleshipProgr')}</td>
+                <td className="py-2">{t('legalPrivacy:legitimateInterestsOfTheChurchIn2')}</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4">{t('legalPrivacy:pastoralCarePrayerFollowUp')}</td>
+                <td className="py-2">{t('legalPrivacy:legitimateInterestsAndWhereRelevantOur')}</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4">{t('legalPrivacy:sendingYouOptionalNewslettersEventInvitation')}</td>
+                <td className="py-2">{t('legalPrivacy:yourExplicitConsent')}</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4">{t('legalPrivacy:protectingKairosAgainstFraudAndAbuse')}</td>
+                <td className="py-2">{t('legalPrivacy:legitimateInterestsInMaintainingASecure')}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p className="pt-2">{t('legalPrivacy:weDoNotUseYourData')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:whoWeShareYourDataWith')}>
+        <p>{t('legalPrivacy:yourDataIsVisibleToLeaders')}</p>
+        <p>{t('legalPrivacy:weShareDataWithTheFollowing')}</p>
+        <ul className="list-disc space-y-2 pl-6">
+          <li>
+            <strong>{t('legalPrivacy:cloudflareInc')}</strong>{t('legalPrivacy:hostsTheKairosWebsiteApplicationServer')}</li>
+          <li>
+            <strong>{t('legalPrivacy:planetscaleInc')}</strong> {t('legalPrivacy:runsThePostgresDatabase')}
+          </li>
+          <li>
+            <strong>{t('legalPrivacy:amazonWebServicesInc')}</strong> {t('legalPrivacy:sendsTheTransactionalEmails')}
+          </li>
+          <li>
+            <strong>{t('legalPrivacy:sentryInc')}</strong>{t('legalPrivacy:receivesErrorReportsWhenKairosFails')}</li>
+        </ul>
+        <p>{t('legalPrivacy:theseProvidersActAs')}<em>{t('legalPrivacy:dataProcessors')}</em>{t('legalPrivacy:theyProcessYourDataOnlyUnderOur')}
+        </p>
+        <p>{t('legalPrivacy:weMayAlsoDiscloseDataWhere')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:howLongWeKeepYourData')}>
+        <ul className="list-disc space-y-1 pl-6">
+          <li>
+            <strong>{t('legalPrivacy:activeMemberRecords')}</strong>{t('legalPrivacy:areKeptForAsLongAs')}</li>
+          <li>
+            <strong>{t('legalPrivacy:archivedMemberRecords')}</strong>{t('legalPrivacy:areKeptForUpToYears')}</li>
+          <li>
+            <strong>{t('legalPrivacy:recordsAboutChildrenUnder')}</strong>{t('legalPrivacy:areKeptInLineWithOur')}</li>
+          <li>
+            <strong>{t('legalPrivacy:attendanceRecords')}</strong>{t('legalPrivacy:areKeptForYearsOnA')}</li>
+          <li>
+            <strong>{t('legalPrivacy:consentRecords')}</strong>{t('legalPrivacy:areKeptForTheLifetimeOf')}</li>
+          <li>
+            <strong>{t('legalPrivacy:signInLogsAndErrorReports')}</strong>{t('legalPrivacy:areKeptForUpToDays')}</li>
+        </ul>
+      </Section>
+
+      <Section title={t('legalPrivacy:yourRights')}>
+        <p>{t('legalPrivacy:underUkGdprYouHaveThe')}</p>
+        <ul className="list-disc space-y-1 pl-6">
+          <li>
+            <strong>{t('legalPrivacy:access')}</strong> {t('legalPrivacy:yourPersonalDataSubjectAccessRequest')}
+          </li>
+          <li>
+            <strong>{t('legalPrivacy:correct')}</strong>{t('legalPrivacy:dataThatIsInaccurateOrIncomplete')}</li>
+          <li>
+            <strong>{t('legalPrivacy:erase')}</strong> {t('legalPrivacy:yourDataRightToBeForgotten')}
+          </li>
+          <li>
+            <strong>{t('legalPrivacy:restrict')}</strong>{t('legalPrivacy:howWeProcessYourDataWhile')}</li>
+          <li>
+            <strong>{t('legalPrivacy:portability')}</strong>{t('legalPrivacy:receiveAMachineReadableExport')}
+          </li>
+          <li>
+            <strong>{t('legalPrivacy:object')}</strong>{t('legalPrivacy:toProcessingCarriedOutOnThe')}</li>
+          <li>
+            <strong>{t('legalPrivacy:withdrawConsent')}</strong> {t('legalPrivacy:atAnyTimeWhereWeReliedOnConsent')}{' '}
+            <Link
+              href="/profile/settings/legal"
+              className="font-medium text-[#5D3FD3] hover:underline"
+            >
+              {t('legalPrivacy:yourLegalAndConsentSettings')}
+            </Link>
+          </li>
+        </ul>
+        <p>
+          {t('legalPrivacy:toExerciseAnyOfTheseRights')}{' '}
+          <a
+            href="mailto:privacy@kharis.org"
+            className="font-medium text-[#5D3FD3] hover:underline"
+          >{t('legalPrivacy:privacyKharisOrg')}</a>
+          {t('legalPrivacy:weWillRespondWithinOneMonth')}
+        </p>
+        <p>
+          {t('legalPrivacy:ifYouBelieveWeHandledDataUnlawfully')}{' '}
+          <a
+            href="https://ico.org.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#5D3FD3] hover:underline"
+          >{t('legalPrivacy:icoOrgUk')}</a>
+          {t('legalPrivacy:weWouldEncourageYouToRaiseItFirst')}
+        </p>
+      </Section>
+
+      <Section title={t('legalPrivacy:childrenAndYoungPeople')}>
+        <p>{t('legalPrivacy:churchTakesSafeguardingSeriously')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:cookiesAndTracking')}>
+        <p>{t('legalPrivacy:kairosUsesASingleFirstParty')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:security')}>
+        <p>{t('legalPrivacy:passwordsAreStoredAsHashes')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:changesToThisNotice')}>
+        <p>{t('legalPrivacy:whenWeMakeAMaterialChange')}</p>
+      </Section>
+
+      <Section title={t('legalPrivacy:contactUs')}>
+        {/* i18n-ignore: the organisation's registered name. */}
+        <p>
+          Kharis Church:{' '}
+          <a
+            href="mailto:privacy@kharis.org"
+            className="font-medium text-[#5D3FD3] hover:underline"
+          >{t('legalPrivacy:privacyKharisOrg')}</a>
+        </p>
+      </Section>
+
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-900 dark:text-[#f8b537]">
+        <p className="font-semibold">{t('legalPrivacy:draftForReview')}</p>
+        <p className="mt-1">{t('legalPrivacy:thisDocumentIsAnInitialDraft')}</p>
+      </div>
+    </article>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function SubHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="pt-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+      {children}
+    </h3>
+  );
+}

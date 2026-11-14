@@ -4,17 +4,37 @@ export { members, membersRelations } from './members';
 export { branchLeadership, branchLeadershipRelations } from './branch-leadership';
 export { roles, rolesRelations } from './roles';
 export { memberRoles, memberRolesRelations } from './member-roles';
+export { memberGuardians, memberGuardiansRelations } from './member-guardians';
 export { fellowships, fellowshipsRelations } from './fellowships';
 export { fellowshipMembers, fellowshipMembersRelations } from './fellowship-members';
 export { fellowshipMeetings, fellowshipMeetingsRelations } from './fellowship-meetings';
 export { fellowshipMeetingAttendance, fellowshipMeetingAttendanceRelations } from './fellowship-meeting-attendance';
 export { fellowshipJoinRequests, fellowshipJoinRequestsRelations } from './fellowship-join-requests';
-export { fellowshipFollowups, fellowshipFollowupsRelations } from './fellowship-followups';
+export { memberFollowups, memberFollowupsRelations } from './member-followups';
 export { outreachPrograms, outreachProgramsRelations } from './outreach-programs';
 export { souls, soulsRelations } from './souls';
 export { followUps, followUpsRelations } from './follow-ups';
 export { outreachParticipants, outreachParticipantsRelations } from './outreach-participants';
 export { newBelieverEnrollments, newBelieverSessions, newBelieverAttendance } from './new-believers';
+export {
+  membershipCohorts,
+  membershipCohortsRelations,
+  membershipInterest,
+  membershipInterestRelations,
+  membershipSessions,
+  membershipSessionsRelations,
+  membershipEnrollments,
+  membershipEnrollmentsRelations,
+  membershipSessionRecords,
+  membershipSessionRecordsRelations,
+  type MembershipCohort,
+  type NewMembershipCohort,
+  type MembershipInterestRow,
+  type NewMembershipInterestRow,
+  type MembershipSession,
+  type MembershipEnrollment,
+  type MembershipSessionRecord,
+} from './membership';
 export {
   mentorFollowups,
   mentorFollowupsRelations,
@@ -25,7 +45,7 @@ export { departments, departmentsRelations } from './departments';
 export { branchDepartments, branchDepartmentsRelations } from './branch-departments';
 export { departmentMembers, departmentMembersRelations } from './department-members';
 export { departmentJoinRequests, departmentJoinRequestsRelations } from './department-join-requests';
-export { departmentFollowups, departmentFollowupsRelations } from './department-followups';
+
 export { departmentUniformOutfits, departmentUniformOutfitsRelations } from './department-uniform-outfits';
 export { departmentUniformSchedule, departmentUniformScheduleRelations } from './department-uniform-schedule';
 export { rotaTemplates, rotaTemplatesRelations } from './rota-templates';
@@ -83,3 +103,20 @@ export {
   type ConsentRecord,
   type NewConsentRecord,
 } from './consent-records';
+export {
+  oauthAccounts,
+  oauthAccountsRelations,
+  type OAuthAccount,
+  type NewOAuthAccount,
+} from './oauth-accounts';
+export {
+  oauthSessions,
+  oauthSessionsRelations,
+  type OAuthSession,
+  type NewOAuthSession,
+} from './oauth-sessions';
+export {
+  oauthVerificationTokens,
+  type OAuthVerificationToken,
+  type NewOAuthVerificationToken,
+} from './oauth-verification-tokens';

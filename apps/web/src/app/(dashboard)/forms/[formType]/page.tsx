@@ -5,57 +5,46 @@ export const runtime = 'edge';
 import { use } from 'react';
 import Link from 'next/link';
 import { Button } from '@kairos/ui';
-import { isFormType } from '../_lib/form-meta';
-import { AltarCallForm } from './_components/altar-call-form';
-import { BaptismForm } from './_components/baptism-form';
-import { TestimonyForm } from './_components/testimony-form';
-import { BabyForm } from './_components/baby-form';
 import { DeclarativeForm } from './_components/declarative-form';
-import { FORM_DEFINITIONS } from '@kairos/types';
+import { FORM_DEFINITIONS, isFormType, localiseFormDefinition } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
+/**
+ * Every form renders from its definition.
+ *
+ * There used to be a bespoke component per form beside the declarative
+ * renderer, and the two drifted: web's baby forms asked for parent names where
+ * mobile captured references, and web's testimony used Yes/No radios where the
+ * definition used checkboxes. The questions matched by nobody's decision in
+ * particular. One renderer, one definition per form, one set of questions on
+ * both platforms — including the success copy, which mobile previously had no
+ * way to reach.
+ */
 export default function FormFillPage({
   params,
 }: {
   params: Promise<{ formType: string }>;
-}) {
+}) {  const { t } = useTranslation(['forms', 'common']);
+
   const { formType } = use(params);
 
-  if (!isFormType(formType)) {
+  const definition = isFormType(formType)
+    ? localiseFormDefinition(t, FORM_DEFINITIONS[formType])
+    : undefined;
+
+  if (!definition) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-2xl font-bold text-foreground">Form not found</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('forms:formNotFound')}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          “{formType}” isn’t a form we recognise.
+          {t('forms:isntAFormWeRecognise', { name: formType })}
         </p>
         <Link href="/forms" className="mt-6 inline-block">
-          <Button className="bg-[#5D3FD3] hover:bg-[#451ebb]">Back to forms</Button>
+          <Button className="bg-[#5D3FD3] hover:bg-[#451ebb]">{t('forms:backToForms')}</Button>
         </Link>
       </div>
     );
   }
 
-  switch (formType) {
-    case 'first_time_visitor': {
-      const definition = FORM_DEFINITIONS.first_time_visitor!;
-      return (
-        <DeclarativeForm
-          definition={definition}
-          successTitle="Welcome recorded"
-          successMessage="Thank you for visiting. A leader will reach out to you soon."
-        />
-      );
-    }
-    case 'altar_call':
-      return <AltarCallForm />;
-    case 'baptism':
-      return <BaptismForm />;
-    case 'testimony':
-      return <TestimonyForm />;
-    case 'baby_naming':
-      return <BabyForm mode="baby_naming" />;
-    case 'baby_dedication':
-      return <BabyForm mode="baby_dedication" />;
-    default:
-      return null;
-  }
+  return <DeclarativeForm definition={definition} />;
 }

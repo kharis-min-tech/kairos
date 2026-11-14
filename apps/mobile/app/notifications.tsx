@@ -1,0 +1,100 @@
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Bell } from 'lucide-react-native';
+import {
+  Card,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import { useTranslation } from 'react-i18next';
+
+export default function Notifications() {  const { t } = useTranslation(['settings', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('settings:notifications')}</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <View style={styles.subHeader}>
+        <Text style={styles.subTitle}>{t('settings:activityFeed')}</Text>
+      </View>
+
+      <View style={styles.emptyBlock}>
+        <View style={styles.iconTile}>
+          <Bell color={c.primary} size={22} strokeWidth={1.5} />
+        </View>
+        <Text style={styles.emptyTitle}>{t('settings:nothingHereYet')}</Text>
+        <Text style={styles.emptyMeta}>{t('settings:theInAppNotificationsFeedLands')}</Text>
+      </View>
+
+      <Card padding="md" style={styles.metaCard}>
+        <Text style={styles.metaEyebrow}>{t('settings:whatThisWillShow')}</Text>
+        <Text style={styles.metaLine}>{t('settings:approvalsWaitingOnYou')}</Text>
+        <Text style={styles.metaLine}>{t('settings:rotaRemindersAndSwapRequests')}</Text>
+        <Text style={styles.metaLine}>{t('settings:newBelieverSessionCompletions')}</Text>
+        <Text style={styles.metaLine}>{t('settings:pastoralAnnouncements')}</Text>
+        <Text style={styles.metaLine}>{t('settings:givingReceipts')}</Text>
+      </Card>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
+  subHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  subTitle: { ...typography.screenTitle, color: c.ink },
+  emptyBlock: {
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  iconTile: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.lg,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
+  emptyMeta: {
+    ...typography.body,
+    color: c.inkMuted,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  metaCard: {
+    marginHorizontal: spacing.lg,
+    gap: spacing.xs,
+  },
+  metaEyebrow: { ...typography.eyebrow, color: c.inkMuted },
+  metaLine: { ...typography.body, color: c.inkMuted },
+});
+}
+

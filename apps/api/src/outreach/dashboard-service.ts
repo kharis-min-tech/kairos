@@ -1,4 +1,5 @@
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
+import { toIsoOrNull } from '../lib/sql-dates';
 import type { SQL } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { souls, followUps, members, outreachPrograms } from '@kairos/database';
@@ -47,7 +48,9 @@ interface SoulWithRAG {
   assignedMemberName: string | null;
   assignedMemberBranchName: string | null;
   outreachName: string | null;
-  lastFollowUpDate: Date | null;
+  // String, not Date: this crosses JSON, and the raw SQL fragment it comes
+  // from never produced a Date reliably anyway. See lib/sql-dates.ts.
+  lastFollowUpDate: string | null;
   daysSinceLastFollowUp: number | null;
   ragStatus: RAGStatus;
   ragReason: string;
@@ -147,7 +150,7 @@ export async function getDashboardOverview(
       assignedMemberId: souls.assignedMemberId,
       branchId: outreachPrograms.branchId,
       assignedMemberBranchId: members.homeBranchId,
-      lastFollowUpDate: sql<Date>`(
+      lastFollowUpDate: sql<Date | string | null>`(
         SELECT MAX(follow_up_date) 
         FROM follow_ups 
         WHERE follow_ups.soul_id = ${souls.id}
@@ -207,7 +210,7 @@ export async function getSoulsWithRAGStatus(
     dateTo?: Date;
     programId?: string;
   },
-): Promise<{ data: SoulWithRAG[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+): Promise<{ data: SoulWithRAG[]; meta: { page: number; limit: number; total: number; totalPages: number } }> {
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
@@ -237,7 +240,7 @@ export async function getSoulsWithRAGStatus(
       outreachName: outreachPrograms.programName,
       branchId: outreachPrograms.branchId,
       assignedMemberBranchId: members.homeBranchId,
-      lastFollowUpDate: sql<Date>`(
+      lastFollowUpDate: sql<Date | string | null>`(
         SELECT MAX(follow_up_date) 
         FROM follow_ups 
         WHERE follow_ups.soul_id = ${souls.id}
@@ -279,7 +282,7 @@ export async function getSoulsWithRAGStatus(
       assignedMemberName: soul.assignedMemberName,
       assignedMemberBranchName: soul.assignedMemberBranchName,
       outreachName: soul.outreachName,
-      lastFollowUpDate: soul.lastFollowUpDate,
+      lastFollowUpDate: toIsoOrNull(soul.lastFollowUpDate),
       daysSinceLastFollowUp: soul.daysSinceLastFollowUp,
       ragStatus,
       ragReason,
@@ -300,7 +303,7 @@ export async function getSoulsWithRAGStatus(
 
   return {
     data: paginatedData,
-    pagination: {
+    meta: {
       page,
       limit,
       total,
@@ -323,7 +326,7 @@ export async function getFollowUpsWithRAGStatus(
     dateTo?: Date;
     programId?: string;
   },
-): Promise<{ data: FollowUpWithRAG[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+): Promise<{ data: FollowUpWithRAG[]; meta: { page: number; limit: number; total: number; totalPages: number } }> {
   const page = filters?.page || 1;
   const limit = filters?.limit || 50;
   const offset = (page - 1) * limit;
@@ -383,7 +386,7 @@ export async function getFollowUpsWithRAGStatus(
 
   return {
     data: paginatedData,
-    pagination: {
+    meta: {
       page,
       limit,
       total,
@@ -464,7 +467,7 @@ export async function getDashboardAnalytics(
       assignedMemberId: souls.assignedMemberId,
       branchId: outreachPrograms.branchId,
       assignedMemberBranchId: members.homeBranchId,
-      lastFollowUpDate: sql<Date>`(
+      lastFollowUpDate: sql<Date | string | null>`(
         SELECT MAX(follow_up_date) 
         FROM follow_ups 
         WHERE follow_ups.soul_id = ${souls.id}

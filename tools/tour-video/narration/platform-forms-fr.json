@@ -1,0 +1,19 @@
+{
+  "role": "platform-forms-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Les formulaires",
+      "caption": "Six, pour ce que les gens demandent.",
+      "speech": "Les formulaires couvrent la première visite, le baptême, un témoignage, l’imposition du nom, la dédicace, et les nouveaux croyants."
+    },
+    {
+      "n": 2,
+      "title": "En remplir un",
+      "caption": "Il arrive à la bonne personne.",
+      "speech": "Remplissez-en un, et il parvient à la personne concernée. Rattaché au dossier de l’intéressé, s’il en a déjà un."
+    }
+  ]
+}

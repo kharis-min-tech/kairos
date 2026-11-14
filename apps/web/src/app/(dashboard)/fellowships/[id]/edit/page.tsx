@@ -2,7 +2,7 @@
 
 export const runtime = 'edge';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -13,8 +13,10 @@ import { useCapabilities } from '@/hooks/use-capabilities';
 import { useBranches } from '@/hooks/use-branches';
 import { useMembers } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
+import { AddressAutofillGroup, Button, Input, Label, Card, CardContent, CardHeader, CardTitle, CardDescription, CustomSelect } from '@kairos/ui';
 import { FellowshipType } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
   [FellowshipType.KGroups]: 'K-Groups',
@@ -25,6 +27,8 @@ const FELLOWSHIP_TYPE_LABELS: Record<string, string> = {
 };
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// i18n-ignore(7): the English source; `fellowships:recurrence_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const FREQUENCIES = [
   { value: 'Every week', label: 'Every week' },
   { value: 'Every two weeks', label: 'Every two weeks' },
@@ -42,19 +46,25 @@ for (let h = 5; h <= 22; h++) {
   }
 }
 
-const schema = z.object({
-  fellowshipName: z.string().min(1, 'Fellowship name is required').max(150),
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+  fellowshipName: z.string().min(1, t('fellowships:vFellowshipNameIsRequired')).max(150),
   branchId: z.string().uuid('Select a branch'),
-  fellowshipType: z.string().min(1, 'Select a fellowship type'),
+  fellowshipType: z.string().min(1, t('fellowships:vSelectAFellowshipType')),
   description: z.string().optional(),
   leaderId: z.string().optional(),
   coLeaderId: z.string().optional(),
   meetingFrequency: z.string().optional(),
   meetingDay: z.string().optional(),
   meetingTime: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 function parseMeetingSchedule(schedule: string | null) {
   if (!schedule) return { meetingFrequency: '', meetingDay: '', meetingTime: '' };
@@ -67,7 +77,9 @@ function parseMeetingSchedule(schedule: string | null) {
   return { meetingFrequency, meetingDay, meetingTime };
 }
 
-export default function EditFellowshipPage() {
+export default function EditFellowshipPage() {  const { t } = useTranslation(['fellowships', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
+
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -109,6 +121,11 @@ export default function EditFellowshipPage() {
       description: fellowship.description ?? '',
       leaderId: fellowship.leaderId ?? '',
       coLeaderId: fellowship.coLeaderId ?? '',
+      address: fellowship.address ?? '',
+      city: fellowship.city ?? '',
+      postalCode: fellowship.postalCode ?? '',
+      latitude: fellowship.latitude ?? null,
+      longitude: fellowship.longitude ?? null,
       ...parsed,
     });
   }, [fellowship, reset]);
@@ -130,6 +147,11 @@ export default function EditFellowshipPage() {
           leaderId: data.leaderId || undefined,
           coLeaderId: data.coLeaderId || undefined,
           meetingSchedule,
+          address: data.address || undefined,
+          city: data.city || undefined,
+          postalCode: data.postalCode || undefined,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
         },
       });
       router.push(`/fellowships/${id}`);
@@ -167,7 +189,7 @@ export default function EditFellowshipPage() {
   if (!fellowship) {
     return (
       <div role="alert" className="rounded-lg bg-destructive/10 p-4">
-        <p className="text-sm text-destructive">Fellowship not found.</p>
+        <p className="text-sm text-destructive">{t('fellowships:fellowshipNotFound')}</p>
       </div>
     );
   }
@@ -180,18 +202,16 @@ export default function EditFellowshipPage() {
           <Link href={`/fellowships/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Fellowship
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Edit Fellowship</h1>
+            </svg>{t('fellowships:backToFellowship')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('fellowships:editFellowship')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">{fellowship.fellowshipName}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Fellowship Details</CardTitle>
-          <CardDescription>Update the details for this fellowship group</CardDescription>
+          <CardTitle>{t('fellowships:fellowshipDetails')}</CardTitle>
+          <CardDescription>{t('fellowships:updateTheDetailsForThisFellowship')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -204,20 +224,20 @@ export default function EditFellowshipPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="fellowshipName">Fellowship Name *</Label>
-              <Input id="fellowshipName" {...register('fellowshipName')} placeholder="e.g. Brixton K-Group A" />
+              <Label htmlFor="fellowshipName">{t('fellowships:fellowshipName')}</Label>
+              <Input id="fellowshipName" {...register('fellowshipName')} placeholder={t('fellowships:eGBrixtonKGroupA')} />
               {errors.fellowshipName && (
                 <p className="text-sm text-destructive">{errors.fellowshipName.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fellowshipType">Fellowship Type *</Label>
+              <Label htmlFor="fellowshipType">{t('fellowships:fellowshipType')}</Label>
               <CustomSelect
                 id="fellowshipType"
                 value={watch('fellowshipType') ?? ''}
                 onValueChange={(v) => setValue('fellowshipType', v as FormValues['fellowshipType'])}
-                placeholder="Select a type..."
+                placeholder={t('fellowships:selectAType')}
                 options={Object.values(FellowshipType).map((t) => ({ value: t, label: FELLOWSHIP_TYPE_LABELS[t] ?? t }))}
               />
               {errors.fellowshipType && (
@@ -227,12 +247,12 @@ export default function EditFellowshipPage() {
 
             {isAdmin && (
               <div className="space-y-2">
-                <Label htmlFor="branchId">Branch *</Label>
+                <Label htmlFor="branchId">{t('fellowships:branch')}</Label>
                 <CustomSelect
                   id="branchId"
                   value={watch('branchId') ?? ''}
                   onValueChange={(v) => setValue('branchId', v)}
-                  placeholder={branchesLoading ? 'Loading branches...' : 'Select a branch...'}
+                  placeholder={branchesLoading ? t('fellowships:loadingBranches') : t('fellowships:selectBranch')}
                   options={(branches ?? []).map((branch) => ({ value: branch.id, label: branch.branchName }))}
                 />
                 {errors.branchId && (
@@ -242,11 +262,33 @@ export default function EditFellowshipPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label>{t('fellowships:meetingLocationOptional')}</Label>
+              <p className="text-xs text-muted-foreground">{t('fellowships:leaveBlankIfTheFellowshipMeets')}</p>
+              <AddressAutofillGroup
+                accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                value={{
+                  line1: watch('address') ?? '',
+                  city: watch('city') ?? '',
+                  postalCode: watch('postalCode') ?? '',
+                  latitude: watch('latitude') ?? undefined,
+                  longitude: watch('longitude') ?? undefined,
+                }}
+                onChange={(v) => {
+                  setValue('address', v.line1, { shouldDirty: true });
+                  setValue('city', v.city, { shouldDirty: true });
+                  setValue('postalCode', v.postalCode, { shouldDirty: true });
+                  if (typeof v.latitude === 'number') setValue('latitude', v.latitude, { shouldDirty: true });
+                  if (typeof v.longitude === 'number') setValue('longitude', v.longitude, { shouldDirty: true });
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">{t('fellowships:description')}</Label>
               <textarea
                 id="description"
                 {...register('description')}
-                placeholder="Brief description of this fellowship..."
+                placeholder={t('fellowships:briefDescriptionOfThisFellowship')}
                 rows={3}
                 className="flex min-h-[80px] w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20"
               />
@@ -254,52 +296,52 @@ export default function EditFellowshipPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="leaderId">Leader</Label>
+                <Label htmlFor="leaderId">{t('fellowships:leader')}</Label>
                 <CustomSelect
                   id="leaderId"
                   value={watch('leaderId') ?? ''}
                   onValueChange={(v) => setValue('leaderId', v)}
-                  placeholder="Select leader..."
+                  placeholder={t('fellowships:selectLeader')}
                   options={branchMembers.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="coLeaderId">Co-Leader</Label>
+                <Label htmlFor="coLeaderId">{t('fellowships:coLeader')}</Label>
                 <CustomSelect
                   id="coLeaderId"
                   value={watch('coLeaderId') ?? ''}
                   onValueChange={(v) => setValue('coLeaderId', v)}
-                  placeholder="Select co-leader..."
+                  placeholder={t('fellowships:selectCoLeader')}
                   options={branchMembers.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
                 />
               </div>
             </div>
 
             <div className="space-y-3 rounded-lg border p-4">
-              <p className="text-sm font-medium">Meeting Schedule (optional)</p>
+              <p className="text-sm font-medium">{t('fellowships:meetingScheduleOptional')}</p>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="meetingFrequency" className="text-xs text-muted-foreground">Frequency</Label>
+                  <Label htmlFor="meetingFrequency" className="text-xs text-muted-foreground">{t('fellowships:frequency')}</Label>
                   <CustomSelect
                     id="meetingFrequency"
                     value={watch('meetingFrequency') ?? ''}
                     onValueChange={(v) => setValue('meetingFrequency', v as FormValues['meetingFrequency'])}
                     placeholder="—"
-                    options={FREQUENCIES.map((f) => ({ value: f.value, label: f.label }))}
+                    options={localiseOptions(t, 'fellowships:recurrence_', FREQUENCIES)}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="meetingDay" className="text-xs text-muted-foreground">Day</Label>
+                  <Label htmlFor="meetingDay" className="text-xs text-muted-foreground">{t('fellowships:day')}</Label>
                   <CustomSelect
                     id="meetingDay"
                     value={watch('meetingDay') ?? ''}
                     onValueChange={(v) => setValue('meetingDay', v as FormValues['meetingDay'])}
                     placeholder="—"
-                    options={DAYS.map((d) => ({ value: d, label: d }))}
+                    options={DAYS.map((d) => ({ value: d, label: t(`common:weekday_${d}`, { defaultValue: d }) }))}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="meetingTime" className="text-xs text-muted-foreground">Time</Label>
+                  <Label htmlFor="meetingTime" className="text-xs text-muted-foreground">{t('fellowships:time')}</Label>
                   <CustomSelect
                     id="meetingTime"
                     value={watch('meetingTime') ?? ''}
@@ -316,15 +358,13 @@ export default function EditFellowshipPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.push(`/fellowships/${id}`)}
-              >
-                Cancel
-              </Button>
+              >{t('fellowships:cancel')}</Button>
               <Button
                 type="submit"
                 variant="success"
                 disabled={isSubmitting || updateFellowship.isPending}
               >
-                {isSubmitting || updateFellowship.isPending ? 'Saving…' : 'Save Changes'}
+                {isSubmitting || updateFellowship.isPending ? t('fellowships:saving') : t('fellowships:saveChanges')}
               </Button>
             </div>
           </form>

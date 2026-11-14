@@ -10,8 +10,10 @@ import { ArrowLeft } from 'lucide-react';
 import { useFellowships } from '@/hooks/use-fellowships';
 import { useMyDepartments } from '@/hooks/use-departments';
 import { useAuthStore } from '@/lib/auth-store';
+import { useTranslation } from 'react-i18next';
 
-export default function CaptureSoulPage() {
+export default function CaptureSoulPage() {  const { t } = useTranslation(['souls', 'common']);
+
   const router = useRouter();
   const api = useApi();
   const { toast } = useToast();
@@ -111,8 +113,8 @@ export default function CaptureSoulPage() {
       const soul = await captureSoul(api, data);
 
       toast({
-        title: 'Soul captured successfully',
-        description: `${soul.firstName} ${soul.lastName} has been added to your souls list.`,
+        title: t('souls:soulCapturedSuccessfully'),
+        description: t('souls:v1V2BeenAddedSouls', { v1: soul.firstName, v2: soul.lastName }),
       });
 
       // Reset form
@@ -135,7 +137,7 @@ export default function CaptureSoulPage() {
       router.push(`/souls/${soul.id}`);
     } catch (error: unknown) {
       toast({
-        title: 'Failed to capture soul',
+        title: t('souls:failedToCaptureSoul'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -155,22 +157,21 @@ export default function CaptureSoulPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Capture Soul</h1>
-          <p className="text-muted-foreground">Record a new contact from evangelism</p>
+          <h1 className="text-3xl font-bold">{t('souls:captureSoul')}</h1>
+          <p className="text-muted-foreground">{t('souls:recordANewContactFromEvangelism')}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="firstName">
-              First Name <span className="text-destructive">*</span>
+            <Label htmlFor="firstName">{t('souls:firstName')}<span className="text-destructive">*</span>
             </Label>
             <Input
               id="firstName"
               value={formData.firstName}
               onChange={(e) => handleChange('firstName', e.target.value)}
-              placeholder="James"
+              placeholder={t('souls:james')}
             />
             {errors.firstName && (
               <p className="text-sm text-destructive">{errors.firstName}</p>
@@ -178,14 +179,13 @@ export default function CaptureSoulPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lastName">
-              Last Name <span className="text-destructive">*</span>
+            <Label htmlFor="lastName">{t('souls:lastName')}<span className="text-destructive">*</span>
             </Label>
             <Input
               id="lastName"
               value={formData.lastName}
               onChange={(e) => handleChange('lastName', e.target.value)}
-              placeholder="Smith"
+              placeholder={t('souls:smith')}
             />
             {errors.lastName && (
               <p className="text-sm text-destructive">{errors.lastName}</p>
@@ -194,8 +194,7 @@ export default function CaptureSoulPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">
-            Phone Number <span className="text-destructive">*</span>
+          <Label htmlFor="phone">{t('souls:phoneNumber')}<span className="text-destructive">*</span>
           </Label>
           <Input
             id="phone"
@@ -209,13 +208,13 @@ export default function CaptureSoulPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email (Optional)</Label>
+          <Label htmlFor="email">{t('souls:emailOptional')}</Label>
           <Input
             id="email"
             type="email"
             value={formData.email}
             onChange={(e) => handleChange('email', e.target.value)}
-            placeholder="james.smith@example.co.uk"
+            placeholder={t('souls:jamesSmithExampleCoUk')}
           />
           {errors.email && (
             <p className="text-sm text-destructive">{errors.email}</p>
@@ -223,81 +222,81 @@ export default function CaptureSoulPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Address (Optional)</Label>
+          <Label htmlFor="address">{t('souls:addressOptional')}</Label>
           <Input
             id="address"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="45 High Street"
+            placeholder={t('souls:highStreet')}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="city">City (Optional)</Label>
+          <Label htmlFor="city">{t('souls:cityOptional')}</Label>
           <Input
             id="city"
             value={formData.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="London"
+            placeholder={t('souls:london')}
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="gender">Gender (Optional)</Label>
+            <Label htmlFor="gender">{t('souls:genderOptional')}</Label>
             <CustomSelect
               id="gender"
               value={formData.gender}
               onValueChange={(v) => handleChange('gender', v)}
-              placeholder="Select gender"
-              options={[{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }]}
+              placeholder={t('souls:selectGender')}
+              options={[{ value: 'Male', label: t('souls:male') }, { value: 'Female', label: t('souls:female') }]}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ageRange">Age Range (Optional)</Label>
+            <Label htmlFor="ageRange">{t('souls:ageRangeOptional')}</Label>
             <CustomSelect
               id="ageRange"
               value={formData.ageRange}
               onValueChange={(v) => handleChange('ageRange', v)}
-              placeholder="Select age range"
+              placeholder={t('souls:selectAgeRange')}
               options={[{ value: '18-25', label: '18-25' }, { value: '26-35', label: '26-35' }, { value: '36-50', label: '36-50' }, { value: '51+', label: '51+' }]}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="outreachId">Outreach Program</Label>
+          <Label htmlFor="outreachId">{t('souls:outreachProgram')}</Label>
           <CustomSelect
             id="outreachId"
             value={formData.outreachId}
             onValueChange={(v) => handleChange('outreachId', v)}
-            placeholder="Ad-hoc / Solo Evangelism"
+            placeholder={t('souls:adHocSoloEvangelism')}
             options={programs.map((p) => ({ value: p.id, label: p.programName }))}
           />
-          <p className="text-xs text-muted-foreground">Leave blank if this was a personal/solo encounter.</p>
+          <p className="text-xs text-muted-foreground">{t('souls:leaveBlankIfThisWasA')}</p>
         </div>
 
         {/* Optional attribution — captured on behalf of a fellowship or dept. */}
         {(myFellowships.length > 0 || myDepartments.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fellowshipId">On behalf of fellowship (Optional)</Label>
+              <Label htmlFor="fellowshipId">{t('souls:onBehalfFellowshipOptional')}</Label>
               <CustomSelect
                 id="fellowshipId"
                 value={formData.fellowshipId}
                 onValueChange={(v) => handleChange('fellowshipId', v)}
-                placeholder="None"
+                placeholder={t('souls:none')}
                 options={myFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="branchDepartmentId">On behalf of department (Optional)</Label>
+              <Label htmlFor="branchDepartmentId">{t('souls:onBehalfDepartmentOptional')}</Label>
               <CustomSelect
                 id="branchDepartmentId"
                 value={formData.branchDepartmentId}
                 onValueChange={(v) => handleChange('branchDepartmentId', v)}
-                placeholder="None"
+                placeholder={t('souls:none')}
                 options={myDepartments.map((d) => ({ value: d.id, label: d.departmentName }))}
               />
             </div>
@@ -305,28 +304,26 @@ export default function CaptureSoulPage() {
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="notes">Notes (Optional)</Label>
+          <Label htmlFor="notes">{t('souls:notesOptional')}</Label>
           <Textarea
             id="notes"
             value={formData.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="Any additional information or prayer requests..."
+            placeholder={t('souls:anyAdditionalInformationOrPrayerRequests')}
             rows={4}
           />
         </div>
 
         <div className="flex gap-4">
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Capturing...' : 'Capture Soul'}
+            {loading ? t('souls:capturing') : t('souls:captureSoul')}
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => router.back()}
             disabled={loading}
-          >
-            Cancel
-          </Button>
+          >{t('souls:cancel')}</Button>
         </div>
       </form>
     </div>

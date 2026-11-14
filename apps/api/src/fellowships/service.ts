@@ -6,7 +6,7 @@ import {
   fellowshipMembers,
   fellowshipMeetings,
   fellowshipMeetingAttendance,
-  fellowshipFollowups,
+  memberFollowups,
   fellowshipJoinRequests,
   members,
   branches,
@@ -21,6 +21,7 @@ import {
   sendJoinRequestReceivedEmail,
   sendJoinRequestApprovedEmail,
   sendJoinRequestRejectedEmail,
+  logger,
 } from '@kairos/utils';
 import { enforceScopeAllows } from '../lib/scope';
 import { syncFellowshipLeaderGrants } from '../lib/role-sync';
@@ -167,6 +168,14 @@ export async function getFellowship(db: Database, auth: AuthContext, id: string)
       leaderId: fellowships.leaderId,
       coLeaderId: fellowships.coLeaderId,
       meetingSchedule: fellowships.meetingSchedule,
+      meetingDay: fellowships.meetingDay,
+      meetingTime: fellowships.meetingTime,
+      address: fellowships.address,
+      city: fellowships.city,
+      postalCode: fellowships.postalCode,
+      latitude: fellowships.latitude,
+      longitude: fellowships.longitude,
+      country: fellowships.country,
       isActive: fellowships.isActive,
       createdAt: fellowships.createdAt,
       updatedAt: fellowships.updatedAt,
@@ -193,8 +202,11 @@ export async function createFellowship(
     meetingSchedule?: string;
     meetingDay?: string;
     meetingTime?: string;
-    latitude?: number;
-    longitude?: number;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    latitude?: number | null;
+    longitude?: number | null;
     country?: string;
   },
 ) {
@@ -230,8 +242,11 @@ export async function createFellowship(
       meetingSchedule: data.meetingSchedule,
       meetingDay: data.meetingDay,
       meetingTime: data.meetingTime,
-      latitude: data.latitude,
-      longitude: data.longitude,
+      address: data.address ?? null,
+      city: data.city ?? null,
+      postalCode: data.postalCode ?? null,
+      latitude: data.latitude ?? null,
+      longitude: data.longitude ?? null,
       country: data.country,
     })
     .returning();
@@ -642,7 +657,11 @@ export async function getFellowshipStats(
 
   const meetingRows = await db
     .select({
-      week: sql<Date>`date_trunc('week', ${fellowshipMeetings.meetingDate})`.as('w'),
+      // Already a 'YYYY-MM-DD' string by the time it lands, so the consumer
+      // below needs no Date round-trip and no cast.
+      week: sql<string>`to_char(date_trunc('week', ${fellowshipMeetings.meetingDate}), 'YYYY-MM-DD')`.as(
+        'w',
+      ),
       c: count(),
     })
     .from(fellowshipMeetings)
@@ -660,7 +679,7 @@ export async function getFellowshipStats(
     const c = Number(r.c);
     meetingsLast90d += c;
     return {
-      week: (r.week as Date).toISOString().slice(0, 10),
+      week: r.week,
       count: c,
     };
   });
@@ -668,10 +687,10 @@ export async function getFellowshipStats(
   const followupRows = await db
     .select({
       total: count(),
-      closed: sql<number>`COUNT(*) FILTER (WHERE LOWER(${fellowshipFollowups.contactStatus}) IN ('completed', 'closed'))::int`,
+      closed: sql<number>`COUNT(*) FILTER (WHERE LOWER(${memberFollowups.contactStatus}) IN ('completed', 'closed'))::int`,
     })
-    .from(fellowshipFollowups)
-    .where(eq(fellowshipFollowups.fellowshipId, fellowshipId));
+    .from(memberFollowups)
+    .where(eq(memberFollowups.fellowshipId, fellowshipId));
   const totalFollowups = Number(followupRows[0]?.total ?? 0);
   const closedFollowups = Number(followupRows[0]?.closed ?? 0);
 
@@ -817,11 +836,21 @@ export async function createJoinRequest(
     .from(members)
     .where(eq(members.id, auth.memberId));
   if (requester?.email) {
-    sendJoinRequestReceivedEmail(
-      requester.email,
-      requester.firstName,
-      fellowship.fellowshipName,
-    ).catch(() => { /* email failure is non-fatal */ });
+    // Await: CF Workers cancel un-awaited promises when the response
+    // returns, so a floating .catch(...) never runs and no email is sent.
+    try {
+      await sendJoinRequestReceivedEmail(
+        requester.email,
+        requester.firstName,
+        fellowship.fellowshipName,
+      );
+    } catch (err) {
+      logger.warn('sendJoinRequestReceivedEmail failed', {
+        memberId: auth.memberId,
+        fellowshipName: fellowship.fellowshipName,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   // Workflow notification to leadership chain
@@ -946,9 +975,16 @@ export async function reviewJoinRequest(
       data.status === 'approved'
         ? sendJoinRequestApprovedEmail
         : sendJoinRequestRejectedEmail;
-    sendFn(reviewee.email, reviewee.firstName, fellowship.fellowshipName).catch(() => {
-      /* email failure is non-fatal */
-    });
+    try {
+      await sendFn(reviewee.email, reviewee.firstName, fellowship.fellowshipName);
+    } catch (err) {
+      logger.warn('Join request decision email failed', {
+        memberId: request.memberId,
+        fellowshipName: fellowship.fellowshipName,
+        decision: data.status,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   await dispatchNotification(db, {
@@ -972,6 +1008,10 @@ export async function reviewJoinRequest(
 
 export async function listFellowshipsForMap(db: Database, _auth: AuthContext) {
   try {
+    // Prefer the fellowship's own lat/lng; if unset, fall back to the parent
+     // branch's coords so a fellowship without its own address still lands on
+     // the map. COALESCE keeps the response shape stable — callers only look at
+     // `latitude`/`longitude`.
     const rows = await db.execute(sql`
       SELECT
         f.id,
@@ -983,14 +1023,16 @@ export async function listFellowshipsForMap(db: Database, _auth: AuthContext) {
         f.meeting_schedule AS "meetingSchedule",
         f.meeting_day AS "meetingDay",
         f.meeting_time AS "meetingTime",
-        f.latitude,
-        f.longitude,
+        COALESCE(f.latitude, b.latitude) AS "latitude",
+        COALESCE(f.longitude, b.longitude) AS "longitude",
         f.country
       FROM fellowships f
       LEFT JOIN branches b ON f.branch_id = b.id
       WHERE f.is_active = true
-        AND f.latitude IS NOT NULL
-        AND f.longitude IS NOT NULL
+        AND (
+          (f.latitude IS NOT NULL AND f.longitude IS NOT NULL)
+          OR (b.latitude IS NOT NULL AND b.longitude IS NOT NULL)
+        )
     `);
     // postgres-js `db.execute` returns the RowList (an array) directly.
     return rows;

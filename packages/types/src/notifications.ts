@@ -88,6 +88,7 @@ export const NotificationEventType = {
   SecurityRoleGranted: 'security.role_granted',
   SecurityRoleRevoked: 'security.role_revoked',
   SecuritySigninNewDevice: 'security.signin_new_device',
+  SecurityOAuthProviderLinked: 'security.oauth_provider_linked',
   SecurityEmailChangeRequested: 'security.email_change_requested',
   SecurityEmailChangeConfirmed: 'security.email_change_confirmed',
   SecurityEmailChangedAlert: 'security.email_changed_alert',
@@ -101,6 +102,10 @@ export const NotificationEventType = {
   WorkflowSoulStatusChanged: 'workflow.soul_status_changed',
   WorkflowNewBelieverStageMoved: 'workflow.new_believer_stage_moved',
   WorkflowNewBelieverRemoved: 'workflow.new_believer_removed',
+  WorkflowMembershipInterestExpressed: 'workflow.membership_interest_expressed',
+  WorkflowMembershipCohortAdmitted: 'workflow.membership_cohort_admitted',
+  WorkflowMembershipCohortGraduated: 'workflow.membership_cohort_graduated',
+  WorkflowMembershipInterestEnded: 'workflow.membership_interest_ended',
   // ── Lifecycle ──
   LifecycleVisitorPromoted: 'lifecycle.visitor_promoted',
   LifecycleChildAgedOut: 'lifecycle.child_aged_out',

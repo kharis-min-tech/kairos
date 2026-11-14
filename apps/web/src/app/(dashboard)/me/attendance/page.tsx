@@ -10,43 +10,55 @@ import {
   CardDescription,
 } from '@kairos/ui';
 import { useMyAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { MyAttendanceSnapshot } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
-function getTone(rate: number, missedCount: number, servicesInWindow: number) {
-  if (servicesInWindow === 0) return { kind: 'neutral' as const, label: 'Window just started', tone: 'text-muted-foreground' };
+type Translator = ReturnType<typeof useTranslation>['t'];
+
+function getTone(
+  t: Translator,
+  rate: number,
+  missedCount: number,
+  servicesInWindow: number,
+) {
+  if (servicesInWindow === 0) {
+    return {
+      kind: 'neutral' as const,
+      label: t('attendance:toneWindowJustStarted'),
+      tone: 'text-muted-foreground',
+    };
+  }
   if (rate >= 0.8) {
     return {
       kind: 'positive' as const,
-      label: 'Great consistency — keep it up!',
+      label: t('attendance:toneGreatConsistency'),
       tone: 'text-emerald-700 dark:text-emerald-400',
     };
   }
   if (rate >= 0.6) {
     return {
       kind: 'neutral' as const,
-      label: 'A few more services and you’re solidly in the green.',
+      label: t('attendance:toneAlmostThere'),
       tone: 'text-[#9a6b04] dark:text-[#f8b537]',
     };
   }
   return {
     kind: 'warning' as const,
-    label: `${missedCount} missed in this window — let’s rebuild the habit.`,
+    label: t('attendance:toneRebuildHabit', { count: missedCount }),
     tone: 'text-destructive',
   };
 }
 
-export default function MyAttendancePage() {
+export default function MyAttendancePage() {  const { t } = useTranslation(['attendance', 'common']);
+
   const { data, isLoading, isError, error } = useMyAttendance({ weeks: 12 });
 
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">My Attendance</h1>
-        <p className="text-sm text-muted-foreground">
-          Your service-attendance picture over the last 12 weeks. Only you, your pastor,
-          and the church admin team can see this.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t('attendance:myAttendance')}</h1>
+        <p className="text-sm text-muted-foreground">{t('attendance:yourServiceAttendancePictureOverThe')}</p>
       </header>
 
       {isLoading ? (
@@ -56,11 +68,11 @@ export default function MyAttendancePage() {
             <div className="h-40 animate-pulse rounded-xl bg-muted/60" />
             <div className="h-40 animate-pulse rounded-xl bg-muted/60" />
           </div>
-          <span className="sr-only">Loading your attendance snapshot</span>
+          <span className="sr-only">{t('attendance:loadingYourAttendanceSnapshot')}</span>
         </div>
       ) : isError ? (
         <div role="alert" className="rounded-lg bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-          {error instanceof Error ? error.message : 'Could not load your attendance.'}
+          {error instanceof Error ? error.message : t('attendance:couldNotLoadYourAttendance')}
         </div>
       ) : data ? (
         <SnapshotBody snapshot={data} />
@@ -69,8 +81,9 @@ export default function MyAttendancePage() {
   );
 }
 
-function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
-  const tone = getTone(snapshot.rate, snapshot.missedCount, snapshot.servicesInWindow);
+function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {  const { t } = useTranslation(['attendance', 'common']);
+
+  const tone = getTone(t, snapshot.rate, snapshot.missedCount, snapshot.servicesInWindow);
   const ratePct = Math.round(snapshot.rate * 100);
 
   return (
@@ -80,28 +93,28 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Attendance rate ({snapshot.windowWeeks} weeks)
+              {t('attendance:attendanceRateWeeks', { count: snapshot.windowWeeks })}
             </p>
             <p className={`mt-1 text-5xl font-bold ${tone.tone}`}>{ratePct}%</p>
             <p className={`mt-1 text-sm font-medium ${tone.tone}`}>{tone.label}</p>
           </div>
           <div className="text-sm text-muted-foreground">
             <p>
-              <span className="font-semibold text-foreground">{snapshot.attendedCount}</span>{' '}
-              attended of{' '}
-              <span className="font-semibold text-foreground">{snapshot.servicesInWindow}</span>{' '}
-              services
+              {t('attendance:attendedOfServices', {
+                attended: snapshot.attendedCount,
+                total: snapshot.servicesInWindow,
+              })}
             </p>
             {snapshot.lastService && (
               <p className="mt-1">
-                Last seen at{' '}
+                {t('attendance:lastSeenAt')}{' '}
                 <Link
                   href={`/attendance/${snapshot.lastService.id}`}
                   className="font-medium text-[#5D3FD3] hover:underline"
                 >
-                  {snapshot.lastService.serviceTitle || `${snapshot.lastService.serviceType} Service`}
+                  {snapshot.lastService.serviceTitle || t('attendance:typedService', { type: snapshot.lastService.serviceType })}
                 </Link>{' '}
-                on {formatShortDate(snapshot.lastService.serviceDate)}
+                {t('attendance:onDate', { date: formatShortDate(snapshot.lastService.serviceDate) })}
               </p>
             )}
           </div>
@@ -113,9 +126,8 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Punctuality breakdown
-            </CardTitle>
-            <CardDescription>How your {snapshot.servicesInWindow} services split.</CardDescription>
+              <Sparkles className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:punctualityBreakdown')}</CardTitle>
+            <CardDescription>{t('attendance:howYourServicesSplit', { count: snapshot.servicesInWindow })}</CardDescription>
           </CardHeader>
           <CardContent>
             <PunctualityBars snapshot={snapshot} />
@@ -130,12 +142,12 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
               ) : (
                 <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden />
               )}{' '}
-              Current streak
+              {t('attendance:currentStreak')}
             </CardTitle>
             <CardDescription>
               {snapshot.currentStreak.kind === 'attended'
-                ? 'Consecutive services attended.'
-                : 'Consecutive services missed.'}
+                ? t('attendance:consecutiveServicesAttended')
+: t('attendance:consecutiveServicesMissed')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -149,7 +161,9 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
               {snapshot.currentStreak.length}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {snapshot.currentStreak.kind === 'attended' ? 'in a row, attended' : 'in a row, missed'}
+              {snapshot.currentStreak.kind === 'attended'
+                ? t('attendance:inARowAttended')
+                : t('attendance:inARowMissed')}
             </p>
           </CardContent>
         </Card>
@@ -159,21 +173,20 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Calendar className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Service history
-          </CardTitle>
-          <CardDescription>Every service in the window, oldest first.</CardDescription>
+            <Calendar className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('attendance:serviceHistory')}</CardTitle>
+          <CardDescription>{t('attendance:everyServiceInTheWindowOldest')}</CardDescription>
         </CardHeader>
         <CardContent>
           {snapshot.history.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No services in this window yet.
-            </p>
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('attendance:noServicesInThisWindowYet')}</p>
           ) : (
-            <ul className="divide-y rounded-lg border bg-card" aria-label="My service history">
+            <ul className="divide-y rounded-lg border bg-card" aria-label={t('attendance:myServiceHistory')}>
               {snapshot.history.map((h) => (
                 <li key={h.serviceId} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <span>
-                    <span className="font-medium text-foreground">{h.serviceType}</span>{' '}
+                    <span className="font-medium text-foreground">
+                      {t(`attendance:serviceType_${h.serviceType}`)}
+                    </span>{' '}
                     <span className="text-muted-foreground">{formatShortDate(h.serviceDate)}</span>
                   </span>
                   <StatusPill status={h.status} />
@@ -187,13 +200,14 @@ function SnapshotBody({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
   );
 }
 
-function PunctualityBars({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
+function PunctualityBars({ snapshot }: { snapshot: MyAttendanceSnapshot }) {  const { t } = useTranslation(['attendance', 'common']);
+
   const total = snapshot.servicesInWindow || 1;
   const buckets = [
-    { label: 'Present', count: snapshot.presentOnTimeCount, tone: 'bg-emerald-500' },
-    { label: 'Late', count: snapshot.lateCount, tone: 'bg-[#f8b537]' },
-    { label: 'Virtual', count: snapshot.virtualCount, tone: 'bg-[#5D3FD3]' },
-    { label: 'Missed', count: snapshot.missedCount, tone: 'bg-rose-500' },
+    { label: t('attendance:present'), count: snapshot.presentOnTimeCount, tone: 'bg-emerald-500' },
+    { label: t('attendance:late'), count: snapshot.lateCount, tone: 'bg-[#f8b537]' },
+    { label: t('attendance:virtual'), count: snapshot.virtualCount, tone: 'bg-[#5D3FD3]' },
+    { label: t('attendance:missed'), count: snapshot.missedCount, tone: 'bg-rose-500' },
   ];
   return (
     <ul className="space-y-2">
@@ -222,6 +236,7 @@ function PunctualityBars({ snapshot }: { snapshot: MyAttendanceSnapshot }) {
 }
 
 function StatusPill({ status }: { status: string | null }) {
+  const { t } = useTranslation(['attendance', 'common']);
   const tone =
     status === 'Present'
       ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
@@ -232,7 +247,13 @@ function StatusPill({ status }: { status: string | null }) {
           : 'bg-rose-500/10 text-rose-600 dark:text-rose-400';
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}>
-      {status ?? 'Missed'}
+      {status === 'Present'
+        ? t('attendance:present')
+        : status === 'Late'
+          ? t('attendance:late')
+          : status === 'Virtual'
+            ? t('attendance:virtual')
+            : t('attendance:missed')}
     </span>
   );
 }

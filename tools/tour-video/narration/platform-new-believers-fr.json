@@ -1,0 +1,19 @@
+{
+  "role": "platform-new-believers-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Le parcours",
+      "caption": "Quatre séances, puis un département.",
+      "speech": "Nouveaux croyants est le parcours de discipulat. Quatre séances, puis l’entrée dans un département. Chacun visible sur le tableau."
+    },
+    {
+      "n": 2,
+      "title": "Séances",
+      "caption": "Programmées, enseignées, pointées.",
+      "speech": "Les séances sont programmées par antenne, avec un enseignant et une date. Faites l’appel, puis faites avancer les personnes à l’étape suivante."
+    }
+  ]
+}

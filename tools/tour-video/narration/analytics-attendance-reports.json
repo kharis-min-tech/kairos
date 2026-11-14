@@ -1,0 +1,19 @@
+{
+  "role": "analytics-attendance-reports",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Attendance reports",
+      "caption": "Per week, per branch.",
+      "speech": "Attendance reports show check-ins per week against distinct members, which separates the same people coming often from more people coming."
+    },
+    {
+      "n": 2,
+      "title": "Who is missing",
+      "caption": "Sorted by how long.",
+      "speech": "The missing members list is sorted by how many services somebody has missed in a row, which is the list pastoral care actually needs."
+    }
+  ]
+}

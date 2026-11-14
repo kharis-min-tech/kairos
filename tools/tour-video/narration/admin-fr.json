@@ -1,0 +1,61 @@
+{
+  "role": "admin-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Votre vue d’ensemble",
+      "caption": "Toutes les antennes à la fois.",
+      "speech": "Voici la vue administrateur. Le Pouls compte toutes les antennes à la fois. La section Vous attend, elle, liste ce qui demande votre attention aujourd’hui."
+    },
+    {
+      "n": 2,
+      "title": "Antennes",
+      "caption": "Les créer, les regrouper, les retirer.",
+      "speech": "Les antennes n’appartiennent qu’à vous. Seul un administrateur peut en créer une, la changer de région, ou la retirer du service."
+    },
+    {
+      "n": 3,
+      "title": "Dans une antenne",
+      "caption": "Ses détails, et qui la dirige.",
+      "speech": "Ouvrez une antenne pour régler ses détails, et sa direction. Nommez le pasteur principal ici, et il obtient la vue sur la file protection de cette antenne."
+    },
+    {
+      "n": 4,
+      "title": "Régions",
+      "caption": "La géographie qui regroupe vos antennes.",
+      "speech": "Les régions regroupent les antennes par géographie. Créez la région d’abord. Une antenne ne peut pas exister sans la sienne."
+    },
+    {
+      "n": 5,
+      "title": "La file d’approbation",
+      "caption": "Personne n’entre sans qu’on le laisse entrer.",
+      "speech": "Toute personne inscrite d’elle-même attend ici. Approuvez-la, et elle obtient l’accès complet. Refusez-la, et le compte est supprimé."
+    },
+    {
+      "n": 6,
+      "title": "Qui détient quoi",
+      "caption": "Les habilitations, pas les titres.",
+      "speech": "Ouvrez un membre pour gérer ses habilitations. Kairos ne stocke que deux rôles système. Tout le reste vient d’une habilitation."
+    },
+    {
+      "n": 7,
+      "title": "Les cours de membre",
+      "caption": "À l’échelle de l’église, hors de toute antenne.",
+      "speech": "Le programme d’adhésion est à l’échelle de l’église. Les promotions puisent partout. L’administrer demande donc une habilitation d’église."
+    },
+    {
+      "n": 8,
+      "title": "Rapports inter-antennes",
+      "caption": "La seule vue qui compare les antennes.",
+      "speech": "Les rapports sont la vue inter-antennes. Vous êtes le seul rôle à voir toutes les antennes côte à côte, plutôt qu’une seule à la fois."
+    },
+    {
+      "n": 9,
+      "title": "Votre langue",
+      "caption": "Kairos et ce manuel, en quatre langues.",
+      "speech": "Kairos parle anglais, français, krio, et twi. Changez de langue depuis la barre latérale, et le manuel s’ouvre dans celle que vous avez choisie."
+    }
+  ]
+}

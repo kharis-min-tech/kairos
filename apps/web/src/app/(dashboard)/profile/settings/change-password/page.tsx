@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -10,27 +10,31 @@ import { ArrowLeft, KeyRound, ShieldCheck } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
 import { api } from '@/lib/api';
 import { PasswordStrength } from '@/components/password-strength';
+import { useTranslation } from 'react-i18next';
 
-const schema = z
+const makeSchema = (t: (key: string) => string) =>
+  z
   .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
+    currentPassword: z.string().min(1, t('security:vCurrentPasswordIsRequired')),
     newPassword: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[a-z]/, 'Must contain a lowercase letter')
-      .regex(/[0-9]/, 'Must contain a number')
-      .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
+      .min(8, t('security:vPasswordMustBeAtLeastCharacters'))
+      .regex(/[A-Z]/, t('security:vMustContainAnUppercaseLetter'))
+      .regex(/[a-z]/, t('security:vMustContainALowercaseLetter'))
+      .regex(/[0-9]/, t('security:vMustContainANumber'))
+      .regex(/[^A-Za-z0-9]/, t('security:vMustContainASpecialCharacter')),
+    confirmPassword: z.string().min(1, t('security:vPleaseConfirmYourPassword')),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: t('security:vPasswordsDoNotMatch'),
     path: ['confirmPassword'],
   });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
-export default function ChangePasswordSettingsPage() {
+export default function ChangePasswordSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
+
   const router = useRouter();
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -66,38 +70,30 @@ export default function ChangePasswordSettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Change password</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Enter your current password, then choose a new one.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings:changePassword')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:enterYourCurrentPasswordThenChoose')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <KeyRound className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> New password
-          </CardTitle>
+            <KeyRound className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:newPassword')}</CardTitle>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-4 text-sm">
-              <p className="font-semibold text-emerald-700 dark:text-emerald-400">
-                Password updated
-              </p>
-              <p className="text-muted-foreground">
-                We&apos;ve emailed you a confirmation. Returning to settings…
-              </p>
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400">{t('settings:passwordUpdated')}</p>
+              <p className="text-muted-foreground">{t('settings:weVeEmailedConfirmationReturningSettings')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <Label htmlFor="currentPassword">Current password</Label>
+                <Label htmlFor="currentPassword">{t('settings:currentPassword')}</Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -111,7 +107,7 @@ export default function ChangePasswordSettingsPage() {
                 )}
               </div>
               <div>
-                <Label htmlFor="newPassword">New password</Label>
+                <Label htmlFor="newPassword">{t('settings:newPassword')}</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -130,7 +126,7 @@ export default function ChangePasswordSettingsPage() {
                 </div>
               )}
               <div>
-                <Label htmlFor="confirmPassword">Confirm new password</Label>
+                <Label htmlFor="confirmPassword">{t('settings:confirmNewPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -153,7 +149,7 @@ export default function ChangePasswordSettingsPage() {
                 className="rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] text-white"
                 disabled={submitting}
               >
-                {submitting ? 'Updating…' : 'Update password'}
+                {submitting ? t('settings:updatingPassword') : t('settings:updatePassword')}
               </Button>
             </form>
           )}
@@ -163,10 +159,7 @@ export default function ChangePasswordSettingsPage() {
       <Card>
         <CardContent className="flex items-start gap-3 py-4 text-xs text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#5D3FD3]" aria-hidden />
-          <p>
-            You&apos;ll get an email confirming the change. If you didn&apos;t
-            do this, contact your church administrator immediately.
-          </p>
+          <p>{t('settings:youLlGetEmailConfirmingChange')}</p>
         </CardContent>
       </Card>
     </div>

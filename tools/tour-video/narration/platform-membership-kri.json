@@ -1,0 +1,19 @@
+{
+  "role": "platform-membership-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Klas",
+      "caption": "Fo wik, ɛn wetin i de gi.",
+      "speech": "Mɛmbaship na di fo-wik klas. Fɔ finish am na wetin mek pɔsin Mɛmba fɔ tru, nɔ mata aw lɔng dɛn de kam."
+    },
+    {
+      "n": 2,
+      "title": "Koɔt dɛn",
+      "caption": "Intek, mak ɛn grajueshɔn.",
+      "speech": "Wan koɔt na wan intek. Yu skɛjul in fo sɛshɔn, mak atɛndans ɛn di las tɛst, ɛn grajuet di pipul we pas."
+    }
+  ]
+}

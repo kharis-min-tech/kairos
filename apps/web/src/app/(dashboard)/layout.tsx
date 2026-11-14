@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { docsUrl } from '@kairos/core';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/auth-store';
 import { useCapabilities } from '@/hooks/use-capabilities';
+import { useMyConsentStatuses } from '@/hooks/use-consent';
 import { api } from '@/lib/api';
 import { cn } from '@kairos/ui';
 import type { Capability } from '@kairos/types';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageToggle } from '@/components/language-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
 import { ConsentBanner } from '@/components/consent-banner';
 // RBAC Phase 5b: in-app role switcher removed. Users see all their grants
@@ -22,31 +26,96 @@ import { ConsentBanner } from '@/components/consent-banner';
 // links automatically.
 type NavItem = {
   href: string;
-  label: string;
+  /** Catalogue key under `nav:items`, resolved at render. */
+  labelKey: string;
   adminOnly?: boolean;
   capability?: Capability;
+  /**
+   * Any-of capability gate. If provided, the item is visible when the caller
+   * holds at least one of the listed capabilities. Used for surfaces (e.g.
+   * /concerns) that mirror the API's OR-of-capabilities access rule.
+   */
+  anyCapability?: Capability[];
   badge?: string;
+  /**
+   * Which cluster the item sits under. Plain-noun nav taxonomy (2026-10-04),
+   * the same vocabulary as the mobile More tab and the control-centre blocks:
+   * clusters are named for what they contain, so a new module has an obvious
+   * home. Items with no section render ungrouped above the first header.
+   */
+  section?: NavSection;
+};
+
+type NavSection =
+  | 'For you'
+  | 'People'
+  | 'Groups'
+  | 'Gatherings'
+  | 'Insights'
+  | 'Organisation';
+
+/** Render order. A section with no visible items is skipped, header and all. */
+const NAV_SECTIONS: NavSection[] = [
+  'For you',
+  'People',
+  'Groups',
+  'Gatherings',
+  'Insights',
+  'Organisation',
+];
+
+/** Section names are the display order's source of truth; keys live here. */
+const SECTION_KEYS: Record<string, string> = {
+  'For you': 'forYou',
+  'People': 'people',
+  'Groups': 'groups',
+  'Gatherings': 'gatherings',
+  'Insights': 'insights',
+  'Organisation': 'organisation',
 };
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Overview' },
-  { href: '/admin/branches', label: 'Branches', adminOnly: true },
-  { href: '/admin/regions', label: 'Regions', adminOnly: true },
-  { href: '/my-branch', label: 'My Branch', capability: 'branch:write' },
-  { href: '/members', label: 'Members', capability: 'branch:write' },
-  { href: '/fellowships', label: 'Fellowships' },
-  // /attendance is open to all — page-level gating (canRecord) hides write CTAs from non-writers,
-  // and Admin-dept members (systemRole='member') need the entry point to reach the desk.
-  { href: '/attendance', label: 'Attendance' },
-  { href: '/me/attendance', label: 'My Attendance' },
-  { href: '/reports', label: 'Reports' },
-  { href: '/new-believers', label: 'New Believers' },
-  { href: '/departments', label: 'Departments' },
-  { href: '/outreach/programs', label: 'Outreach Programs' },
-  { href: '/souls', label: 'Souls Pipeline' },
-  { href: '/forms', label: 'Forms' },
-  { href: '/souls-dashboard', label: 'Souls Dashboard' },
-  { href: '/profile', label: 'Profile' },
+  // Ungrouped — the control centre is the front door, not a category.
+  { href: '/dashboard', labelKey: 'overview' },
+
+  { href: '/my-branch', labelKey: 'myBranch', capability: 'branch:write', section: 'For you' },
+  { href: '/me/attendance', labelKey: 'myAttendance', section: 'For you' },
+  { href: '/profile', labelKey: 'profile', section: 'For you' },
+
+  { href: '/members', labelKey: 'members', capability: 'branch:write', section: 'People' },
+  { href: '/new-believers', labelKey: 'newBelievers', section: 'People' },
+  // Membership classes are church-wide, so every approved member sees this:
+  // they can view cohorts and join the interest pool. Admin-only actions gate
+  // inside the page.
+  { href: '/membership', labelKey: 'membership', section: 'People' },
+  {
+    href: '/concerns',
+    labelKey: 'concerns',
+    anyCapability: ['branch:write', 'safeguarding:read'],
+    section: 'People',
+  },
+  { href: '/follow-ups', labelKey: 'followUps', capability: 'branch:write', section: 'People' },
+  { href: '/outreach/programs', labelKey: 'outreachPrograms', section: 'People' },
+  { href: '/souls', labelKey: 'soulsPipeline', section: 'People' },
+  { href: '/forms', labelKey: 'forms', section: 'People' },
+
+  { href: '/fellowships', labelKey: 'fellowships', section: 'Groups' },
+  { href: '/departments', labelKey: 'departments', section: 'Groups' },
+
+  // /attendance is open to all — page-level gating (canRecord) hides write CTAs
+  // from non-writers, and Admin-dept members (systemRole='member') need the
+  // entry point to reach the desk.
+  { href: '/attendance', labelKey: 'attendance', section: 'Gatherings' },
+  // /attendance/check-in is the member self-check-in surface (honour system +
+  // QR scanner). Open to any authenticated member — the API 403s if the branch
+  // has self-check-in off.
+  { href: '/attendance/check-in', labelKey: 'checkIn', section: 'Gatherings' },
+
+  { href: '/reports', labelKey: 'reports', section: 'Insights' },
+  { href: '/souls-dashboard', labelKey: 'soulsDashboard', section: 'Insights' },
+
+  { href: '/admin/branches', labelKey: 'branches', adminOnly: true, section: 'Organisation' },
+  { href: '/admin/regions', labelKey: 'regions', adminOnly: true, section: 'Organisation' },
 ];
 
 const NAV_ICONS: Record<string, React.ReactNode> = {
@@ -105,6 +174,16 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
+  '/attendance/check-in': (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  ),
+  '/membership': (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+    </svg>
+  ),
   '/new-believers': (
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -130,12 +209,68 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
     </svg>
   ),
+  '/concerns': (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+    </svg>
+  ),
+  '/follow-ups': (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+    </svg>
+  ),
 };
 
-function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
-  const isActive = item.href === '/dashboard'
+/**
+ * Whether a nav item matches the current route. Shared with the section-open
+ * rule below so an active link can never sit inside a collapsed section.
+ */
+function isItemActive(href: string, pathname: string): boolean {
+  return href === '/dashboard'
     ? pathname === '/dashboard'
-    : pathname === item.href || (pathname.startsWith(item.href + '/'));
+    : pathname === href || pathname.startsWith(href + '/');
+}
+
+/**
+ * A collapsible nav cluster. Collapsed by default so the sidebar stays short
+ * as modules land; the section holding the current route opens itself, so you
+ * can always see where you are. Opening one is remembered for the session —
+ * the dashboard layout doesn't remount on client-side navigation.
+ */
+function NavSectionHeader({
+  label,
+  open,
+  onToggle,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 transition-colors hover:text-foreground"
+    >
+      <svg
+        className={cn('h-3 w-3 transition-transform', open ? 'rotate-90' : '')}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        aria-hidden
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+      </svg>
+      {label}
+    </button>
+  );
+}
+
+function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string; onClick?: () => void }) {
+  const { t } = useTranslation(['nav', 'common']);
+  const isActive = isItemActive(item.href, pathname);
 
   return (
     <Link
@@ -144,12 +279,12 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         isActive
-          ? 'border-l-2 border-violet-500 bg-primary/10 pl-[10px] text-foreground font-semibold'
+          ? 'border-l-2 border-[#5D3FD3] bg-primary/10 pl-[10px] text-foreground font-semibold'
           : 'border-l-2 border-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
       )}
     >
       {NAV_ICONS[item.href]}
-      {item.label}
+      {t(`nav:items.${item.labelKey}`)}
       {item.badge && (
         <span className="ml-auto rounded-full bg-[#5D3FD3] px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
           {item.badge}
@@ -160,8 +295,10 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { t, i18n } = useTranslation(['nav', 'common']);
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     user,
     logout,
@@ -172,6 +309,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   } = useAuthStore();
   const caps = useCapabilities();
   const [mobileOpen, setMobileOpen] = useState(false);
+  /**
+   * Sections the user has explicitly toggled this session. Absent means
+   * "follow the default", which is closed unless the section holds the
+   * current route.
+   */
+  const [toggledSections, setToggledSections] = useState<Record<string, boolean>>({});
+
+
+  // Wait for zustand-persist to rehydrate from localStorage before deciding
+  // whether we're logged out. Otherwise every legitimate refresh flashes a
+  // redirect to /login while accessToken is transiently null. Initial state
+  // must be `false` (not read from persist) — this component is rendered
+  // during SSG where `useAuthStore.persist` isn't reliably attached.
+  const [hasHydrated, setHasHydrated] = useState(false);
+  useEffect(() => {
+    const p = useAuthStore.persist;
+    if (!p) {
+      setHasHydrated(true);
+      return;
+    }
+    if (p.hasHydrated()) {
+      setHasHydrated(true);
+      return;
+    }
+    const unsub = p.onFinishHydration(() => setHasHydrated(true));
+    return unsub;
+  }, []);
+
+  // Client-side auth guard. If someone hits a dashboard URL after logout
+  // (or via Back after logout), send them to /login instead of painting
+  // the chrome and letting every useQuery below 401 into an empty state.
+  useEffect(() => {
+    if (hasHydrated && !accessToken) {
+      router.replace('/login');
+    }
+  }, [hasHydrated, accessToken, router]);
 
   // Hydrate user profile from API after page refresh (user is not persisted in localStorage)
   const { data: profileData } = useQuery({
@@ -193,13 +366,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [mustChangePassword, router]);
 
+  // Phase 1.5 Better-Auth: SSO onboarding + approval gates. Both onboarding
+  // and pending-approval live in the (auth) chrome — no sidebar, no
+  // clickable nav — so the user's not misled into thinking they can browse
+  // yet. Since (auth) routes never mount this layout, we only need to catch
+  // dashboard-side entrance and bounce out.
+  const mustCompleteProfile =
+    (user as { mustCompleteProfile?: boolean })?.mustCompleteProfile === true;
+  const approvalStatus = user?.approvalStatus ?? null;
+  useEffect(() => {
+    if (!user) return;
+    if (mustCompleteProfile) {
+      router.replace('/complete-profile');
+      return;
+    }
+    if (approvalStatus && approvalStatus !== 'approved') {
+      router.replace('/pending-approval');
+    }
+  }, [user, mustCompleteProfile, approvalStatus, router]);
+
+  // Consent gate: any required policy that hasn't been accepted forces the
+  // caller to /accept-policies before the dashboard renders. Mirrors the
+  // mustChangePassword gate above. The API middleware provides the same
+  // enforcement server-side — the client redirect is a UX niceness on top.
+  //
+  // We block the dashboard render entirely until the query has resolved AND
+  // no required consents are pending. Without that we'd flash the dashboard
+  // chrome + content for one render before the redirect fires. React Query
+  // caches the result for 5 minutes (see useMyConsentStatuses), so warm
+  // navigations don't pay the round-trip.
+  const { data: consentData, isPending: consentQueryPending } = useMyConsentStatuses();
+  const pendingConsentCount = consentData
+    ? consentData.statuses.filter((s) => s.required && s.needsAccept).length
+    : 0;
+  useEffect(() => {
+    if (pendingConsentCount > 0) {
+      router.replace('/accept-policies');
+    }
+  }, [pendingConsentCount, router]);
+
   function handleLogout() {
     logout();
-    router.push('/login');
+    // Purge any cached responses from the previous session so a subsequent
+    // login (or the redirect flash) can't surface stale data.
+    queryClient.clear();
+    router.replace('/login');
   }
+
+  // Suppress render entirely until we know for sure whether the caller is
+  // authenticated. Prevents the sidebar + failing fetches from appearing
+  // when the store is empty (post-logout URL nav) or still hydrating.
+  if (!hasHydrated || !accessToken) return null;
+
+  // Block dashboard render while the consent gate is deciding. Two cases:
+  //   1. First page load with unresolved consent query — waiting on the
+  //      network. Painting the dashboard now and redirecting a beat later
+  //      causes the "flash of dashboard" the user reported.
+  //   2. Query resolved with pending required consents — the useEffect above
+  //      has already fired router.replace('/accept-policies') this render;
+  //      returning null avoids painting the dashboard for one frame while
+  //      the router swaps routes.
+  if (consentQueryPending || pendingConsentCount > 0) return null;
+
+  const sectionOpen = (section: string, items: NavItem[]) =>
+    toggledSections[section] ?? items.some((item) => isItemActive(item.href, pathname));
 
   const visibleNavItems = navItems.filter((item) => {
     if (item.adminOnly) return activeRole === 'admin';
+    if (item.anyCapability) return item.anyCapability.some((c) => caps.has(c));
     if (item.capability) return caps.has(item.capability);
     return true;
   });
@@ -208,23 +442,66 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-full flex-col bg-white/80 backdrop-blur-[20px] dark:bg-[#0f0f12]/80">
       {/* Brand */}
       <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5">
+        {/* i18n-ignore: the organisation's registered name. */}
         <img src="/logo.png" alt="Kharis Church" className="h-9 w-9 object-contain" />
         <div>
-          <p className="text-base font-bold leading-tight text-foreground">Kairos</p>
-          <p className="text-xs text-muted-foreground">Church Admin</p>
+          <p className="text-base font-bold leading-tight text-foreground">{t('common:kairos')}</p>
+          <p className="text-xs text-muted-foreground">{t('common:churchAdmin')}</p>
         </div>
       </Link>
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 px-3 pb-4">
-        {visibleNavItems.map((item) => (
-          <NavLink
-            key={item.href}
-            item={item}
-            pathname={pathname}
-            onClick={() => setMobileOpen(false)}
-          />
-        ))}
+        {visibleNavItems
+          .filter((item) => !item.section)
+          .map((item) => (
+            <NavLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              onClick={() => setMobileOpen(false)}
+            />
+          ))}
+
+        {NAV_SECTIONS.map((section) => {
+          const items = visibleNavItems.filter((item) => item.section === section);
+          if (items.length === 0) return null;
+          const open = sectionOpen(section, items);
+          return (
+            <div key={section} className="pt-2">
+              <NavSectionHeader
+                label={t(`nav:sections.${SECTION_KEYS[section]}`)}
+                open={open}
+                onToggle={() =>
+                  setToggledSections((prev) => ({ ...prev, [section]: !open }))
+                }
+              />
+              {open
+                ? items.map((item) => (
+                    <NavLink
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      onClick={() => setMobileOpen(false)}
+                    />
+                  ))
+                : null}
+            </div>
+          );
+        })}
+        <a
+          href={docsUrl("", i18n.language)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+          </svg>{t('common:helpGuides')}<svg className="ml-auto h-3 w-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </a>
       </nav>
 
       {/* User section */}
@@ -241,14 +518,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {user?.firstName} {user?.lastName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {user?.honorific ?? (user?.systemRole === 'admin' ? 'Administrator' : 'Member')}
+              {user?.honorific ?? (user?.systemRole === 'admin' ? t('common:administrator') : t('common:member'))}
             </p>
           </div>
           <Link
             href="/profile/settings"
             className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
-            aria-label="Settings"
-            title="Settings"
+            aria-label={t('common:settings')}
+            title={t('common:settings')}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
@@ -256,11 +533,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
           </Link>
           <ThemeToggle className="flex-shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
+          <LanguageToggle className="flex-shrink-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
           <button
             onClick={handleLogout}
             className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label={t('common:signOut')}
+            title={t('common:signOut')}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
@@ -304,7 +582,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button
               onClick={() => setMobileOpen(true)}
               className="rounded-lg p-1.5 text-foreground hover:bg-foreground/5"
-              aria-label="Open navigation"
+              aria-label={t('common:openNavigation')}
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                 <rect y="3" width="20" height="2" rx="1" />
@@ -312,9 +590,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <rect y="15" width="20" height="2" rx="1" />
               </svg>
             </button>
-            <span className="text-lg font-bold text-foreground">Kairos</span>
+            <span className="text-lg font-bold text-foreground">{t('common:kairos')}</span>
           </div>
           <ThemeToggle className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
+          <LanguageToggle className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
         </header>
 
         <main className="flex-1 overflow-y-auto">

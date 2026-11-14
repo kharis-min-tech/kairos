@@ -13,7 +13,8 @@ import {
 } from '@kairos/ui';
 import { useMyDepartments } from '@/hooks/use-departments';
 import { useMyRota } from '@/hooks/use-me';
-import { formatDate, formatShortDate } from '@/lib/date-format';
+import { formatDate, formatShortDate } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 const PREVIEW_LIMIT = 3;
 
@@ -56,7 +57,8 @@ function formatStartTime(startTime: string | null): string | null {
   return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
+export function MyDepartmentsView({ probationByDeptId }: Props = {}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: depts, isLoading: deptsLoading } = useMyDepartments();
   const { data: rota, isLoading: rotaLoading } = useMyRota();
 
@@ -85,10 +87,8 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-2 py-10 text-center">
           <Users className="h-6 w-6 text-muted-foreground" />
-          <p className="text-sm font-medium">You're not in any departments yet.</p>
-          <p className="text-xs text-muted-foreground">
-            Browse the departments at your branch below and request to join.
-          </p>
+          <p className="text-sm font-medium">{t('departments:youReNotInAnyDepartments')}</p>
+          <p className="text-xs text-muted-foreground">{t('departments:browseTheDepartmentsAtYourBranch')}</p>
         </CardContent>
       </Card>
     );
@@ -129,7 +129,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
                     <span className="font-medium">
                       {upcoming.length === 0
                         ? 'No upcoming duties'
-                        : `${upcoming.length} upcoming ${upcoming.length === 1 ? 'duty' : 'duties'}`}
+                        : `${upcoming.length} upcoming ${t('departments:dutyWord', { count: upcoming.length })}`}
                       {rotaLoading && upcoming.length === 0 ? ' …' : ''}
                     </span>
                   </div>
@@ -166,7 +166,7 @@ export function MyDepartmentsView({ probationByDeptId }: Props = {}) {
 
                   {remaining > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      + {remaining} more — view all in this department
+                      {t('departments:moreViewAllInDepartment', { count: remaining })}
                     </p>
                   )}
                 </div>

@@ -1,0 +1,140 @@
+#!/usr/bin/env node
+/**
+ * Produce every clip, in every language.
+ *
+ *   node batch.mjs                     everything
+ *   node batch.mjs --lang en           one language
+ *   node batch.mjs --only platform-members
+ *   node batch.mjs --plan              list the work and stop
+ *
+ * Each video is record → narrate → render. That is a few minutes apiece and
+ * there are a lot of them, so the run is resumable: anything already in
+ * `out/` is left alone unless `--force` is given. Stopping and restarting
+ * costs nothing.
+ *
+ * Every language is narrated by Deepgram. Krio and Twi have no voice of their
+ * own in its catalogue and are read by an English one; the captions come from
+ * the script, so the subtitles stay in the real language. Was: no voice in
+ * any engine available, so those are captions over the footage with no audio
+ * track — chosen over reading somebody English in place of their own language.
+ */
+import { execFileSync } from 'node:child_process';
+
+import { VOICE_FOR_LANG, DUB_FROM } from './lib/deepgram.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { listFlows } from './flows/index.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const argv = process.argv.slice(2);
+const flagOf = (n, d) => { const i = argv.indexOf(`--${n}`); return i >= 0 ? argv[i + 1] : d; };
+const has = (n) => argv.includes(`--${n}`);
+
+/**
+ * Languages the handbook is published in, and the voice each is read in.
+ *
+ * Both narrated languages used to name `athena`, which is en-US — so the
+ * French clips were an American voice reading French words. The voice now
+ * comes from VOICE_FOR_LANG, where each language has one of its own.
+ */
+export const LANGS = [
+  { code: 'en', voice: VOICE_FOR_LANG.en },
+  { code: 'fr', voice: VOICE_FOR_LANG.fr },
+  { code: 'kri', voice: VOICE_FOR_LANG.kri },
+  { code: 'tw', voice: VOICE_FOR_LANG.tw },
+];
+
+const only = flagOf('only');
+const langFilter = flagOf('lang');
+const force = has('force');
+
+const flows = (await listFlows()).filter((f) => !only || f === only);
+const langs = LANGS.filter((l) => !langFilter || l.code === langFilter);
+
+const jobs = [];
+for (const flow of flows) {
+  for (const lang of langs) {
+    const slug = lang.code === 'en' ? flow : `${flow}-${lang.code}`;
+    jobs.push({ flow, lang, slug, out: join(HERE, 'out', `tour-${slug}.mp4`) });
+  }
+}
+
+const todo = jobs.filter((j) => force || !existsSync(j.out));
+
+console.log(`${flows.length} flows × ${langs.length} languages = ${jobs.length} videos`);
+console.log(`${jobs.length - todo.length} already rendered, ${todo.length} to do\n`);
+
+if (has('plan')) {
+  for (const j of todo) console.log(`  ${j.slug.padEnd(42)} ${j.lang.voice ?? 'captions only'}`);
+  process.exit(0);
+}
+
+/**
+ * No step may take longer than this.
+ *
+ * Learned the hard way, twice. If the machine sleeps mid-render, Chrome's
+ * sessions die under Remotion and `cycle-browser-tabs` spins on
+ * "Protocol error (Page.bringToFront): Session closed" forever. The batch
+ * process stays alive and reports no failure, so it looks healthy from the
+ * outside while doing nothing at all — the last run sat wedged on one clip
+ * for roughly twelve hours.
+ *
+ * A render is about a minute for a section clip and four for a role tour, so
+ * fifteen minutes is far beyond any legitimate step. Exceeding it kills the
+ * child, fails the clip, and lets the run carry on to the next one; the
+ * clip is picked up by the next pass because nothing was written to out/.
+ */
+const STEP_TIMEOUT = 15 * 60 * 1000;
+
+const run = (cmd, args) =>
+  execFileSync(cmd, args, {
+    cwd: HERE,
+    stdio: 'inherit',
+    env: process.env,
+    timeout: STEP_TIMEOUT,
+    killSignal: 'SIGKILL',
+  });
+
+let done = 0;
+let failed = 0;
+const started = Date.now();
+
+for (const job of todo) {
+  const n = `${String(++done).padStart(3)}/${todo.length}`;
+  const narration = join(HERE, 'narration', `${job.slug}.json`);
+  console.log(`\n${'─'.repeat(70)}\n${n}  ${job.slug}`);
+
+  if (!existsSync(narration)) {
+    console.log(`  no narration script at narration/${job.slug}.json — skipped`);
+    failed++;
+    continue;
+  }
+
+  try {
+    run('node', ['record.mjs', job.flow, '--lang', job.lang.code]);
+    // A dubbed language speaks the English script of the same flow.
+    const dub = DUB_FROM[job.lang.code];
+    run('node', [
+      'voice.mjs', job.slug,
+      ...(job.lang.voice ? ['--voice', job.lang.voice] : ['--silent']),
+      ...(dub ? ['--dub', job.flow.replace(/\//g, '-')] : []),
+    ]);
+    run('node', ['render.mjs', job.slug]);
+  } catch (err) {
+    const why = err.signal === 'SIGKILL'
+      ? `timed out after ${STEP_TIMEOUT / 60000} minutes and was killed`
+      : err.message.split('\n')[0];
+    console.log(`  FAILED: ${why}`);
+    failed++;
+    continue;
+  }
+
+  const mins = (Date.now() - started) / 60000;
+  const rate = mins / done;
+  console.log(`  ${mins.toFixed(0)}m elapsed, ~${(rate * (todo.length - done)).toFixed(0)}m left`);
+}
+
+console.log(`\n${'═'.repeat(70)}`);
+console.log(`${done - failed} rendered, ${failed} failed, ${((Date.now() - started) / 60000).toFixed(0)}m total`);

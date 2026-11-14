@@ -1,0 +1,19 @@
+{
+  "role": "platform-membership-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "La classe",
+      "caption": "Quatre semaines, et ce qu’elle confère.",
+      "speech": "Adhésion, c’est la classe de quatre semaines. La terminer est ce qui fait formellement de quelqu’un un Membre."
+    },
+    {
+      "n": 2,
+      "title": "Promotions",
+      "caption": "Sessions, notes et remise des diplômes.",
+      "speech": "Une promotion est une session d’entrée. Vous planifiez ses quatre séances, vous notez la présence et l’examen, puis vous diplômez ceux qui ont réussi."
+    }
+  ]
+}

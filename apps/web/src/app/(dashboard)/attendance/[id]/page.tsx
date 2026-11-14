@@ -4,12 +4,13 @@ export const runtime = 'edge';
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, Users } from 'lucide-react';
-import { Card, CardContent, cn } from '@kairos/ui';
+import { ChevronLeft, Users, QrCode } from 'lucide-react';
+import { Button, Card, CardContent, cn } from '@kairos/ui';
 import { useService, useCanRecordAttendance } from '@/hooks/use-attendance';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { ServiceType } from '@kairos/types';
 import { CheckInPanel } from '../_components/check-in-panel';
+import { useTranslation } from 'react-i18next';
 
 const TYPE_BADGE: Record<string, string> = {
   [ServiceType.Sunday]: 'bg-[#5D3FD3]/15 text-[#5D3FD3] dark:text-[#a392ed]',
@@ -31,7 +32,8 @@ function BreakdownPill({ label, value }: { label: string; value: number }) {
   );
 }
 
-export default function CheckInPage() {
+export default function CheckInPage() {  const { t } = useTranslation(['attendance', 'common']);
+
   const { id } = useParams<{ id: string }>();
   const { data: service, isLoading, isError, error } = useService(id);
   const { data: canRecordResult } = useCanRecordAttendance(
@@ -45,8 +47,7 @@ export default function CheckInPage() {
         href="/attendance"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ChevronLeft className="h-4 w-4" /> Back to services
-      </Link>
+        <ChevronLeft className="h-4 w-4" />{t('attendance:backToServices')}</Link>
 
       {isLoading ? (
         <div className="h-24 animate-pulse rounded-xl bg-foreground/5" />
@@ -66,10 +67,13 @@ export default function CheckInPage() {
                       TYPE_BADGE[service.serviceType],
                     )}
                   >
-                    {service.serviceType}
+                    {t(`attendance:serviceType_${service.serviceType}`)}
                   </span>
                   <h1 className="text-xl font-bold text-foreground">
-                    {service.serviceTitle || `${service.serviceType} Service`}
+                    {service.serviceTitle ||
+                      t('attendance:typedService', {
+                        type: t(`attendance:serviceType_${service.serviceType}`),
+                      })}
                   </h1>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -82,14 +86,14 @@ export default function CheckInPage() {
                 <div className="flex items-center gap-1.5 rounded-lg bg-foreground/[0.04] px-3 py-2 text-sm">
                   <Users className="h-4 w-4 text-[#5D3FD3]" />
                   <span className="font-semibold text-foreground">{service.recordedCount}</span>
-                  <span className="text-muted-foreground">recorded</span>
+                  <span className="text-muted-foreground">{t('attendance:recorded')}</span>
                 </div>
                 {service.recordedCount > 0 && service.categoryBreakdown && (
                   <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <BreakdownPill label="Members" value={service.categoryBreakdown.members} />
-                    <BreakdownPill label="Returners" value={service.categoryBreakdown.returners} />
-                    <BreakdownPill label="Visitors" value={service.categoryBreakdown.visitors} />
-                    <BreakdownPill label="Children" value={service.categoryBreakdown.children} />
+                    <BreakdownPill label={t('attendance:members')} value={service.categoryBreakdown.members} />
+                    <BreakdownPill label={t('attendance:returners')} value={service.categoryBreakdown.returners} />
+                    <BreakdownPill label={t('attendance:visitors')} value={service.categoryBreakdown.visitors} />
+                    <BreakdownPill label={t('attendance:children')} value={service.categoryBreakdown.children} />
                   </div>
                 )}
               </div>
@@ -97,16 +101,20 @@ export default function CheckInPage() {
           </Card>
 
           {canCheckIn ? (
-            <CheckInPanel serviceId={id} />
+            <>
+              <div className="flex justify-end">
+                <Link href={`/attendance/${id}/qr`}>
+                  <Button variant="outline">
+                    <QrCode className="mr-1.5 h-4 w-4" />{t('attendance:showSelfCheckInQr')}</Button>
+                </Link>
+              </div>
+              <CheckInPanel serviceId={id} />
+            </>
           ) : (
             <Card>
               <CardContent className="py-8 text-center">
-                <p className="text-sm font-medium text-foreground">
-                  Check-in is only available to leaders, pastors, and admins.
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Speak to your branch leadership if you need to record attendance.
-                </p>
+                <p className="text-sm font-medium text-foreground">{t('attendance:checkInIsOnlyAvailableTo')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('attendance:speakToYourBranchLeadershipIf')}</p>
               </CardContent>
             </Card>
           )}

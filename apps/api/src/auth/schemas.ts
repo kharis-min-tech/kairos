@@ -19,6 +19,9 @@ export const signupSchema = z.object({
   emergencyContactRelationship: z.enum(['Spouse', 'Partner', 'Parent', 'Child', 'Sibling', 'Grandparent', 'Guardian', 'Friend', 'Other']).optional(),
   // Step 3: Password
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  acceptedPolicies: z.boolean().refine((v) => v === true, {
+    message: 'You must accept the Terms & Conditions and Privacy Notice to continue',
+  }),
 });
 
 export const loginSchema = z.object({
@@ -59,4 +62,33 @@ export const requestEmailChangeSchema = z.object({
 
 export const tokenSchema = z.object({
   token: z.string().min(1, 'Token is required'),
+});
+
+// Phase 1.5 Better-Auth: SSO-onboarding submit. `acceptedPolicies` stays
+// optional at the schema layer — the service double-checks whether the
+// caller has already accepted the current published T&C/Privacy versions
+// and only enforces the checkbox when a fresh consent record is needed.
+export const completeOauthProfileSchema = z.object({
+  phone: z
+    .string()
+    .min(1, 'Phone is required')
+    .max(20, 'Phone is too long'),
+  homeBranchId: z.string().uuid('Please pick a branch'),
+  acceptedPolicies: z.boolean().optional(),
+  // Optional — surfaced on the onboarding screen so users can fill them at
+  // first sign-in. Any absent field is left untouched on the member row.
+  firstName: z.string().min(1).max(100).optional(),
+  lastName: z.string().min(1).max(100).optional(),
+  middleName: z.string().max(100).optional(),
+  gender: z.enum(['Male', 'Female']).optional(),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD')
+    .optional(),
+  address: z.string().max(500).optional(),
+  city: z.string().max(100).optional(),
+  postalCode: z.string().max(20).optional(),
+  emergencyContactName: z.string().max(150).optional(),
+  emergencyContactPhone: z.string().max(20).optional(),
+  emergencyContactRelationship: z.string().max(50).optional(),
 });

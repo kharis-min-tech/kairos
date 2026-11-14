@@ -3,6 +3,7 @@
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { cn } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
 interface ThemeToggleProps {
   className?: string;
@@ -11,6 +12,7 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
+  const { t } = useTranslation(['common']);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -34,7 +36,7 @@ export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
     return (
       <button
         onClick={toggle}
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-label={isDark ? t('common:switchLightMode') : t('common:switchDarkMode')}
         className={cn(
           'flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
           'border-border bg-background text-foreground hover:bg-muted',
@@ -42,7 +44,7 @@ export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
         )}
       >
         {isDark ? <SunIcon /> : <MoonIcon />}
-        {isDark ? 'Light mode' : 'Dark mode'}
+        {isDark ? t('common:lightMode') : t('common:darkMode')}
       </button>
     );
   }
@@ -50,8 +52,8 @@ export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
   return (
     <button
       onClick={toggle}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={isDark ? t('common:switchLightMode') : t('common:switchDarkMode')}
+      title={isDark ? t('common:switchLightMode') : t('common:switchDarkMode')}
       className={cn(
         'rounded-md p-1.5 transition-colors',
         'text-muted-foreground hover:bg-muted hover:text-foreground',

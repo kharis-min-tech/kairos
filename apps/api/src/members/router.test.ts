@@ -128,7 +128,7 @@ describe('GET /api/members', () => {
     const body = await res.json() as any;
     expect(body.success).toBe(true);
     expect(body.data.data).toBeDefined();
-    expect(body.data.pagination).toBeDefined();
+    expect(body.data.meta).toBeDefined();
   });
 });
 
@@ -213,13 +213,13 @@ describe('PATCH /api/members/:id', () => {
 // ── DELETE /api/members/:id ────────────────────────────────
 
 describe('DELETE /api/members/:id', () => {
-  it('should return 401 for non-admin', async () => {
+  it('should return 403 for non-admin', async () => {
     const res = await app.request(`/api/members/${TEST_IDS.memberId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${memberToken}` },
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -247,14 +247,14 @@ describe('POST /api/members/:id/approve', () => {
     expect(body.success).toBe(true);
   });
 
-  it('should return 401 for regular member', async () => {
+  it('should return 403 for regular member', async () => {
     const res = await app.request(`/api/members/pending-member-id/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ approved: true }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -297,14 +297,14 @@ describe('POST /api/members/:id/membership-class', () => {
     expect(res.status).toBe(200);
   });
 
-  it('returns 401 for a regular member', async () => {
+  it('returns 403 for a regular member', async () => {
     const res = await app.request(`/api/members/${TEST_IDS.memberId}/membership-class`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${memberToken}` },
       body: JSON.stringify({ completedAt: '2026-06-01T00:00:00.000Z' }),
     });
 
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(403);
   });
 
   it('rejects a malformed body', async () => {
@@ -329,7 +329,7 @@ describe('GET /api/members/:id/health-record', () => {
   it('returns the record for an admin', async () => {
     // select 1: member lookup (admin → no SG prefetch); select 2: record
     mockDb.select
-      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: null }]))
+      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01' }]))
       .mockReturnValueOnce(chainTo([{ id: 'hr-1', memberId: TEST_IDS.memberId, medicalConditions: 'Asthma' }]));
 
     const res = await app.request(`/api/members/${TEST_IDS.memberId}/health-record`, {
@@ -343,9 +343,11 @@ describe('GET /api/members/:id/health-record', () => {
   });
 
   it('returns 403 when an unrelated in-branch member lacks safeguarding access', async () => {
-    // select 1: member lookup; select 2: SG-Lead branches → none
+    // select 1: member lookup; 2: SG-Lead branches → none; 3: members this
+    // viewer guards → none. Guardianship is a row now, so it costs a query.
     mockDb.select
-      .mockReturnValueOnce(chainTo([{ id: 'someone-else', homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: null }]))
+      .mockReturnValueOnce(chainTo([{ id: 'someone-else', homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01' }]))
+      .mockReturnValueOnce(chainTo([]))
       .mockReturnValueOnce(chainTo([]));
 
     const res = await app.request(`/api/members/someone-else/health-record`, {
@@ -360,7 +362,7 @@ describe('PUT /api/members/:id/health-record', () => {
   it('upserts a record as admin and stamps consent', async () => {
     // select 1: member lookup; select 2: existing record → none
     mockDb.select
-      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01', guardianMemberId: null }]))
+      .mockReturnValueOnce(chainTo([{ id: TEST_IDS.memberId, homeBranchId: TEST_IDS.branchId, memberType: 'member', dateOfBirth: '2016-01-01' }]))
       .mockReturnValueOnce(chainTo([]));
     mockDb.insert.mockReturnValueOnce(chainTo([{ id: 'hr-1', memberId: TEST_IDS.memberId, photoMediaConsent: true }]));
 
@@ -385,7 +387,7 @@ describe('GET /api/members/safeguarding/unguarded-minors', () => {
 
   it('returns the list for an admin (not captured by /:id)', async () => {
     mockDb.select.mockReturnValueOnce(chainTo([
-      { id: 'minor-1', firstName: 'Lily', lastName: 'Thompson', dateOfBirth: '2016-01-01', branchName: 'London', guardianMemberId: null, guardianFirstName: null, guardianLastName: null },
+      { id: 'minor-1', firstName: 'Lily', lastName: 'Thompson', dateOfBirth: '2016-01-01', branchName: 'London', linkedGuardianCount: 0, guardianNames: null },
     ]));
 
     const res = await app.request('/api/members/safeguarding/unguarded-minors', {

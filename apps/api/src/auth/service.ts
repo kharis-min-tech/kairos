@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { eq, and, or, sql } from 'drizzle-orm';
+import { eq, and, or, gt, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import {
   members,
@@ -7,7 +7,10 @@ import {
   roles,
   branchDepartments,
   departments,
+  consentRecords,
+  branches,
 } from '@kairos/database';
+import { getCurrentConsentVersions } from '../consent/service';
 import type {
   AuthContext,
   AuthTokens,
@@ -28,10 +31,12 @@ import {
   UnauthorizedError,
   ValidationError,
   logger,
+  sendAccountVerificationEmail,
   sendPasswordResetEmail,
   hashPassword,
   verifyPassword,
   randomTokenHex,
+  isMailerLive,
 } from '@kairos/utils';
 
 function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
@@ -63,12 +68,12 @@ function toMemberProfile(row: typeof members.$inferSelect): MemberProfile {
     systemRole: row.systemRole as MemberProfile['systemRole'],
     honorific: row.honorific,
     memberType: row.memberType as MemberProfile['memberType'],
-    guardianMemberId: row.guardianMemberId,
     membershipClassCompletedAt: row.membershipClassCompletedAt
       ? row.membershipClassCompletedAt.toISOString()
       : null,
     emailVerified: row.emailVerified,
     mustChangePassword: row.mustChangePassword,
+    mustCompleteProfile: row.mustCompleteProfile,
   };
 }
 
@@ -177,9 +182,10 @@ export interface SignupInput {
   emergencyContactPhone?: string;
   emergencyContactRelationship?: string;
   password: string;
+  acceptedPolicies?: boolean;
 }
 
-export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken: string }> {
+export async function signup(db: Database, input: SignupInput): Promise<{ member: MemberProfile; verificationToken?: string; sendVerificationEmail: Promise<void> }> {
   // Check for existing email
   const existing = await db
     .select({ id: members.id })
@@ -213,7 +219,11 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
   }
 
   const passwordHash = await hashPassword(input.password);
+  // Verification token: plaintext goes in the emailed link, hash sits in the DB.
+  // Mirrors password_reset. verifyEmail() hash-compares against the row.
   const verificationToken = randomTokenHex(32);
+  const verificationTokenHash = await hashPassword(verificationToken);
+  const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   const [created] = await db
     .insert(members)
@@ -238,6 +248,8 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
       homeBranchId: input.homeBranchId,
       passwordHash,
       emailVerified: false,
+      emailVerificationToken: verificationTokenHash,
+      emailVerificationExpiry: verificationExpiry,
       approvalStatus: 'pending',
       systemRole: 'member',
       // Phase 2: signups start as attendees. Once approved + class completed,
@@ -254,20 +266,64 @@ export async function signup(db: Database, input: SignupInput): Promise<{ member
     throw new Error('Failed to create member');
   }
 
-  // In production, send verification email. For local dev, log the token.
-  logger.info('Email verification token generated', {
-    memberId: created.id,
-    email: created.email,
-    verificationToken,
+  // Record Terms + Privacy consent inline at the current published version so
+  // self-signup users don't have to accept twice (checkbox at signup + banner
+  // on first login). Admin-invited members skip this path and still see the
+  // banner on first login, which is correct — they never saw the docs before
+  // their account was created.
+  if (input.acceptedPolicies) {
+    const versions = getCurrentConsentVersions();
+    const now = new Date();
+    await db.insert(consentRecords).values([
+      {
+        memberId: created.id,
+        consentType: 'terms',
+        version: versions.terms,
+        granted: true,
+        grantedAt: now,
+      },
+      {
+        memberId: created.id,
+        consentType: 'privacy',
+        version: versions.privacy,
+        granted: true,
+        grantedAt: now,
+      },
+    ]);
+  }
+
+  const verifyLink = `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/verify-email?token=${verificationToken}`;
+
+  // Return the send as a promise so the router can hand it to
+  // `c.executionCtx.waitUntil(...)`. CF Workers cancel un-awaited promises
+  // the moment fetch() returns; a floating `.catch(...)` here would silently
+  // kill every verification email in staging/prod.
+  const sendVerificationEmail = sendAccountVerificationEmail(
+    created.email,
+    created.firstName,
+    verifyLink,
+  ).catch((err) => {
+    logger.error('Failed to send account verification email', {
+      memberId: created.id,
+      email: created.email,
+      error: err instanceof Error ? err.message : String(err),
+    });
   });
 
+  // Only return the plaintext token when the mailer is NOT live (local dev
+  // without SES creds). In staging/prod the email is the canonical path;
+  // returning the token here bypasses the mailer entirely and used to
+  // auto-verify users who never received an email — hiding real SES
+  // misconfiguration behind a "success" screen.
+  const mailerLive = isMailerLive();
   return {
     member: toMemberProfile(created),
-    verificationToken,
+    sendVerificationEmail,
+    ...(mailerLive ? {} : { verificationToken }),
   };
 }
 
-async function issueAuthenticatedSession(
+export async function issueAuthenticatedSession(
   db: Database,
   member: typeof members.$inferSelect,
   secrets: AuthSecrets,
@@ -380,10 +436,11 @@ export async function refreshAccessToken(
     throw new UnauthorizedError('Member not found or inactive');
   }
 
-  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = await resolveBranchAdminAuthority(
-    db,
-    member.id,
-  );
+  const [authority, grants] = await Promise.all([
+    resolveBranchAdminAuthority(db, member.id),
+    resolveGrants(db, member.id),
+  ]);
+  const { branchSystemAdminBranchIds, branchDataAdminBranchIds } = authority;
 
   const authContext: AuthContext = {
     memberId: member.id,
@@ -393,8 +450,14 @@ export async function refreshAccessToken(
     activeRole: member.systemRole as AuthContext['systemRole'],
     branchSystemAdminBranchIds,
     branchDataAdminBranchIds,
-    // RBAC Phase 1: grants live outside the JWT; populated per-request.
-    grants: [],
+    // The API re-resolves grants from the database on every request, so it
+    // never reads these. Both clients do: `useCapabilities()` on web and its
+    // mobile twin decode the access token to decide which affordances to
+    // offer. Minting a refreshed token with an empty array therefore stripped
+    // every capability-gated button, menu and page the moment the first
+    // refresh landed — and logging out and back in "fixed" it, because only
+    // the login path filled this in. Re-resolve here too.
+    grants,
   };
 
   const [accessToken, newRefreshToken] = await Promise.all([
@@ -405,30 +468,55 @@ export async function refreshAccessToken(
 }
 
 export async function verifyEmail(db: Database, token: string): Promise<void> {
-  // For local dev, we use a simple token lookup approach.
-  // The token was logged during signup — in production, this would be stored in a verification_tokens table.
-  // For MVP, we accept any valid token format and verify based on member lookup.
-  // In a real implementation, validate token against a stored hash.
-
-  // For local dev simplicity: the token is the member's email encoded by a deterministic scheme.
-  // We'll use a pragmatic approach: find unverified members, or accept the token as a member ID for dev.
-  logger.info('Email verification attempted', { token });
-
-  // For MVP local dev: accept token as member ID
-  const [member] = await db
-    .select()
+  // The token in the URL is the plaintext value we emailed on signup. The DB
+  // holds only the bcrypt hash + expiry. Fetch all candidate rows (unverified,
+  // non-expired, token still present) and hash-compare to find the owner.
+  const now = new Date();
+  const candidates = await db
+    .select({
+      id: members.id,
+      emailVerificationToken: members.emailVerificationToken,
+      emailVerificationExpiry: members.emailVerificationExpiry,
+    })
     .from(members)
-    .where(and(eq(members.id, token), eq(members.emailVerified, false)))
-    .limit(1);
+    .where(
+      and(
+        eq(members.emailVerified, false),
+        // gt() routes through the column encoder — the raw sql`...` template
+        // does not, and hands the Date straight to postgres.js which crashes
+        // in Buffer.byteLength. Column is nullable; gt() with NULL evaluates
+        // false, which is the semantic we want (no expiry = no candidate).
+        gt(members.emailVerificationExpiry, now),
+      ),
+    )
+    .limit(200);
 
-  if (!member) {
+  let matched: { id: string } | null = null;
+  for (const candidate of candidates) {
+    if (!candidate.emailVerificationToken) continue;
+    // Sequential hash compares are fine: bcrypt is fast enough at O(hundreds)
+    // and signup-verification traffic is low.
+    // eslint-disable-next-line no-await-in-loop
+    if (await verifyPassword(token, candidate.emailVerificationToken)) {
+      matched = { id: candidate.id };
+      break;
+    }
+  }
+
+  if (!matched) {
     throw new NotFoundError('Invalid or expired verification token');
   }
 
   await db
     .update(members)
-    .set({ emailVerified: true })
-    .where(eq(members.id, member.id));
+    .set({
+      emailVerified: true,
+      // Null the token so the link is single-use — a second submit gets
+      // "invalid or expired" instead of silently succeeding.
+      emailVerificationToken: null,
+      emailVerificationExpiry: null,
+    })
+    .where(eq(members.id, matched.id));
 }
 
 export async function forgotPassword(db: Database, email: string): Promise<{ resetToken: string }> {
@@ -562,4 +650,195 @@ export async function changePassword(
     outcome: AuditOutcome.Success,
     metadata: { via: 'change_password' },
   });
+}
+
+// ── SSO onboarding: complete-oauth-profile ────────────────
+
+export interface CompleteOAuthProfileInput {
+  phone: string;
+  homeBranchId: string;
+  acceptedPolicies?: boolean;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  gender?: 'Male' | 'Female';
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
+}
+
+/**
+ * Phase 1.5 Better-Auth: finalize an SSO signup. The caller must currently
+ * be flagged `mustCompleteProfile === true` — any other state throws a
+ * validation error so a normal member can't accidentally overwrite their
+ * home branch by hitting this endpoint. On success:
+ *   - phone + homeBranchId are persisted
+ *   - Terms + Privacy consent records are inserted (only if the user hasn't
+ *     already accepted the current published version — checked live so this
+ *     path is idempotent if the client double-submits)
+ *   - `mustCompleteProfile` flips to FALSE
+ *
+ * `approvalStatus` is NOT touched here. Admin approval is a separate gate;
+ * the caller lands on /pending-approval afterwards and waits.
+ */
+export async function completeOauthProfile(
+  db: Database,
+  auth: AuthContext,
+  input: CompleteOAuthProfileInput,
+): Promise<MemberProfile> {
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(eq(members.id, auth.memberId))
+    .limit(1);
+
+  if (!member) throw new NotFoundError('Member not found');
+
+  if (!member.mustCompleteProfile) {
+    throw new ValidationError(
+      'This account has already completed onboarding.',
+    );
+  }
+
+  // Verify the chosen home branch exists + is active. Reject on unknown
+  // branch — the dropdown on the client is server-populated so this is
+  // only reachable via a crafted request, but a clean 400 is friendlier
+  // than a FK-violation 500.
+  const [branch] = await db
+    .select({ id: branches.id })
+    .from(branches)
+    .where(and(eq(branches.id, input.homeBranchId), eq(branches.isActive, true)))
+    .limit(1);
+  if (!branch) {
+    throw new ValidationError('Please pick an active branch.');
+  }
+
+  // Phone-uniqueness guard mirrors signup() — refuse to steal an active
+  // member's number.
+  const phoneConflict = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(and(eq(members.phone, input.phone), eq(members.isActive, true)))
+    .limit(1);
+  const conflictingId = phoneConflict[0]?.id;
+  if (conflictingId && conflictingId !== auth.memberId) {
+    throw new ConflictError('A member with this phone number already exists');
+  }
+
+  // Insert Terms + Privacy consent only if the user hasn't already accepted
+  // the current published version. Guards against double-submit re-inserts
+  // and lets us keep the T&C checkbox conditional on the client.
+  const versions = getCurrentConsentVersions();
+  const [existingTerms, existingPrivacy] = await Promise.all([
+    db
+      .select({ id: consentRecords.id })
+      .from(consentRecords)
+      .where(
+        and(
+          eq(consentRecords.memberId, member.id),
+          eq(consentRecords.consentType, 'terms'),
+          eq(consentRecords.version, versions.terms),
+          eq(consentRecords.granted, true),
+          eq(consentRecords.isActive, true),
+        ),
+      )
+      .limit(1),
+    db
+      .select({ id: consentRecords.id })
+      .from(consentRecords)
+      .where(
+        and(
+          eq(consentRecords.memberId, member.id),
+          eq(consentRecords.consentType, 'privacy'),
+          eq(consentRecords.version, versions.privacy),
+          eq(consentRecords.granted, true),
+          eq(consentRecords.isActive, true),
+        ),
+      )
+      .limit(1),
+  ]);
+
+  const needsConsent = !existingTerms[0] || !existingPrivacy[0];
+  if (needsConsent && !input.acceptedPolicies) {
+    throw new ValidationError(
+      'You must accept the Terms & Conditions and Privacy Notice to continue',
+    );
+  }
+
+  const now = new Date();
+  if (needsConsent && input.acceptedPolicies) {
+    const rows: Array<typeof consentRecords.$inferInsert> = [];
+    if (!existingTerms[0]) {
+      rows.push({
+        memberId: member.id,
+        consentType: 'terms',
+        version: versions.terms,
+        granted: true,
+        grantedAt: now,
+      });
+    }
+    if (!existingPrivacy[0]) {
+      rows.push({
+        memberId: member.id,
+        consentType: 'privacy',
+        version: versions.privacy,
+        granted: true,
+        grantedAt: now,
+      });
+    }
+    if (rows.length > 0) {
+      await db.insert(consentRecords).values(rows);
+    }
+  }
+
+  // Build a set patch that only writes columns the caller actually sent.
+  // Empty strings for optional fields are normalised to null so the DB stores
+  // "not provided" rather than a spurious empty string.
+  const setPatch: Partial<typeof members.$inferInsert> = {
+    phone: input.phone,
+    homeBranchId: input.homeBranchId,
+    mustCompleteProfile: false,
+    updatedAt: now,
+  };
+  const opt = <T extends string>(v: T | undefined): T | null | undefined =>
+    v === undefined ? undefined : v === '' ? null : v;
+  if (input.firstName !== undefined && input.firstName !== '') {
+    // firstName + lastName are NOT NULL — only overwrite with a non-empty value.
+    setPatch.firstName = input.firstName;
+  }
+  if (input.lastName !== undefined && input.lastName !== '') {
+    setPatch.lastName = input.lastName;
+  }
+  const middleName = opt(input.middleName);
+  if (middleName !== undefined) setPatch.middleName = middleName;
+  const gender = opt(input.gender);
+  if (gender !== undefined) setPatch.gender = gender;
+  const dob = opt(input.dateOfBirth);
+  if (dob !== undefined) setPatch.dateOfBirth = dob;
+  const address = opt(input.address);
+  if (address !== undefined) setPatch.address = address;
+  const city = opt(input.city);
+  if (city !== undefined) setPatch.city = city;
+  const postalCode = opt(input.postalCode);
+  if (postalCode !== undefined) setPatch.postalCode = postalCode;
+  const ecName = opt(input.emergencyContactName);
+  if (ecName !== undefined) setPatch.emergencyContactName = ecName;
+  const ecPhone = opt(input.emergencyContactPhone);
+  if (ecPhone !== undefined) setPatch.emergencyContactPhone = ecPhone;
+  const ecRel = opt(input.emergencyContactRelationship);
+  if (ecRel !== undefined) setPatch.emergencyContactRelationship = ecRel;
+
+  const [updated] = await db
+    .update(members)
+    .set(setPatch)
+    .where(eq(members.id, member.id))
+    .returning();
+
+  if (!updated) throw new Error('Failed to update member during onboarding');
+
+  return toMemberProfile(updated);
 }

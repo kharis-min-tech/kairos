@@ -2,7 +2,14 @@ import type { Context, Next } from 'hono';
 import { patchLoggerContext } from '@kairos/utils';
 import { jwtVerify } from 'jose';
 import type { AuthContext, Capability, RoleScope } from '@kairos/types';
-import { UnauthorizedError } from '@kairos/utils';
+// 401 says "I do not know who you are"; 403 says "I know, and no". Every
+// capability rejection below is the second — the caller authenticated fine and
+// simply lacks the grant. They all used to throw 401, which matters because
+// the api-client refreshes the token on 401 and logs out on a terminal auth
+// failure: failing a permission check could bounce someone to /login instead
+// of telling them they have no access. apps/api/CLAUDE.md already documented
+// these as 403.
+import { UnauthorizedError, ForbiddenError } from '@kairos/utils';
 import { db } from '../db';
 import { resolveGrants, authHasCapability } from '../lib/grants';
 import { getAuthSecrets } from '../lib/auth-secrets';
@@ -74,7 +81,7 @@ export function requireRole(...roles: string[]) {
   return async (c: Context, next: Next) => {
     const auth = c.get('auth');
     if (!roles.includes(auth.systemRole)) {
-      throw new UnauthorizedError('Insufficient permissions');
+      throw new ForbiddenError('Insufficient permissions');
     }
     await next();
   };
@@ -96,14 +103,14 @@ export function requireBranchAdmin(branchIdParam = 'id') {
     // with scope=branch:X must be acting on branch X — any other branch in
     // the URL is refused before we even check membership.
     if (auth.scope?.kind === 'branch' && auth.scope.id !== branchId) {
-      throw new UnauthorizedError('Insufficient permissions');
+      throw new ForbiddenError('Insufficient permissions');
     }
     const ok =
       auth.systemRole === 'admin' ||
       (authHasCapability(auth, 'branch:read') && auth.branchId === branchId) ||
       auth.branchSystemAdminBranchIds.includes(branchId) ||
       auth.branchDataAdminBranchIds.includes(branchId);
-    if (!ok) throw new UnauthorizedError('Insufficient permissions');
+    if (!ok) throw new ForbiddenError('Insufficient permissions');
     await next();
   };
 }
@@ -120,10 +127,10 @@ export function requireBranchSystemAdmin(branchIdParam = 'id') {
     if (!branchId) throw new UnauthorizedError('Branch ID required');
     // Phase 4: scope-bound branch sessions can only act on their scoped branch.
     if (auth.scope?.kind === 'branch' && auth.scope.id !== branchId) {
-      throw new UnauthorizedError('Insufficient permissions');
+      throw new ForbiddenError('Insufficient permissions');
     }
     const ok = auth.systemRole === 'admin' || auth.branchSystemAdminBranchIds.includes(branchId);
-    if (!ok) throw new UnauthorizedError('Insufficient permissions');
+    if (!ok) throw new ForbiddenError('Insufficient permissions');
     await next();
   };
 }
@@ -155,10 +162,10 @@ export function requireCapability(
       auth.scope.kind === target.kind &&
       auth.scope.id !== target.id
     ) {
-      throw new UnauthorizedError('Insufficient permissions');
+      throw new ForbiddenError('Insufficient permissions');
     }
     if (!authHasCapability(auth, cap, target)) {
-      throw new UnauthorizedError('Insufficient permissions');
+      throw new ForbiddenError('Insufficient permissions');
     }
     await next();
   };
@@ -187,7 +194,7 @@ export function requireAnyCapability(...caps: Capability[]) {
         return;
       }
     }
-    throw new UnauthorizedError('Insufficient permissions');
+    throw new ForbiddenError('Insufficient permissions');
   };
 }
 

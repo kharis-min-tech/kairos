@@ -1,0 +1,19 @@
+{
+  "role": "platform-attendance-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Sɛvis dɛn",
+      "caption": "Ɛvri gadarin, ɛn in rɛjista.",
+      "speech": "Atɛndans de lis di sɛvis dɛn. Ɛvri wan de sho omɔch dɛn rɛkɔd ɛn if di rɛjista stil opin."
+    },
+    {
+      "n": 2,
+      "title": "Rɛkɔd Udat Kam",
+      "caption": "Di dɛsk, ɔ di mɛmba insɛf.",
+      "speech": "Opin wan sɛvis fɔ mak pipul prɛzɛnt, let ɔ vɔchwal. Mɛmba kin chɛk dɛnsɛf in wit di QR kod na di dɔ."
+    }
+  ]
+}

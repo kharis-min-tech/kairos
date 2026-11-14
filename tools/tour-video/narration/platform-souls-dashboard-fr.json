@@ -1,0 +1,19 @@
+{
+  "role": "platform-souls-dashboard-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Les chiffres",
+      "caption": "Où en est le parcours.",
+      "speech": "Le tableau de bord des âmes traduit le parcours en chiffres. Combien à chaque étape, combien de conversions, et la fraîcheur des suivis."
+    },
+    {
+      "n": 2,
+      "title": "Par statut",
+      "caption": "Cliquez une barre pour voir qui.",
+      "speech": "Les graphiques répartissent par statut, et par urgence. Cliquez sur une barre pour voir exactement qui elle compte."
+    }
+  ]
+}

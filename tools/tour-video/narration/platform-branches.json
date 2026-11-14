@@ -1,0 +1,19 @@
+{
+  "role": "platform-branches",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Every branch",
+      "caption": "The whole network, listed.",
+      "speech": "Branches lists every location the church runs, its city, its region and how many people are in its congregation."
+    },
+    {
+      "n": 2,
+      "title": "Inside one",
+      "caption": "Settings, leadership and members.",
+      "speech": "Open a branch to set its details, assign its pastor and admins, and see the members, groups and services that belong to it."
+    }
+  ]
+}

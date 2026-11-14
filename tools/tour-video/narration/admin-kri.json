@@ -1,0 +1,61 @@
+{
+  "role": "admin-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Yu ovavyu",
+      "caption": "Ɔl di branch wan tɛm.",
+      "speech": "Dis na di admin vyu. Chɔch Pɔls de kawnt ɔl di branch wan tɛm, ɛn Nid Yu de lis wetin de wet fɔ sɔmbɔdi tide."
+    },
+    {
+      "n": 2,
+      "title": "Branch dɛn",
+      "caption": "Mek dɛn, grup dɛn, pul dɛn.",
+      "speech": "Branch na yu yon nɔmɔ. Na admin nɔmɔ kin mek wan, muv am to ɔda rijɔn, ɔ pul am awt pan di aktiv wan dɛn."
+    },
+    {
+      "n": 3,
+      "title": "Insay wan branch",
+      "caption": "In ditel, ɛn udat de lid am.",
+      "speech": "Opin wan branch fɔ sɛt in ditel ɛn in lidaship. We yu nem di mayn pasto ya, dat de gi am say pan dat branch in sefgadin kyu."
+    },
+    {
+      "n": 4,
+      "title": "Rijɔn dɛn",
+      "caption": "Di ples dɛn we de grup yu branch.",
+      "speech": "Rijɔn de grup branch bay ples. Mek di rijɔn fɔs; yu nɔ kin mek branch te di rijɔn de."
+    },
+    {
+      "n": 5,
+      "title": "Di aproval kyu",
+      "caption": "Nɔbɔdi nɔ de ɛnta te sɔmbɔdi opin fɔ am.",
+      "speech": "Ɛnibɔdi we sayn ɔp insɛf de wet ya. Aprov am ɛn i gɛt ful mɛmba akses; rifyuz am ɛn dɛn pul di akawnt."
+    },
+    {
+      "n": 6,
+      "title": "Udat ol wetin",
+      "caption": "Na grant, nɔto job taytul.",
+      "speech": "Opin wan mɛmba fɔ manej in grant dɛn. Kairos de sev tu sistem rol nɔmɔ, so ɔltin ɛls de kam frɔm grant."
+    },
+    {
+      "n": 7,
+      "title": "Mɛmbaship klas dɛn",
+      "caption": "Chɔch-wayd, so no branch grant nɔ de rich am.",
+      "speech": "Di mɛmbaship program na chɔch-wayd. Kɔhɔt de tek pipul frɔm ɛvri branch, so fɔ administa am, yu nid chɔch-skop grant."
+    },
+    {
+      "n": 8,
+      "title": "Ripɔt akrɔs branch",
+      "caption": "Di onli vyu we de tan branch wit branch.",
+      "speech": "Ripɔt na di krɔs-branch vyu. Na yu nɔmɔ as rol kin si ɛvri branch sayd bay sayd, nɔto wan at a tɛm."
+    },
+    {
+      "n": 9,
+      "title": "Yu langwej",
+      "caption": "Kairos ɛn dis andbuk, insay fɔ langwej.",
+      "speech": "Kairos de tɔk Inglish, Frɛnch, Krio ɛn Twi. Chenj am frɔm di saydba, ɛn di andbuk de opin insay di sem langwej."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "role": "analytics-growth-reports-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Croissance",
+      "caption": "Les nouveaux membres, dans le temps.",
+      "speech": "Les rapports de croissance comptent les nouveaux membres sur la période, et où ils ont rejoint. Le tout comparé aux mois précédents."
+    },
+    {
+      "n": 2,
+      "title": "Nouveaux membres",
+      "caption": "D’où ils viennent.",
+      "speech": "La répartition montre par quelle antenne, et par quel chemin, ils sont arrivés. Donc ce qui amène réellement du monde."
+    }
+  ]
+}

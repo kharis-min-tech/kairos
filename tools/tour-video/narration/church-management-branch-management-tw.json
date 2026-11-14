@@ -1,0 +1,19 @@
+{
+  "role": "church-management-branch-management-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Asɔre baa nhyehyɛeɛ",
+      "caption": "Nsɛm, berɛ, nkyerɛwee.",
+      "speech": "Asɔre baa kura n’adres, n’ɔsom berɛ, ne sɛ w’ankasa nkyerɛwee abue anaa ne berɛ tenten a ɛtwa ɔsom no ho hyia."
+    },
+    {
+      "n": 2,
+      "title": "Hwan na ɔdi anim",
+      "caption": "Ɔsɔfoɔ, asomfoɔ, sohwɛfoɔ.",
+      "speech": "Wɔde akannifoɔ ma wɔ ha: ɔsɔfoɔ panin, asomfoɔ sɛ wɔwɔ hɔ a, ne asɔre baa sohwɛfoɔ a wɔtumi hwɛ ne nsɛm so."
+    }
+  ]
+}

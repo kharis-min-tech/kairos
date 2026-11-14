@@ -11,3 +11,26 @@ test-results
 .claude/worktrees
 .vscode/
 grant-proposal/
+
+# Windows/WSL mark-of-the-web metadata
+*:Zone.Identifier
+
+# Android signing keystores — private material. `eas credentials --download`
+# drops these into apps/mobile/; they must never be committed.
+*.jks
+*.keystore
+
+# Generated video. Large, regenerable from tools/tour-video, and belongs
+# wherever the docs site is published rather than in the repository.
+tools/tour-video/out/
+tools/tour-video/mixed/
+tools/tour-video/public/capture/
+tools/tour-video/public/voice/
+tools/tour-video/marks-*.json
+tools/tour-video/stale/
+tools/tour-video/.capture-tmp/
+tools/tour-video/assets/bed.*
+tools/tour-video/public/bed.mp3
+apps/docs/public/clips/
+apps/docs/public/voice-samples/
+tools/tour-video/walkthrough/

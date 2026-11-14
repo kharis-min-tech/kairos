@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Mail, ShieldCheck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -8,15 +8,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@kairos/ui';
 import { useRequestEmailChange } from '@/hooks/use-email-change';
+import { useTranslation } from 'react-i18next';
 
-const schema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newEmail: z.string().email('Invalid email address'),
+const makeSchema = (t: (key: string) => string) =>
+  z.object({
+  currentPassword: z.string().min(1, t('settings:vCurrentPasswordIsRequired')),
+  newEmail: z.string().email(t('settings:vInvalidEmailAddress')),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
-export default function EmailChangePage() {
+export default function EmailChangePage() {  const { t } = useTranslation(['settings', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
+
   const [success, setSuccess] = useState(false);
   const mutation = useRequestEmailChange();
 
@@ -41,41 +45,32 @@ export default function EmailChangePage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Change email</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Confirm your password, then we&apos;ll send a verification link to the
-          new address.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings:changeEmail')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:confirmPasswordThenLlSendVerification')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Mail className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> New email
-          </CardTitle>
+            <Mail className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:newEmail')}</CardTitle>
         </CardHeader>
         <CardContent>
           {success ? (
             <div className="space-y-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-4 text-sm">
-              <p className="font-semibold text-emerald-700 dark:text-emerald-400">
-                Confirmation sent
-              </p>
+              <p className="font-semibold text-emerald-700 dark:text-emerald-400">{t('settings:confirmationSent')}</p>
               <p className="text-muted-foreground">
-                Check the new email for a verification link. Your current email is
-                still active until you click it. We&apos;ve also notified your old
-                email — if you didn&apos;t request this, click <strong>This wasn&apos;t me</strong> in that message.
-              </p>
+                {t('settings:checkNewEmailForLink')}{' '}
+                <strong>{t('settings:thisWasntMe')}</strong>{t('settings:inThatMessage')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <Label htmlFor="currentPassword">Current password</Label>
+                <Label htmlFor="currentPassword">{t('settings:currentPassword')}</Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -89,7 +84,7 @@ export default function EmailChangePage() {
                 )}
               </div>
               <div>
-                <Label htmlFor="newEmail">New email address</Label>
+                <Label htmlFor="newEmail">{t('settings:newEmailAddress')}</Label>
                 <Input
                   id="newEmail"
                   type="email"
@@ -112,7 +107,7 @@ export default function EmailChangePage() {
                 className="rounded-lg bg-gradient-to-r from-[#451ebb] to-[#5d3fd3] text-white"
                 disabled={mutation.isPending}
               >
-                {mutation.isPending ? 'Sending…' : 'Send confirmation'}
+                {mutation.isPending ? t('settings:sending') : t('settings:sendConfirmation')}
               </Button>
             </form>
           )}
@@ -122,11 +117,7 @@ export default function EmailChangePage() {
       <Card>
         <CardContent className="flex items-start gap-3 py-4 text-xs text-muted-foreground">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#5D3FD3]" aria-hidden />
-          <p>
-            Your old email will get an alert with a &ldquo;This wasn&apos;t me&rdquo;
-            link. Clicking that reverts the change immediately and locks your
-            account until you reset your password.
-          </p>
+          <p>{t('settings:yourOldEmailGetAlertWasn')}</p>
         </CardContent>
       </Card>
     </div>

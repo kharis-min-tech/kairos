@@ -1,0 +1,61 @@
+{
+  "role": "general-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Votre vue d’ensemble",
+      "caption": "La porte d’entrée, limitée à votre rôle.",
+      "speech": "Voici Kairos. Il s’ouvre sur votre vue d’ensemble. Et tout ce que vous voyez ici correspond à ce dont vous êtes réellement responsable."
+    },
+    {
+      "n": 2,
+      "title": "La barre latérale",
+      "caption": "Six groupes. Vous ne voyez que les vôtres.",
+      "speech": "La barre latérale regroupe Personnes, Groupes, Rassemblements, Analyses, et Organisation. Une section absente est simplement une section dont votre rôle n’a pas besoin."
+    },
+    {
+      "n": 3,
+      "title": "Membres",
+      "caption": "Tout le monde dans une seule liste.",
+      "speech": "Membres est l’annuaire. Toute l’église s’y trouve, avec son antenne de rattachement, et si la classe d’adhésion a été faite."
+    },
+    {
+      "n": 4,
+      "title": "Cellules",
+      "caption": "Les petits groupes, avec une carte.",
+      "speech": "Les cellules sont les petits groupes. K-Groups, Kharis Express, New Breeds, et les autres. Avec une carte pour trouver la plus proche."
+    },
+    {
+      "n": 5,
+      "title": "Départements",
+      "caption": "Les équipes de ministère et leurs plannings.",
+      "speech": "Les départements sont les équipes de ministère. Chacune garde son effectif, son planning de service, et les candidatures reçues."
+    },
+    {
+      "n": 6,
+      "title": "Présence",
+      "caption": "Cultes, enregistrement et feuilles de présence.",
+      "speech": "La présence couvre les cultes, et l’enregistrement. Chacun peut s’enregistrer avec un QR code, ou l’accueil le fait à l’arrivée."
+    },
+    {
+      "n": 7,
+      "title": "Le parcours des âmes",
+      "caption": "Du premier contact jusqu’au département.",
+      "speech": "Le parcours des âmes suit une personne touchée par l’évangélisation. Nouveau, suivi en cours, intéressé, converti, puis le discipulat."
+    },
+    {
+      "n": 8,
+      "title": "Rapports",
+      "caption": "Présence, croissance et engagement.",
+      "speech": "Les rapports transforment tout cela en chiffres. Tendances de présence, croissance des adhésions, et engagement. Toujours selon votre rôle."
+    },
+    {
+      "n": 9,
+      "title": "Votre langue",
+      "caption": "Kairos et ce manuel, en quatre langues.",
+      "speech": "Kairos parle anglais, français, krio, et twi. Changez de langue depuis la barre latérale, et le manuel s’ouvre dans celle que vous avez choisie."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+appId: ${APP_ID}
+name: Departments CRUD — list + create form (no submit)
+tags:
+  - smoke
+  - wave3
+  - departments
+env:
+  APP_ID: "com.kharis.kairos"
+---
+# Idempotent. Enters /departments, opens the create form, asserts, backs out.
+# Does NOT submit — the create form requires a lead member picker that would
+# depend on branch-specific seed data.
+
+- tapOn: "More"
+- extendedWaitUntil:
+    visible:
+      text: "For you"
+    timeout: 8000
+
+- scrollUntilVisible:
+    element:
+      text: "Departments"
+    direction: DOWN
+    timeout: 8000
+    speed: 40
+- tapOn: "Departments"
+
+- extendedWaitUntil:
+    visible:
+      text: "My branch"
+    timeout: 8000
+- assertVisible: "Any dept"
+
+- tapOn:
+    id: "new-department-btn"
+
+- extendedWaitUntil:
+    visible:
+      text: "New department"
+    timeout: 8000
+- assertVisible: "DEPARTMENT"
+- assertVisible: "LEADERSHIP"
+- assertVisible: "Create department"
+
+- pressKey: Back
+- extendedWaitUntil:
+    visible:
+      text: "My branch"
+    timeout: 8000
+- pressKey: Back

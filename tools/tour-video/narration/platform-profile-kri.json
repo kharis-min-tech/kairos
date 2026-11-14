@@ -1,0 +1,19 @@
+{
+  "role": "platform-profile-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Yu Infɔmeshɔn",
+      "caption": "Yu kɔntakt infɔmeshɔn.",
+      "speech": "Yu prɔfayl kip yu kɔntakt infɔmeshɔn, yu om branch, ɛn di rol dɛn we dɛn gi yu akrɔs di chɔch."
+    },
+    {
+      "n": 2,
+      "title": "Yu Sɛtin dɛn",
+      "caption": "Sikyuriti, notifikeshɔn, langwej.",
+      "speech": "Sɛtin kɔva yu paswɔd ɛn aw yu de sayn in, wetin notifikeshɔn yu de gɛt, ɛn di langwej we Kairos de tɔk to yu."
+    }
+  ]
+}

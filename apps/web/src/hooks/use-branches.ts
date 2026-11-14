@@ -6,6 +6,7 @@ import type {
   CreateBranchRequest,
   UpdateBranchRequest,
   CreateRegionRequest,
+  UpdateRegionRequest,
   AssignLeadershipRequest,
   GetLeadershipParams,
   AssignBranchRoleRequest,
@@ -84,6 +85,27 @@ export function useCreateRegion() {
     mutationFn: async (data: CreateRegionRequest) => {
       const res = await api.regions.create(data);
       return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['regions'] }),
+  });
+}
+
+export function useUpdateRegion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateRegionRequest }) => {
+      const res = await api.regions.update(id, data);
+      return res.data!;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['regions'] }),
+  });
+}
+
+export function useDeleteRegion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.regions.delete(id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['regions'] }),
   });

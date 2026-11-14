@@ -20,7 +20,7 @@ export function renderFormsSubmissionReceived(p: FormsSubmissionReceivedPayload)
     ? ` submitted by ${escapeHtml(p.submittedByName)}`
     : '';
   return {
-    subject: `New ${p.formLabel} submission — ${p.subjectName}`,
+    subject: `New ${p.formLabel} submission: ${p.subjectName}`,
     html: renderLayout({
       heading: `New ${p.formLabel} submission`,
       greeting: p.memberName,

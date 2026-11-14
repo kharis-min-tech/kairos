@@ -1,0 +1,160 @@
+import type { ExpoConfig, ConfigContext } from 'expo/config';
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: 'Kairos',
+  slug: 'kairos-mobile',
+  version: '1.0.0',
+  runtimeVersion: { policy: 'appVersion' },
+  orientation: 'portrait',
+  icon: './assets/icon.png',
+  scheme: 'kairos',
+  userInterfaceStyle: 'automatic',
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: 'com.kharis.kairos',
+    // Universal-links: when the OS sees an https link on kairos.kharis.org
+    // (or staging) whose path matches the AASA file, it opens the app instead
+    // of Safari. AASA files live at apps/web/public/.well-known/.
+    associatedDomains: [
+      'applinks:kairos.kharis.org',
+      'applinks:staging.kairos.kharis.org',
+    ],
+  },
+  android: {
+    package: 'com.kharis.kairos',
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#5D3FD3',
+    },
+    // App-links: same idea as iOS. `autoVerify: true` tells the OS to verify
+    // the assetlinks.json from the domain on install; when it passes, the app
+    // wins the deep-link intent silently. Password reset, email verify, and
+    // the OAuth SSO callbacks are the paths currently intercepted.
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/reset-password',
+          },
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/verify-email',
+          },
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/oauth-callback',
+          },
+          {
+            scheme: 'https',
+            host: 'kairos.kharis.org',
+            pathPrefix: '/oauth-confirm-link',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/reset-password',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/verify-email',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/oauth-callback',
+          },
+          {
+            scheme: 'https',
+            host: 'staging.kairos.kharis.org',
+            pathPrefix: '/oauth-confirm-link',
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
+  },
+  web: {
+    favicon: './assets/favicon.png',
+  },
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    'expo-font',
+    // Supplies the device locale list that i18n falls back to when the user
+    // has not chosen a language explicitly.
+    'expo-localization',
+    // Biometric sign-in. This plugin is what puts NSFaceIDUsageDescription in
+    // the iOS Info.plist and USE_BIOMETRIC in the Android manifest, so adding
+    // it REQUIRES a new native build — an OTA update cannot ship it.
+    [
+      'expo-local-authentication',
+      {
+        faceIDPermission: 'Kairos uses Face ID to unlock your saved sign-in.',
+      },
+    ],
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-icon.png',
+        imageWidth: 200,
+        resizeMode: 'contain',
+        backgroundColor: '#5D3FD3',
+      },
+    ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission:
+          'Kairos needs access to your photo library so you can pick a profile photo.',
+      },
+    ],
+    '@react-native-community/datetimepicker',
+    [
+      '@rnmapbox/maps',
+      {
+        // Native SDK download uses this secret token at build time. Set via
+        // EAS secret `MAPBOX_DOWNLOAD_TOKEN` — never committed.
+        RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN,
+      },
+    ],
+    // Brand-tints the Android app theme so the native datetime picker (and
+    // other Material widgets) render highlights + buttons in Modern Sanctuary
+    // purple instead of the default Material teal. Dark mode uses the lighter
+    // `primaryLight` (#a488ff) to keep the accent readable on the dark
+    // picker surface. iOS uses the accentColor prop on the picker component
+    // itself, wired inside DatePicker.tsx / TimePicker.tsx.
+    [
+      './plugins/with-android-brand-tint',
+      { color: '#5D3FD3', colorNight: '#a488ff' },
+    ],
+  ],
+  experiments: {
+    typedRoutes: true,
+  },
+  owner: 'kharis-tech',
+  updates: {
+    url: 'https://u.expo.dev/8f936297-f8c8-4257-97f1-e079ae99921f',
+  },
+  extra: {
+    apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3001',
+    // OAuth (Better-Auth Phase 1): the API server redirects to
+    // `${FRONTEND_URL}/oauth-callback#...` after the IdP handshake. The
+    // mobile OAuth flow needs to know this base URL so
+    // `WebBrowser.openAuthSessionAsync` can detect the return and close the
+    // in-app browser. Falls back to same-host as the API for prod/staging.
+    frontendBaseUrl: process.env.EXPO_PUBLIC_FRONTEND_URL,
+    mapboxPublicToken:
+      process.env.MAPBOX_PUBLIC_TOKEN ?? process.env.EXPO_PUBLIC_MAPBOX_TOKEN,
+    eas: {
+      projectId: '8f936297-f8c8-4257-97f1-e079ae99921f',
+    },
+  },
+});

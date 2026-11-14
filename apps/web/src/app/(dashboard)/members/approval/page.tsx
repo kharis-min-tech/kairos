@@ -4,26 +4,33 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMembers, useApproveMember } from '@/hooks/use-members';
 import { useAuthStore } from '@/lib/auth-store';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { useConfirm } from '@/components/confirm-dialog';
 import { toast } from 'sonner';
 import { Button } from '@kairos/ui';
 import { Card, CardContent } from '@kairos/ui';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
-export default function MemberApprovalPage() {
+export default function MemberApprovalPage() {  const { t } = useTranslation(['members', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.systemRole === 'admin';
+  const caps = useCapabilities();
+  // Branch admins and branch data admins also carry `signup:approve`, so
+  // gating on systemRole=admin alone would bounce them off a page they can
+  // legitimately action. Mirror the API's own capability check.
+  const canApprove = user?.systemRole === 'admin' || caps.has('signup:approve');
 
   useEffect(() => {
-    if (user !== null && !isAdmin) router.replace('/members');
-  }, [user, isAdmin, router]);
+    if (user !== null && !canApprove) router.replace('/members');
+  }, [user, canApprove, router]);
 
-  const { data: result, isLoading, error } = useMembers({ approvalStatus: 'pending' }, isAdmin);
+  const { data: result, isLoading, error } = useMembers({ approvalStatus: 'pending' }, canApprove);
   const approveMember = useApproveMember();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
-  if (user !== null && !isAdmin) return null;
+  if (user !== null && !canApprove) return null;
 
   const members = result?.data ?? [];
 
@@ -36,11 +43,9 @@ export default function MemberApprovalPage() {
           <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Members
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Approval Queue</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Review and approve pending member registrations</p>
+            </svg>{t('members:backToMembers')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('members:approvalQueue')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('members:reviewAndApprovePendingMemberRegistrations')}</p>
         </div>
       </div>
 
@@ -71,7 +76,7 @@ export default function MemberApprovalPage() {
       ) : members.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No pending members to review.</p>
+            <p className="text-muted-foreground">{t('members:noPendingMembersToReview')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -101,23 +106,21 @@ export default function MemberApprovalPage() {
                       disabled={approveMember.isPending}
                       onClick={async () => {
                         const ok = await confirm({
-                          title: `Reject ${member.firstName} ${member.lastName}?`,
-                          description: 'Their registration request will be marked as rejected.',
-                          confirmLabel: 'Reject',
+                          title: t('members:rejectV1V2', { v1: member.firstName, v2: member.lastName }),
+                          description: t('members:theirRegistrationRequestWillBeMarked'),
+                          confirmLabel: t('members:reject'),
                           variant: 'destructive',
                         });
                         if (!ok) return;
                         approveMember.mutate(
                           { id: member.id, data: { approved: false } },
                           {
-                            onSuccess: () => toast.success('Registration rejected.'),
-                            onError: () => toast.error('Failed to reject registration. Please try again.'),
+                            onSuccess: () => toast.success(t('members:registrationRejected')),
+                            onError: () => toast.error(t('members:failedRejectRegistrationTryAgain')),
                           },
                         );
                       }}
-                    >
-                      Reject
-                    </Button>
+                    >{t('members:reject')}</Button>
                     <Button
                       size="sm"
                       className="bg-emerald-600 text-white hover:bg-emerald-700"
@@ -126,14 +129,12 @@ export default function MemberApprovalPage() {
                         approveMember.mutate(
                           { id: member.id, data: { approved: true } },
                           {
-                            onSuccess: () => toast.success('Member approved.'),
-                            onError: () => toast.error('Failed to approve member. Please try again.'),
+                            onSuccess: () => toast.success(t('members:memberApproved')),
+                            onError: () => toast.error(t('members:failedApproveMemberTryAgain')),
                           },
                         );
                       }}
-                    >
-                      Approve
-                    </Button>
+                    >{t('members:approve')}</Button>
                   </div>
                 </CardContent>
               </Card>

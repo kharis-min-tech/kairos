@@ -1,0 +1,19 @@
+{
+  "role": "platform-concerns-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Bien-être et protection",
+      "caption": "Deux boîtes, volontairement séparées.",
+      "speech": "Les préoccupations contiennent deux boîtes. Bien-être et protection restent séparés à dessein, et lus par des personnes différentes."
+    },
+    {
+      "n": 2,
+      "title": "En lire une",
+      "caption": "Le dossier, et qui l’a soulevée.",
+      "speech": "Ouvrir une préoccupation montre le suivi dont elle provient, qui l’a soulevée, et ce qui a été fait depuis."
+    }
+  ]
+}

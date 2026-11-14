@@ -1,4 +1,4 @@
-import { eq, ne, and, or, count, sql, gte, lte, inArray, notInArray } from 'drizzle-orm';
+import { eq, ne, and, count, sql, gte, lte, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
 import {
@@ -15,17 +15,24 @@ import {
   fellowshipMeetingAttendance,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { NotFoundError, ForbiddenError, ConflictError } from '@kairos/utils';
+import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '@kairos/utils';
 import { createMemberShell } from '../lib/member-shell';
 import { authHasAnyCapability } from '../lib/grants';
+import { signQrToken, verifyQrToken } from './self-check-in-qr';
+import {
+  resolveLeaderScopeMemberIds,
+  composeScopeMemberIds,
+} from '../lib/leader-scope';
 
 // ── Local auth helpers (per-module, not imported — see CLAUDE.md) ──
 
 function enforceBranchScope(auth: AuthContext, branchId?: string) {
-  if (authHasCapability(auth, 'branch:read')) return;
-  if (branchId && branchId !== auth.branchId) {
-    throw new ForbiddenError('You can only access attendance in your branch');
-  }
+  if (!branchId || branchId === auth.branchId) return;
+  // Scoped, NOT scope-less: `authHasCapability(auth, 'branch:read')` with no
+  // scope is true when the caller holds the capability on ANY branch, so a
+  // Branch Admin for one branch passed it for every other one.
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) return;
+  throw new ForbiddenError('You can only access attendance in your branch');
 }
 
 /**
@@ -69,7 +76,7 @@ async function enforceServiceWriter(
   auth: AuthContext,
   branchId: string,
 ): Promise<void> {
-  if (authHasCapability(auth, 'branch:read')) return;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: branchId })) return;
   if (await isInAdminDepartment(db, auth.memberId, branchId)) return;
   throw new ForbiddenError(
     'Only admin-desk volunteers (Admin department), pastors, and admins can manage services',
@@ -135,124 +142,63 @@ async function resolveFilterMemberIds(
   return Array.from(deptIds ?? fellowshipIds ?? new Set<string>());
 }
 
-/**
- * Auto-narrow reports for fellowship/department leaders without branch:read.
- * Returns the union of member IDs across all fellowships and departments the
- * caller leads/co-leads in the target branch.
- *
- *   branch:read holders (admin / pastor)  → null  (no narrowing — branch-wide)
- *   fellowship:read / department:read     → array (members of led groups)
- *   leader with no active led groups      → empty array (visible scope = nothing)
- *
- * Mirrors the souls dashboard fix: a Youth Fellowship leader's attendance
- * report should be Youth's attendance, not the whole branch's.
- */
-async function resolveLeaderScopeMemberIds(
-  db: Database,
-  auth: AuthContext,
-  branchId: string,
-): Promise<string[] | null> {
-  if (authHasCapability(auth, 'branch:read')) return null;
-  // Plain members (no leadership cap) don't get auto-narrowed — they read
-  // their branch's summary as-is. Only callers holding fellowship/department
-  // read need narrowing because they'd otherwise see branch-wide data.
-  if (!authHasAnyCapability(auth, 'fellowship:read', 'department:read')) {
-    return null;
-  }
-
-  const [ledFellowshipRows, ledDeptRows] = await Promise.all([
-    db
-      .select({ id: fellowships.id })
-      .from(fellowships)
-      .where(
-        and(
-          eq(fellowships.isActive, true),
-          eq(fellowships.branchId, branchId),
-          or(
-            eq(fellowships.leaderId, auth.memberId),
-            eq(fellowships.coLeaderId, auth.memberId),
-          )!,
-        ),
-      ),
-    db
-      .select({ id: branchDepartments.id })
-      .from(branchDepartments)
-      .where(
-        and(
-          eq(branchDepartments.isActive, true),
-          eq(branchDepartments.branchId, branchId),
-          or(
-            eq(branchDepartments.leadMemberId, auth.memberId),
-            eq(branchDepartments.deputyMemberId, auth.memberId),
-          )!,
-        ),
-      ),
-  ]);
-
-  const ledFellowshipIds = ledFellowshipRows.map((r) => r.id);
-  const ledDeptIds = ledDeptRows.map((r) => r.id);
-
-  if (ledFellowshipIds.length === 0 && ledDeptIds.length === 0) return [];
-
-  const memberIdSet = new Set<string>();
-  if (ledFellowshipIds.length > 0) {
-    const rows = await db
-      .select({ memberId: fellowshipMembers.memberId })
-      .from(fellowshipMembers)
-      .where(
-        and(
-          eq(fellowshipMembers.isActive, true),
-          inArray(fellowshipMembers.fellowshipId, ledFellowshipIds),
-        ),
-      );
-    rows.forEach((r) => memberIdSet.add(r.memberId));
-  }
-  if (ledDeptIds.length > 0) {
-    const rows = await db
-      .select({ memberId: departmentMembers.memberId })
-      .from(departmentMembers)
-      .where(
-        and(
-          eq(departmentMembers.isActive, true),
-          inArray(departmentMembers.branchDepartmentId, ledDeptIds),
-        ),
-      );
-    rows.forEach((r) => memberIdSet.add(r.memberId));
-  }
-  return Array.from(memberIdSet);
-}
-
-/**
- * Compose the leader-scope and explicit-filter member IDs:
- *   admin/pastor + no explicit filter         → null (branch-wide)
- *   admin/pastor + explicit filter            → explicit filter IDs
- *   leader      + no explicit filter          → leader-scope IDs
- *   leader      + explicit filter             → intersection
- *
- * `[]` (empty array) means "scope resolved but contains no members" — the
- * caller short-circuits to an empty report rather than running a branch-wide
- * query.
- */
-function composeScopeMemberIds(
-  leaderIds: string[] | null,
-  filterIds: string[] | null,
-): string[] | null {
-  if (leaderIds === null && filterIds === null) return null;
-  if (leaderIds === null) return filterIds;
-  if (filterIds === null) return leaderIds;
-  const filterSet = new Set(filterIds);
-  return leaderIds.filter((id) => filterSet.has(id));
-}
-
 /** Resolve which branch a write/report targets, enforcing scope for non-admin/pastor. */
 function resolveBranchId(auth: AuthContext, requested?: string): string {
-  if (authHasCapability(auth, 'branch:read')) {
-    return requested ?? auth.branchId;
+  if (!requested || requested === auth.branchId) return auth.branchId;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: requested })) {
+    return requested;
   }
-  if (requested && requested !== auth.branchId) {
-    throw new ForbiddenError('You can only access attendance in your branch');
+  throw new ForbiddenError('You can only access attendance in your branch');
+}
+
+/** Absolute cutoff for the "engaged member" window — N months back from now. */
+function engagedSince(windowMonths: number): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() - windowMonths);
+  return d;
+}
+
+/**
+ * Members who attended at least one service in the engagement window,
+ * grouped by branch. Present/Late/Virtual all count. Returns a fully
+ * populated Map (empty set for a branch with zero attendance) so callers
+ * can look up any input branchId without existence checks.
+ *
+ * "engaged" is our reporting-only counter to the soft-delete `is_active`
+ * flag — someone who stopped 8 months ago is still `is_active=true` and
+ * would inflate branch-rate denominators. Engagement is the honest denominator
+ * for pastoral rate metrics.
+ */
+async function resolveEngagedMemberIds(
+  db: Database,
+  branchIds: string[],
+  windowMonths: number,
+): Promise<Map<string, Set<string>>> {
+  const result = new Map<string, Set<string>>();
+  branchIds.forEach((b) => result.set(b, new Set()));
+  if (branchIds.length === 0 || windowMonths <= 0) return result;
+
+  const since = engagedSince(windowMonths);
+  const rows = await db
+    .select({
+      branchId: services.branchId,
+      memberId: serviceAttendance.memberId,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        inArray(services.branchId, branchIds),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .groupBy(services.branchId, serviceAttendance.memberId);
+
+  for (const row of rows) {
+    result.get(row.branchId)?.add(row.memberId);
   }
-  return auth.branchId;
+  return result;
 }
 
 // ── Types ──────────────────────────────────────────────────
@@ -292,11 +238,11 @@ export async function canRecordAttendance(
   auth: AuthContext,
   branchId?: string,
 ): Promise<{ canRecord: boolean }> {
-  if (authHasCapability(auth, 'branch:read')) {
-    return { canRecord: true };
-  }
   if (!auth.branchId) return { canRecord: false };
   const targetBranch = branchId ?? auth.branchId;
+  if (authHasCapability(auth, 'branch:read', { kind: 'branch', id: targetBranch })) {
+    return { canRecord: true };
+  }
   if (targetBranch !== auth.branchId) return { canRecord: false };
   return { canRecord: await isInAdminDepartment(db, auth.memberId, targetBranch) };
 }
@@ -350,10 +296,12 @@ export async function createService(db: Database, auth: AuthContext, data: Creat
 export async function listServices(db: Database, auth: AuthContext, query: ListServicesQuery) {
   const conditions = [eq(services.isActive, true)];
 
-  if (!authHasCapability(auth, 'branch:read')) {
-    conditions.push(eq(services.branchId, auth.branchId));
-  } else if (query.branchId) {
-    conditions.push(eq(services.branchId, query.branchId));
+  // Only a system admin sees services across branches. A branch-scoped grant
+  // authorises its own branch and nothing else.
+  if (auth.systemRole === 'admin') {
+    if (query.branchId) conditions.push(eq(services.branchId, query.branchId));
+  } else {
+    conditions.push(eq(services.branchId, resolveBranchId(auth, query.branchId)));
   }
 
   if (query.type) conditions.push(eq(services.serviceType, query.type));
@@ -683,6 +631,271 @@ export async function recordAttendance(
   return { recorded: rows.length };
 }
 
+// ── Self-check-in ─────────────────────────────────────────
+//
+// The signed-in member records their own attendance. Guardrails against
+// fraud/backdating live on the branch: an admin sets a window
+// [startTime − openMinutesBefore, startTime + closeMinutesAfter] plus a late
+// threshold. Idempotent — repeat calls inside the window return the existing
+// row rather than 409, so a jittery tap doesn't upset the caller.
+
+export interface SelfCheckInResult {
+  serviceId: string;
+  memberId: string;
+  status: 'Present' | 'Late';
+  arrivalTime: string;
+  alreadyCheckedIn: boolean;
+}
+
+export async function selfCheckIn(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+): Promise<SelfCheckInResult> {
+  return performSelfCheckIn(db, auth, serviceId);
+}
+
+/**
+ * Shared self-check-in core — window math + idempotency + insert. Called by
+ * the honour-system endpoint (`selfCheckIn`) AND by the QR verify endpoint
+ * (`selfCheckInWithQrToken`), so the Late math only lives here. Do not
+ * duplicate this logic in a new caller — refactor to hoist a step and
+ * reuse it.
+ */
+async function performSelfCheckIn(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+): Promise<SelfCheckInResult> {
+  // Grab the service + its branch's self-check-in config in one query so
+  // the window math + gates run against the same snapshot.
+  const [row] = await db
+    .select({
+      serviceId: services.id,
+      serviceDate: services.serviceDate,
+      isActive: services.isActive,
+      branchId: services.branchId,
+      enabled: branches.selfCheckInEnabled,
+      openBefore: branches.selfCheckInOpenMinutesBefore,
+      closeAfter: branches.selfCheckInCloseMinutesAfter,
+      lateAfter: branches.selfCheckInLateAfterMinutes,
+    })
+    .from(services)
+    .innerJoin(branches, eq(services.branchId, branches.id))
+    .where(eq(services.id, serviceId))
+    .limit(1);
+
+  if (!row || !row.isActive) throw new NotFoundError('Service');
+
+  // Cross-branch attempt: your home branch is your check-in scope. Admin/
+  // pastor bypass the branch match — useful when they're visiting a satellite.
+  if (row.branchId !== auth.branchId && !authHasCapability(auth, 'branch:read')) {
+    throw new ForbiddenError('You can only self-check-in at your home branch');
+  }
+
+  if (!row.enabled) {
+    throw new ForbiddenError(
+      'Self check-in is turned off for this branch. Ask an usher to record you.',
+    );
+  }
+
+  const now = new Date();
+  const start = new Date(row.serviceDate);
+  const opensAt = new Date(start.getTime() - row.openBefore * 60_000);
+  const closesAt = new Date(start.getTime() + row.closeAfter * 60_000);
+  const lateAt = new Date(start.getTime() + row.lateAfter * 60_000);
+
+  if (now < opensAt) {
+    const minsUntil = Math.ceil((opensAt.getTime() - now.getTime()) / 60_000);
+    throw new ForbiddenError(
+      `Self check-in isn't open yet. It opens in ${minsUntil} minute${minsUntil === 1 ? '' : 's'}.`,
+    );
+  }
+  if (now > closesAt) {
+    throw new ForbiddenError(
+      'Self check-in has closed for this service. Ask an usher to record you.',
+    );
+  }
+
+  // Idempotent: return the existing row if the member already checked in.
+  const [existing] = await db
+    .select({
+      status: serviceAttendance.attendanceStatus,
+      arrivalTime: serviceAttendance.arrivalTime,
+    })
+    .from(serviceAttendance)
+    .where(
+      and(
+        eq(serviceAttendance.serviceId, serviceId),
+        eq(serviceAttendance.memberId, auth.memberId),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    return {
+      serviceId,
+      memberId: auth.memberId,
+      status: existing.status as 'Present' | 'Late',
+      arrivalTime: (existing.arrivalTime ?? now).toISOString(),
+      alreadyCheckedIn: true,
+    };
+  }
+
+  const status: 'Present' | 'Late' = now > lateAt ? 'Late' : 'Present';
+
+  await db.insert(serviceAttendance).values({
+    serviceId,
+    memberId: auth.memberId,
+    attendanceStatus: status,
+    arrivalTime: now,
+    isFirstTimeVisitor: false,
+    recordedBy: auth.memberId,
+  });
+
+  return {
+    serviceId,
+    memberId: auth.memberId,
+    status,
+    arrivalTime: now.toISOString(),
+    alreadyCheckedIn: false,
+  };
+}
+
+// ── Rotating QR (admin desk shows; member scans) ──────────
+//
+// Stateless HMAC — see self-check-in-qr.ts. Admin desk polls `generateQrToken`
+// every ~30s; the member's scan lands on `selfCheckInWithQrToken` which
+// verifies the signature, then defers to `performSelfCheckIn` for the actual
+// business logic (window math, Late threshold, idempotency).
+
+export interface QrTokenPayload {
+  token: string;
+  /** ms epoch when the current bucket ends. Client should poll before then. */
+  expiresAt: number;
+  /** Client can encode `kairos://check-in/{serviceId}/{token}` for the QR. */
+  serviceId: string;
+}
+
+export async function generateQrToken(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+  secret: string,
+): Promise<QrTokenPayload> {
+  // Reuse getService — it enforces branch scope + soft-delete for us.
+  const svc = await getService(db, auth, serviceId);
+  // Only admin-desk writers can display the QR (branch:read admin, pastor,
+  // or Admin-dept volunteer). Everyone else gets a 403.
+  await enforceServiceWriter(db, auth, svc.branchId);
+
+  const signed = await signQrToken(secret, serviceId);
+  return { token: signed.token, expiresAt: signed.expiresAt, serviceId };
+}
+
+export async function selfCheckInWithQrToken(
+  db: Database,
+  auth: AuthContext,
+  serviceId: string,
+  token: string,
+  secret: string,
+): Promise<SelfCheckInResult> {
+  try {
+    await verifyQrToken(secret, serviceId, token);
+  } catch (err) {
+    throw new ForbiddenError(
+      err instanceof Error && err.message ? err.message : 'QR token is invalid',
+    );
+  }
+  return performSelfCheckIn(db, auth, serviceId);
+}
+
+/**
+ * Small helper the mobile Check-in tab uses to pick a service without
+ * duplicating window math client-side. Returns the services on the caller's
+ * home branch today whose window is currently open, most-relevant first.
+ */
+export interface CheckInCandidate {
+  serviceId: string;
+  serviceDate: string;
+  serviceType: string;
+  serviceTitle: string | null;
+  windowOpensAt: string;
+  windowClosesAt: string;
+  lateAfterAt: string;
+  status: 'open' | 'opens-soon' | 'closed';
+  minutesUntilOpen: number | null;
+}
+
+export async function listSelfCheckInCandidates(
+  db: Database,
+  auth: AuthContext,
+): Promise<CheckInCandidate[]> {
+  const branchId = auth.branchId;
+  if (!branchId) return [];
+
+  // "Today" spans a wide window so we still surface a 9am service at 7pm
+  // ("closed") for the UI to explain, and a 9am service at 6am ("opens-soon").
+  const today = new Date();
+  const startOfDay = new Date(today);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const rows = await db
+    .select({
+      serviceId: services.id,
+      serviceDate: services.serviceDate,
+      serviceType: services.serviceType,
+      serviceTitle: services.serviceTitle,
+      enabled: branches.selfCheckInEnabled,
+      openBefore: branches.selfCheckInOpenMinutesBefore,
+      closeAfter: branches.selfCheckInCloseMinutesAfter,
+      lateAfter: branches.selfCheckInLateAfterMinutes,
+    })
+    .from(services)
+    .innerJoin(branches, eq(services.branchId, branches.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, startOfDay),
+        lte(services.serviceDate, endOfDay),
+      ),
+    )
+    .orderBy(services.serviceDate);
+
+  const now = Date.now();
+  return rows
+    .filter((r) => r.enabled)
+    .map((r) => {
+      const start = new Date(r.serviceDate).getTime();
+      const opensAt = start - r.openBefore * 60_000;
+      const closesAt = start + r.closeAfter * 60_000;
+      const lateAt = start + r.lateAfter * 60_000;
+      let status: CheckInCandidate['status'];
+      let minutesUntilOpen: number | null = null;
+      if (now < opensAt) {
+        status = 'opens-soon';
+        minutesUntilOpen = Math.ceil((opensAt - now) / 60_000);
+      } else if (now > closesAt) {
+        status = 'closed';
+      } else {
+        status = 'open';
+      }
+      return {
+        serviceId: r.serviceId,
+        serviceDate: new Date(r.serviceDate).toISOString(),
+        serviceType: r.serviceType,
+        serviceTitle: r.serviceTitle,
+        windowOpensAt: new Date(opensAt).toISOString(),
+        windowClosesAt: new Date(closesAt).toISOString(),
+        lateAfterAt: new Date(lateAt).toISOString(),
+        status,
+        minutesUntilOpen,
+      };
+    });
+}
+
 export async function listAttendance(db: Database, auth: AuthContext, serviceId: string) {
   await getService(db, auth, serviceId);
 
@@ -736,11 +949,16 @@ export async function getAttendanceTrends(
     conditions.push(inArray(serviceAttendance.memberId, filterIds));
   }
 
-  // Per ISO week: distinct attendees (Present + Late + Virtual all count as attended).
+  // Per ISO week: `attendees` = raw check-ins (sum of attendance rows across
+  // every service that week — someone at both Sunday AM and Midweek counts
+  // twice); `distinctAttendees` = unique humans that week. Gap between the
+  // two = multi-service attenders, i.e. how deeply engaged the regulars are.
+  // Present/Late/Virtual all count as attended.
   const rows = await db
     .select({
       weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`,
-      attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`,
+      attendees: sql<number>`COUNT(${serviceAttendance.memberId})`,
+      distinctAttendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`,
       serviceCount: sql<number>`COUNT(DISTINCT ${services.id})`,
     })
     .from(services)
@@ -752,6 +970,7 @@ export async function getAttendanceTrends(
   return rows.map((r) => ({
     weekStart: r.weekStart,
     attendees: Number(r.attendees),
+    distinctAttendees: Number(r.distinctAttendees),
     serviceCount: Number(r.serviceCount),
   }));
 }
@@ -762,69 +981,160 @@ export async function getMissingMembers(
   query: { branchId?: string; services?: number; departmentId?: string; fellowshipId?: string },
 ) {
   enforceReportReader(auth);
-  const branchId = resolveBranchId(auth, query.branchId);
   const recentCount = query.services ?? 4;
 
-  // Recent N services for this branch.
-  const recentServices = await db
-    .select({ id: services.id })
-    .from(services)
-    .where(and(eq(services.branchId, branchId), eq(services.isActive, true)))
-    .orderBy(sql`${services.serviceDate} DESC`)
-    .limit(recentCount);
-
-  const recentServiceIds = recentServices.map((s) => s.id);
-
-  // Active members (as of now) in this branch with no row across those services.
-  const baseConditions = [
-    eq(members.isActive, true),
-    eq(members.homeBranchId, branchId),
-  ];
-
-  // Leader scope auto-narrows fellowship/dept leaders to their groups; the
-  // explicit query filter further narrows that intersection.
-  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
-    resolveFilterMemberIds(db, branchId, {
-      departmentId: query.departmentId,
-      fellowshipId: query.fellowshipId,
-    }),
-    resolveLeaderScopeMemberIds(db, auth, branchId),
-  ]);
-  const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
-  if (filterIds !== null) {
-    if (filterIds.length === 0) {
-      return [] as { memberId: string; firstName: string; lastName: string; servicesConsidered: number }[];
+  // Determine the set of branches to compute for. Admin/pastor with
+  // branch:read + no explicit filter → all active branches (mirrors the
+  // Attendance-by-branch tile on the same page). Otherwise fall back to
+  // the single-branch resolution that enforces scope.
+  // Across ALL branches is a system-admin view. No branch-scoped grant can
+  // authorise an aggregate that spans branches it has no reach over.
+  const canReadAcrossBranches = auth.systemRole === 'admin';
+  const isAllBranches = canReadAcrossBranches && !query.branchId;
+  let targetBranchIds: string[];
+  if (isAllBranches) {
+    const activeBranches = await db
+      .select({ id: branches.id })
+      .from(branches)
+      .where(eq(branches.isActive, true));
+    if (activeBranches.length === 0) {
+      return [] as {
+        memberId: string;
+        firstName: string;
+        lastName: string;
+        servicesConsidered: number;
+        missedStreak: number;
+      }[];
     }
-    baseConditions.push(inArray(members.id, filterIds));
-  }
-
-  let rows;
-  if (recentServiceIds.length === 0) {
-    // No services to compare against — every active member is "missing".
-    rows = await db
-      .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
-      .from(members)
-      .where(and(...baseConditions))
-      .orderBy(members.lastName, members.firstName);
+    targetBranchIds = activeBranches.map((b) => b.id);
   } else {
-    const attendedSubquery = db
-      .select({ memberId: serviceAttendance.memberId })
-      .from(serviceAttendance)
-      .where(inArray(serviceAttendance.serviceId, recentServiceIds));
-
-    rows = await db
-      .select({ memberId: members.id, firstName: members.firstName, lastName: members.lastName })
-      .from(members)
-      .where(and(...baseConditions, notInArray(members.id, attendedSubquery)))
-      .orderBy(members.lastName, members.firstName);
+    targetBranchIds = [resolveBranchId(auth, query.branchId)];
   }
 
-  return rows.map((r) => ({
-    memberId: r.memberId,
-    firstName: r.firstName,
-    lastName: r.lastName,
-    servicesConsidered: recentServiceIds.length,
-  }));
+  // Per-branch: last N services on that branch, ordered most-recent first
+  // (a global ORDER BY across branches would let the busiest branch swallow
+  // the window and hide members from quieter branches).
+  const perBranchServices = await Promise.all(
+    targetBranchIds.map(async (bId) => {
+      const rows = await db
+        .select({ id: services.id })
+        .from(services)
+        .where(and(eq(services.branchId, bId), eq(services.isActive, true)))
+        .orderBy(sql`${services.serviceDate} DESC`)
+        .limit(recentCount);
+      return { branchId: bId, serviceIds: rows.map((r) => r.id) };
+    }),
+  );
+
+  const leaderScopeIds = await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
+  if (leaderScopeIds !== null && leaderScopeIds.length === 0) {
+    return [] as {
+      memberId: string;
+      firstName: string;
+      lastName: string;
+      servicesConsidered: number;
+      missedStreak: number;
+    }[];
+  }
+
+  // Per branch: (1) list active members in scope, (2) load their attendance
+  // rows across the window, (3) compute each member's consecutive-most-recent
+  // absence streak in JS. Streak-of-0 (present at the most recent service in
+  // scope) drops off the list.
+  const perBranchRows = await Promise.all(
+    perBranchServices.map(async ({ branchId, serviceIds }) => {
+      const explicitFilterIds = isAllBranches
+        ? null
+        : await resolveFilterMemberIds(db, branchId, {
+            departmentId: query.departmentId,
+            fellowshipId: query.fellowshipId,
+          });
+      const filterIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+      if (filterIds !== null && filterIds.length === 0) return [];
+
+      const baseConditions = [
+        eq(members.isActive, true),
+        eq(members.homeBranchId, branchId),
+      ];
+      if (filterIds !== null) baseConditions.push(inArray(members.id, filterIds));
+
+      const memberRows = await db
+        .select({
+          memberId: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+        })
+        .from(members)
+        .where(and(...baseConditions));
+
+      if (memberRows.length === 0) return [];
+
+      // No services on this branch → treat every active member as fully
+      // missing (streak equals window size, but window has no anchor so we
+      // report 1 to keep the sort meaningful and avoid a divide-by-zero look).
+      if (serviceIds.length === 0) {
+        return memberRows.map((r) => ({
+          memberId: r.memberId,
+          firstName: r.firstName,
+          lastName: r.lastName,
+          servicesConsidered: 0,
+          missedStreak: 1,
+        }));
+      }
+
+      const memberIds = memberRows.map((m) => m.memberId);
+      const attendance = await db
+        .select({
+          memberId: serviceAttendance.memberId,
+          serviceId: serviceAttendance.serviceId,
+        })
+        .from(serviceAttendance)
+        .where(
+          and(
+            inArray(serviceAttendance.memberId, memberIds),
+            inArray(serviceAttendance.serviceId, serviceIds),
+          ),
+        );
+
+      const attendedBy = new Map<string, Set<string>>();
+      for (const row of attendance) {
+        let set = attendedBy.get(row.memberId);
+        if (!set) {
+          set = new Set();
+          attendedBy.set(row.memberId, set);
+        }
+        set.add(row.serviceId);
+      }
+
+      // serviceIds is ordered DESC (most recent first). Streak = leading
+      // count of services this member missed before the first hit.
+      return memberRows
+        .map((m) => {
+          const attended = attendedBy.get(m.memberId) ?? new Set<string>();
+          let streak = 0;
+          for (const sid of serviceIds) {
+            if (attended.has(sid)) break;
+            streak++;
+          }
+          return {
+            memberId: m.memberId,
+            firstName: m.firstName,
+            lastName: m.lastName,
+            servicesConsidered: serviceIds.length,
+            missedStreak: streak,
+          };
+        })
+        .filter((m) => m.missedStreak > 0);
+    }),
+  );
+
+  const merged = perBranchRows.flat();
+  merged.sort((a, b) => {
+    if (a.missedStreak !== b.missedStreak) return b.missedStreak - a.missedStreak;
+    const ln = a.lastName.localeCompare(b.lastName);
+    return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+  });
+  return merged;
 }
 
 /**
@@ -848,6 +1158,14 @@ export async function getCohortDiff(
   },
 ) {
   enforceReportReader(auth);
+  // Cross-branch admins (branch:read) MUST pass an explicit branchId — the
+  // compare API is single-branch and silently narrowing to auth.branchId
+  // produced the "One or more services are outside the caller branch" bug
+  // that the /attendance/reports page hit when the outer filter defaulted
+  // to "All branches". Fail loudly instead of falling back.
+  if (authHasCapability(auth, 'branch:read') && !query.branchId) {
+    throw new ValidationError('branchId is required. Pick a branch to compare cohorts within');
+  }
   const branchId = resolveBranchId(auth, query.branchId);
 
   // Validate that every referenced service belongs to the scoped branch.
@@ -1297,7 +1615,11 @@ export async function getDepartmentAttendance(
     const serviceIds = svcRows.map((s) => s.id);
     const trendRows = await db
       .select({
-        weekStart: sql<Date>`date_trunc('week', ${services.serviceDate})`.as('week_start'),
+        // to_char, not sql<Date>: a raw fragment skips Drizzle's type mapper,
+        // so casting here makes the annotation true instead of hopeful.
+        weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`.as(
+          'week_start',
+        ),
         attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`.as('attendees'),
       })
       .from(serviceAttendance)
@@ -1311,7 +1633,7 @@ export async function getDepartmentAttendance(
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
     trend = trendRows.map((r) => ({
-      weekStart: (r.weekStart as Date).toISOString(),
+      weekStart: new Date(r.weekStart).toISOString(),
       attendees: Number(r.attendees),
     }));
   }
@@ -1430,7 +1752,11 @@ export async function getFellowshipAttendance(
     svcDistinct = svcAttended.size;
     const trendRows = await db
       .select({
-        weekStart: sql<Date>`date_trunc('week', ${services.serviceDate})`.as('week_start'),
+        // to_char, not sql<Date>: a raw fragment skips Drizzle's type mapper,
+        // so casting here makes the annotation true instead of hopeful.
+        weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`.as(
+          'week_start',
+        ),
         attendees: sql<number>`COUNT(DISTINCT ${serviceAttendance.memberId})`.as('attendees'),
       })
       .from(serviceAttendance)
@@ -1444,7 +1770,7 @@ export async function getFellowshipAttendance(
       .groupBy(sql`date_trunc('week', ${services.serviceDate})`)
       .orderBy(sql`date_trunc('week', ${services.serviceDate})`);
     svcTrend = trendRows.map((r) => ({
-      weekStart: (r.weekStart as Date).toISOString(),
+      weekStart: new Date(r.weekStart).toISOString(),
       attendees: Number(r.attendees),
     }));
   }
@@ -1548,10 +1874,11 @@ export async function getFellowshipAttendance(
 export async function getAttendanceByBranch(
   db: Database,
   auth: AuthContext,
-  query: { branchId?: string; weeks: number },
+  query: { branchId?: string; weeks: number; engagedWindowMonths?: number },
 ) {
   enforceReportReader(auth);
   const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+  const engagedWindow = query.engagedWindowMonths ?? 3;
 
   // Metric (defined here): attendanceRate = distinct attendees over the recent
   // period / count of active 'member'-type members in the branch. Capped at 1.0
@@ -1562,7 +1889,7 @@ export async function getAttendanceByBranch(
   // subquery rendered them unqualified (so `branches.id` resolved to the inner
   // table's own id, breaking the correlation) and couldn't encode the Date bound.
   const branchConditions = [eq(branches.isActive, true)];
-  if (!authHasCapability(auth, 'branch:read')) {
+  if (auth.systemRole !== 'admin') {
     branchConditions.push(eq(branches.id, auth.branchId));
   } else if (query.branchId) {
     branchConditions.push(eq(branches.id, query.branchId));
@@ -1585,7 +1912,8 @@ export async function getAttendanceByBranch(
   const leaderScopeIds = await resolveLeaderScopeMemberIds(db, auth, auth.branchId);
   if (leaderScopeIds !== null && leaderScopeIds.length === 0) return [];
 
-  // Active 'member'-type counts per branch.
+  // Active 'member'-type counts per branch (soft-delete flag — kept alongside
+  // engaged for context; not used as rate denominator).
   const memberCountConditions = [
     eq(members.isActive, true),
     inArray(members.homeBranchId, branchIds),
@@ -1621,14 +1949,35 @@ export async function getAttendanceByBranch(
     .groupBy(services.branchId);
   const attendeesByBranch = new Map(attendeeCounts.map((r) => [r.branchId, Number(r.value)]));
 
+  // Engaged denominator per branch. Filter to the leader scope so a Youth
+  // leader sees engaged-in-Youth, not engaged-in-branch.
+  const engagedByBranchRaw = await resolveEngagedMemberIds(db, branchIds, engagedWindow);
+  const engagedByBranch = new Map<string, number>();
+  for (const [bId, memberSet] of engagedByBranchRaw) {
+    if (leaderScopeIds !== null) {
+      const scope = new Set(leaderScopeIds);
+      let n = 0;
+      for (const m of memberSet) if (scope.has(m)) n++;
+      engagedByBranch.set(bId, n);
+    } else {
+      engagedByBranch.set(bId, memberSet.size);
+    }
+  }
+
   return branchRows.map((b) => {
     const active = activeByBranch.get(b.id) ?? 0;
+    const engaged = engagedByBranch.get(b.id) ?? 0;
     const attended = attendeesByBranch.get(b.id) ?? 0;
-    const rate = active > 0 ? Math.min(1, attended / active) : 0;
+    // Rate uses engaged as denominator — the honest "of the people we're
+    // actually reaching, what fraction came in the last window". Falls back
+    // to active when engaged is zero to avoid a divide-by-zero display.
+    const denom = engaged > 0 ? engaged : active;
+    const rate = denom > 0 ? Math.min(1, attended / denom) : 0;
     return {
       branchId: b.id,
       branchName: b.branchName,
       activeMembers: active,
+      engagedMembers: engaged,
       distinctAttendees: attended,
       attendanceRate: Math.round(rate * 1000) / 1000,
     };
@@ -1716,4 +2065,400 @@ export async function getAttendanceSummary(
       rate: Math.round(rate * 1000) / 1000,
     },
   };
+}
+
+// ── Heatmap ────────────────────────────────────────────────
+
+/**
+ * Attendance heatmap — rows of members × columns of the last N services on
+ * one branch. Cells encode Present/Late/Virtual/absent. Sorting is left to
+ * the client; response includes attendedCount / attendancePct / missedStreak
+ * so the client can order without a second call.
+ *
+ * Per-branch only (a global cross-branch heatmap has no coherent column
+ * ordering — different branches meet on different days).
+ */
+export async function getAttendanceHeatmap(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    branchId: string;
+    weeks: number;
+    departmentId?: string;
+    fellowshipId?: string;
+    engagedWindowMonths: number;
+    engagedOnly: boolean;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+
+  // 1) Columns: last N services in the branch, chronological ASC so the
+  // rightmost column is the most recent (typical timeline reading order).
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+  const serviceRows = await db
+    .select({
+      id: services.id,
+      serviceDate: services.serviceDate,
+      serviceType: services.serviceType,
+      serviceTitle: services.serviceTitle,
+    })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    )
+    .orderBy(sql`${services.serviceDate} ASC`);
+
+  const serviceIdList = serviceRows.map((s) => s.id);
+  // Most-recent-first order used for streak computation.
+  const serviceIdListDesc = [...serviceIdList].reverse();
+
+  // 2) Row scope: leader-scope ∩ explicit dept/fellowship filter ∩ engaged?
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  let scopedIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+  if (scopedIds !== null && scopedIds.length === 0) {
+    return {
+      services: serviceRows.map((s) => ({
+        id: s.id,
+        serviceDate: s.serviceDate.toISOString(),
+        serviceType: s.serviceType,
+        serviceTitle: s.serviceTitle,
+      })),
+      members: [],
+    };
+  }
+
+  if (query.engagedOnly) {
+    const engagedMap = await resolveEngagedMemberIds(db, [branchId], query.engagedWindowMonths);
+    const engaged = engagedMap.get(branchId) ?? new Set<string>();
+    if (scopedIds === null) {
+      scopedIds = Array.from(engaged);
+    } else {
+      scopedIds = scopedIds.filter((id) => engaged.has(id));
+    }
+    if (scopedIds.length === 0) {
+      return {
+        services: serviceRows.map((s) => ({
+          id: s.id,
+          serviceDate: s.serviceDate.toISOString(),
+          serviceType: s.serviceType,
+          serviceTitle: s.serviceTitle,
+        })),
+        members: [],
+      };
+    }
+  }
+
+  const memberConds = [eq(members.isActive, true), eq(members.homeBranchId, branchId)];
+  if (scopedIds !== null) memberConds.push(inArray(members.id, scopedIds));
+  const memberRows = await db
+    .select({
+      memberId: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+    })
+    .from(members)
+    .where(and(...memberConds))
+    .orderBy(members.lastName, members.firstName);
+
+  if (memberRows.length === 0 || serviceIdList.length === 0) {
+    return {
+      services: serviceRows.map((s) => ({
+        id: s.id,
+        serviceDate: s.serviceDate.toISOString(),
+        serviceType: s.serviceType,
+        serviceTitle: s.serviceTitle,
+      })),
+      members: memberRows.map((m) => ({
+        memberId: m.memberId,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        cells: [] as ('present' | 'late' | 'virtual' | 'absent')[],
+        attendedCount: 0,
+        servicesConsidered: serviceIdList.length,
+        attendancePct: 0,
+        missedStreak: serviceIdList.length,
+      })),
+    };
+  }
+
+  // 3) Attendance rows for the window and scope.
+  const memberIds = memberRows.map((m) => m.memberId);
+  const attRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      serviceId: serviceAttendance.serviceId,
+      status: serviceAttendance.attendanceStatus,
+    })
+    .from(serviceAttendance)
+    .where(
+      and(
+        inArray(serviceAttendance.memberId, memberIds),
+        inArray(serviceAttendance.serviceId, serviceIdList),
+      ),
+    );
+
+  const statusByMember = new Map<string, Map<string, 'present' | 'late' | 'virtual'>>();
+  for (const r of attRows) {
+    let inner = statusByMember.get(r.memberId);
+    if (!inner) {
+      inner = new Map();
+      statusByMember.set(r.memberId, inner);
+    }
+    inner.set(
+      r.serviceId,
+      r.status === 'Late' ? 'late' : r.status === 'Virtual' ? 'virtual' : 'present',
+    );
+  }
+
+  const members2 = memberRows.map((m) => {
+    const inner = statusByMember.get(m.memberId);
+    const cells = serviceIdList.map<'present' | 'late' | 'virtual' | 'absent'>((sid) =>
+      inner?.get(sid) ?? 'absent',
+    );
+    const attendedCount = cells.filter((c) => c !== 'absent').length;
+    const attendancePct =
+      serviceIdList.length > 0
+        ? Math.round((attendedCount / serviceIdList.length) * 1000) / 1000
+        : 0;
+    // Streak: consecutive most-recent absences.
+    let streak = 0;
+    for (const sid of serviceIdListDesc) {
+      if (inner?.has(sid)) break;
+      streak++;
+    }
+    return {
+      memberId: m.memberId,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      cells,
+      attendedCount,
+      servicesConsidered: serviceIdList.length,
+      attendancePct,
+      missedStreak: streak,
+    };
+  });
+
+  return {
+    services: serviceRows.map((s) => ({
+      id: s.id,
+      serviceDate: s.serviceDate.toISOString(),
+      serviceType: s.serviceType,
+      serviceTitle: s.serviceTitle,
+    })),
+    members: members2,
+  };
+}
+
+// ── Frequency buckets ──────────────────────────────────────
+
+/**
+ * Bucket engaged members by attendance ratio over the engagement window:
+ *   weekly     ≥75%
+ *   biweekly   ≥40% and <75%
+ *   monthly    ≥15% and <40%
+ *   occasional  >0% and <15%
+ *   dormant    on the active roll but zero attendance in the window
+ *
+ * Denominator = distinct services on the branch in the window. Filters:
+ * leader scope + explicit dept/fellowship.
+ */
+export async function getFrequencyBuckets(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    branchId?: string;
+    engagedWindowMonths: number;
+    departmentId?: string;
+    fellowshipId?: string;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+  const since = engagedSince(query.engagedWindowMonths);
+
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  const scopedIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+
+  const bucketsEmpty = (window: number, considered: number, engaged = 0) => ({
+    windowMonths: window,
+    servicesConsidered: considered,
+    engagedMembers: engaged,
+    buckets: [
+      { key: 'weekly' as const, label: 'Weekly', members: 0, description: 'Attended ≥75% of services in the window' },
+      { key: 'biweekly' as const, label: 'Biweekly', members: 0, description: 'Attended 40–74% of services' },
+      { key: 'monthly' as const, label: 'Monthly', members: 0, description: 'Attended 15–39% of services' },
+      { key: 'occasional' as const, label: 'Occasional', members: 0, description: 'Attended <15% of services (at least once)' },
+      { key: 'dormant' as const, label: 'Dormant', members: 0, description: 'On the active roll but no attendance in the window' },
+    ],
+  });
+
+  // 1) Denominator: how many services on the branch in the window.
+  const serviceRows = await db
+    .select({ id: services.id })
+    .from(services)
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+      ),
+    );
+  const totalServices = serviceRows.length;
+  if (totalServices === 0) return bucketsEmpty(query.engagedWindowMonths, 0);
+
+  // 2) Population: active members on the branch (filtered).
+  const memberConds = [eq(members.isActive, true), eq(members.homeBranchId, branchId)];
+  if (scopedIds !== null) memberConds.push(inArray(members.id, scopedIds));
+  const memberRows = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(and(...memberConds));
+  if (memberRows.length === 0) return bucketsEmpty(query.engagedWindowMonths, totalServices);
+
+  // 3) Per-member attendance counts over the window.
+  const memberIds = memberRows.map((m) => m.id);
+  const attRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      value: sql<number>`COUNT(DISTINCT ${serviceAttendance.serviceId})`,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        gte(services.serviceDate, since),
+        inArray(serviceAttendance.memberId, memberIds),
+      ),
+    )
+    .groupBy(serviceAttendance.memberId);
+
+  const countByMember = new Map(attRows.map((r) => [r.memberId, Number(r.value)]));
+
+  let weekly = 0, biweekly = 0, monthly = 0, occasional = 0, dormant = 0, engaged = 0;
+  for (const m of memberIds) {
+    const c = countByMember.get(m) ?? 0;
+    if (c === 0) { dormant++; continue; }
+    engaged++;
+    const ratio = c / totalServices;
+    if (ratio >= 0.75) weekly++;
+    else if (ratio >= 0.4) biweekly++;
+    else if (ratio >= 0.15) monthly++;
+    else occasional++;
+  }
+
+  const shell = bucketsEmpty(query.engagedWindowMonths, totalServices, engaged);
+  const counts: Record<string, number> = { weekly, biweekly, monthly, occasional, dormant };
+  for (const b of shell.buckets) {
+    b.members = counts[b.key] ?? 0;
+  }
+  return shell;
+}
+
+// ── First-time vs returning per week ───────────────────────
+
+/**
+ * For each of the last N weeks: how many attendees were first-time (their
+ * earliest attendance record on this branch is inside the week), vs
+ * returning (they'd attended before that week). Real growth signal —
+ * distinguishes reaching new people from same-regulars showing up.
+ */
+export async function getFirstTimeReturning(
+  db: Database,
+  auth: AuthContext,
+  query: {
+    branchId?: string;
+    weeks: number;
+    departmentId?: string;
+    fellowshipId?: string;
+  },
+) {
+  enforceReportReader(auth);
+  const branchId = resolveBranchId(auth, query.branchId);
+  const since = new Date(Date.now() - query.weeks * 7 * 24 * 60 * 60 * 1000);
+
+  const [explicitFilterIds, leaderScopeIds] = await Promise.all([
+    resolveFilterMemberIds(db, branchId, {
+      departmentId: query.departmentId,
+      fellowshipId: query.fellowshipId,
+    }),
+    resolveLeaderScopeMemberIds(db, auth, branchId),
+  ]);
+  const scopedIds = composeScopeMemberIds(leaderScopeIds, explicitFilterIds);
+  if (scopedIds !== null && scopedIds.length === 0) {
+    return [] as { weekStart: string; firstTime: number; returning: number }[];
+  }
+
+  // 1) In-window attendance rows.
+  const attConds = [
+    eq(services.branchId, branchId),
+    eq(services.isActive, true),
+    gte(services.serviceDate, since),
+  ];
+  if (scopedIds !== null) attConds.push(inArray(serviceAttendance.memberId, scopedIds));
+
+  const attRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      weekStart: sql<string>`to_char(date_trunc('week', ${services.serviceDate}), 'YYYY-MM-DD')`,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(and(...attConds))
+    .groupBy(serviceAttendance.memberId, sql`date_trunc('week', ${services.serviceDate})`);
+
+  if (attRows.length === 0) return [];
+
+  // 2) Earliest-ever attendance date per member on this branch (used to
+  // classify a week's attendees as first-time vs returning). Only members
+  // present in the window matter — restrict for cheapness.
+  const attendedMemberIds = Array.from(new Set(attRows.map((r) => r.memberId)));
+  const earliestRows = await db
+    .select({
+      memberId: serviceAttendance.memberId,
+      earliestWeek: sql<string>`to_char(date_trunc('week', MIN(${services.serviceDate})), 'YYYY-MM-DD')`,
+    })
+    .from(serviceAttendance)
+    .innerJoin(services, eq(serviceAttendance.serviceId, services.id))
+    .where(
+      and(
+        eq(services.branchId, branchId),
+        eq(services.isActive, true),
+        inArray(serviceAttendance.memberId, attendedMemberIds),
+      ),
+    )
+    .groupBy(serviceAttendance.memberId);
+  const earliestByMember = new Map(earliestRows.map((r) => [r.memberId, r.earliestWeek]));
+
+  // 3) Roll up: per week, count first-time vs returning.
+  const byWeek = new Map<string, { firstTime: number; returning: number }>();
+  for (const row of attRows) {
+    const entry = byWeek.get(row.weekStart) ?? { firstTime: 0, returning: 0 };
+    const earliest = earliestByMember.get(row.memberId);
+    if (earliest && earliest === row.weekStart) entry.firstTime++;
+    else entry.returning++;
+    byWeek.set(row.weekStart, entry);
+  }
+
+  return Array.from(byWeek.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([weekStart, v]) => ({ weekStart, ...v }));
 }

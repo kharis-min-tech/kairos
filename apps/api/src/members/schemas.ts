@@ -83,6 +83,10 @@ export const listMembersQuerySchema = z.object({
   branchId: z.string().uuid().optional(),
   approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
   fellowshipId: z.string().uuid().optional(),
+  // Directory now covers Members + Attendees (approved humans with sign-in
+  // accounts). Visitor/child shells stay on their dedicated surfaces (Forms,
+  // Safeguarding review). Pass to narrow to one type.
+  memberType: z.enum(['member', 'attendee']).optional(),
 });
 
 export const unguardedMinorsQuerySchema = z.object({

@@ -1,0 +1,262 @@
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import {
+  ChevronLeft,
+  ChevronRight,
+  KeyRound,
+  Mail,
+  History,
+  Link2,
+  Fingerprint,
+} from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
+import {
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import { alert } from '@/lib/alert';
+import { useAuthStore } from '@/store/auth';
+import * as biometric from '@/lib/biometric';
+import { useTranslation } from 'react-i18next';
+import { keySlug } from '@/lib/localise-options';
+
+export default function SecurityHub() {  const { t } = useTranslation(['security', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('security:security')}</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.introBlock}>
+          <Text style={styles.introTitle}>{t('security:accountSecurity')}</Text>
+          <Text style={styles.introMeta}>{t('security:changeYourPasswordMoveYourAccount')}</Text>
+        </View>
+
+        <View style={styles.list}>
+          <NavLink
+            icon={KeyRound}
+            title={t('security:changePassword')}
+            meta="Update your login password. You'll need your current one."
+            onPress={() => router.push('/security/change-password')}
+          />
+          <NavLink
+            icon={Mail}
+            title={t('security:changeEmail')}
+            meta="Move your account to a new email. Both addresses get notified."
+            onPress={() => router.push('/security/change-email')}
+          />
+          <NavLink
+            icon={Link2}
+            title={t('security:connectedAccounts')}
+            meta="Link or disconnect Google, Microsoft, and Apple sign-in."
+            onPress={() => router.push('/security/connections' as never)}
+          />
+          <NavLink
+            icon={History}
+            title={t('security:recentActivity')}
+            meta="Sign-ins, password changes, and role updates on your account."
+            onPress={() => router.push('/recent-activity')}
+          />
+
+          <BiometricToggle />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/**
+ * Opt in to biometric sign-in.
+ *
+ * Enabling seals a copy of the refresh token behind the OS keychain's own
+ * authentication requirement, so the token is unreadable without a successful
+ * biometric check — the prompt is raised by that read, not by us in front of a
+ * value we already hold. See lib/biometric.ts.
+ *
+ * Hidden entirely on a device with no hardware, and shown disabled with an
+ * explanation when hardware exists but nothing is enrolled. A toggle that
+ * silently does nothing is what this feature is replacing.
+ */
+function BiometricToggle() {  const { t } = useTranslation(['security', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  const user = useAuthStore((s) => s.user);
+
+  const [cap, setCap] = useState<biometric.BiometricCapability | null>(null);
+  const [enabled, setEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [capability, on] = await Promise.all([
+        biometric.getCapability(),
+        user ? biometric.isArmedFor(user.id) : Promise.resolve(false),
+      ]);
+      if (cancelled) return;
+      setCap(capability);
+      setEnabled(on);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  if (!cap || !cap.hasHardware) return null;
+
+  async function toggle(next: boolean) {
+    if (busy || !cap || !user) return;
+    setBusy(true);
+    try {
+      if (!next) {
+        await biometric.disable(user.id);
+        setEnabled(false);
+        return;
+      }
+      if (!refreshToken) {
+        alert.info(
+          'Sign in again first',
+          'Your session needs refreshing before biometric sign-in can be armed.',
+        );
+        return;
+      }
+      const result = await biometric.enable(refreshToken, {
+        id: user.id,
+        displayName:
+          [user.firstName, user.lastName].filter(Boolean).join(' ').trim() ||
+          user.email,
+        email: user.email,
+        addedAt: new Date().toISOString(),
+      });
+      setEnabled(result.ok);
+      if (!result.ok) {
+        const title = `Could not enable ${cap.label}`;
+        const body =
+          result.reason === 'no_hardware'
+            ? 'This device has no biometric hardware.'
+            : result.reason === 'not_enrolled'
+              ? `Set up ${cap.label} in your device settings first, then try again.`
+              : `The device declined. Make sure your screen lock is set up and a biometric is enrolled, then try again.${result.message ? `\n\nDevice said: ${result.message}` : ''}`;
+        alert.info(title, body);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card padding="md" style={styles.linkCard}>
+      <View style={styles.iconTile}>
+        <Fingerprint color={c.primary} size={18} strokeWidth={1.5} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={styles.linkTitle}>
+          {t('security:signInWithProvider', {
+            provider: t(`auth:biometric_${keySlug(cap.label)}`, { defaultValue: cap.label }),
+          })}
+        </Text>
+        {!cap.isEnrolled ? (
+          <Text style={styles.linkMeta}>{t('security:setItUpInYourDevice')}</Text>
+        ) : !enabled ? (
+          <Text style={styles.linkMeta}>{t('security:skipYourPassword')}</Text>
+        ) : null}
+      </View>
+      <Switch
+        value={enabled}
+        onValueChange={(v) => void toggle(v)}
+        disabled={busy || !cap.isEnrolled}
+      />
+    </Card>
+  );
+}
+
+function NavLink({
+  icon: Icon,
+  title,
+  meta,
+  onPress,
+}: {
+  icon: LucideIcon;
+  title: string;
+  meta: string;
+  onPress: () => void;
+}) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <Pressable onPress={onPress}>
+      <Card padding="md" style={styles.linkCard}>
+        <View style={styles.iconTile}>
+          <Icon color={c.primary} size={18} strokeWidth={1.5} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={styles.linkTitle}>{title}</Text>
+          <Text style={styles.linkMeta}>{meta}</Text>
+        </View>
+        <ChevronRight color={c.inkVeryFaded} size={18} strokeWidth={1.5} />
+      </Card>
+    </Pressable>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
+  container: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
+  },
+  introBlock: { gap: 2 },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.body, color: c.inkMuted, lineHeight: 20 },
+  list: { gap: spacing.sm },
+  linkCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  iconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    backgroundColor: 'rgba(93,63,211,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkTitle: { ...typography.body, color: c.ink, fontWeight: '600' },
+  linkMeta: {
+    ...typography.meta,
+    color: c.inkMuted,
+    lineHeight: 15,
+  },
+});
+}
+

@@ -28,6 +28,7 @@ vi.mock('@/hooks/use-attendance', () => ({
     isPending: cohortIsPending,
     error: null,
     mutateAsync: cohortMutate,
+    reset: vi.fn(),
   }),
 }));
 

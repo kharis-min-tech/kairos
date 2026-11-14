@@ -16,6 +16,8 @@ import type {
   NewBelieverStageValue,
 } from '@kairos/types';
 import { getSessionStageDef } from './session-helpers';
+import { stageLabel } from '../../_components/stage-config';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   session: NewBelieverSession;
@@ -23,7 +25,8 @@ interface Props {
   canRecordAttendance: boolean;
 }
 
-export function AttendanceTab({ session, branchId, canRecordAttendance }: Props) {
+export function AttendanceTab({ session, branchId, canRecordAttendance }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const [toggles, setToggles] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState(false);
   const sessionStage = session.sessionStage as NewBelieverStageValue;
@@ -92,7 +95,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
 
     try {
       await recordAttendance.mutateAsync({ sessionId: session.id, data: { records } });
-      toast.success('Attendance saved');
+      toast.success(t('newBelievers:attendanceSaved'));
       setSaved(true);
       setToggles({});
     } catch (err: unknown) {
@@ -102,17 +105,13 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
 
   if (attendanceLoading || enrollmentsLoading) {
     return (
-      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Loading attendance...
-      </p>
+      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('newBelievers:loadingAttendance')}</p>
     );
   }
 
   if (mergedRows.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        No enrolled members are currently in the active class pipeline.
-      </p>
+      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('newBelievers:noEnrolledMembersAreCurrentlyIn')}</p>
     );
   }
 
@@ -120,8 +119,11 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          {`${presentCount} of ${mergedRows.length} marked present`}
-          {stageDef ? ` · ${stageDef.label} candidates only` : ''}
+          {t('newBelievers:ofMarkedPresent', {
+            present: presentCount,
+            total: mergedRows.length,
+          })}
+          {stageDef ? t('newBelievers:candidatesOnlySuffix', { stage: stageLabel(t, stageDef) }) : ''}
         </p>
         {canRecordAttendance && (
           <div className="flex items-center gap-2">
@@ -131,18 +133,14 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
               size="sm"
               onClick={() => setAll(true)}
               disabled={allPresent}
-            >
-              Mark all present
-            </Button>
+            >{t('newBelievers:markAllPresent')}</Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setAll(false)}
               disabled={nonePresent}
-            >
-              Mark all absent
-            </Button>
+            >{t('newBelievers:markAllAbsent')}</Button>
           </div>
         )}
       </div>
@@ -172,7 +170,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
                 }}
               >
                 <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                {attended ? 'Present' : 'Absent'}
+                {attended ? t('newBelievers:present') : t('newBelievers:absent')}
               </Button>
             </div>
           );
@@ -182,7 +180,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
       {canRecordAttendance && (
         <div className="flex items-center justify-between">
           {saved ? (
-            <p className="text-xs font-medium text-emerald-600">Attendance saved.</p>
+            <p className="text-xs font-medium text-emerald-600">{t('newBelievers:attendanceSaved')}</p>
           ) : (
             <span />
           )}
@@ -192,7 +190,7 @@ export function AttendanceTab({ session, branchId, canRecordAttendance }: Props)
             size="sm"
           >
             <ClipboardCheck className="mr-1.5 h-4 w-4" />
-            {recordAttendance.isPending ? 'Saving...' : 'Save Attendance'}
+            {recordAttendance.isPending ? t('newBelievers:saving') : t('newBelievers:saveAttendance')}
           </Button>
         </div>
       )}

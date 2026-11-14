@@ -1,0 +1,19 @@
+{
+  "role": "platform-branches-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Ɛvri Branch",
+      "caption": "Di ol nɛtwɔk, lis.",
+      "speech": "Branch de lis ɛvri ples we di chɔch de ron, di siti, di rijɔn ɛn omɔch pipul de na di kɔngrigeshɔn."
+    },
+    {
+      "n": 2,
+      "title": "Insay Wan",
+      "caption": "Sɛtin, lidaship ɛn mɛmba dɛn.",
+      "speech": "Opin wan branch fɔ sɛt in infɔmeshɔn, gi in pasto ɛn admin dɛn, ɛn si di mɛmba, grup ɛn sɛvis dɛn we bilɔng to am."
+    }
+  ]
+}

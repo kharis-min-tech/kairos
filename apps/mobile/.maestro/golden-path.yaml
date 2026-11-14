@@ -1,0 +1,28 @@
+appId: com.kharis.kairos
+name: Golden path (native build) — first-run onboarding, login, tab tour, sign out
+tags:
+  - smoke
+env:
+  EMAIL: ""
+  PASSWORD: ""
+---
+# Requires an installed dev-client / preview / production build with bundle id
+# com.kharis.kairos on the target device. Use golden-path-expo-go.yaml if you
+# only have Expo Go installed.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- runFlow:
+    file: 10-login.yaml
+    env:
+      APP_ID: com.kharis.kairos
+      EMAIL: ${EMAIL}
+      PASSWORD: ${PASSWORD}
+- runFlow:
+    file: 20-tab-navigation.yaml
+    env:
+      APP_ID: com.kharis.kairos
+- runFlow:
+    file: 30-sign-out.yaml
+    env:
+      APP_ID: com.kharis.kairos

@@ -1,0 +1,61 @@
+{
+  "role": "admin-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wo nhwɛmu",
+      "caption": "Asɔre mmaa nyinaa prɛko.",
+      "speech": "Yei ne sohwɛfoɔ nhwɛmu. Asɔre Nkwa kan asɔre mmaa nyinaa prɛko, na Ɛhia Wo kyerɛ deɛ ɛretwɛn obi ɛnnɛ."
+    },
+    {
+      "n": 2,
+      "title": "Asɔre Mmaa",
+      "caption": "Yɛ wɔn, hyehyɛ wɔn, yi wɔn.",
+      "speech": "Asɔre mmaa yɛ wo nko ara dea. Sohwɛfoɔ nko ara na ɔyɛ bi, de kɔ ɔmantam foforɔ mu, anaa ɔyi bi firi adwuma mu."
+    },
+    {
+      "n": 3,
+      "title": "Asɔre baa bi mu",
+      "caption": "Ne ho nsɛm, ne hwan na ɔdi anim.",
+      "speech": "Bue asɔre baa bi na hyɛ ne nsɛm ne n’akannifoɔ. Sɔfopanin a wobɔ ne din wɔ ha na ɛma ɔhunu saa asɔre baa no ahobammɔ nhwɛmu."
+    },
+    {
+      "n": 4,
+      "title": "Amantam",
+      "caption": "Mmeaeɛ a wɔde w’asɔre mmaa hyehyɛ mu.",
+      "speech": "Amantam de asɔre mmaa hyehyɛ mmeaeɛ so. Yɛ ɔmantam no kane; wontumi nyɛ asɔre baa kɔsi sɛ ne ɔmantam wɔ hɔ."
+    },
+    {
+      "n": 5,
+      "title": "Ɔpene nhwɛmu",
+      "caption": "Obiara nnuru mu kɔsi sɛ obi bue.",
+      "speech": "Obiara a ɔkyerɛw ne din ankasa twɛn wɔ ha. Pene no so na ɔnya akwannya nyinaa; po no na wɔyi n’akawnt."
+    },
+    {
+      "n": 6,
+      "title": "Hwan na ɔkura deɛn",
+      "caption": "Tumi, na ɛnyɛ dibea din.",
+      "speech": "Bue ɔmanfoɔ bi na hwɛ ne tumi so. Kairos kora nhyehyɛeɛ dibea mmienu pɛ, enti biribiara foforɔ firi tumi mu."
+    },
+    {
+      "n": 7,
+      "title": "Asɔremufoɔ adesua",
+      "caption": "Asɔre no nyinaa dea; asɔre baa tumi nnuru so.",
+      "speech": "Asɔremufoɔ nhyehyɛeɛ yɛ asɔre no nyinaa dea. Akuo no gye nnipa firi asɔre mmaa nyinaa so, enti ɛhia asɔre no nyinaa tumi."
+    },
+    {
+      "n": 8,
+      "title": "Nkaeɛbɔ a ɛtra asɔre mmaa so",
+      "caption": "Nhwɛmu korɔ a ɛtoto asɔre mmaa.",
+      "speech": "Nkaeɛbɔ ne nhwɛmu a ɛtra asɔre mmaa so. Wo nko ara ne dibea a wohunu asɔre baa biara bɔ mu, na ɛnyɛ baako baako."
+    },
+    {
+      "n": 9,
+      "title": "Wo kasa",
+      "caption": "Kairos ne nwoma yi, wɔ kasa nnan mu.",
+      "speech": "Kairos ka Borɔfo, Frɛnkye, Krio ne Twi. Sesa no firi nkyekyɛmu no mu, na nwoma no bue wɔ kasa korɔ no ara mu."
+    }
+  ]
+}

@@ -11,8 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Calendar, MapPin, Users, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth-store';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 interface ProgramParticipant {
   memberId: string;
@@ -64,7 +65,8 @@ interface UnregisteredMember {
   isActive: boolean;
 }
 
-export default function ProgramDetailPage() {
+export default function ProgramDetailPage() {  const { t } = useTranslation(['outreach', 'common']);
+
   const caps = useCapabilities();
   const params = useParams();
   const router = useRouter();
@@ -149,7 +151,7 @@ export default function ProgramDetailPage() {
       }
     } catch (error: unknown) {
       toast({
-        title: 'Failed to load program',
+        title: t('outreach:failedToLoadProgram'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -200,9 +202,9 @@ export default function ProgramDetailPage() {
     if (!api || !program) return;
 
     const ok = await confirm({
-      title: `Mark "${program.programName}" as completed?`,
-      description: 'The program will be archived. You can still view its souls and history.',
-      confirmLabel: 'Mark complete',
+      title: t('outreach:markV1Completed', { v1: program.programName }),
+      description: t('outreach:theProgramWillBeArchivedYou'),
+      confirmLabel: t('outreach:markComplete'),
     });
     if (!ok) return;
 
@@ -210,12 +212,12 @@ export default function ProgramDetailPage() {
     try {
       await api.outreach.programs.update(program.id, { isCompleted: true });
       toast({
-        title: 'Program marked as completed',
+        title: t('outreach:programMarkedAsCompleted'),
       });
       await fetchProgram();
     } catch (error: unknown) {
       toast({
-        title: 'Failed to update program',
+        title: t('outreach:failedToUpdateProgram'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -233,13 +235,13 @@ export default function ProgramDetailPage() {
         memberId: user.id,
       });
       toast({
-        title: 'Successfully registered',
-        description: 'You have been registered for this program',
+        title: t('outreach:successfullyRegistered'),
+        description: t('outreach:youHaveBeenRegisteredForThis'),
       });
       await fetchProgram();
     } catch (error: unknown) {
       toast({
-        title: 'Failed to register',
+        title: t('outreach:failedToRegister'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -272,7 +274,7 @@ export default function ProgramDetailPage() {
     return (
       <div role="alert" className="container mx-auto py-6">
         <div className="rounded-lg bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">Program not found.</p>
+          <p className="text-sm text-destructive">{t('outreach:programNotFound')}</p>
         </div>
       </div>
     );
@@ -291,26 +293,18 @@ export default function ProgramDetailPage() {
         </div>
         {program.isCompleted ? (
           <Badge variant="default" className="gap-1">
-            <CheckCircle2 className="h-3 w-3" />
-            Completed
-          </Badge>
+            <CheckCircle2 className="h-3 w-3" />{t('outreach:completed')}</Badge>
         ) : (
           <div className="flex gap-2">
             {canRegisterForProgram && !isRegistered && (
-              <Button onClick={handleRegister} disabled={loading}>
-                Register for Program
-              </Button>
+              <Button onClick={handleRegister} disabled={loading}>{t('outreach:registerForProgram')}</Button>
             )}
             {canRegisterForProgram && isRegistered && (
               <Badge variant="default" className="gap-1">
-                <CheckCircle2 className="h-3 w-3" />
-                Registered
-              </Badge>
+                <CheckCircle2 className="h-3 w-3" />{t('outreach:registered')}</Badge>
             )}
             {canManageProgram && (
-              <Button onClick={handleMarkComplete} disabled={loading} variant="outline">
-                Mark as Completed
-              </Button>
+              <Button onClick={handleMarkComplete} disabled={loading} variant="outline">{t('outreach:markAsCompleted')}</Button>
             )}
           </div>
         )}
@@ -319,7 +313,7 @@ export default function ProgramDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Program Details</CardTitle>
+            <CardTitle>{t('outreach:programDetails')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-2">
@@ -345,7 +339,7 @@ export default function ProgramDetailPage() {
             </div>
             {!isMember && program.totalSoulsReached !== undefined && (
               <div className="pt-2 mt-2">
-                <p className="text-sm text-muted-foreground">Souls Reached</p>
+                <p className="text-sm text-muted-foreground">{t('outreach:soulsReached')}</p>
                 <p className="text-2xl font-bold">{program.totalSoulsReached}</p>
               </div>
             )}
@@ -355,17 +349,17 @@ export default function ProgramDetailPage() {
         {!isMember ? (
           <Card>
             <CardHeader>
-              <CardTitle>Statistics</CardTitle>
+              <CardTitle>{t('outreach:statistics')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {program.statistics && (
                 <>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Workers</p>
+                    <p className="text-sm text-muted-foreground">{t('outreach:totalWorkers')}</p>
                     <p className="text-xl font-semibold">{program.statistics.totalWorkers || 0}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Souls by Status</p>
+                    <p className="text-sm text-muted-foreground">{t('outreach:soulsByStatus')}</p>
                     <div className="grid grid-cols-2 gap-2 mt-2">
                       {program.statistics.soulsByStatus && Object.entries(program.statistics.soulsByStatus).map(([status, count]: [string, number]) => (
                         <div key={status} className="flex justify-between text-sm">
@@ -377,7 +371,7 @@ export default function ProgramDetailPage() {
                   </div>
                   {program.statistics.conversionRate !== undefined && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                      <p className="text-sm text-muted-foreground">{t('outreach:conversionRate')}</p>
                       <p className="text-xl font-semibold">{program.statistics.conversionRate}%</p>
                     </div>
                   )}
@@ -388,38 +382,36 @@ export default function ProgramDetailPage() {
         ) : canRegisterForProgram ? (
           <Card>
             <CardHeader>
-              <CardTitle>Your Registration Status</CardTitle>
+              <CardTitle>{t('outreach:yourRegistrationStatus')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {program.isCompleted ? (
                 <div>
-                  <p className="text-muted-foreground mb-3">This program has been completed</p>
+                  <p className="text-muted-foreground mb-3">{t('outreach:thisProgramHasBeenCompleted')}</p>
                   {isRegistered ? (
                     <div className="flex items-center gap-2 text-emerald-600">
                       <CheckCircle2 className="h-5 w-5" />
                       <div>
-                        <p className="font-semibold">You participated in this program</p>
-                        <p className="text-sm text-muted-foreground">Thank you for your service</p>
+                        <p className="font-semibold">{t('outreach:youParticipatedInThisProgram')}</p>
+                        <p className="text-sm text-muted-foreground">{t('outreach:thankYouForYourService')}</p>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">You did not participate in this program</p>
+                    <p className="text-sm text-muted-foreground">{t('outreach:youDidNotParticipateInThis')}</p>
                   )}
                 </div>
               ) : isRegistered ? (
                 <div className="flex items-center gap-2 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5" />
                   <div>
-                    <p className="font-semibold">You are registered</p>
-                    <p className="text-sm text-muted-foreground">You are participating in this program</p>
+                    <p className="font-semibold">{t('outreach:youAreRegistered')}</p>
+                    <p className="text-sm text-muted-foreground">{t('outreach:youAreParticipatingInThisProgram')}</p>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <p className="text-muted-foreground mb-3">You are not registered for this program yet</p>
-                  <Button onClick={handleRegister} disabled={loading} className="w-full">
-                    Register Now
-                  </Button>
+                  <p className="text-muted-foreground mb-3">{t('outreach:youAreNotRegisteredForThis')}</p>
+                  <Button onClick={handleRegister} disabled={loading} className="w-full">{t('outreach:registerNow')}</Button>
                 </div>
               )}
             </CardContent>
@@ -430,7 +422,7 @@ export default function ProgramDetailPage() {
       {program.description && (
         <Card>
           <CardHeader>
-            <CardTitle>Description</CardTitle>
+            <CardTitle>{t('outreach:description')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm whitespace-pre-wrap">{program.description}</p>
@@ -484,7 +476,7 @@ export default function ProgramDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No workers registered yet</p>
+                <p className="text-sm text-muted-foreground text-center py-8">{t('outreach:noWorkersRegisteredYet')}</p>
               )}
             </CardContent>
           </Card>
@@ -516,14 +508,12 @@ export default function ProgramDetailPage() {
                           </span>
                         )}
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        Not Registered
-                      </Badge>
+                      <Badge variant="secondary" className="text-xs">{t('outreach:notRegistered')}</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">All active members are registered</p>
+                <p className="text-sm text-muted-foreground text-center py-8">{t('outreach:allActiveMembersAreRegistered')}</p>
               )}
             </CardContent>
           </Card>
@@ -533,9 +523,9 @@ export default function ProgramDetailPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Souls Captured</CardTitle>
+            <CardTitle>{t('outreach:soulsCaptured')}</CardTitle>
             <Link href={`/souls?outreachId=${program.id}`}>
-              <Button variant="outline" size="sm">View All</Button>
+              <Button variant="outline" size="sm">{t('outreach:viewAll')}</Button>
             </Link>
           </div>
         </CardHeader>
@@ -558,15 +548,20 @@ export default function ProgramDetailPage() {
                 ))}
               {program.souls.filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id).length > 5 && (
                 <p className="text-sm text-muted-foreground text-center pt-2">
-                  And {program.souls.filter((soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id).length - 5} more...
+                  {t('outreach:andMore', {
+                    count:
+                      program.souls.filter(
+                        (soul: ProgramSoul) => !isMember || soul.assignedMemberId === user?.id,
+                      ).length - 5,
+                  })}
                 </p>
               )}
               {isMember && program.souls.filter((soul: ProgramSoul) => soul.assignedMemberId === user?.id).length === 0 && (
-                <p className="text-sm text-muted-foreground">You haven't captured any souls in this program yet</p>
+                <p className="text-sm text-muted-foreground">{t('outreach:youHavenTCapturedAnySouls')}</p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No souls captured yet</p>
+            <p className="text-sm text-muted-foreground">{t('outreach:noSoulsCapturedYet')}</p>
           )}
         </CardContent>
       </Card>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -22,21 +24,24 @@ import { useCreateSession } from '@/hooks/use-new-believers';
 import type { CreateNewBelieverSessionRequest } from '@kairos/types';
 import {
   combineDateAndTime,
-  curriculumOptions,
+  getCurriculumOptions,
   getSessionStageDef,
   todayIso,
 } from './session-helpers';
+import { stageTopic } from '../../_components/stage-config';
+import { useTranslation } from 'react-i18next';
 
-const createSessionFormSchema = z.object({
+const makeCreateSessionFormSchema = (t: (key: string) => string) =>
+  z.object({
   sessionStage: z.enum(['session-1', 'session-2', 'session-3', 'session-4']),
-  sessionDate: z.string().min(1, 'Choose a session date'),
-  sessionTime: z.string().regex(/^\d{2}:\d{2}$/, 'Choose a session time'),
-  location: z.string().trim().min(1, 'Enter a location').max(300, 'Location is too long'),
-  teacherId: z.string().min(1, 'Choose a teacher'),
-  feedback: z.string().max(2000, 'Notes are too long').optional(),
+  sessionDate: z.string().min(1, t('newBelievers:vChooseASessionDate')),
+  sessionTime: z.string().regex(/^\d{2}:\d{2}$/, t('newBelievers:vChooseASessionTime')),
+  location: z.string().trim().min(1, t('newBelievers:vEnterALocation')).max(300, t('newBelievers:vLocationIsTooLong')),
+  teacherId: z.string().min(1, t('newBelievers:vChooseATeacher')),
+  feedback: z.string().max(2000, t('newBelievers:vNotesAreTooLong')).optional(),
 });
 
-type CreateSessionFormValues = z.infer<typeof createSessionFormSchema>;
+type CreateSessionFormValues = z.infer<ReturnType<typeof makeCreateSessionFormSchema>>;
 
 function defaultValues(): CreateSessionFormValues {
   return {
@@ -59,7 +64,9 @@ export function CreateSessionDialog({
   teacherOptions: { value: string; label: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}) {
+}) {  const { t } = useTranslation(['newBelievers', 'common']);
+  const createSessionFormSchema = useMemo(() => makeCreateSessionFormSchema(t), [t]);
+
   const createSession = useCreateSession();
   const form = useForm<CreateSessionFormValues>({
     resolver: zodResolver(createSessionFormSchema),
@@ -82,7 +89,7 @@ export function CreateSessionDialog({
 
     try {
       await createSession.mutateAsync(payload);
-      toast.success('Session created');
+      toast.success(t('newBelievers:sessionCreated'));
       form.reset(defaultValues());
       onOpenChange(false);
     } catch (err: unknown) {
@@ -100,15 +107,13 @@ export function CreateSessionDialog({
     >
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>New Session</DialogTitle>
-          <DialogDescription>
-            Schedule a New Believers class session for this branch.
-          </DialogDescription>
+          <DialogTitle>{t('newBelievers:newSession')}</DialogTitle>
+          <DialogDescription>{t('newBelievers:scheduleANewBelieversClassSession')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">Curriculum Session</label>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:curriculumSession')}</label>
             <CustomSelect
               value={sessionStage}
               onValueChange={(value) =>
@@ -117,10 +122,12 @@ export function CreateSessionDialog({
                   shouldValidate: true,
                 })
               }
-              options={curriculumOptions}
+              options={getCurriculumOptions(t)}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Topic: {selectedStage?.topic ?? 'Select a session'}
+              {selectedStage
+                ? t('newBelievers:topicWithName', { topic: stageTopic(t, selectedStage) ?? '' })
+                : t('newBelievers:selectASession')}
             </p>
             {form.formState.errors.sessionStage && (
               <p className="mt-1 text-xs font-medium text-destructive">
@@ -130,7 +137,7 @@ export function CreateSessionDialog({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Date</label>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:date')}</label>
             <DateSelect
               value={sessionDate}
               onChange={(value) =>
@@ -148,7 +155,7 @@ export function CreateSessionDialog({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Time</label>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:time')}</label>
             <TimeSelect
               value={form.watch('sessionTime')}
               onValueChange={(value) =>
@@ -167,12 +174,10 @@ export function CreateSessionDialog({
           </div>
 
           <div>
-            <label htmlFor="session-location" className="mb-1 block text-sm font-medium">
-              Location
-            </label>
+            <label htmlFor="session-location" className="mb-1 block text-sm font-medium">{t('newBelievers:location')}</label>
             <Input
               id="session-location"
-              placeholder="Main auditorium"
+              placeholder={t('newBelievers:mainAuditorium')}
               {...form.register('location')}
             />
             {form.formState.errors.location && (
@@ -183,7 +188,7 @@ export function CreateSessionDialog({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Teacher</label>
+            <label className="mb-1 block text-sm font-medium">{t('newBelievers:teacher')}</label>
             <CustomSelect
               value={form.watch('teacherId')}
               onValueChange={(value) =>
@@ -193,7 +198,7 @@ export function CreateSessionDialog({
                 })
               }
               options={teacherOptions}
-              placeholder="Assign teacher"
+              placeholder={t('newBelievers:assignTeacher')}
             />
             {form.formState.errors.teacherId && (
               <p className="mt-1 text-xs font-medium text-destructive">
@@ -203,13 +208,12 @@ export function CreateSessionDialog({
           </div>
 
           <div>
-            <label htmlFor="session-feedback" className="mb-1 block text-sm font-medium">
-              Session Notes <span className="font-normal text-muted-foreground">(optional)</span>
+            <label htmlFor="session-feedback" className="mb-1 block text-sm font-medium">{t('newBelievers:sessionNotes')}<span className="font-normal text-muted-foreground">(optional)</span>
             </label>
             <Textarea
               id="session-feedback"
               rows={3}
-              placeholder="Class-wide observations or follow-up themes"
+              placeholder={t('newBelievers:classWideObservationsOrFollowUp')}
               {...form.register('feedback')}
             />
             {form.formState.errors.feedback && (
@@ -220,11 +224,9 @@ export function CreateSessionDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('newBelievers:cancel')}</Button>
             <Button type="submit" disabled={createSession.isPending}>
-              {createSession.isPending ? 'Creating...' : 'Create Session'}
+              {createSession.isPending ? t('newBelievers:creating') : t('newBelievers:createSession')}
             </Button>
           </DialogFooter>
         </form>

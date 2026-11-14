@@ -1,0 +1,463 @@
+import { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import { alert } from '@/lib/alert';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, Search, ScanLine, UserPlus, QrCode } from 'lucide-react-native';
+import {
+  Avatar,
+  Badge,
+  Button,
+  spacing,
+  typography,
+  radii,
+  gradients,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import { api } from '@/lib/api-client';
+import { useCapabilities, useRequireCapability } from '@/lib/capabilities';
+import { useAuthStore } from '@/store/auth';
+import { QrScannerModal } from '@/components/qr-scanner-modal';
+import { useTranslation } from 'react-i18next';
+
+/**
+ * Parse an admin-facing member QR. The scanner encodes each roster row as
+ * `kairos://member/{memberId}` — nothing more. Returning `null` on any
+ * mismatch keeps the caller's alert message uniform.
+ */
+function parseMemberQr(payload: string): string | null {
+  const prefix = 'kairos://member/';
+  if (!payload.startsWith(prefix)) return null;
+  const id = payload.slice(prefix.length).trim();
+  return id.length > 0 ? id : null;
+}
+
+export default function AdminCheckin() {  const { t } = useTranslation(['admin', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+  const qc = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const caps = useCapabilities();
+  const homeBranchId = useAuthStore((s) => s.user?.homeBranchId ?? null);
+  const canAccess =
+    caps.systemRole === 'admin' ||
+    (!!homeBranchId && caps.has('branch:write', { kind: 'branch', id: homeBranchId }));
+  useRequireCapability(canAccess);
+
+  // Nearest upcoming service.
+  const services = useQuery({
+    queryKey: ['attendance', 'services', 'today'],
+    queryFn: async () => (await api.attendance.listServices({ limit: 5 })).data?.data ?? [],
+  });
+
+  const activeService = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return (services.data ?? [])
+      .filter((s) => new Date(s.serviceDate) >= today)
+      .sort(
+        (a, b) => new Date(a.serviceDate).getTime() - new Date(b.serviceDate).getTime(),
+      )[0];
+  }, [services.data]);
+
+  const serviceId = activeService?.id;
+
+  const roster = useQuery({
+    queryKey: ['attendance', 'roster', serviceId],
+    queryFn: async () => {
+      const res = await api.attendance.roster(serviceId!);
+      const payload = res.data;
+      if (!payload) return [];
+      return Array.isArray(payload) ? payload : (payload.data ?? []);
+    },
+    enabled: !!serviceId,
+  });
+
+  const checkin = useMutation({
+    mutationFn: async ({ memberId }: { memberId: string }) => {
+      if (!serviceId) throw new Error('No active service');
+      return api.attendance.recordAttendance(serviceId, {
+        entries: [{ memberId, status: 'Present' }],
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'roster', serviceId] });
+    },
+    onError: (e: Error) => {
+      alert.info('Check-in failed', e.message);
+    },
+  });
+
+  // Return contract matches QrScannerModal — true accepts + parent closes,
+  // false keeps the scanner open with an in-frame "not recognised" hint.
+  function handleScannedMemberQr(payload: string): boolean {
+    const memberId = parseMemberQr(payload);
+    if (!memberId) return false;
+    setScannerOpen(false);
+    const match = (roster.data ?? []).find((r) => r.memberId === memberId);
+    checkin.mutate({ memberId });
+    if (match) {
+      alert.info('Checked in', `${match.firstName} ${match.lastName}`);
+    }
+    return true;
+  }
+
+  const roasted = (roster.data ?? []).filter((r) =>
+    search
+      ? `${r.firstName} ${r.lastName}`.toLowerCase().includes(search.toLowerCase())
+      : true,
+  );
+
+  const checkedIn = (roster.data ?? []).filter((r) => r.status !== null).length;
+  const total = roster.data?.length ?? 0;
+  const notYet = Math.max(0, total - checkedIn);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.gradientHeader}>
+        <LinearGradient
+          colors={gradients.brandDeep}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientBg}
+        />
+        <View style={styles.headerBar}>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <ChevronLeft color="#ffffff" size={24} strokeWidth={1.5} />
+          </Pressable>
+          <View style={styles.headerText}>
+            <Text style={styles.headerEyebrow}>{t('admin:checkInDesk')}</Text>
+            <Text style={styles.headerTitle}>
+              {activeService?.serviceTitle ?? activeService?.serviceType ?? 'No live service'}
+            </Text>
+            <Text style={styles.headerMeta}>
+              {activeService?.branchName ?? 'Kharis'}
+              {activeService
+                ? ` · ${new Date(activeService.serviceDate).toLocaleDateString('en-GB', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                  })}`
+                : ''}
+            </Text>
+          </View>
+          <View style={styles.liveChip}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveLabel}>{t('admin:live')}</Text>
+          </View>
+        </View>
+
+        <View style={styles.statTiles}>
+          <StatTile label={t('admin:checkedIn')} value={String(checkedIn)} />
+          <StatTile label={t('admin:roster')} value={String(total)} />
+          <StatTile label={t('admin:notYet')} value={String(notYet)} />
+        </View>
+      </View>
+
+      <View style={styles.actionBar}>
+        <Button
+          label={t('admin:scanQr')}
+          size="sm"
+          onPress={() => setScannerOpen(true)}
+          iconLeft={<ScanLine color="#ffffff" size={14} strokeWidth={2} />}
+        />
+        <Button
+          label={t('admin:walkIn')}
+          size="sm"
+          variant="outline"
+          onPress={() => router.push('/forms/first_time_visitor')}
+          iconLeft={<UserPlus color={c.primary} size={14} strokeWidth={2} />}
+        />
+        <Button
+          label={t('admin:showQr')}
+          size="sm"
+          variant="outline"
+          onPress={() => {
+            if (!serviceId) {
+              alert.info('No service', 'Schedule a service before showing a QR code.');
+              return;
+            }
+            // expo-router typed-routes cache is stale for this newly-added screen;
+            // regenerates on next `expo start`. Casting to Href-compatible shape.
+            router.push({
+              pathname: '/admin/checkin-qr' as never,
+              params: { serviceId },
+            });
+          }}
+          iconLeft={<QrCode color={c.primary} size={14} strokeWidth={2} />}
+        />
+        <View style={styles.searchField}>
+          <Search color={c.inkFaded} size={16} strokeWidth={1.5} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('admin:search')}
+            placeholderTextColor={c.inkFaded}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+      </View>
+
+      {!activeService ? (
+        <View style={styles.emptyBlock}>
+          <Text style={styles.emptyTitle}>{t('admin:noServiceReady')}</Text>
+          <Text style={styles.emptyMeta}>{t('admin:theCheckInDeskActivatesOnce')}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={roasted}
+          keyExtractor={(r) => r.memberId}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={roster.isFetching}
+              onRefresh={() => roster.refetch()}
+              tintColor={c.primary}
+            />
+          }
+          ListHeaderComponent={
+            <Text style={styles.queueLabel}>
+              {t('attendance:atTheDeskCount', { count: roasted.length })}
+            </Text>
+          }
+          ListEmptyComponent={
+            roster.isLoading ? (
+              <ActivityIndicator color={c.primary} style={{ marginTop: spacing.xl }} />
+            ) : (
+              <Text style={styles.emptyText}>{t('admin:noMatches')}</Text>
+            )
+          }
+          ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
+          renderItem={({ item }) => {
+            const isCheckedIn = item.status !== null;
+            const isPending = checkin.isPending && checkin.variables?.memberId === item.memberId;
+            return (
+              <View
+                style={[
+                  styles.row,
+                  isCheckedIn && styles.rowCheckedIn,
+                ]}
+              >
+                <Avatar
+                  size="sm"
+                  photoUrl={item.photoUrl}
+                  firstName={item.firstName}
+                  lastName={item.lastName}
+                />
+                <View style={styles.rowText}>
+                  <Text style={styles.rowName}>
+                    {item.firstName} {item.lastName}
+                  </Text>
+                  {isCheckedIn ? (
+                    <Badge label={item.status ?? 'Present'} variant="success" size="sm" />
+                  ) : (
+                    <Text style={styles.rowMeta}>{t('admin:notCheckedIn')}</Text>
+                  )}
+                </View>
+                {!isCheckedIn ? (
+                  <Button
+                    label={t('admin:checkIn')}
+                    size="sm"
+                    loading={isPending}
+                    onPress={() => checkin.mutate({ memberId: item.memberId })}
+                  />
+                ) : null}
+              </View>
+            );
+          }}
+        />
+      )}
+
+      <QrScannerModal
+        visible={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={handleScannedMemberQr}
+        title={t('admin:scanMemberCode')}
+        hint={t('admin:pointTheCameraAtAMember')}
+      />
+    </SafeAreaView>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  return (
+    <View style={styles.statTile}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label.toUpperCase()}</Text>
+    </View>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
+  gradientHeader: {
+    paddingBottom: spacing.md,
+  },
+  gradientBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  headerText: { flex: 1, gap: 2 },
+  headerEyebrow: {
+    ...typography.eyebrow,
+    color: 'rgba(255,255,255,0.65)',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  headerMeta: {
+    ...typography.meta,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  liveChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radii.pill,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: c.success,
+  },
+  liveLabel: {
+    ...typography.meta,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  statTiles: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  statTile: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: 2,
+    alignItems: 'flex-start',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  statLabel: {
+    ...typography.eyebrow,
+    color: 'rgba(255,255,255,0.6)',
+  },
+
+  actionBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: c.page,
+    borderBottomWidth: 1,
+    borderBottomColor: c.divider,
+  },
+  searchField: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: c.card,
+    borderWidth: 1,
+    borderColor: c.divider,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.sm,
+    height: 36,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    color: c.ink,
+  },
+
+  emptyBlock: {
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  emptyTitle: { ...typography.cardTitle, color: c.ink },
+  emptyMeta: {
+    ...typography.body,
+    color: c.inkMuted,
+    textAlign: 'center',
+  },
+  emptyText: {
+    ...typography.body,
+    color: c.inkFaded,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+  },
+
+  listContent: {
+    padding: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
+  },
+  queueLabel: {
+    ...typography.eyebrow,
+    color: c.inkMuted,
+    marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: c.card,
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  rowCheckedIn: {
+    borderLeftWidth: 3,
+    borderLeftColor: c.success,
+  },
+  rowText: { flex: 1, gap: spacing.xs },
+  rowName: { ...typography.cardTitle, color: c.ink },
+  rowMeta: { ...typography.meta, color: c.inkMuted },
+});
+}
+

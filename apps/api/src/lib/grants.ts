@@ -1,14 +1,15 @@
 import { eq, and } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
-import { memberRoles, roles } from '@kairos/database';
+import { branchLeadership, memberRoles, roles } from '@kairos/database';
 import {
   type AuthContext,
   type Capability,
   type Grant,
   type RoleScope,
   type SystemRole,
+  CHURCH_SCOPE,
   FunctionalRole,
-  RoleCapabilities,
+  matchesCapability,
 } from '@kairos/types';
 
 // ── DB role-name → FunctionalRole mapping ──────────────────
@@ -17,15 +18,22 @@ import {
 // Operational/volunteer roles in the same table (e.g. "Worship Lead",
 // "Media Team") aren't authority bundles — they're skipped here.
 
-const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
+/**
+ * Exported so role ASSIGNMENT can ask what scope shape a role takes, rather
+ * than assuming 'branch' — see assignRole in members/service.ts.
+ */
+export const DB_ROLE_NAME_TO_FUNCTIONAL: Record<string, FunctionalRole> = {
   'Branch System Admin': FunctionalRole.BranchAdmin,
   'Branch Data Admin': FunctionalRole.BranchDataAdmin,
   'Safeguarding Lead': FunctionalRole.SafeguardingLead,
+  'Safeguarding Head': FunctionalRole.SafeguardingHead,
   'Fellowship Leader': FunctionalRole.FellowshipLeader,
   'Department Lead': FunctionalRole.DepartmentLeader,
   'Department Deputy': FunctionalRole.DepartmentDeputy,
   'New Believers Mentor': FunctionalRole.NewBelieversMentor,
   'New Believers Teacher': FunctionalRole.NewBelieversTeacher,
+  'Membership Admin': FunctionalRole.MembershipAdmin,
+  'Membership Champion': FunctionalRole.MembershipChampion,
 };
 
 // ── resolveGrants ──────────────────────────────────────────
@@ -44,7 +52,51 @@ export async function resolveGrants(
   db: Database,
   memberId: string,
 ): Promise<Grant[]> {
+  const [rows, pastorOf] = await Promise.all([
+    selectRoleGrants(db, memberId),
+    selectMainPastorBranchIds(db, memberId),
+  ]);
+
+  const out: Grant[] = [];
+
+  // Derived, not stored: whoever currently holds the `Main Pastor` row for a
+  // branch gets a BranchPastor grant over it.
+  //
+  // This is the one place identity feeds authority, and it is deliberate. A
+  // Main Pastor and a Minister both carry BranchAdmin, so no role→capability
+  // mapping can give the pastor safeguarding sight and withhold it from the
+  // minister — only `branch_leadership` knows which of them is which. Keeping
+  // it as a synthesised grant means every existing gate, on the API and on
+  // both clients, keeps running through the one matcher instead of learning a
+  // second mechanism.
+  for (const branchId of pastorOf) {
+    out.push({
+      role: FunctionalRole.BranchPastor,
+      scope: { kind: 'branch', id: branchId },
+      branchId,
+    });
+  }
+
+  return out.concat(toGrants(rows));
+}
+
+/** The member's current Main Pastor appointments. */
+async function selectMainPastorBranchIds(db: Database, memberId: string): Promise<string[]> {
   const rows = await db
+    .select({ branchId: branchLeadership.branchId })
+    .from(branchLeadership)
+    .where(
+      and(
+        eq(branchLeadership.memberId, memberId),
+        eq(branchLeadership.role, 'Main Pastor'),
+        eq(branchLeadership.isCurrent, true),
+      ),
+    );
+  return rows.map((r) => r.branchId);
+}
+
+function selectRoleGrants(db: Database, memberId: string) {
+  return db
     .select({
       roleName: roles.roleName,
       branchId: memberRoles.branchId,
@@ -60,18 +112,34 @@ export async function resolveGrants(
         eq(roles.isActive, true),
       ),
     );
+}
 
+type RoleGrantRow = Awaited<ReturnType<typeof selectRoleGrants>>[number];
+
+function toGrants(rows: RoleGrantRow[]): Grant[] {
   const out: Grant[] = [];
   for (const row of rows) {
     const fnRole = DB_ROLE_NAME_TO_FUNCTIONAL[row.roleName];
     if (!fnRole) continue;
     const scopeKind = row.scopeKind as RoleScope['kind'];
-    if (scopeKind !== 'branch' && scopeKind !== 'fellowship' && scopeKind !== 'department') {
+    if (
+      scopeKind !== 'branch' &&
+      scopeKind !== 'fellowship' &&
+      scopeKind !== 'department' &&
+      scopeKind !== 'church'
+    ) {
       continue;
     }
+    // A church grant's stored scope_id is the nil-UUID sentinel and its
+    // branch_id is only the grantee's home branch (a query handle, not the
+    // grant's reach). Normalising to CHURCH_SCOPE_ID here means a row that
+    // somehow carries a real uuid still resolves to the one church scope
+    // rather than a grant that matches nothing.
+    const scope: RoleScope =
+      scopeKind === 'church' ? CHURCH_SCOPE : { kind: scopeKind, id: row.scopeId };
     out.push({
       role: fnRole,
-      scope: { kind: scopeKind, id: row.scopeId },
+      scope,
       branchId: row.branchId,
     });
   }
@@ -80,23 +148,17 @@ export async function resolveGrants(
 
 // ── hasCapability ──────────────────────────────────────────
 //
-// Pure capability lookup over a grant list. Single transitional shim:
-//
-//   - `systemRole === 'admin'` → always true. The break-glass platform owner
-//     bypasses everything; matches today's escape-hatch semantics and
-//     survives the rebuild.
+// The API's name for `matchesCapability` from @kairos/types, which is where
+// the matcher itself lives — beside the role/capability catalog it reads, so
+// that this server and both clients gate on ONE implementation and a surface
+// a client offers is exactly a surface this server will allow. The rules are
+// documented there; this stays as the API-side name because it is called
+// everywhere and the indirection is free.
 //
 // RBAC Phase 4c: the `'pastor'` shim is gone. Pastor is now a display-only
 // honorific (members.honorific column), not a permission. A "Pastor" who
 // holds no grants gets no admin access — see Phase 4a's migration for the
 // systemRole collapse that drove this.
-//
-// Scope matching:
-//   - No `scope` arg → any grant of `cap` suffices.
-//   - Exact match → grant.scope.{kind,id} === scope.{kind,id}.
-//   - Hierarchical match → a `branch`-scoped grant covers fellowship/
-//     department targets in the same branch, provided the caller passes
-//     the target's parent `branchId` on the scope object.
 
 export function hasCapability(
   grants: readonly Grant[],
@@ -104,27 +166,7 @@ export function hasCapability(
   cap: Capability,
   scope?: RoleScope & { branchId?: string },
 ): boolean {
-  if (systemRole === 'admin') return true;
-
-  const targetBranchId =
-    scope?.kind === 'branch' ? scope.id : scope?.branchId;
-
-  for (const grant of grants) {
-    const caps = RoleCapabilities[grant.role];
-    if (!caps.includes(cap)) continue;
-    if (!scope) return true;
-    if (grant.scope.kind === scope.kind && grant.scope.id === scope.id) {
-      return true;
-    }
-    if (
-      grant.scope.kind === 'branch' &&
-      targetBranchId &&
-      grant.scope.id === targetBranchId
-    ) {
-      return true;
-    }
-  }
-  return false;
+  return matchesCapability(grants, systemRole, cap, scope);
 }
 
 // RBAC Phase 3f: thin wrapper that reads `auth.grants` and delegates to

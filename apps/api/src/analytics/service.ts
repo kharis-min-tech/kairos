@@ -10,7 +10,7 @@ import {
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import { ForbiddenError } from '@kairos/utils';
-import { isRealMember } from '../lib/member-predicates';
+import { isRealMember, isPastoralMember } from '../lib/member-predicates';
 
 /**
  * Task #33 Phase 2 follow-up: split the member roll into the four real
@@ -60,22 +60,29 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
     throw new ForbiddenError('Only admins can access church-wide stats');
   }
 
-  const [[branchCount], breakdown, [fellowshipCount]] = await Promise.all([
+  const [[branchCount], breakdown, [fellowshipCount], [pendingCount]] = await Promise.all([
     db.select({ value: count() }).from(branches).where(eq(branches.isActive, true)),
     loadMemberBreakdown(db, undefined),
     db.select({ value: count() }).from(fellowships).where(eq(fellowships.isActive, true)),
+    // Pending approvals — mirrors getBranchStats: self-signup members are
+    // inactive until approved, so we do NOT filter on is_active. Attendee/
+    // visitor shells count too so the tile matches the /members?pending list.
+    db
+      .select({ value: count() })
+      .from(members)
+      .where(eq(members.approvalStatus, 'pending')),
   ]);
 
-  // Members by approval status — kept as confirmed Members only because the
-  // tile is "pending approvals" for the formal Member roll. Attendee/visitor
-  // shells live under their own admin surfaces.
+  // Approval-status breakdown across the pastoral roll (Members + Attendees).
+  // Visitor/child shells excluded — they don't go through the same approval
+  // gate and would distort the "who's waiting on approval" tile.
   const approvalStats = await db
     .select({
       status: members.approvalStatus,
       count: count(),
     })
     .from(members)
-    .where(and(eq(members.isActive, true), isRealMember()))
+    .where(and(eq(members.isActive, true), isPastoralMember()))
     .groupBy(members.approvalStatus);
 
   // Fellowships by type
@@ -104,6 +111,7 @@ export async function getAdminStats(db: Database, auth: AuthContext) {
     // should read totalRoll + memberBreakdown.
     totalMembers: breakdown.members,
     totalFellowships: fellowshipCount!.value,
+    pendingApprovals: pendingCount!.value,
     membersByApproval: approvalStats,
     fellowshipsByType,
   };
@@ -137,8 +145,11 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
       ),
   ]);
 
-  // Pending approvals for this branch — restricted to confirmed Members
-  // because attendee/visitor shells use a different approval surface.
+  // Pending approvals for this branch. Self-signup members are inactive
+  // (is_active = false) until an admin approves them, so we do NOT filter on
+  // is_active here — mirrors the carve-out in listMembers for pending queries.
+  // Attendee shells count too: /members/approval surfaces them, so the tile
+  // must match.
   const [pendingCount] = await db
     .select({ value: count() })
     .from(members)
@@ -146,7 +157,6 @@ export async function getBranchStats(db: Database, auth: AuthContext) {
       and(
         eq(members.homeBranchId, branchId),
         eq(members.approvalStatus, 'pending'),
-        eq(members.isActive, true),
       ),
     );
 

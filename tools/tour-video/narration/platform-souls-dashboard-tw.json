@@ -1,0 +1,19 @@
+{
+  "role": "platform-souls-dashboard-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Akontaa no",
+      "caption": "Sɛdeɛ kwan no rekɔ.",
+      "speech": "Akra dashboard dane kwan no yɛ akontaa: dodoɔ a wɔwɔ gyinaberɛ biara, dodoɔ a wɔasakra, ne sɛdeɛ nkɔdi akyi no yɛ foforɔ."
+    },
+    {
+      "n": 2,
+      "title": "Fa gyinabea so",
+      "caption": "Mia nsensaneɛ na hunu hwan.",
+      "speech": "Mfonini no kyekyɛ mu fa gyinabea ne deɛ ɛho hia so. Mia nsensaneɛ biara na hunu nnipa a ɛrekan wɔn pɛpɛɛpɛ."
+    }
+  ]
+}

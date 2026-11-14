@@ -1,0 +1,19 @@
+{
+  "role": "analytics-attendance-reports-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Atɛndans Ripɔt",
+      "caption": "Pɛ wik, pɛ branch.",
+      "speech": "Atɛndans ripɔt de sho chɛk-in pɛ wik agens difrɛn mɛmba, we de sɛpret di sem pipul we de kam ɔltɛm frɔm mɔ pipul we de kam."
+    },
+    {
+      "n": 2,
+      "title": "Udat Nɔ De",
+      "caption": "Sɔt bay aw lɔng.",
+      "speech": "Di misin mɛmba lis sɔt bay omɔch sɛvis pɔsin dɔn mis wan afta di ɔda, we na di lis we pastɔral kia nid fɔ tru."
+    }
+  ]
+}

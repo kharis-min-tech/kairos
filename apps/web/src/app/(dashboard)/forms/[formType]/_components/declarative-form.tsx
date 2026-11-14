@@ -11,121 +11,100 @@ import {
   CardContent,
   cn,
 } from '@kairos/ui';
-import { Search, X, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { DateSelect } from '@/components/date-select';
+import { MemberCombobox, MemberPickOrType } from './member-combobox';
 import { useAuthStore } from '@/lib/auth-store';
-import { useSubmitForm, useFormMemberSearch } from '@/hooks/use-forms';
+import { useSubmitForm } from '@/hooks/use-forms';
 import {
+  buildFormPayload,
+  declaredFieldIds,
+  emptyFormRow,
   evaluateCondition,
+  initialFormValues,
+  validateForm,
   type FormDefinition,
   type FormFieldDef,
+  type FormFieldValue,
+  type FormMemberSearchResult,
+  type FormRowValues,
   type FormSectionDef,
+  type FormValues,
   type RepeatableGroupDef,
 } from '@kairos/types';
 import { FormShell } from './form-shell';
 import { FieldError, FieldLabel, RadioRow } from './field';
 import { DisclaimerConsent, CONSENT_POLICY_VERSION } from './disclaimer-consent';
-import { BranchPicker } from './branch-picker';
+import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 // ── Value model ─────────────────────────────────────────────
 //
 // Top-level fields are keyed by their field id in a flat `values` bag.
-// Repeatable groups store an array of per-row value bags under the
-// group id. The flat bag is exactly what `evaluateCondition` reads,
-// so visibility branches resolve reactively as the user types.
-
-type FieldValue = string | boolean | undefined;
-type RowValues = Record<string, FieldValue>;
-
-interface FormState {
-  values: Record<string, FieldValue>;
-  rows: Record<string, RowValues[]>; // repeatable group id → rows
-}
-
-function emptyRow(group: RepeatableGroupDef): RowValues {
-  const row: RowValues = {};
-  for (const f of group.fields) {
-    row[f.id] = f.type === 'checkbox' ? false : '';
-  }
-  return row;
-}
-
-function initialState(def: FormDefinition): FormState {
-  const values: Record<string, FieldValue> = {};
-  const rows: Record<string, RowValues[]> = {};
-  for (const block of def.blocks) {
-    if (block.kind === 'section') {
-      for (const f of block.fields) {
-        values[f.id] = f.type === 'checkbox' ? false : '';
-      }
-    } else {
-      const min = block.min ?? 0;
-      rows[block.id] = Array.from({ length: min }, () => emptyRow(block));
-    }
-  }
-  return { values, rows };
-}
-
-// ── Validation ──────────────────────────────────────────────
+// Repeatable groups store an array of per-row value bags under the group id.
+// The flat bag is exactly what `evaluateCondition` reads, so visibility
+// branches resolve reactively as the user types.
 //
-// Required only when visible. We reuse `evaluateCondition` for both the
-// field's own `visibleWhen` and its containing block's — mirroring the
-// API so the client and server agree on the under-16 / brought-children
-// branches.
+// Seeding, validation and payload assembly are all pure, and they live in
+// `@kairos/types/form-engine` so this renderer and the mobile one cannot
+// disagree about what a given set of answers submits. They had already drifted
+// apart twice before they moved there.
 
-function isFieldVisible(
-  field: FormFieldDef,
-  blockVisible: boolean,
-  values: Record<string, unknown>,
-  now: Date,
-): boolean {
-  if (!blockVisible) return false;
-  if (!field.visibleWhen) return true;
-  return evaluateCondition(field.visibleWhen, values, now);
-}
+// i18n-ignore(5): the English source; `forms:yesNo_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site. 'Yes'/'No' is
+// what the form submits.
+const YES_NO = [
+  { value: 'Yes', label: 'Yes' },
+  { value: 'No', label: 'No' },
+];
 
-function isFilled(v: FieldValue): boolean {
-  if (typeof v === 'boolean') return v;
-  return typeof v === 'string' && v.trim().length > 0;
-}
+type FieldValue = FormFieldValue;
+type RowValues = FormRowValues;
+type FormState = FormValues;
 
 export interface DeclarativeFormProps {
   definition: FormDefinition;
+  /** Overrides `definition.success`. Rarely needed — the copy belongs in the definition. */
   successTitle?: string;
   successMessage?: string;
 }
 
 export function DeclarativeForm({
   definition,
-  successTitle = 'Submission received',
-  successMessage = 'Thank you. A leader will follow up with you soon.',
-}: DeclarativeFormProps) {
+  successTitle,
+  successMessage,
+}: DeclarativeFormProps) {  const { t } = useTranslation(['forms', 'common']);
+
   const user = useAuthStore((s) => s.user);
   const submitForm = useSubmitForm();
 
   const [submitted, setSubmitted] = useState(false);
-  const [state, setState] = useState<FormState>(() => initialState(definition));
+  const [state, setState] = useState<FormState>(() => initialFormValues(definition));
   // Field error keys are top-level field ids, plus `${groupId}.${index}.${fieldId}`.
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const rowsOf = (groupId: string): RowValues[] => state.rows[groupId] ?? [];
 
   const [subjectMemberId, setSubjectMemberId] = useState<string | undefined>();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
+  // What the subject pre-fill wrote, so unlinking can take back exactly those
+  // values — and only where the person hasn't since edited them.
+  const [prefilled, setPrefilled] = useState<Record<string, string>>({});
   const [consentAck, setConsentAck] = useState(false);
-  const [selectedBranchId, setSelectedBranchId] = useState<string | undefined>();
 
   // `now` is stable for one render of the form so age-based branches don't
   // flicker between keystrokes.
   const now = useMemo(() => new Date(), []);
 
-  const { data: searchResults, isFetching: searching } = useFormMemberSearch(
-    { q: searchTerm, branchId: user?.homeBranchId },
-    { enabled: searchOpen && searchTerm.trim().length >= 2 },
-  );
+  // A submission shared anonymously must not carry the subject link. The
+  // bespoke testimony form has always dropped it; read it off the answer rather
+  // than the form type so any definition asking the same question inherits the
+  // rule, and so the mobile renderer can mirror it exactly.
+  const isAnonymous = state.values.shareAnonymously === true;
 
   function setValue(id: string, value: FieldValue) {
+    // Ticking anonymity retracts the link rather than leaving one on screen
+    // that submit would silently discard.
+    if (id === 'shareAnonymously' && value === true) setSubjectMemberId(undefined);
     setState((p) => ({ ...p, values: { ...p.values, [id]: value } }));
     setErrors((p) => {
       const next = { ...p };
@@ -152,7 +131,7 @@ export function DeclarativeForm({
     setState((p) => {
       const current = p.rows[group.id] ?? [];
       if (group.max !== undefined && current.length >= group.max) return p;
-      return { ...p, rows: { ...p.rows, [group.id]: [...current, emptyRow(group)] } };
+      return { ...p, rows: { ...p.rows, [group.id]: [...current, emptyFormRow(group)] } };
     });
   }
 
@@ -168,115 +147,58 @@ export function DeclarativeForm({
     });
   }
 
-  // ── Member typeahead (returning/known person) ──────────────
+  // ── Subject link (is this submission about somebody we already hold?) ──
+  //
+  // The copy and the pre-fill targets come from `definition.subjectLink`, so a
+  // baby form says "Find the parent/guardian" and fills the parent's phone,
+  // while a first-timer says "Find an existing person" and fills name + phone.
+  // Both renderers read the same descriptor; neither hardcodes either one.
 
-  function selectExisting(r: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    phone: string | null;
-  }) {
-    setSubjectMemberId(r.id);
-    setState((p) => ({
-      ...p,
-      values: {
-        ...p.values,
-        firstName: r.firstName,
-        lastName: r.lastName,
-        ...(p.values.phone !== undefined ? { phone: r.phone ?? '' } : {}),
-      },
-    }));
-    setSearchOpen(false);
-    setSearchTerm(`${r.firstName} ${r.lastName}`);
-  }
+  const subjectLink = definition.subjectLink;
 
-  function clearExisting() {
-    setSubjectMemberId(undefined);
-    setSearchTerm('');
+  function setSubject(member: FormMemberSearchResult | null) {
+    if (!member) {
+      setSubjectMemberId(undefined);
+      // Take back exactly what pre-fill wrote, and only where it is still
+      // untouched — a value the person has since edited is theirs, not ours.
+      setState((p) => {
+        const values = { ...p.values };
+        for (const [id, written] of Object.entries(prefilled)) {
+          if (values[id] === written) values[id] = '';
+        }
+        return { ...p, values };
+      });
+      setPrefilled({});
+      return;
+    }
+
+    setSubjectMemberId(member.id);
+    const targets: Record<string, string | undefined> = subjectLink?.prefill ?? {};
+    const declared = declaredFieldIds(definition);
+    const writes: Record<string, string> = {};
+    const copy: Record<string, string> = {
+      firstName: member.firstName,
+      lastName: member.lastName,
+      phone: member.phone ?? '',
+    };
+    for (const [attribute, fieldId] of Object.entries(targets)) {
+      // Never invent a key the form didn't ask for.
+      if (fieldId && declared.has(fieldId)) writes[fieldId] = copy[attribute] ?? '';
+    }
+    setPrefilled(writes);
+    setState((p) => ({ ...p, values: { ...p.values, ...writes } }));
+    setErrors((p) => {
+      const next = { ...p };
+      for (const id of Object.keys(writes)) delete next[id];
+      return next;
+    });
   }
 
   // ── Submit ─────────────────────────────────────────────────
 
-  function validate(): Record<string, string> {
-    const found: Record<string, string> = {};
-    const values = state.values as Record<string, unknown>;
-
-    for (const block of definition.blocks) {
-      const blockVisible = block.visibleWhen
-        ? evaluateCondition(block.visibleWhen, values, now)
-        : true;
-      if (!blockVisible) continue;
-
-      if (block.kind === 'section') {
-        for (const field of block.fields) {
-          if (!field.required) continue;
-          if (!isFieldVisible(field, blockVisible, values, now)) continue;
-          if (!isFilled(state.values[field.id])) {
-            found[field.id] = `${field.label} is required`;
-          }
-        }
-      } else {
-        block.fields.forEach((field) => {
-          if (!field.required) return;
-          rowsOf(block.id).forEach((row, index) => {
-            // Sub-field visibility evaluates against the row's own values.
-            const rowVisible = field.visibleWhen
-              ? evaluateCondition(field.visibleWhen, row as Record<string, unknown>, now)
-              : true;
-            if (!rowVisible) return;
-            if (!isFilled(row[field.id])) {
-              found[`${block.id}.${index}.${field.id}`] =
-                `${field.label} is required`;
-            }
-          });
-        });
-      }
-    }
-    return found;
-  }
-
-  function buildPayload(): Record<string, unknown> {
-    const payload: Record<string, unknown> = {};
-    const values = state.values as Record<string, unknown>;
-
-    for (const block of definition.blocks) {
-      const blockVisible = block.visibleWhen
-        ? evaluateCondition(block.visibleWhen, values, now)
-        : true;
-      if (!blockVisible) continue;
-
-      if (block.kind === 'section') {
-        for (const field of block.fields) {
-          if (!isFieldVisible(field, blockVisible, values, now)) continue;
-          const v = state.values[field.id];
-          if (field.type === 'checkbox') {
-            payload[field.id] = Boolean(v);
-          } else if (typeof v === 'string' && v.trim().length > 0) {
-            payload[field.id] = v.trim();
-          }
-        }
-      } else {
-        const rows = rowsOf(block.id)
-          .map((row) => {
-            const out: Record<string, unknown> = {};
-            for (const field of block.fields) {
-              const v = row[field.id];
-              if (field.type === 'checkbox') out[field.id] = Boolean(v);
-              else if (typeof v === 'string' && v.trim().length > 0)
-                out[field.id] = v.trim();
-            }
-            return out;
-          })
-          .filter((row) => Object.keys(row).length > 0);
-        if (rows.length > 0) payload[block.id] = rows;
-      }
-    }
-    return payload;
-  }
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const found = validate();
+    const found = validateForm(definition, state, now);
     if (Object.keys(found).length > 0) {
       setErrors(found);
       return;
@@ -285,9 +207,8 @@ export function DeclarativeForm({
       await submitForm.mutateAsync({
         formType: definition.formType,
         data: {
-          subjectMemberId,
-          branchId: selectedBranchId,
-          payload: buildPayload(),
+          subjectMemberId: isAnonymous ? undefined : subjectMemberId,
+          payload: buildFormPayload(definition, state, now),
           consentGivenAt: new Date().toISOString(),
           consentPolicyVersion: CONSENT_POLICY_VERSION,
         },
@@ -301,12 +222,10 @@ export function DeclarativeForm({
   function reset() {
     setSubmitted(false);
     setErrors({});
-    setState(initialState(definition));
+    setState(initialFormValues(definition));
     setSubjectMemberId(undefined);
-    setSearchTerm('');
-    setSearchOpen(false);
+    setPrefilled({});
     setConsentAck(false);
-    setSelectedBranchId(undefined);
   }
 
   const values = state.values as Record<string, unknown>;
@@ -318,6 +237,11 @@ export function DeclarativeForm({
     value: FieldValue,
     onChange: (v: FieldValue) => void,
     errorKey: string,
+    // Writes a sibling field in the SAME bag as `onChange` — the top-level
+    // values for a section, the row's own values inside a repeatable group.
+    // Only member fields use it, to clear their free-text twin.
+    setSibling: (fieldId: string, v: FieldValue) => void = setValue,
+    siblingValues: Record<string, FieldValue> = state.values,
   ) {
     const errorMsg = errors[errorKey];
 
@@ -339,6 +263,35 @@ export function DeclarativeForm({
           </label>
           <FieldError message={errorMsg} />
         </div>
+      );
+    }
+
+    if (field.type === 'member') {
+      // The stored value is a member id, so the picked person can actually be
+      // routed to — a typed name never could be. The control owns its own
+      // label, help text and error line: it is one question with one answer,
+      // and the generic wrapper below would print the label a second time.
+      const companionId = field.freeTextFieldId;
+      const companionValue = companionId ? siblingValues[companionId] : undefined;
+      return (
+        <MemberPickOrType
+          field={field}
+          memberId={typeof value === 'string' ? value : ''}
+          typedName={typeof companionValue === 'string' ? companionValue : ''}
+          errorMessage={errorMsg}
+          onPickMember={(m) => {
+            onChange(m ? m.id : '');
+            if (companionId) setSibling(companionId, '');
+          }}
+          onTypeName={
+            companionId
+              ? (name) => {
+                  setSibling(companionId, name);
+                  onChange('');
+                }
+              : undefined
+          }
+        />
       );
     }
 
@@ -367,6 +320,17 @@ export function DeclarativeForm({
               value={typeof value === 'string' ? value : ''}
               options={field.options ?? []}
               onChange={(v) => onChange(v)}
+            />
+          );
+        case 'boolean':
+          // Yes/No on screen, a boolean in the payload. Unanswered renders as
+          // neither pill selected, which is what makes "No" mean something.
+          return (
+            <RadioRow
+              name={field.label}
+              value={typeof value === 'boolean' ? (value ? 'Yes' : 'No') : ''}
+              options={localiseOptions(t, 'forms:yesNo_', YES_NO)}
+              onChange={(v) => onChange(v === 'Yes')}
             />
           );
         case 'textarea':
@@ -454,12 +418,11 @@ export function DeclarativeForm({
                   {rows.length > min ? (
                     <button
                       type="button"
-                      aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
+                      aria-label={t('forms:removeV1V2', { v1: itemLabel.toLowerCase(), v2: index + 1 })}
                       onClick={() => removeRow(block, index)}
                       className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4" /> Remove
-                    </button>
+                      <Trash2 className="h-4 w-4" />{t('forms:remove')}</button>
                   ) : null}
                 </div>
                 {block.fields
@@ -475,6 +438,8 @@ export function DeclarativeForm({
                         row[field.id],
                         (v) => setRowValue(block.id, index, field.id, v),
                         `${block.id}.${index}.${field.id}`,
+                        (fieldId, v) => setRowValue(block.id, index, fieldId, v),
+                        row,
                       )}
                     </div>
                   ))}
@@ -502,84 +467,38 @@ export function DeclarativeForm({
       description={definition.description ?? ''}
       branchName={(user as { branchName?: string | null })?.branchName}
       submitted={submitted}
-      successTitle={successTitle}
-      successMessage={successMessage}
+      successTitle={successTitle ?? definition.success?.title ?? 'Submission received'}
+      successMessage={
+        successMessage ??
+        (subjectMemberId && !isAnonymous
+          ? definition.success?.linkedMessage
+          : undefined) ??
+        definition.success?.message ??
+        'Thank you. A leader will follow up with you soon.'
+      }
       onSubmitAnother={reset}
     >
       <form onSubmit={onSubmit} className="space-y-8">
-        <BranchPicker value={selectedBranchId} onChange={setSelectedBranchId} />
 
-        {/* Find existing person — link a returning/known visitor. */}
-        <Card>
-          <CardContent className="space-y-3 py-5">
-            <FieldLabel htmlFor="member-search">Find an existing person</FieldLabel>
-            <p className="text-xs text-muted-foreground">
-              Search by name or phone. Leave blank to create a new contact.
-            </p>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+        {/* The subject link. Withheld entirely when the definition declares none,
+            and withdrawn for an anonymous submission, which by construction isn't
+            tied to anybody's record. */}
+        {subjectLink ? (
+          <Card>
+            <CardContent className="py-5">
+              <MemberCombobox
                 id="member-search"
-                className="pl-9 pr-9"
-                placeholder="Search by name or phone…"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setSearchOpen(true);
-                  if (subjectMemberId) setSubjectMemberId(undefined);
-                }}
-                onFocus={() => setSearchOpen(true)}
+                label={subjectLink.label}
+                helpText={subjectLink.helpText}
+                memberId={subjectMemberId ?? ''}
+                onPick={setSubject}
+                linkedNote={subjectLink.linkedNote}
+                disabled={isAnonymous}
+                disabledHint="An anonymous submission won’t be linked to anyone’s record."
               />
-              {(searchTerm || subjectMemberId) && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={clearExisting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {subjectMemberId ? (
-              <p className="text-xs font-medium text-[#16A34A]">
-                Linked to an existing person — submitting will update their record.
-              </p>
-            ) : null}
-
-            {searchOpen && searchTerm.trim().length >= 2 && !subjectMemberId ? (
-              <div className="rounded-lg border border-input/15">
-                {searching ? (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>
-                ) : searchResults && searchResults.length > 0 ? (
-                  <ul>
-                    {searchResults.map((r) => (
-                      <li key={r.id}>
-                        <button
-                          type="button"
-                          onClick={() => selectExisting(r)}
-                          className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-foreground/5"
-                        >
-                          <span className="font-medium text-foreground">
-                            {r.firstName} {r.lastName}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {r.phone ?? 'No phone'} · {r.memberType}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">
-                    No matches — a new contact will be created.
-                  </p>
-                )}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {definition.blocks.map((block) => {
           const blockVisible = block.visibleWhen
@@ -606,7 +525,7 @@ export function DeclarativeForm({
           disabled={submitForm.isPending || !consentAck}
           className="w-full bg-[#5D3FD3] hover:bg-[#451ebb]"
         >
-          {submitForm.isPending ? 'Submitting…' : 'Submit'}
+          {submitForm.isPending ? t('forms:submitting') : t('forms:submit')}
         </Button>
       </form>
     </FormShell>

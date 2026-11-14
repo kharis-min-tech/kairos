@@ -13,6 +13,9 @@ import type {
   BranchAttendanceParams,
   AttendanceSummaryParams,
   CohortDiffRequest,
+  AttendanceHeatmapParams,
+  FrequencyBucketParams,
+  FirstTimeReturningParams,
 } from '@kairos/types';
 
 // ── Service queries ────────────────────────────────────────
@@ -91,6 +94,40 @@ export function useAttendanceByBranch(params?: BranchAttendanceParams) {
     queryKey: ['attendance', 'by-branch', params],
     queryFn: async () => {
       const res = await api.attendance.byBranch(params);
+      return res.data!;
+    },
+  });
+}
+
+export function useAttendanceHeatmap(
+  params: AttendanceHeatmapParams | undefined,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['attendance', 'heatmap', params],
+    queryFn: async () => {
+      const res = await api.attendance.heatmap(params!);
+      return res.data!;
+    },
+    enabled: (options?.enabled ?? true) && !!params?.branchId,
+  });
+}
+
+export function useFrequencyBuckets(params?: FrequencyBucketParams) {
+  return useQuery({
+    queryKey: ['attendance', 'frequency-buckets', params],
+    queryFn: async () => {
+      const res = await api.attendance.frequencyBuckets(params);
+      return res.data!;
+    },
+  });
+}
+
+export function useFirstTimeReturning(params?: FirstTimeReturningParams) {
+  return useQuery({
+    queryKey: ['attendance', 'first-time-returning', params],
+    queryFn: async () => {
+      const res = await api.attendance.firstTimeReturning(params);
       return res.data!;
     },
   });
@@ -180,6 +217,68 @@ export function useCohortDiff() {
       const res = await api.attendance.cohortDiff(data);
       return res.data!;
     },
+  });
+}
+
+// ── Member self-check-in (honour system + rotating QR) ────
+
+export function useSelfCheckInCandidates() {
+  return useQuery({
+    queryKey: ['attendance', 'self-check-in', 'candidates'],
+    queryFn: async () => {
+      const res = await api.attendance.selfCheckInCandidates();
+      return res.data ?? [];
+    },
+    // Poll every 60s while mounted so a window that opens mid-view flips to
+    // "open" without needing a manual refresh — mirrors the mobile tab.
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useSelfCheckIn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (serviceId: string) => {
+      const res = await api.attendance.selfCheckIn(serviceId);
+      return res.data!;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
+      qc.invalidateQueries({ queryKey: ['attendance', 'me'] });
+    },
+  });
+}
+
+export function useSelfCheckInQr() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { serviceId: string; token: string }) => {
+      const res = await api.attendance.selfCheckInQr(params);
+      return res.data!;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['attendance', 'self-check-in', 'candidates'] });
+      qc.invalidateQueries({ queryKey: ['attendance', 'me'] });
+    },
+  });
+}
+
+/**
+ * Admin-desk QR token — polls every 30s to keep the on-screen QR fresh. Only
+ * useful on the admin QR display page; do NOT surface elsewhere (endpoint is
+ * capability-gated so a plain member will 403 anyway).
+ */
+export function useQrToken(serviceId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['attendance', 'qr-token', serviceId],
+    queryFn: async () => {
+      const res = await api.attendance.getQrToken(serviceId!);
+      return res.data!;
+    },
+    enabled: !!serviceId,
+    refetchInterval: 30_000,
+    staleTime: 0,
   });
 }
 

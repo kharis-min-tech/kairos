@@ -1,0 +1,19 @@
+{
+  "role": "platform-regions-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Régions",
+      "caption": "Des antennes regroupées géographiquement.",
+      "speech": "Les régions regroupent les antennes par géographie. Pour que les rapports couvrent un pays, plutôt qu’un seul site."
+    },
+    {
+      "n": 2,
+      "title": "Antennes rattachées",
+      "caption": "Une région occupée ne se supprime pas.",
+      "speech": "Chaque région affiche ses antennes rattachées. Une région qui en a ne peut pas être supprimée, tant qu’elles ne sont pas déplacées."
+    }
+  ]
+}

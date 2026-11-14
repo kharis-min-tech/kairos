@@ -1,0 +1,19 @@
+{
+  "role": "church-management-reporting-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Deɛ wɔbɔ amanneɛ",
+      "caption": "Mmaeɛ, nkɔsoɔ, nkitahodie.",
+      "speech": "Amanneɛbɔ fa mmaeɛ nkɔsoɔ, asɔrefoɔ dodoɔ nkɔanim, nkitahodie ne asɛmpaka ho, biara sɛdeɛ wo dibea tumi hunu."
+    },
+    {
+      "n": 2,
+      "title": "Sesa berɛ no",
+      "caption": "Bosome a atwam, anaa afe.",
+      "speech": "Sesa berɛ no ma ɛtrɛ anaa ɛte so. Akontaa no ne mfonini biara di akyi."
+    }
+  ]
+}

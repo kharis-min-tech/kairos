@@ -1,0 +1,19 @@
+{
+  "role": "administration-settings",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Your settings",
+      "caption": "Account, security, appearance.",
+      "speech": "Settings covers your account, your sign-in methods, how Kairos looks, and which language it speaks to you in."
+    },
+    {
+      "n": 2,
+      "title": "Notifications",
+      "caption": "What reaches you, and how often.",
+      "speech": "Notifications are per category. Choose immediate or a daily digest for each, or turn one off entirely. Security alerts always arrive."
+    }
+  ]
+}

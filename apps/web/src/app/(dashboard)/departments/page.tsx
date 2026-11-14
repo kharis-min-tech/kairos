@@ -24,6 +24,7 @@ import {
 import { MyOffersBanner } from './_components/my-offers-banner';
 import { MyApplicationsList } from './_components/my-applications-list';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 interface ListParams {
   page?: number;
@@ -57,7 +58,8 @@ function DepartmentsListSkeleton() {
   );
 }
 
-function DepartmentsContent() {
+function DepartmentsContent() {  const { t } = useTranslation(['departments', 'common']);
+
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -133,17 +135,19 @@ function DepartmentsContent() {
       <div className="flex items-start justify-between pb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {isMemberView ? 'My Departments' : 'Departments'}
+            {isMemberView ? t('departments:myDepartments') : t('departments:departments')}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {isMemberView
-              ? 'Your active department memberships and upcoming duties.'
-              : `Ministry teams${pagination ? ` — ${pagination.total} total` : ''}`}
+              ? t('departments:yourActiveMembershipsAndDuties')
+              : pagination
+                ? t('departments:ministryTeamsWithTotal', { count: pagination.total })
+                : t('departments:ministryTeams')}
           </p>
         </div>
         {(caps.has('branch:write')) && (
           <Link href="/departments/new">
-            <Button size="sm">+ New Department</Button>
+            <Button size="sm">+ {t('departments:newDepartment')}</Button>
           </Link>
         )}
       </div>
@@ -195,12 +199,8 @@ function DepartmentsContent() {
           )}
 
           <div className="pt-2">
-            <h2 className="text-base font-semibold tracking-tight">
-              Browse other departments at your branch
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Request to join any of the teams below.
-            </p>
+            <h2 className="text-base font-semibold tracking-tight">{t('departments:browseOtherDepartmentsAtYourBranch')}</h2>
+            <p className="text-xs text-muted-foreground">{t('departments:requestToJoinAnyOfThe')}</p>
           </div>
         </>
       )}
@@ -213,9 +213,9 @@ function DepartmentsContent() {
           onValueChange={(v) =>
             setParams((p) => ({ ...p, departmentId: v || undefined, page: 1 }))
           }
-          placeholder="All Ministries"
+          placeholder={t('departments:allMinistries')}
           options={[
-            { value: '', label: 'All Ministries' },
+            { value: '', label: t('departments:allMinistries') },
             ...(catalogue ?? [])
               .filter((d) => d.isActive)
               .map((d) => ({ value: d.id, label: d.departmentName })),
@@ -228,9 +228,9 @@ function DepartmentsContent() {
             onValueChange={(v) =>
               setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))
             }
-            placeholder="All Branches"
+            placeholder={t('departments:allBranches')}
             options={[
-              { value: '', label: 'All Branches' },
+              { value: '', label: t('departments:allBranches') },
               ...(branchesResult ?? []).map((b) => ({ value: b.id, label: b.branchName })),
             ]}
           />
@@ -242,13 +242,11 @@ function DepartmentsContent() {
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             {(caps.has('fellowship:write') || caps.has('department:write')) ? (
               <>
-                <p className="font-medium">You don’t lead a department</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  The leader view shows departments you lead or co-lead. Switch to your member view to browse and apply to one.
-                </p>
+                <p className="font-medium">{t('departments:youDonTLeadADepartment')}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t('departments:theLeaderViewShowsDepartmentsYou')}</p>
               </>
             ) : (
-              <p className="text-muted-foreground">No departments found.</p>
+              <p className="text-muted-foreground">{t('departments:noDepartmentsFound')}</p>
             )}
           </CardContent>
         </Card>
@@ -265,7 +263,7 @@ function DepartmentsContent() {
                       </CardTitle>
                       {dept.pendingJoinRequestCount && dept.pendingJoinRequestCount > 0 ? (
                         <span className="flex-shrink-0 rounded-full bg-[#f8b537]/20 px-2.5 py-0.5 text-xs font-medium text-[#7a5a00] dark:text-[#f8b537]">
-                          {dept.pendingJoinRequestCount} pending
+                          {t('departments:pendingCount', { count: dept.pendingJoinRequestCount })}
                         </span>
                       ) : null}
                     </div>
@@ -274,13 +272,13 @@ function DepartmentsContent() {
                   <CardContent className="pt-0">
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <p className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">Lead:</span>
+                        <span className="font-medium text-foreground">{t('departments:lead')}</span>
                         <span>
                           {dept.leadFirstName} {dept.leadLastName}
                         </span>
                       </p>
                       <p className="text-xs">
-                        {dept.memberCount ?? 0} member{(dept.memberCount ?? 0) === 1 ? '' : 's'}
+                        {t('departments:memberCount', { count: dept.memberCount ?? 0 })}
                       </p>
                       {dept.description && (
                         <p className="line-clamp-2 pt-1">{dept.description}</p>
@@ -294,21 +292,19 @@ function DepartmentsContent() {
                           onClick={async (e) => {
                             e.preventDefault();
                             const ok = await confirm({
-                              title: `Deactivate ${dept.departmentName} at ${dept.branchName}?`,
-                              description: 'The department will be hidden from the directory and members will lose access.',
-                              confirmLabel: 'Deactivate',
+                              title: t('departments:deactivateV1V2', { v1: dept.departmentName, v2: dept.branchName }),
+                              description: t('departments:theDepartmentWillBeHiddenFrom'),
+                              confirmLabel: t('departments:deactivate'),
                               variant: 'destructive',
                             });
                             if (!ok) return;
                             deactivate.mutate(dept.id, {
-                              onSuccess: () => toast.success('Department deactivated.'),
+                              onSuccess: () => toast.success(t('departments:departmentDeactivated')),
                               onError: () =>
-                                toast.error('Failed to deactivate department. Please try again.'),
+                                toast.error(t('departments:failedDeactivateDepartmentTryAgain')),
                             });
                           }}
-                        >
-                          Deactivate
-                        </Button>
+                        >{t('departments:deactivate')}</Button>
                       </div>
                     )}
                   </CardContent>
@@ -325,9 +321,7 @@ function DepartmentsContent() {
                 size="sm"
                 disabled={pagination.page <= 1}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) - 1 }))}
-              >
-                Previous
-              </Button>
+              >{t('departments:previous')}</Button>
               <span className="text-sm text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
@@ -336,9 +330,7 @@ function DepartmentsContent() {
                 size="sm"
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) + 1 }))}
-              >
-                Next
-              </Button>
+              >{t('departments:next')}</Button>
             </div>
           )}
         </>

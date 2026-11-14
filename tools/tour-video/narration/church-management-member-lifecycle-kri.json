@@ -1,0 +1,19 @@
+{
+  "role": "church-management-member-lifecycle-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Frɔm Vizitɔ to Mɛmba",
+      "caption": "Fo stej, wan lis.",
+      "speech": "Ɔlman de sidɔm sɔm say pan di sem jɔni: vizitɔ, ritɔna, dɛn mɛmba wan tɛm di fo-wik klas dɔn."
+    },
+    {
+      "n": 2,
+      "title": "Usay Stetɔs de Sho",
+      "caption": "Pan di layn, ɛn pan di prɔfayl.",
+      "speech": "Di dairɛktri layn de sho wetin stej pɔsin de, so yu kin si wantɛm udat nɔbɔdi nɔ eva fɔlo ɔp."
+    }
+  ]
+}

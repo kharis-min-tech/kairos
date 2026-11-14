@@ -1,3 +1,4 @@
+import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { authMiddleware, requireAnyCapability, getAuth } from '../middleware/auth';
@@ -16,6 +17,10 @@ import {
   cohortDiffSchema,
   myAttendanceQuerySchema,
   groupAttendanceQuerySchema,
+  heatmapQuerySchema,
+  frequencyBucketsQuerySchema,
+  firstTimeReturningQuerySchema,
+  selfCheckInQrBodySchema,
 } from './schemas';
 import {
   createService,
@@ -31,11 +36,42 @@ import {
   getAttendanceByBranch,
   getAttendanceSummary,
   canRecordAttendance,
+  selfCheckIn,
+  listSelfCheckInCandidates,
   getCohortDiff,
   getMyAttendance,
   getDepartmentAttendance,
   getFellowshipAttendance,
+  getAttendanceHeatmap,
+  getFrequencyBuckets,
+  getFirstTimeReturning,
+  generateQrToken,
+  selfCheckInWithQrToken,
 } from './service';
+
+/**
+ * Reads SELF_CHECK_IN_QR_SECRET from the Worker env binding (production /
+ * staging) or process.env (local Node dev). Mirrors `getAuthSecrets` in
+ * lib/auth-secrets.ts so the two secret-fetching flows stay uniform.
+ *
+ * Set the secret with:
+ *   wrangler secret put SELF_CHECK_IN_QR_SECRET
+ *   wrangler secret put --env staging SELF_CHECK_IN_QR_SECRET
+ */
+function readQrSecret(c: Context): string {
+  const env = (c as { env?: unknown }).env;
+  if (env && typeof env === 'object') {
+    const v = (env as Record<string, unknown>)['SELF_CHECK_IN_QR_SECRET'];
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+  if (typeof process !== 'undefined' && process.env) {
+    const v = process.env['SELF_CHECK_IN_QR_SECRET'];
+    if (typeof v === 'string' && v.length > 0) return v;
+  }
+  // Dev fallback keeps local integration cheap; production MUST set the secret
+  // (Worker deploys will emit a warning if it's missing).
+  return 'dev-self-check-in-qr-secret';
+}
 
 export const attendanceRouter = new Hono();
 
@@ -117,6 +153,39 @@ attendanceRouter.get(
   },
 );
 
+attendanceRouter.get(
+  '/reports/heatmap',
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
+  zValidator('query', heatmapQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getAttendanceHeatmap(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/frequency-buckets',
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
+  zValidator('query', frequencyBucketsQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getFrequencyBuckets(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
+attendanceRouter.get(
+  '/reports/first-time-returning',
+  requireAnyCapability('branch:read', 'fellowship:read', 'department:read'),
+  zValidator('query', firstTimeReturningQuerySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const result = await getFirstTimeReturning(db, auth, c.req.valid('query'));
+    return c.json(successResponse(result));
+  },
+);
+
 // Dashboard summary — readable by any authenticated role (branch-scoped in the
 // service for non-admins), so the member dashboard can show it.
 attendanceRouter.get(
@@ -168,6 +237,71 @@ attendanceRouter.post(
     return c.json(successResponse(result, 'Attendance recorded'), 201);
   },
 );
+
+// Self check-in — signed-in member records their own attendance inside the
+// branch-configured window. See selfCheckIn service comment for the guardrails.
+attendanceRouter.post('/services/:id/self-check-in', async (c) => {
+  const auth = getAuth(c);
+  const result = await selfCheckIn(db, auth, c.req.param('id')!);
+  return c.json(
+    successResponse(
+      result,
+      result.alreadyCheckedIn
+        ? `Already checked in. Status: ${result.status}`
+        : `Checked in as ${result.status}`,
+    ),
+    result.alreadyCheckedIn ? 200 : 201,
+  );
+});
+
+// ── Rotating QR (admin displays, member scans) ────────────
+//
+// GET  /services/:id/qr-token          → admin-only current token + expiry
+// POST /services/:id/self-check-in-qr  → member scan → verify → check-in
+//
+// The token is a stateless HMAC over `{serviceId, timeBucket}`; the verifier
+// accepts the current or previous bucket to survive a mid-second scan. See
+// self-check-in-qr.ts + docs/self-check-in.md.
+
+attendanceRouter.get('/services/:id/qr-token', async (c) => {
+  const auth = getAuth(c);
+  const result = await generateQrToken(db, auth, c.req.param('id')!, readQrSecret(c));
+  return c.json(successResponse(result));
+});
+
+attendanceRouter.post(
+  '/services/:id/self-check-in-qr',
+  zValidator('json', selfCheckInQrBodySchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const { token } = c.req.valid('json');
+    const result = await selfCheckInWithQrToken(
+      db,
+      auth,
+      c.req.param('id')!,
+      token,
+      readQrSecret(c),
+    );
+    return c.json(
+      successResponse(
+        result,
+        result.alreadyCheckedIn
+          ? `Already checked in. Status: ${result.status}`
+          : `Checked in as ${result.status}`,
+      ),
+      result.alreadyCheckedIn ? 200 : 201,
+    );
+  },
+);
+
+// Candidates: today's services with per-service window state so the mobile
+// Check-in tab can render the CTA (open) / countdown (opens-soon) / hint (closed)
+// without duplicating the window math.
+attendanceRouter.get('/self-check-in/candidates', async (c) => {
+  const auth = getAuth(c);
+  const result = await listSelfCheckInCandidates(db, auth);
+  return c.json(successResponse(result));
+});
 
 attendanceRouter.get('/services/:id/records', async (c) => {
   const auth = getAuth(c);

@@ -1,15 +1,14 @@
-import { eq, and, or, ilike, count, sql, exists, type SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, inArray, count, sql, exists, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '@kairos/database';
-import { members, memberRoles, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
+import { members, memberRoles, memberGuardians, roles, branches, fellowshipMembers, memberHealthRecords, newBelieverEnrollments, departmentMembers } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
-import { isMinorMember, MINOR_AGE_THRESHOLD } from '@kairos/types';
+import { isMinorMember, MINOR_AGE_THRESHOLD, CHURCH_SCOPE_ID, RoleScopeKind } from '@kairos/types';
 import { getActiveBranchId, generateTokenPair } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
-import { authHasCapability } from '../lib/grants';
-import { isRealMember } from '../lib/member-predicates';
+import { authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
 import { dispatchNotification } from '../notifications/service';
 import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent } from '../audit/service';
@@ -23,6 +22,7 @@ import {
   sendAccountRejectedEmail,
   hashPassword,
   randomTokenHex,
+  logger,
 } from '@kairos/utils';
 
 function enforceMemberAccess(auth: AuthContext, memberId: string) {
@@ -52,8 +52,8 @@ const REDACTABLE_FIELDS = [
 
 /** Minimal member shape the safeguarding gate keys off. */
 type SafeguardingSubject = {
+  id: string;
   homeBranchId: string;
-  guardianMemberId?: string | null;
 };
 
 /**
@@ -84,6 +84,37 @@ async function getViewerSafeguardingBranches(
 }
 
 /**
+ * Resolve, ONCE per request, the members this viewer is an active guardian of.
+ *
+ * Guardianship used to be a single column on the member row, so the list path
+ * could read it straight off the row it had already selected. It is a join
+ * table now (0056 — a child can have two parents and often a carer as well),
+ * so the set is resolved up front for the same reason the Safeguarding Lead
+ * branches are: the alternative is a query per row.
+ *
+ * Admin/pastor short-circuit — they already see everything, so the query is
+ * pointless for them.
+ */
+async function getViewerGuardedMemberIds(
+  db: Database,
+  auth: AuthContext,
+): Promise<Set<string>> {
+  if (authHasCapability(auth, 'branch:read')) {
+    return new Set();
+  }
+  const rows = await db
+    .select({ memberId: memberGuardians.memberId })
+    .from(memberGuardians)
+    .where(
+      and(
+        eq(memberGuardians.guardianMemberId, auth.memberId),
+        eq(memberGuardians.isActive, true),
+      ),
+    );
+  return new Set(rows.map((r) => r.memberId));
+}
+
+/**
  * In-memory safeguarding-access check given a pre-resolved capability set.
  * True when the viewer is admin/pastor, the member's guardian, or holds an
  * active Safeguarding Lead role scoped to the member's home branch.
@@ -92,9 +123,11 @@ function hasSafeguardingAccessWith(
   auth: AuthContext,
   member: SafeguardingSubject,
   safeguardingBranches: Set<string>,
+  guardedMemberIds: Set<string>,
 ): boolean {
   if (authHasCapability(auth, 'branch:read')) return true;
-  if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
+  // ANY active guardian, not "the" guardian — that is the whole point of 0056.
+  if (guardedMemberIds.has(member.id)) return true;
   return safeguardingBranches.has(member.homeBranchId);
 }
 
@@ -108,9 +141,11 @@ async function hasSafeguardingAccess(
   member: SafeguardingSubject,
 ): Promise<boolean> {
   if (authHasCapability(auth, 'branch:read')) return true;
-  if (member.guardianMemberId && member.guardianMemberId === auth.memberId) return true;
-  const branches = await getViewerSafeguardingBranches(db, auth);
-  return branches.has(member.homeBranchId);
+  const [branches, guarded] = await Promise.all([
+    getViewerSafeguardingBranches(db, auth),
+    getViewerGuardedMemberIds(db, auth),
+  ]);
+  return hasSafeguardingAccessWith(auth, member, branches, guarded);
 }
 
 /**
@@ -146,18 +181,35 @@ export async function listRoles(db: Database) {
 export async function listMembers(
   db: Database,
   auth: AuthContext,
-  query: { page: number; limit: number; search?: string; branchId?: string; approvalStatus?: string; fellowshipId?: string },
+  query: {
+    page: number;
+    limit: number;
+    search?: string;
+    branchId?: string;
+    approvalStatus?: string;
+    fellowshipId?: string;
+    memberType?: 'member' | 'attendee';
+  },
 ) {
-  // Pending members are inactive until approved, so skip isActive filter for pending queries
+  // Pending members are inactive until approved AND arrive as attendees
+  // (membership_class_completed_at NULL), so all defaults get skipped for
+  // pending queries — otherwise the approval queue would be permanently empty
+  // for self-signup accounts.
   const conditions: SQL[] = [];
   if (query.approvalStatus !== 'pending') {
     conditions.push(eq(members.isActive, true));
+    // Directory covers Members + Attendees (approved humans who signed in).
+    // Visitor / child shells stay behind their dedicated surfaces (Forms,
+    // Safeguarding review) — surfacing them here would flood the roll with
+    // rows that don't have a sign-in and blur the safeguarding gate.
+    // Callers can narrow to one type via query.memberType.
+    conditions.push(
+      inArray(
+        members.memberType,
+        query.memberType ? [query.memberType] : ['member', 'attendee'],
+      ),
+    );
   }
-
-  // Task #33 Phase 2: the directory is the confirmed-Member roll only — rows
-  // with membership_class_completed_at populated. Visitors / attendees / child
-  // shells are surfaced via Forms, the NB pipeline, and safeguarding review.
-  conditions.push(isRealMember());
 
   // Non-admin can only see their own branch (home or active secondary)
   if (!authHasCapability(auth, 'branch:read')) {
@@ -212,7 +264,10 @@ export async function listMembers(
   // Resolve the viewer's safeguarding capability ONCE up front (admin/pastor
   // short-circuit to an empty set without a query), then evaluate per-row in
   // memory to avoid an N+1 across the list.
-  const safeguardingBranches = await getViewerSafeguardingBranches(db, auth);
+  const [safeguardingBranches, guardedMemberIds] = await Promise.all([
+    getViewerSafeguardingBranches(db, auth),
+    getViewerGuardedMemberIds(db, auth),
+  ]);
 
   const [rows, [total]] = await Promise.all([
     db
@@ -237,7 +292,10 @@ export async function listMembers(
         approvalStatus: members.approvalStatus,
         systemRole: members.systemRole,
         memberType: members.memberType,
-        guardianMemberId: members.guardianMemberId,
+        // The REAL confirmed-Member signal per docs/domain-model.md §0 —
+        // exposed on the list so the directory badge can trust class
+        // completion directly instead of memberType, which can drift.
+        membershipClassCompletedAt: members.membershipClassCompletedAt,
         isActive: members.isActive,
         createdAt: members.createdAt,
         photoUrl: members.photoUrl,
@@ -252,12 +310,12 @@ export async function listMembers(
   ]);
 
   const data = rows.map((row) =>
-    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches)),
+    applyMinorProtection(row, hasSafeguardingAccessWith(auth, row, safeguardingBranches, guardedMemberIds)),
   );
 
   return {
     data,
-    pagination: {
+    meta: {
       page: query.page,
       limit: query.limit,
       total: total!.count,
@@ -296,7 +354,6 @@ export async function getMember(db: Database, memberId: string, auth: AuthContex
       approvalStatus: members.approvalStatus,
       systemRole: members.systemRole,
       memberType: members.memberType,
-      guardianMemberId: members.guardianMemberId,
       membershipClassCompletedAt: members.membershipClassCompletedAt,
       emailVerified: members.emailVerified,
       createdAt: members.createdAt,
@@ -492,13 +549,27 @@ export async function approveMember(
     .where(eq(members.id, memberId))
     .returning();
 
-  // Send approval/rejection email non-blocking
+  // Await the send — a floating .catch() gets cancelled on CF Workers the
+  // moment the response returns, silently dropping every approval email.
+  // Approval is a low-frequency admin action; the extra ~300ms round-trip
+  // is a fair price for actually delivering the email. Failures still
+  // don't block the approval itself (swallowed here on purpose).
   if (member.email) {
     const memberName = member.firstName ?? 'Member';
-    if (approved) {
-      sendAccountApprovedEmail(member.email, memberName).catch(() => {});
-    } else {
-      sendAccountRejectedEmail(member.email, memberName).catch(() => {});
+    try {
+      if (approved) {
+        await sendAccountApprovedEmail(member.email, memberName);
+      } else {
+        await sendAccountRejectedEmail(member.email, memberName);
+      }
+    } catch (err) {
+      // Log but don't fail the approval — an admin has already flipped the
+      // account state and the user can be told out-of-band.
+      logger.error('Failed to send approval email', {
+        memberId,
+        approved,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 
@@ -529,10 +600,37 @@ export async function assignRole(
 
   // Verify role exists
   const [role] = await db
-    .select({ id: roles.id })
+    .select({ id: roles.id, roleName: roles.roleName })
     .from(roles)
     .where(and(eq(roles.id, input.roleId), eq(roles.isActive, true)));
   if (!role) throw new ValidationError('Role not found or inactive');
+
+  // What scope shape does this role actually take?
+  //
+  // This used to be hardcoded to 'branch', which was true of every role until
+  // the church scope arrived. Granting a church-scoped role through this
+  // endpoint then wrote a branch-scoped row, which `resolveGrants` resolves
+  // into a grant that matches NOTHING — the UI would report success and the
+  // grantee would still be locked out, with no error anywhere to explain it.
+  //
+  // Derive it from the catalog instead, so a future church-scoped role works
+  // here the day it is added. Unmapped role names (operational roles like
+  // "Worship Lead", which carry no authority) keep the branch shape they have
+  // always had.
+  const functionalRole = DB_ROLE_NAME_TO_FUNCTIONAL[role.roleName];
+  const scopeKind = functionalRole ? RoleScopeKind[functionalRole] : 'branch';
+  if (scopeKind === 'fellowship' || scopeKind === 'department') {
+    // Those grants are written through by the fellowship/department services
+    // when a leader is set, not assigned by hand here — this endpoint has no
+    // fellowship or department id to scope them to.
+    throw new ValidationError(
+      `${role.roleName} is scoped to a ${scopeKind} and is assigned from that ${scopeKind}, not here`,
+    );
+  }
+  // A church scope names no entity, so it stores the nil-UUID sentinel.
+  // `branchId` stays the caller-supplied branch: on a church grant it is only
+  // a query handle ("whose grants are in branch B"), never the grant's reach.
+  const scopeId = scopeKind === 'church' ? CHURCH_SCOPE_ID : input.branchId;
 
   // Verify branch exists
   const [branch] = await db
@@ -541,7 +639,10 @@ export async function assignRole(
     .where(and(eq(branches.id, input.branchId), eq(branches.isActive, true)));
   if (!branch) throw new ValidationError('Branch not found or inactive');
 
-  // Check for active duplicate
+  // Check for active duplicate. Keyed on the SCOPE, not on branchId: two
+  // church grants for the same member are duplicates even when their
+  // (incidental) branch ids differ, and `uq_member_roles_active_assignment`
+  // would reject the second insert as a 500 rather than a clean conflict.
   const [existing] = await db
     .select({ id: memberRoles.id })
     .from(memberRoles)
@@ -549,11 +650,18 @@ export async function assignRole(
       and(
         eq(memberRoles.memberId, memberId),
         eq(memberRoles.roleId, input.roleId),
-        eq(memberRoles.branchId, input.branchId),
+        eq(memberRoles.scopeKind, scopeKind),
+        eq(memberRoles.scopeId, scopeId),
         eq(memberRoles.isActive, true),
       ),
     );
-  if (existing) throw new ConflictError('Member already has this role in this branch');
+  if (existing) {
+    throw new ConflictError(
+      scopeKind === 'church'
+        ? 'Member already has this church-wide role'
+        : 'Member already has this role in this branch',
+    );
+  }
 
   const [assignment] = await db
     .insert(memberRoles)
@@ -561,8 +669,8 @@ export async function assignRole(
       memberId,
       roleId: input.roleId,
       branchId: input.branchId,
-      scopeKind: 'branch',
-      scopeId: input.branchId,
+      scopeKind,
+      scopeId,
       notes: input.notes ?? null,
     })
     .returning();
@@ -986,7 +1094,6 @@ async function loadMemberForSafeguarding(
       homeBranchId: members.homeBranchId,
       memberType: members.memberType,
       dateOfBirth: members.dateOfBirth,
-      guardianMemberId: members.guardianMemberId,
     })
     .from(members)
     .where(and(eq(members.id, memberId), eq(members.isActive, true)));
@@ -1090,7 +1197,17 @@ export async function listUnguardedMinors(
     }
   }
 
-  const guardian = alias(members, 'guardian');
+  // "Unguarded" now means: no active guardian link pointing at an active adult.
+  // Before 0056 this was a left join on one column; a minor with two guardians
+  // is only unguarded when BOTH are gone, which a single join cannot express.
+  const hasLiveGuardian = sql`EXISTS (
+    SELECT 1 FROM member_guardians mg
+    JOIN members g ON g.id = mg.guardian_member_id
+    WHERE mg.member_id = ${members.id}
+      AND mg.is_active = true
+      AND g.is_active = true
+  )`;
+
   const rows = await db
     .select({
       id: members.id,
@@ -1098,13 +1215,25 @@ export async function listUnguardedMinors(
       lastName: members.lastName,
       dateOfBirth: members.dateOfBirth,
       branchName: branches.branchName,
-      guardianMemberId: members.guardianMemberId,
-      guardianFirstName: guardian.firstName,
-      guardianLastName: guardian.lastName,
+      // Links that exist regardless of whether the adult is still active. This
+      // separates "nobody was ever named" from "everyone named has been
+      // deactivated" — different safeguarding problems with different actions.
+      linkedGuardianCount: sql<number>`(
+        SELECT COUNT(*)::int FROM member_guardians mg
+        WHERE mg.member_id = ${members.id} AND mg.is_active = true
+      )`,
+      guardianNames: sql<string | null>`(
+        SELECT string_agg(
+                 TRIM(g.first_name || ' ' || COALESCE(g.last_name, '')),
+                 ', ' ORDER BY mg.is_primary DESC, g.last_name
+               )
+        FROM member_guardians mg
+        JOIN members g ON g.id = mg.guardian_member_id
+        WHERE mg.member_id = ${members.id} AND mg.is_active = true
+      )`,
     })
     .from(members)
     .innerJoin(branches, eq(members.homeBranchId, branches.id))
-    .leftJoin(guardian, eq(members.guardianMemberId, guardian.id))
     .where(
       and(
         eq(members.homeBranchId, branchId),
@@ -1114,32 +1243,21 @@ export async function listUnguardedMinors(
           eq(members.memberType, 'child'),
           sql`${members.dateOfBirth} > (CURRENT_DATE - INTERVAL '${sql.raw(String(MINOR_AGE_THRESHOLD))} years')`,
         ),
-        // guardian missing or deactivated
-        or(sql`${members.guardianMemberId} IS NULL`, eq(guardian.isActive, false)),
+        sql`NOT ${hasLiveGuardian}`,
       ),
     )
     .orderBy(members.lastName, members.firstName);
 
-  return (rows as Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string | null;
-    branchName: string;
-    guardianMemberId: string | null;
-    guardianFirstName: string | null;
-    guardianLastName: string | null;
-  }>).map((r) => ({
+  return rows.map((r) => ({
     id: r.id,
     firstName: r.firstName,
     lastName: r.lastName,
     dateOfBirth: r.dateOfBirth,
     branchName: r.branchName,
-    guardianStatus: (r.guardianMemberId === null ? 'none' : 'inactive') as 'none' | 'inactive',
-    guardianName:
-      r.guardianMemberId && r.guardianFirstName
-        ? `${r.guardianFirstName} ${r.guardianLastName ?? ''}`.trim()
-        : null,
+    guardianStatus: (Number(r.linkedGuardianCount) === 0 ? 'none' : 'inactive') as
+      | 'none'
+      | 'inactive',
+    guardianNames: r.guardianNames,
   }));
 }
 

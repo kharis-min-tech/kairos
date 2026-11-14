@@ -1,0 +1,61 @@
+{
+  "role": "pastor-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wo Nhwɛbea",
+      "caption": "W’asɔre baa, ne deɛ ɛhia ɛnnɛ.",
+      "speech": "Wo nhwɛbea bue w’asɔre baa so: dodoɔ a wɔwɔ asafo no mu, ne deɛ ɛretwɛn wo sɛ wobɛyɛ ɛnnɛ."
+    },
+    {
+      "n": 2,
+      "title": "W’asɔre baa",
+      "caption": "Biribiara a ɛwɔ deɛ wodi anim no mu.",
+      "speech": "M’asɔre Baa ne deɛ wodi anim no nyinaa. Ne mufoɔ, n’akuo, n’ɔsom, ne wɔn a wɔaba foforɔ."
+    },
+    {
+      "n": 3,
+      "title": "Nhwɛmu no",
+      "caption": "Obiara, ne ne gyinabea.",
+      "speech": "Nhwɛmu no kyerɛ obiara a ɔwɔ w’asɔre baa mu. Nsensaneɛ no kyerɛ sɛ ɔyɛ ɔhɔhoɔ, ɔsanba, anaa wawie adesua no."
+    },
+    {
+      "n": 4,
+      "title": "Nkɔdi Akyi",
+      "caption": "Nhwɛmu mmiɛnsa, a berɛ nni mu.",
+      "speech": "Nkɔdi Akyi wɔ nhwɛmu mmiɛnsa: ahɔhoɔ foforɔ a obiara ne wɔn nkasaeɛ, wɔn a wɔnni kuo mu, ne nkitahodie a berɛ atwam."
+    },
+    {
+      "n": 5,
+      "title": "Nsɛm a Ɛha Adwene",
+      "caption": "Yiedie ne ahobammɔ, soronko.",
+      "speech": "Nsɛm a Ɛha Adwene kura yiedie ne ahobammɔ. Ɛyɛ nkrataa beaeɛ mmienu soronko, a nnipa a wɔnsɛ na wɔkenkan."
+    },
+    {
+      "n": 6,
+      "title": "Wo Fekuo",
+      "caption": "Kuo a wodi anim.",
+      "speech": "Fekuo a wodi anim no, wotumi kyerɛw mmaeɛ, kyerɛw nkɔdi akyi, na wohunu hwan na wagyae ba."
+    },
+    {
+      "n": 7,
+      "title": "W’adwumakuo",
+      "caption": "Mufoɔ, nnwuma nhyehyɛeɛ ne adwumayɛfoɔ pɛ.",
+      "speech": "W’adwumakuo mu no wohwɛ mufoɔ so, woyi nnwuma nhyehyɛeɛ adi, na wodi wɔn a wɔpɛ sɛ wɔka ho ho dwuma."
+    },
+    {
+      "n": 8,
+      "title": "Akra Kwan",
+      "caption": "Firi nkitahodie kɔsi adwumakuo mu.",
+      "speech": "Akra kwan di obi a yɛduruu ne ho wɔ asɛmpaka mu akyi, firi nkitahodie a ɛdi kan kɔsi adwumakuo mu kɔ."
+    },
+    {
+      "n": 9,
+      "title": "Amanneɛbɔ",
+      "caption": "W’asɔre baa, wɔ akontaa mu.",
+      "speech": "Amanneɛbɔ dane w’asɔre baa yɛ akontaa: mmaeɛ nkɔsoɔ, hwan na ɔnni hɔ, ne sɛdeɛ akuo no renyini."
+    }
+  ]
+}

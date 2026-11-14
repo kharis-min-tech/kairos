@@ -29,6 +29,8 @@ import {
   getSoulLane,
   SOUL_PIPELINE_LANES,
 } from './_components/drag-rules';
+import { useTranslation } from 'react-i18next';
+import { keySlug } from '@/lib/localise-options';
 
 interface SoulCardData {
   id: string;
@@ -48,6 +50,8 @@ type RAGLabel = 'Critical' | 'Monitor' | 'On Track';
 
 // RAG Status: Red/Amber/Green based on follow-up timing
 function getRAGStatus(status: string, daysSinceLastFollowUp: number | null | undefined) {
+    // i18n-ignore(5): `label` is the RAGLabel the filter compares on; the
+    // visible text comes from `souls:critical` / `monitor` / `onTrack`.
     const CRITICAL = { label: 'Critical' as RAGLabel, bgColor: 'bg-rose-500/10 dark:bg-rose-500/15', textColor: 'text-rose-600 dark:text-rose-400', borderColor: 'border-l-rose-500', dotColor: 'bg-rose-500' };
     const MONITOR  = { label: 'Monitor'  as RAGLabel, bgColor: 'bg-[#f8b537]/15 dark:bg-[#f8b537]/15', textColor: 'text-[#9a6b04] dark:text-[#f8b537]', borderColor: 'border-l-[#f8b537]', dotColor: 'bg-[#f8b537]' };
     const ON_TRACK = { label: 'On Track' as RAGLabel, bgColor: 'bg-emerald-100 dark:bg-emerald-950/50', textColor: 'text-emerald-700 dark:text-emerald-300', borderColor: 'border-l-emerald-500', dotColor: 'bg-emerald-500' };
@@ -94,7 +98,8 @@ function SoulCard({
   onToggleSelect?: (id: string) => void;
   canSelect?: boolean;
   variant?: 'default' | 'preview';
-}) {
+}) {  const { t } = useTranslation(['souls', 'common']);
+
   const router = useRouter();
   
   const ragStatus = getRAGStatus(soul.status, soul.daysSinceLastFollowUp);
@@ -131,7 +136,7 @@ function SoulCard({
                   ? 'bg-foreground/10 border border-foreground/60 shadow-[0_0_0_2px_hsl(var(--foreground)/0.15)]'
                   : 'border border-foreground/30 bg-transparent hover:border-foreground/50'
               }`}
-              aria-label={isSelected ? 'Deselect soul' : 'Select soul'}
+              aria-label={isSelected ? t('souls:deselectSoul') : t('souls:selectSoul')}
             >
               {isSelected && <Check className="h-3 w-3 text-foreground" strokeWidth={2.5} />}
             </button>
@@ -152,7 +157,7 @@ function SoulCard({
                       : 'bg-slate-500/15 text-slate-600 dark:text-slate-400'
                 }`}
               >
-                {disposition}
+                {t(`souls:status_${keySlug(disposition)}`, { defaultValue: disposition })}
               </span>
             )}
           </div>
@@ -180,16 +185,16 @@ function SoulCard({
                 <span className="text-xs text-muted-foreground truncate">{soul.assignedMemberName}</span>
               </>
             ) : (
-              <span className="text-xs text-muted-foreground italic">Unassigned</span>
+              <span className="text-xs text-muted-foreground italic">{t('souls:unassigned')}</span>
             )}
           </div>
           {(soul.status === 'New' || soul.status === 'Following Up' || soul.status === 'Interested') && (
             <p className="text-xs text-muted-foreground">
               {soul.daysSinceLastFollowUp === null || soul.daysSinceLastFollowUp === undefined
-                ? 'No follow-up logged'
+                ? t('souls:noFollowUpLogged')
                 : soul.daysSinceLastFollowUp === 0
-                  ? 'Last contact: Today'
-                  : `Last contact: ${soul.daysSinceLastFollowUp} day${soul.daysSinceLastFollowUp !== 1 ? 's' : ''} ago`}
+                  ? t('souls:lastContactToday')
+                  : t('souls:lastContactDaysAgo', { count: soul.daysSinceLastFollowUp })}
             </p>
           )}
         </div>
@@ -246,7 +251,8 @@ function KanbanColumn({
   selectedSouls?: Set<string>;
   onToggleSelect?: (id: string) => void;
   canSelect?: boolean;
-}) {
+}) {  const { t } = useTranslation(['souls', 'common']);
+
   const { setNodeRef, isOver, active } = useDroppable({ id: status });
   const fromStatus = active?.data.current?.status as string | undefined;
   const dropRule = getSoulDropRule(fromStatus, status);
@@ -258,7 +264,9 @@ function KanbanColumn({
       <Card className="bg-muted">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">{status}</CardTitle>
+            <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">
+              {t(`souls:lane_${keySlug(status)}`, { defaultValue: status })}
+            </CardTitle>
             <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded text-xs font-semibold bg-foreground/10 text-foreground/60">{count}</span>
           </div>
         </CardHeader>
@@ -273,9 +281,7 @@ function KanbanColumn({
           }`}
         >
           {souls.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No souls in this stage
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">{t('souls:noSoulsInThisStage')}</p>
           ) : (
             souls.map((soul) => (
               <div key={soul.id} data-soul-id={soul.id}>
@@ -294,7 +300,8 @@ function KanbanColumn({
   );
 }
 
-export default function SoulsKanbanPage() {
+export default function SoulsKanbanPage() {  const { t } = useTranslation(['souls', 'common']);
+
   const caps = useCapabilities();
   const router = useRouter();
   const api = useApi();
@@ -380,8 +387,8 @@ export default function SoulsKanbanPage() {
     } catch (error) {
       console.error('Failed to fetch members:', error);
       toast({
-        title: 'Failed to load members',
-        description: 'Could not fetch member list',
+        title: t('souls:failedToLoadMembers'),
+        description: t('souls:couldNotFetchMemberList'),
         variant: 'destructive',
       });
     } finally {
@@ -415,8 +422,8 @@ export default function SoulsKanbanPage() {
   const handleBulkAssign = async () => {
     if (!api || selectedSouls.size === 0 || !bulkAssignMemberId) {
       toast({
-        title: 'Invalid selection',
-        description: 'Please select souls and a member to assign to',
+        title: t('souls:invalidSelection'),
+        description: t('souls:pleaseSelectSoulsAndAMember'),
         variant: 'destructive',
       });
       return;
@@ -431,8 +438,8 @@ export default function SoulsKanbanPage() {
 
       if (response.success) {
         toast({
-          title: 'Bulk assignment successful',
-          description: `${response.data?.reassignedCount ?? 0} soul(s) reassigned`,
+          title: t('souls:bulkAssignmentSuccessful'),
+          description: t('souls:v1SoulSReassigned', { v1: response.data?.reassignedCount ?? 0 }),
         });
         setSelectedSouls(new Set());
         setShowBulkAssign(false);
@@ -441,7 +448,7 @@ export default function SoulsKanbanPage() {
       }
     } catch (error: unknown) {
       toast({
-        title: 'Bulk assignment failed',
+        title: t('souls:bulkAssignmentFailed'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -483,7 +490,7 @@ export default function SoulsKanbanPage() {
     if (!dropRule.allowed) {
       if (dropRule.reason) {
         toast({
-          title: 'Move not available',
+          title: t('souls:moveNotAvailable'),
           description: dropRule.reason,
           variant: 'destructive',
         });
@@ -497,14 +504,14 @@ export default function SoulsKanbanPage() {
     try {
       await updateSoulStatus(api, soulId, newStatus);
       toast({
-        title: 'Status updated',
-        description: `Soul moved to ${newStatus}`,
+        title: t('souls:statusUpdated'),
+        description: t('souls:soulMovedV1', { v1: newStatus }),
       });
     } catch (error: unknown) {
       // Revert on error
       updateSoulOptimistic(soulId, { status: soul.status });
       toast({
-        title: 'Failed to update status',
+        title: t('souls:failedToUpdateStatus'),
         description: error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
       });
@@ -549,8 +556,8 @@ export default function SoulsKanbanPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-[-0.02em]">Souls Pipeline</h1>
-          <p className="text-muted-foreground">Track souls through the conversion journey</p>
+          <h1 className="text-3xl font-semibold tracking-[-0.02em]">{t('souls:soulsPipeline')}</h1>
+          <p className="text-muted-foreground">{t('souls:trackSoulsThroughTheConversionJourney')}</p>
         </div>
         <div className="flex gap-2">
           {canBulkAssign && selectedSouls.size > 0 && (
@@ -560,9 +567,7 @@ export default function SoulsKanbanPage() {
             </Button>
           )}
           <Button onClick={() => router.push('/souls/capture')} className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0">
-            <Plus className="mr-2 h-4 w-4" />
-            Capture Soul
-          </Button>
+            <Plus className="mr-2 h-4 w-4" />{t('souls:captureSoul')}</Button>
         </div>
       </div>
 
@@ -571,7 +576,7 @@ export default function SoulsKanbanPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search souls..."
+              placeholder={t('souls:searchSouls')}
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-10"
@@ -579,13 +584,9 @@ export default function SoulsKanbanPage() {
           </div>
           {canBulkAssign && souls.length > 0 && (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={selectAll}>
-                Select All
-              </Button>
+              <Button variant="outline" size="sm" onClick={selectAll}>{t('souls:selectAll')}</Button>
               {selectedSouls.size > 0 && (
-                <Button variant="outline" size="sm" onClick={deselectAll}>
-                  Deselect All
-                </Button>
+                <Button variant="outline" size="sm" onClick={deselectAll}>{t('souls:deselectAll')}</Button>
               )}
             </div>
           )}
@@ -599,34 +600,46 @@ export default function SoulsKanbanPage() {
                 size="sm"
                 value={filters.branchId ?? ''}
                 onValueChange={(v) => setFilters({ branchId: v || undefined })}
-                placeholder="All Branches"
-                options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+                placeholder={t('souls:allBranches')}
+                options={[
+                  { value: '', label: t('souls:allBranches') },
+                  ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+                ]}
               />
             )}
             <CustomSelect
               size="sm"
               value={filters.fellowshipId ?? ''}
               onValueChange={(v) => setFilters({ fellowshipId: v || undefined })}
-              placeholder={isLeader ? 'My Fellowships' : 'All Fellowships'}
-              options={allFellowships.map((f) => ({ value: f.id, label: f.fellowshipName }))}
+              placeholder={isLeader ? t('souls:myFellowships') : t('souls:allFellowships')}
+              options={[
+                { value: '', label: isLeader ? t('souls:myFellowships') : t('souls:allFellowships') },
+                ...allFellowships.map((f) => ({ value: f.id, label: f.fellowshipName })),
+              ]}
             />
             <CustomSelect
               size="sm"
               value={filters.branchDepartmentId ?? ''}
               onValueChange={(v) => setFilters({ branchDepartmentId: v || undefined })}
-              placeholder={isLeader ? 'My Departments' : 'All Departments'}
-              options={allDepartments.map((d) => ({
-                value: d.id,
-                label: `${d.departmentName}${isAdmin && d.branchName ? ` · ${d.branchName}` : ''}`,
-              }))}
+              placeholder={isLeader ? t('souls:myDepartments') : t('souls:allDepartments')}
+              options={[
+                { value: '', label: isLeader ? t('souls:myDepartments') : t('souls:allDepartments') },
+                ...allDepartments.map((d) => ({
+                  value: d.id,
+                  label: `${d.departmentName}${isAdmin && d.branchName ? ` · ${d.branchName}` : ''}`,
+                })),
+              ]}
             />
             {(isAdmin || isPastor) && (
               <CustomSelect
                 size="sm"
                 value={filters.assignedMemberId ?? ''}
                 onValueChange={(v) => setFilters({ assignedMemberId: v || undefined })}
-                placeholder="Any worker"
-                options={members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
+                placeholder={t('souls:anyWorker')}
+                options={[
+                  { value: '', label: t('souls:anyWorker') },
+                  ...members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` })),
+                ]}
               />
             )}
             {(filters.branchId ?? filters.fellowshipId ?? filters.branchDepartmentId ?? filters.assignedMemberId) && (
@@ -639,9 +652,7 @@ export default function SoulsKanbanPage() {
                   branchDepartmentId: undefined,
                   assignedMemberId: undefined,
                 })}
-              >
-                Clear
-              </Button>
+              >{t('souls:clear')}</Button>
             )}
           </div>
         )}
@@ -651,10 +662,13 @@ export default function SoulsKanbanPage() {
           {/* RAG segmented control */}
           <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
             {([
-              { label: 'All' as const,      display: 'All Souls', dotColor: null },
-              { label: 'Critical' as const, display: 'Critical',  dotColor: 'bg-rose-500' },
-              { label: 'Monitor'  as const, display: 'Monitor',   dotColor: 'bg-amber-500' },
-              { label: 'On Track' as const, display: 'On Track',  dotColor: 'bg-emerald-500' },
+              // i18n-ignore(6): `label` is the filter value compared against
+              // RAGLabel and the ragFilter state, so it stays in English.
+              // `display` is the text that gets translated.
+              { label: 'All' as const,      display: t('souls:allSouls'), dotColor: null },
+              { label: 'Critical' as const, display: t('souls:critical'), dotColor: 'bg-rose-500' },
+              { label: 'Monitor' as const,  display: t('souls:monitor'),  dotColor: 'bg-amber-500' },
+              { label: 'On Track' as const, display: t('souls:onTrack'),  dotColor: 'bg-emerald-500' },
             ]).map(({ label, display, dotColor }) => {
               const isActive = ragFilter === label;
               const count = label === 'All'
@@ -685,7 +699,7 @@ export default function SoulsKanbanPage() {
           <div className="flex items-center gap-4">
             {uniqueSources.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Source</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('souls:source')}</span>
                 <div ref={sourceDropdownRef} className="relative">
                   <button
                     type="button"
@@ -717,12 +731,12 @@ export default function SoulsKanbanPage() {
               </div>
             )}
             <div className="flex items-center gap-2">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sort</span>
+            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{t('souls:sort')}</span>
             <div className="flex rounded-xl bg-[#f0f0f3] p-1 dark:bg-white/[0.06]">
               {([
-                { value: 'date-added' as const,   label: 'Date Added' },
-                { value: 'name' as const,          label: 'Name' },
-                { value: 'last-contact' as const,  label: 'Last Contact' },
+                { value: 'date-added' as const,   label: t('souls:dateAdded') },
+                { value: 'name' as const,          label: t('souls:name') },
+                { value: 'last-contact' as const,  label: t('souls:lastContact') },
               ]).map(({ value, label }) => (
                 <button
                   key={value}
@@ -747,34 +761,30 @@ export default function SoulsKanbanPage() {
       {showBulkAssign && (
         <Card className="bg-primary/5">
           <CardHeader>
-            <CardTitle>Bulk Assign {selectedSouls.size} Soul{selectedSouls.size !== 1 ? 's' : ''}</CardTitle>
+            <CardTitle>{t('souls:bulkAssignCount', { count: selectedSouls.size })}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label htmlFor="bulkAssignMember" className="block text-sm font-medium mb-2">
-                Assign to Member
-              </label>
+              <label htmlFor="bulkAssignMember" className="block text-sm font-medium mb-2">{t('souls:assignToMember')}</label>
               {loadingMembers ? (
-                <p className="text-sm text-muted-foreground">Loading members...</p>
+                <p className="text-sm text-muted-foreground">{t('souls:loadingMembers')}</p>
               ) : (
                 <CustomSelect
                   id="bulkAssignMember"
                   value={bulkAssignMemberId}
                   onValueChange={setBulkAssignMemberId}
-                  placeholder="Select a member"
+                  placeholder={t('souls:selectAMember')}
                   options={members.map((m) => ({ value: m.id, label: `${m.firstName} ${m.lastName}` }))}
                 />
               )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Select the member to assign these souls to
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">{t('souls:selectTheMemberToAssignThese')}</p>
             </div>
             <div className="flex gap-2">
               <Button 
                 onClick={handleBulkAssign} 
                 disabled={bulkAssigning || !bulkAssignMemberId || loadingMembers}
               >
-                {bulkAssigning ? 'Assigning...' : 'Assign Souls'}
+                {bulkAssigning ? t('souls:assigning') : t('souls:assignSouls')}
               </Button>
               <Button 
                 variant="outline" 
@@ -783,9 +793,7 @@ export default function SoulsKanbanPage() {
                   setBulkAssignMemberId('');
                 }}
                 disabled={bulkAssigning}
-              >
-                Cancel
-              </Button>
+              >{t('souls:cancel')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -793,7 +801,7 @@ export default function SoulsKanbanPage() {
 
       {loading && souls.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading souls...</p>
+          <p className="text-muted-foreground">{t('souls:loadingSouls')}</p>
         </div>
       ) : (
         <DndContext
@@ -825,13 +833,9 @@ export default function SoulsKanbanPage() {
 
       {!loading && souls.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">
-            No souls found. Start by capturing your first soul!
-          </p>
+          <p className="text-muted-foreground mb-4">{t('souls:noSoulsFoundStartByCapturing')}</p>
           <Button onClick={() => router.push('/souls/capture')} className="bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-white hover:opacity-90 border-0">
-            <Plus className="mr-2 h-4 w-4" />
-            Capture Soul
-          </Button>
+            <Plus className="mr-2 h-4 w-4" />{t('souls:captureSoul')}</Button>
         </div>
       )}
     </div>

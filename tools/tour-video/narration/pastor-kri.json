@@ -1,0 +1,61 @@
+{
+  "role": "pastor-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Yu Ɔvavyu",
+      "caption": "Yu branch, ɛn wetin i nid tide.",
+      "speech": "Yu ɔvavyu de opin pan yu branch: omɔch pipul de na di kɔngrigeshɔn, ɛn wetin de wet fɔ yu fɔ du tide."
+    },
+    {
+      "n": 2,
+      "title": "Yu Branch",
+      "caption": "Ɔltin insay di wan we yu de lid.",
+      "speech": "Mi Branch na di ol wan we yu de lid. In mɛmba dɛn, in grup dɛn, in sɛvis dɛn, ɛn di pipul we jɔs jɔyn."
+    },
+    {
+      "n": 3,
+      "title": "Di Dairɛktri",
+      "caption": "Ɔlman, wit dɛn stetɔs.",
+      "speech": "Di dairɛktri de lis ɔlman insay yu branch. Di layn de tɛl yu if na vizitɔ, ritɔna, ɔ pɔsin we dɔn du di mɛmbaship klas."
+    },
+    {
+      "n": 4,
+      "title": "Fɔlo ɔp dɛn",
+      "caption": "Tri lis, pan shɔt tɛm.",
+      "speech": "Fɔlo ɔp gɛt tri lis: fɔs-tɛm pipul we nɔbɔdi nɔ tɔk to, pipul we nɔ de na grup, ɛn ɛnibɔdi we dɔn let fɔ kɔntakt."
+    },
+    {
+      "n": 5,
+      "title": "Wɔri dɛn",
+      "caption": "Wɛlfɛa ɛn sefgadin, sɛpret.",
+      "speech": "Wɔri na usay wɛlfɛa ɛn sefgadin de sidɔm. Na tu sɛpret inbɔks pɔposli, ɛn difrɛn pipul de rid dɛn."
+    },
+    {
+      "n": 6,
+      "title": "Yu Fɛloship",
+      "caption": "Di grup we yu de lid.",
+      "speech": "Fɔ di fɛloship we yu de lid, yu kin tek di rɛjista, rɛkɔd fɔlo ɔp, ɛn si udat dɔn stɔp fɔ kam."
+    },
+    {
+      "n": 7,
+      "title": "Yu Dipatmɛnt",
+      "caption": "Mɛmba lis, rota ɛn rikrutmɛnt.",
+      "speech": "Fɔ yu dipatmɛnt yu de manej di mɛmba lis, put di rota awt, ɛn wok tru di pipul we de aplay fɔ jɔyn."
+    },
+    {
+      "n": 8,
+      "title": "Di Sol Paiplain",
+      "caption": "Frɔm fɔs kɔntakt go na dipatmɛnt.",
+      "speech": "Di sol paiplain de fɔlo pɔsin we wi rich tru ɛvanjelizm, frɔm di fɔs kɔntakt sote i jɔyn wan dipatmɛnt."
+    },
+    {
+      "n": 9,
+      "title": "Ripɔt dɛn",
+      "caption": "Yu branch, insay nɔmba.",
+      "speech": "Ripɔt de tɔn yu branch to nɔmba: atɛndans trɛnd, udat nɔ de kam, ɛn aw di grup dɛn de gro."
+    }
+  ]
+}

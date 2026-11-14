@@ -13,6 +13,8 @@ export interface StageDef {
  * Active enrollments now start at Session 1; the legacy `enrolled` value
  * remains in shared types for old rows/imports but is not shown as a board lane.
  */
+// i18n-ignore(8): the English source for `stageLabel` and `stageTopic`,
+// which look the display text up per language and fall back to these.
 export const STAGES: StageDef[] = [
   { value: 'session-1',  label: 'Session 1', topic: 'Foundations of Faith',         dotColor: 'bg-sky-500' },
   { value: 'session-2',  label: 'Session 2', topic: 'Who is a Christian',           dotColor: 'bg-indigo-500' },
@@ -58,4 +60,21 @@ export function getStaleDays(
   if (Number.isNaN(last)) return null;
   const days = Math.floor((Date.now() - last) / (1000 * 60 * 60 * 24));
   return days >= STALE_DAYS_THRESHOLD ? days : null;
+}
+
+// ── Display text ───────────────────────────────────────────────────────────
+// `label` and `topic` above are the English source. Everything that renders
+// them goes through these helpers so the board reads in the viewer's
+// language, while `value` — which the API and the drag rules compare on —
+// stays untouched.
+type Translate = (key: string, opts?: Record<string, unknown>) => string;
+
+export function stageLabel(t: Translate, stage?: StageDef | null, fallback = ''): string {
+  if (!stage) return fallback;
+  return t(`newBelievers:stage_${stage.value}_label`, { defaultValue: stage.label });
+}
+
+export function stageTopic(t: Translate, stage?: StageDef | null): string | undefined {
+  if (!stage?.topic) return undefined;
+  return t(`newBelievers:stage_${stage.value}_topic`, { defaultValue: stage.topic });
 }

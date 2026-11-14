@@ -7,12 +7,15 @@ import {
   fellowshipMeetingAttendance,
 } from '@kairos/database';
 import type { AuthContext } from '@kairos/types';
-import { isRealMember } from '../lib/member-predicates';
+import { isPastoralMember } from '../lib/member-predicates';
 
 function branchScope(auth: AuthContext) {
-  // Phase 4: scope=branch pins reports to the scoped branch even for system
-  // admins. Otherwise admin = church-wide, everyone else = home branch.
-  if (auth.scope?.kind === 'branch') return auth.scope.id;
+  // Admin reads church-wide; everyone else is pinned to their home branch.
+  //
+  // There used to be an `auth.scope?.kind === 'branch'` branch above this,
+  // left over from the per-request role switcher. Nothing populates `scope`
+  // any more — `finalize-role` and `switch-role` were deleted — so it was
+  // dead code that read like a live narrowing rule.
   if (auth.systemRole === 'admin') return undefined;
   return auth.branchId;
 }
@@ -23,7 +26,11 @@ export async function getMemberGrowth(db: Database, auth: AuthContext) {
 
   const conditions = [
     gte(members.createdAt, sql`CURRENT_DATE - INTERVAL '6 months'`),
-    isRealMember(),
+    // Growth chart tracks new sign-ups on the pastoral roll — Members +
+    // Attendees. Previously filtered to confirmed Members only, so a fresh
+    // signup didn't count until class completion (months later) and the
+    // chart under-reported real growth.
+    isPastoralMember(),
   ];
   if (scopedBranchId) {
     conditions.push(eq(members.homeBranchId, scopedBranchId));

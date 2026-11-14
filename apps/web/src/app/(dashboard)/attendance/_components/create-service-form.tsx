@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,12 +22,15 @@ import type { CreateServiceRequest, FormMemberSearchResult } from '@kairos/types
 import { useAuthStore } from '@/lib/auth-store';
 import { useFormMemberSearch } from '@/hooks/use-forms';
 import { useBranches } from '@/hooks/use-branches';
+import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
-const serviceSchema = z
+const makeServiceSchema = (t: (key: string) => string) =>
+  z
   .object({
     serviceBranchId: z.string().optional(),
-    serviceDate: z.string().min(1, 'Pick a service date'),
-    serviceTime: z.string().min(1, 'Pick a service time'),
+    serviceDate: z.string().min(1, t('attendance:vPickAServiceDate')),
+    serviceTime: z.string().min(1, t('attendance:vPickAServiceTime')),
     serviceType: z.enum([ServiceType.Sunday, ServiceType.Midweek, ServiceType.Special]),
     serviceTitle: z.string().optional(),
     topic: z.string().optional(),
@@ -36,11 +39,13 @@ const serviceSchema = z
   })
   .refine(
     (v) => v.serviceType !== ServiceType.Special || (v.serviceTitle?.trim().length ?? 0) > 0,
-    { path: ['serviceTitle'], message: 'A special service needs a title' },
+    { path: ['serviceTitle'], message: t('attendance:vASpecialServiceNeedsATitle') },
   );
 
-export type ServiceFormValues = z.infer<typeof serviceSchema>;
+export type ServiceFormValues = z.infer<ReturnType<typeof makeServiceSchema>>;
 
+// i18n-ignore(5): the English source; `attendance:serviceTypeLong_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const TYPE_OPTIONS = [
   { value: ServiceType.Sunday, label: 'Sunday Service' },
   { value: ServiceType.Midweek, label: 'Midweek Service' },
@@ -55,7 +60,9 @@ interface CreateServiceFormProps {
   canPickBranch: boolean;
 }
 
-export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: CreateServiceFormProps) {
+export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: CreateServiceFormProps) {  const { t } = useTranslation(['attendance', 'common']);
+  const serviceSchema = useMemo(() => makeServiceSchema(t), [t]);
+
   const user = useAuthStore((s) => s.user);
   const [preacherName, setPreacherName] = useState('');
   const [preacherSearch, setPreacherSearch] = useState('');
@@ -131,7 +138,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
           {/* Branch picker — admin/pastor only */}
           {canPickBranch && (
             <div className="space-y-2">
-              <Label htmlFor="serviceBranchId">Branch</Label>
+              <Label htmlFor="serviceBranchId">{t('attendance:branch')}</Label>
               <Controller
                 control={control}
                 name="serviceBranchId"
@@ -145,25 +152,23 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                       if (preacherId) clearPreacher();
                     }}
                     options={branchOptions}
-                    placeholder="Select a branch"
+                    placeholder={t('attendance:selectABranch')}
                   />
                 )}
               />
-              <p className="text-xs text-muted-foreground">
-                Record this service for a branch you oversee.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('attendance:recordThisServiceForABranch')}</p>
             </div>
           )}
 
           {/* Date + time */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="serviceDate">Service date</Label>
+              <Label htmlFor="serviceDate">{t('attendance:serviceDate')}</Label>
               <Controller
                 control={control}
                 name="serviceDate"
                 render={({ field }) => (
-                  <DateSelect value={field.value ?? ''} onChange={field.onChange} placeholder="Select date" />
+                  <DateSelect value={field.value ?? ''} onChange={field.onChange} placeholder={t('attendance:selectDate')} />
                 )}
               />
               {errors.serviceDate && (
@@ -171,7 +176,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="serviceTime">Service time</Label>
+              <Label htmlFor="serviceTime">{t('attendance:serviceTime')}</Label>
               <Controller
                 control={control}
                 name="serviceTime"
@@ -187,7 +192,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
           {/* Type */}
           <div className="space-y-2">
-            <Label htmlFor="serviceType">Service type</Label>
+            <Label htmlFor="serviceType">{t('attendance:serviceType')}</Label>
             <Controller
               control={control}
               name="serviceType"
@@ -196,7 +201,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                   id="serviceType"
                   value={field.value}
                   onValueChange={field.onChange}
-                  options={TYPE_OPTIONS}
+                  options={localiseOptions(t, 'attendance:serviceTypeLong_', TYPE_OPTIONS)}
                 />
               )}
             />
@@ -205,12 +210,12 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
           {/* Title — always shown, required when Special */}
           <div className="space-y-2">
             <Label htmlFor="serviceTitle">
-              Service title{serviceType === ServiceType.Special ? '' : ' (optional)'}
+              {serviceType === ServiceType.Special
+                ? t('attendance:serviceTitle')
+                : t('attendance:serviceTitleOptional')}
             </Label>
-            <Input id="serviceTitle" {...register('serviceTitle')} placeholder="e.g. Watchnight" />
-            <p className="text-xs text-muted-foreground">
-              Name the special service, e.g. Watchnight. Optional for Sunday and Midweek.
-            </p>
+            <Input id="serviceTitle" {...register('serviceTitle')} placeholder={t('attendance:eGWatchnight')} />
+            <p className="text-xs text-muted-foreground">{t('attendance:nameTheSpecialServiceEG')}</p>
             {errors.serviceTitle && (
               <p className="text-xs font-medium text-destructive">{errors.serviceTitle.message}</p>
             )}
@@ -218,19 +223,19 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
           {/* Topic */}
           <div className="space-y-2">
-            <Label htmlFor="topic">Topic (optional)</Label>
-            <Textarea id="topic" {...register('topic')} placeholder="Sermon topic or theme" rows={2} />
+            <Label htmlFor="topic">{t('attendance:topicOptional')}</Label>
+            <Textarea id="topic" {...register('topic')} placeholder={t('attendance:sermonTopicOrTheme')} rows={2} />
           </div>
 
           {/* Preacher typeahead */}
           <div className="space-y-2">
-            <Label htmlFor="preacher-search">Preacher (optional)</Label>
+            <Label htmlFor="preacher-search">{t('attendance:preacherOptional')}</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="preacher-search"
                 className="pl-9 pr-9"
-                placeholder="Search a member by name…"
+                placeholder={t('attendance:searchAMemberByName')}
                 value={preacherSearch}
                 onChange={(e) => {
                   setPreacherSearch(e.target.value);
@@ -242,7 +247,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
               {(preacherSearch || preacherId) && (
                 <button
                   type="button"
-                  aria-label="Clear preacher"
+                  aria-label={t('attendance:clearPreacher')}
                   onClick={clearPreacher}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
@@ -251,12 +256,14 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
               )}
             </div>
             {preacherId && (
-              <p className="text-xs font-medium text-[#16A34A]">Preacher set to {preacherName}.</p>
+              <p className="text-xs font-medium text-[#16A34A]">
+                {t('attendance:preacherSetTo', { name: preacherName })}
+              </p>
             )}
             {preacherOpen && preacherSearch.trim().length >= 2 && !preacherId && (
               <div className="rounded-lg border border-input/15">
                 {searchingPreacher ? (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>
+                  <p className="px-3 py-2 text-sm text-muted-foreground">{t('attendance:searching')}</p>
                 ) : preacherResults && preacherResults.length > 0 ? (
                   <ul>
                     {preacherResults.map((r) => (
@@ -275,7 +282,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                     ))}
                   </ul>
                 ) : (
-                  <p className="px-3 py-2 text-sm text-muted-foreground">No matches.</p>
+                  <p className="px-3 py-2 text-sm text-muted-foreground">{t('attendance:noMatches')}</p>
                 )}
               </div>
             )}
@@ -283,7 +290,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
           {/* Expected attendance */}
           <div className="space-y-2">
-            <Label htmlFor="expectedAttendance">Expected attendance (optional)</Label>
+            <Label htmlFor="expectedAttendance">{t('attendance:expectedAttendanceOptional')}</Label>
             <Controller
               control={control}
               name="expectedAttendance"
@@ -293,7 +300,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
                   onValueChange={field.onChange}
                   min={0}
                   step={10}
-                  ariaLabel="Expected attendance"
+                  ariaLabel={t('attendance:expectedAttendance')}
                 />
               )}
             />
@@ -307,7 +314,7 @@ export function CreateServiceForm({ onSubmit, submitError, canPickBranch }: Crea
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating…' : 'Create service'}
+          {isSubmitting ? t('attendance:creating') : t('attendance:createService')}
         </Button>
       </div>
     </form>

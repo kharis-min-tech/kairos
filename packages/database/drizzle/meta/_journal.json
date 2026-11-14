@@ -260,6 +260,146 @@
       "when": 1793300000000,
       "tag": "0036_email_change_and_consent",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794300000000,
+      "tag": "0037_nb_removal_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795300000000,
+      "tag": "0038_consent_extend_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1796300000000,
+      "tag": "0039_email_verification_token",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1797300000000,
+      "tag": "0040_regions_composite_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1798300000000,
+      "tag": "0041_branch_self_checkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1799300000000,
+      "tag": "0042_branch_coordinates",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1800300000000,
+      "tag": "0043_fellowship_address",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1801300000000,
+      "tag": "0044_oauth_provider_linking",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1802300000000,
+      "tag": "0045_oauth_must_complete_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1803300000000,
+      "tag": "0046_followup_visit_shape",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1804300000000,
+      "tag": "0047_membership_classes",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1805300000000,
+      "tag": "0048_membership_admin_and_pool",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1806300000000,
+      "tag": "0049_membership_interest_archive",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1807300000000,
+      "tag": "0050_membership_interest_isactive",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1808300000000,
+      "tag": "0051_membership_champion_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1809300000000,
+      "tag": "0052_member_followups_branch_context",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1810300000000,
+      "tag": "0053_outreach_coordinator_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1791263375986,
+      "tag": "0054_safeguarding_head_and_minister",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1791326315506,
+      "tag": "0055_persona_corrections",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791363961997,
+      "tag": "0056_member_guardians",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,55 @@
+{
+  "role": "member",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Your overview",
+      "caption": "Only what belongs to you.",
+      "speech": "This is your overview. Everything here is yours: your groups, your attendance, and whatever the church needs from you this week."
+    },
+    {
+      "n": 2,
+      "title": "What you can see",
+      "caption": "A short sidebar is not a missing feature.",
+      "speech": "Your sidebar is short because most of Kairos is not yours to run. Nothing is hidden from you out of secrecy."
+    },
+    {
+      "n": 3,
+      "title": "Your attendance",
+      "caption": "Every service you have been marked at.",
+      "speech": "My Attendance shows every service you were recorded at, your current streak, and how your attendance looks over the last few weeks."
+    },
+    {
+      "n": 4,
+      "title": "Your fellowship",
+      "caption": "The small group you belong to.",
+      "speech": "Fellowships shows the group you belong to, when it meets and where. If you are not in one yet, the map will find you the nearest."
+    },
+    {
+      "n": 5,
+      "title": "Your departments",
+      "caption": "The teams you serve on.",
+      "speech": "Departments lists the teams you serve on, when you are next on the rota, and the uniform for that service if there is one."
+    },
+    {
+      "n": 6,
+      "title": "Checking in",
+      "caption": "Scan, and you are marked present.",
+      "speech": "When you arrive, open Check in and scan the code on the screen at the door. That marks you present without queueing at the desk."
+    },
+    {
+      "n": 7,
+      "title": "Forms",
+      "caption": "Baptism, testimony, a first visit.",
+      "speech": "Forms is where you ask for a baptism, share a testimony, or register somebody visiting for the first time. A leader picks it up from there."
+    },
+    {
+      "n": 8,
+      "title": "Your profile",
+      "caption": "Your details, and who can see them.",
+      "speech": "Your profile holds your contact details and your settings, including the language Kairos speaks to you in."
+    }
+  ]
+}

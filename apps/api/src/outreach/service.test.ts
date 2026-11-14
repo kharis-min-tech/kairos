@@ -211,7 +211,7 @@ describe('Outreach Programs Service', () => {
       const result = await listPrograms(mockDb, pastorAuth, { page: 1, limit: 20 });
 
       expect(result.data).toHaveLength(2);
-      expect(result.pagination.total).toBe(2);
+      expect(result.meta.total).toBe(2);
     });
 
     it('should filter by branch for Pastor users', async () => {

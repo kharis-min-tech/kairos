@@ -195,13 +195,13 @@ export function CustomSelect({
         onClick={toggleOpen}
         onKeyDown={handleKeyDown}
         className={cn(
-          'flex h-10 w-full items-center justify-between rounded-lg border border-input/15 bg-background px-3 text-sm transition-colors',
+          'flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-input/15 bg-background px-3 text-sm transition-colors',
           'focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20',
           'disabled:cursor-not-allowed disabled:opacity-50',
           displayLabel ? 'text-foreground' : 'text-muted-foreground',
         )}
       >
-        <span>{displayLabel ?? placeholder}</span>
+        <span className="min-w-0 flex-1 truncate text-left">{displayLabel ?? placeholder}</span>
         <ChevronDown
           className={cn(
             'h-4 w-4 text-muted-foreground transition-transform duration-150 flex-shrink-0',

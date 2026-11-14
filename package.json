@@ -17,16 +17,20 @@
     "db:fresh": "turbo db:fresh --filter=@kairos/database",
     "db:studio": "turbo db:studio --filter=@kairos/database",
     "db:seed": "turbo db:seed --filter=@kairos/database",
-    "db:seed-souls": "turbo db:seed-souls --filter=@kairos/database"
+    "db:seed-souls": "turbo db:seed-souls --filter=@kairos/database",
+    "i18n:audit": "node tools/i18n-audit/audit.mjs",
+    "i18n:check": "node tools/i18n-audit/audit.mjs --ci"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-  
     "turbo": "^2.4.4",
     "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "npm@10.9.2"
+  "packageManager": "npm@10.9.2",
+  "overrides": {
+    "@types/react": "^19.0.0"
+  }
 }

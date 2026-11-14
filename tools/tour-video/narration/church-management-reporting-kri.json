@@ -1,0 +1,19 @@
+{
+  "role": "church-management-reporting-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wetin dɛn de Ripɔt",
+      "caption": "Atɛndans, groth, ɛngejmɛnt.",
+      "speech": "Ripɔt kɔva atɛndans trɛnd, mɛmbaship groth, ɛngejmɛnt ɛn awtrich, ɛvri wan insay wetin yu rol kin si."
+    },
+    {
+      "n": 2,
+      "title": "Chenj di Tɛm",
+      "caption": "Di las mɔnt, ɔ di las ia.",
+      "speech": "Chenj di tɛm fɔ mek am big ɔ smɔl. Di nɔmba dɛn ɛn ɛvri chat de fɔlo am."
+    }
+  ]
+}

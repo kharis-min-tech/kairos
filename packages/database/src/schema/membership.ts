@@ -1,0 +1,359 @@
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  date,
+  integer,
+  boolean,
+  timestamp,
+  index,
+  primaryKey,
+} from 'drizzle-orm/pg-core';
+import { relations, sql } from 'drizzle-orm';
+import { members } from './members';
+import { branches } from './branches';
+
+// ============================================================================
+// MEMBERSHIP CLASSES
+//
+// The machinery behind `members.membershipClassCompletedAt`, the canonical
+// "is this person a confirmed Member?" signal (see
+// apps/api/src/lib/member-predicates.ts). Graduating a cohort is what stamps
+// that column; the admin override in members/service.ts remains the manual
+// escape hatch.
+//
+// BRANCH ISOLATION EXCEPTION — READ BEFORE "FIXING" THIS.
+// `membershipCohorts` has NO branchId on purpose. Membership classes run
+// church-wide rather than per branch, so a cohort is a global row rather than
+// one belonging to a branch. This is a deliberate product decision, not an
+// oversight. Branch reporting survives because the member's home branch is
+// denormalised onto `membershipEnrollments.branchId` at enrolment.
+//
+// Deliberately independent of the new believers pipeline: no auto-enrolment,
+// no bulk enrol from that module, no foreign keys between the two.
+// ============================================================================
+
+// ============================================================================
+// MEMBERSHIP_COHORTS
+// One run of the four-week class, with a unique name like "Autumn 2026".
+// ============================================================================
+export const membershipCohorts = pgTable(
+  'membership_cohorts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: varchar('name', { length: 120 }).notNull(),
+    description: text('description'),
+    startDate: date('start_date').notNull(),
+    /**
+     * The induction / graduation ceremony date. Completing session 4 is not
+     * completion on its own — a member must attend this to graduate.
+     */
+    graduationDate: date('graduation_date'),
+    /** Members must sit AND pass the final test on or before this date. */
+    finalTestDeadline: date('final_test_deadline'),
+    status: varchar('status', { length: 20 }).notNull().default('planned'),
+    /**
+     * Whether admissions into this cohort are open. Separate from `status` so
+     * an already-running cohort can be closed to late joiners. Enrolment is
+     * never self-service: see `membershipInterest` for how people get in.
+     */
+    enrolmentOpen: boolean('enrolment_open').notNull().default(true),
+    /**
+     * Pass marks are per cohort so a run can set a different bar without
+     * rewriting historical results.
+     */
+    homeworkPassMark: integer('homework_pass_mark').notNull().default(50),
+    quizPassMark: integer('quiz_pass_mark').notNull().default(50),
+    finalTestPassMark: integer('final_test_pass_mark').notNull().default(50),
+    notes: text('notes'),
+    createdBy: uuid('created_by').references(() => members.id, { onDelete: 'set null' }),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_membership_cohorts_status').on(table.status),
+    index('idx_membership_cohorts_start_date').on(table.startDate),
+    index('idx_membership_cohorts_is_active').on(table.isActive),
+    // Case-insensitive unique name among active cohorts — enforced by the
+    // partial index in migration 0047 (Drizzle can't express LOWER() + WHERE).
+    sql`CHECK (status IN ('planned', 'active', 'completed', 'cancelled'))`,
+    sql`CHECK (homework_pass_mark BETWEEN 0 AND 100 AND quiz_pass_mark BETWEEN 0 AND 100 AND final_test_pass_mark BETWEEN 0 AND 100)`,
+    sql`CHECK (graduation_date IS NULL OR graduation_date >= start_date)`,
+  ],
+);
+
+// ============================================================================
+// MEMBERSHIP_INTEREST
+// The pool. Migration 0048.
+//
+// Enrolment is NOT self-service. Expressing interest puts a member in this
+// pool, which belongs to no cohort — you join it before there is an intake to
+// join. A Membership Admin later admits people from the pool into a specific
+// cohort, which is what creates the `membershipEnrollments` row.
+//
+// The gap between the two stages is the whole point. Someone who expressed
+// interest and then stopped attending for a season must not roll silently
+// into the next intake, so entries carry an expiry and lapse on their own.
+// ============================================================================
+export const membershipInterest = pgTable(
+  'membership_interest',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    memberId: uuid('member_id')
+      .notNull()
+      .references(() => members.id, { onDelete: 'cascade' }),
+    /**
+     * Denormalised from `members.homeBranchId` when interest is expressed,
+     * for the same reason `membershipEnrollments` carries it: the pool is
+     * church-wide, so this is a branch leader's only handle on it.
+     */
+    branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'set null' }),
+    status: varchar('status', { length: 20 }).notNull().default('waiting'),
+    expressedAt: timestamp('expressed_at').defaultNow().notNull(),
+    /**
+     * When this entry stops counting as waiting. Stored per row rather than
+     * derived from a constant, so changing the window later cannot
+     * retroactively lapse or revive anybody.
+     *
+     * The lapse is MATERIALISED, not computed at read time: the service runs
+     * `lapseExpiredInterest` before any pool read or write. That keeps the
+     * partial unique index below honest (an expired 'waiting' row would
+     * otherwise block the member from re-expressing interest) and needs no
+     * cron that could silently stop running.
+     */
+    expiresAt: timestamp('expires_at').notNull(),
+    admittedCohortId: uuid('admitted_cohort_id').references(() => membershipCohorts.id, {
+      onDelete: 'set null',
+    }),
+    admittedAt: timestamp('admitted_at'),
+    admittedBy: uuid('admitted_by').references(() => members.id, { onDelete: 'set null' }),
+    notes: text('notes'),
+    /**
+     * Soft-archive gate, matching the schema-wide convention. The sweep in
+     * the service flips this to FALSE ~30 days after `status` flipped to
+     * 'lapsed', so admins have a grace window before the entry disappears
+     * from the pool page. When was it archived? Read `updated_at`, or for a
+     * guaranteed-immutable timestamp emit into `audit_log`. Migration 0050
+     * (0049's `archived_at` timestamp was reconciled to this shape).
+     */
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_membership_interest_member_id').on(table.memberId),
+    index('idx_membership_interest_branch_id').on(table.branchId),
+    index('idx_membership_interest_status').on(table.status),
+    // The expiry index and the one-live-entry-per-member partial unique index
+    // both live in migration 0048 (Drizzle can't express their WHERE clauses).
+    sql`CHECK (status IN ('waiting', 'admitted', 'lapsed', 'withdrawn'))`,
+    sql`CHECK (expires_at > expressed_at)`,
+  ],
+);
+
+// ============================================================================
+// MEMBERSHIP_SESSIONS
+// Four per cohort, numbered 1 to 4.
+// ============================================================================
+export const membershipSessions = pgTable(
+  'membership_sessions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    cohortId: uuid('cohort_id')
+      .notNull()
+      .references(() => membershipCohorts.id, { onDelete: 'cascade' }),
+    sessionNumber: integer('session_number').notNull(),
+    title: varchar('title', { length: 200 }).notNull(),
+    sessionDate: timestamp('session_date'),
+    location: text('location'),
+    teacherId: uuid('teacher_id').references(() => members.id, { onDelete: 'set null' }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_membership_sessions_teacher_id').on(table.teacherId),
+    sql`CHECK (session_number BETWEEN 1 AND 4)`,
+  ],
+);
+
+// ============================================================================
+// MEMBERSHIP_ENROLLMENTS
+// One row per member per cohort.
+// ============================================================================
+export const membershipEnrollments = pgTable(
+  'membership_enrollments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    cohortId: uuid('cohort_id')
+      .notNull()
+      .references(() => membershipCohorts.id, { onDelete: 'cascade' }),
+    memberId: uuid('member_id')
+      .notNull()
+      .references(() => members.id, { onDelete: 'cascade' }),
+    /**
+     * Denormalised from `members.homeBranchId` at enrolment. Cohorts are
+     * church-wide, so this is the only handle a branch leader has for
+     * filtering the roster to their own people.
+     */
+    branchId: uuid('branch_id').references(() => branches.id, { onDelete: 'set null' }),
+    status: varchar('status', { length: 20 }).notNull().default('enrolled'),
+    enrolledAt: timestamp('enrolled_at').defaultNow().notNull(),
+    /**
+     * TRUE when the member reached this cohort through the interest pool,
+     * FALSE when an admin added them directly (the paper-signup case).
+     * Renamed from `self_enrolled` in 0048; self-enrolment no longer exists.
+     */
+    fromPool: boolean('from_pool').notNull().default(false),
+    /**
+     * Final test. `passed` is derived against the cohort's pass mark at write
+     * time and stored, so historical results survive a later change to the mark.
+     */
+    finalTestScore: integer('final_test_score'),
+    finalTestPassed: boolean('final_test_passed'),
+    finalTestTakenAt: timestamp('final_test_taken_at'),
+    /** The induction / graduation ceremony. Required for graduation. */
+    inductionAttended: boolean('induction_attended').notNull().default(false),
+    inductionAttendedAt: timestamp('induction_attended_at'),
+    graduatedAt: timestamp('graduated_at'),
+    withdrawnReason: varchar('withdrawn_reason', { length: 30 }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('idx_membership_enrollments_member_id').on(table.memberId),
+    index('idx_membership_enrollments_branch_id').on(table.branchId),
+    index('idx_membership_enrollments_status').on(table.status),
+    // Unique (cohort, member) and the one-open-enrolment-per-member partial
+    // index both live in migration 0047.
+    sql`CHECK (status IN ('enrolled', 'graduated', 'withdrawn', 'deferred'))`,
+    sql`CHECK (final_test_score IS NULL OR final_test_score BETWEEN 0 AND 100)`,
+    sql`CHECK (withdrawn_reason IS NULL OR withdrawn_reason IN ('stopped_attending', 'withdrew', 'moved_away', 'deferred_to_next', 'other'))`,
+  ],
+);
+
+// ============================================================================
+// MEMBERSHIP_SESSION_RECORDS
+// Per (session, enrollment): attendance plus the homework and quiz marks.
+// A score and its pass flag are written together or not at all.
+// ============================================================================
+export const membershipSessionRecords = pgTable(
+  'membership_session_records',
+  {
+    sessionId: uuid('session_id')
+      .notNull()
+      .references(() => membershipSessions.id, { onDelete: 'cascade' }),
+    enrollmentId: uuid('enrollment_id')
+      .notNull()
+      .references(() => membershipEnrollments.id, { onDelete: 'cascade' }),
+    attended: boolean('attended').notNull().default(false),
+    homeworkScore: integer('homework_score'),
+    homeworkPassed: boolean('homework_passed'),
+    quizScore: integer('quiz_score'),
+    quizPassed: boolean('quiz_passed'),
+    notes: text('notes'),
+    recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+    recordedBy: uuid('recorded_by').references(() => members.id, { onDelete: 'set null' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.sessionId, table.enrollmentId] }),
+    index('idx_membership_session_records_enrollment_id').on(table.enrollmentId),
+    sql`CHECK ((homework_score IS NULL AND homework_passed IS NULL) OR (homework_score BETWEEN 0 AND 100 AND homework_passed IS NOT NULL))`,
+    sql`CHECK ((quiz_score IS NULL AND quiz_passed IS NULL) OR (quiz_score BETWEEN 0 AND 100 AND quiz_passed IS NOT NULL))`,
+  ],
+);
+
+// ============================================================================
+// RELATIONS
+// ============================================================================
+export const membershipCohortsRelations = relations(membershipCohorts, ({ one, many }) => ({
+  createdByMember: one(members, {
+    fields: [membershipCohorts.createdBy],
+    references: [members.id],
+  }),
+  sessions: many(membershipSessions),
+  enrollments: many(membershipEnrollments),
+  admittedFrom: many(membershipInterest),
+}));
+
+export const membershipInterestRelations = relations(membershipInterest, ({ one }) => ({
+  member: one(members, {
+    fields: [membershipInterest.memberId],
+    references: [members.id],
+    relationName: 'membershipInterested',
+  }),
+  branch: one(branches, {
+    fields: [membershipInterest.branchId],
+    references: [branches.id],
+  }),
+  admittedCohort: one(membershipCohorts, {
+    fields: [membershipInterest.admittedCohortId],
+    references: [membershipCohorts.id],
+  }),
+  admittedByMember: one(members, {
+    fields: [membershipInterest.admittedBy],
+    references: [members.id],
+    relationName: 'membershipAdmitter',
+  }),
+}));
+
+export const membershipSessionsRelations = relations(membershipSessions, ({ one, many }) => ({
+  cohort: one(membershipCohorts, {
+    fields: [membershipSessions.cohortId],
+    references: [membershipCohorts.id],
+  }),
+  teacher: one(members, {
+    fields: [membershipSessions.teacherId],
+    references: [members.id],
+  }),
+  records: many(membershipSessionRecords),
+}));
+
+export const membershipEnrollmentsRelations = relations(
+  membershipEnrollments,
+  ({ one, many }) => ({
+    cohort: one(membershipCohorts, {
+      fields: [membershipEnrollments.cohortId],
+      references: [membershipCohorts.id],
+    }),
+    member: one(members, {
+      fields: [membershipEnrollments.memberId],
+      references: [members.id],
+      relationName: 'membershipStudent',
+    }),
+    branch: one(branches, {
+      fields: [membershipEnrollments.branchId],
+      references: [branches.id],
+    }),
+    records: many(membershipSessionRecords),
+  }),
+);
+
+export const membershipSessionRecordsRelations = relations(
+  membershipSessionRecords,
+  ({ one }) => ({
+    session: one(membershipSessions, {
+      fields: [membershipSessionRecords.sessionId],
+      references: [membershipSessions.id],
+    }),
+    enrollment: one(membershipEnrollments, {
+      fields: [membershipSessionRecords.enrollmentId],
+      references: [membershipEnrollments.id],
+    }),
+    recordedByMember: one(members, {
+      fields: [membershipSessionRecords.recordedBy],
+      references: [members.id],
+    }),
+  }),
+);
+
+export type MembershipCohort = typeof membershipCohorts.$inferSelect;
+export type NewMembershipCohort = typeof membershipCohorts.$inferInsert;
+export type MembershipInterestRow = typeof membershipInterest.$inferSelect;
+export type NewMembershipInterestRow = typeof membershipInterest.$inferInsert;
+export type MembershipSession = typeof membershipSessions.$inferSelect;
+export type MembershipEnrollment = typeof membershipEnrollments.$inferSelect;
+export type MembershipSessionRecord = typeof membershipSessionRecords.$inferSelect;

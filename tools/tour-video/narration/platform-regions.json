@@ -1,0 +1,19 @@
+{
+  "role": "platform-regions",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Regions",
+      "caption": "Branches, grouped by geography.",
+      "speech": "Regions group branches geographically, so reports can cover a country or a cluster rather than one location at a time."
+    },
+    {
+      "n": 2,
+      "title": "Branches attached",
+      "caption": "A region with branches cannot be deleted.",
+      "speech": "Each region shows the branches attached to it. One with branches cannot be deleted until every branch is moved or removed."
+    }
+  ]
+}

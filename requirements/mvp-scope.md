@@ -422,7 +422,7 @@ These are design choices, not gaps to fix on the current branch.
 
 ## 9. Financial Management (Donations)
 
-**Status: 🚧 In-flight** — Module is being delivered in an **open PR pending review on a separate branch**. The current `rebuild-v2` branch ships placeholder mock data on the reports page until the PR lands. Stripe integration remains the cloud-deferred portion; manual donation entry can land independently as part of the local-first phase.
+**Status: 🚧 In-flight** — Module is being delivered in an **open PR pending review on a separate branch**. The current `main` branch ships placeholder mock data on the reports page until the PR lands. Stripe integration remains the cloud-deferred portion; manual donation entry can land independently as part of the local-first phase.
 
 ### Must Have (Week 7-8) - CRITICAL
 
@@ -780,7 +780,7 @@ These are design choices, not gaps to fix on the current branch.
 
 ### Must Be Functional:
 
-Legend: ✅ shipped on `rebuild-v2` · 🚧 in open PR / partial · 📅 still to do · ☁️ cloud-deferred (intentional)
+Legend: ✅ shipped on `main` · 🚧 in open PR / partial · 📅 still to do · ☁️ cloud-deferred (intentional)
 
 1. ✅ Members can register and log in
 2. ✅ Admins can manage members, branches, departments, fellowships
@@ -944,7 +944,7 @@ All open questions have been answered:
 
 **Document Version:** 1.1
 **Original Date:** February 3, 2026
-**Last Reconciled Against Codebase:** May 18, 2026 — branch `rebuild-v2`
+**Last Reconciled Against Codebase:** May 18, 2026 — branch `rebuild-v2` (now consolidated into `main` on 2026-07-21)
 **Status:** Living document — reconciled to shipped state. Forms (§10) and Notifications (§11) remain in scope; Donations (§9) and Service Attendance (§6) are in open PRs awaiting review.
 
 **Next Steps:**

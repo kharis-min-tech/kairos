@@ -133,7 +133,7 @@ describe('listMembers', () => {
     );
     const result = await listMembers(mockDb, adminAuth, { page: 1, limit: 20 });
     expect(result.data).toHaveLength(2);
-    expect(result.pagination.total).toBe(2);
+    expect(result.meta.total).toBe(2);
   });
 
   it('filters by branch for non-admin', async () => {
@@ -354,6 +354,91 @@ describe('assignRole', () => {
     );
     await expect(assignRole(mockDb, memberId, { roleId, branchId }, adminAuth))
       .rejects.toThrow('Member already has this role in this branch');
+  });
+
+  // ── Scope shape is derived from the role, not assumed ────
+  //
+  // This used to hardcode `scopeKind: 'branch'`, which was true of every role
+  // until the church scope arrived. Granting a church-scoped role then wrote a
+  // branch-scoped row that `resolveGrants` turns into a grant matching
+  // NOTHING: the UI reported success and the grantee stayed locked out, with
+  // no error anywhere to explain it. Silent, so it needs a test.
+
+  it('writes a CHURCH scope for Membership Admin, not a branch one', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Membership Admin' }],
+      [{ id: branchId }],
+      [],
+    );
+    const insertSpy = vi.fn(() => createChain([{ id: roleAssignmentId }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
+
+    await assignRole(mockDb, memberId, { roleId, branchId }, adminAuth);
+
+    const chain = insertSpy.mock.results[0]!.value as Record<string, ReturnType<typeof vi.fn>>;
+    const written = chain['values']!.mock.calls[0]![0] as Record<string, unknown>;
+    expect(written['scopeKind']).toBe('church');
+    // The nil UUID: a church scope names no entity.
+    expect(written['scopeId']).toBe('00000000-0000-0000-0000-000000000000');
+    // branchId stays the supplied branch — a query handle, not the reach.
+    expect(written['branchId']).toBe(branchId);
+  });
+
+  it('still writes a branch scope for a branch-scoped role', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Branch System Admin' }],
+      [{ id: branchId }],
+      [],
+    );
+    const insertSpy = vi.fn(() => createChain([{ id: roleAssignmentId }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
+
+    await assignRole(mockDb, memberId, { roleId, branchId }, adminAuth);
+
+    const chain = insertSpy.mock.results[0]!.value as Record<string, ReturnType<typeof vi.fn>>;
+    const written = chain['values']!.mock.calls[0]![0] as Record<string, unknown>;
+    expect(written['scopeKind']).toBe('branch');
+    expect(written['scopeId']).toBe(branchId);
+  });
+
+  it('treats an unmapped operational role as branch-scoped', async () => {
+    // "Worship Lead" and friends carry no authority and are not in the
+    // FunctionalRole catalog. They keep the shape they have always had.
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Worship Lead' }],
+      [{ id: branchId }],
+      [],
+    );
+    const insertSpy = vi.fn(() => createChain([{ id: roleAssignmentId }]));
+    (mockDb.insert as ReturnType<typeof vi.fn>).mockImplementation(insertSpy);
+
+    await assignRole(mockDb, memberId, { roleId, branchId }, adminAuth);
+
+    const chain = insertSpy.mock.results[0]!.value as Record<string, ReturnType<typeof vi.fn>>;
+    const written = chain['values']!.mock.calls[0]![0] as Record<string, unknown>;
+    expect(written['scopeKind']).toBe('branch');
+  });
+
+  it('refuses a fellowship-scoped role here, since it has no fellowship to scope to', async () => {
+    setupSelectSequence([{ id: memberId }], [{ id: roleId, roleName: 'Fellowship Leader' }]);
+    await expect(
+      assignRole(mockDb, memberId, { roleId, branchId }, adminAuth),
+    ).rejects.toThrow(/scoped to a fellowship/);
+  });
+
+  it('reports a duplicate church grant in church terms', async () => {
+    setupSelectSequence(
+      [{ id: memberId }],
+      [{ id: roleId, roleName: 'Membership Admin' }],
+      [{ id: branchId }],
+      [{ id: 'existing-id' }],
+    );
+    await expect(
+      assignRole(mockDb, memberId, { roleId, branchId }, adminAuth),
+    ).rejects.toThrow('Member already has this church-wide role');
   });
 
   it('refuses cross-branch assignment from a branch-scoped admin', async () => {
@@ -831,8 +916,11 @@ describe('getMember — minor redaction', () => {
   });
 
   it('guardian sees their own child full record', async () => {
-    // select 1: member row; guardian match short-circuits capability lookup
-    setupSelect([minorMember]);
+    // select 1: member row; 2: viewer SG-Lead branches → none;
+    // 3: the members this viewer guards → includes this child.
+    // The guardian link is a row now, not a column on the member, so it costs
+    // a query instead of a short-circuit.
+    setupSelectSequence([minorMember], [], [{ memberId: 'minor-1' }]);
     const result = await getMember(mockDb, 'minor-1', guardianAuth);
     expect(result.redacted).toBe(false);
     expect(result.phone).toBe('555000');
@@ -843,7 +931,7 @@ describe('getMember — minor redaction', () => {
     // The guardian link is branch-independent — a guardian scoped to another
     // branch must not be locked out of their own child's record.
     const crossBranchGuardian = { ...guardianAuth, branchId: otherBranchId };
-    setupSelect([minorMember]); // guardian match short-circuits, no capability query
+    setupSelectSequence([minorMember], [], [{ memberId: 'minor-1' }]);
     const result = await getMember(mockDb, 'minor-1', crossBranchGuardian);
     expect(result.redacted).toBe(false);
     expect(result.dateOfBirth).toBe('2016-01-01');
@@ -911,8 +999,9 @@ describe('getMember — minor redaction', () => {
 describe('listMembers — minor redaction', () => {
   it('redacts in-list minors for an unrelated in-branch leader', async () => {
     const adult = { ...minorMember, id: 'adult-1', dateOfBirth: '1980-01-01' };
-    // select 1: viewer SG-Lead branches → none; select 2: rows; select 3: count
-    setupSelectSequence([], [minorMember, adult], [{ count: 2 }]);
+    // select 1: viewer SG-Lead branches → none; 2: members they guard → none;
+    // 3: rows; 4: count
+    setupSelectSequence([], [], [minorMember, adult], [{ count: 2 }]);
     const result = await listMembers(mockDb, leaderAuth, { page: 1, limit: 20 });
     const minorRow = result.data.find((m) => m.id === 'minor-1')!;
     const adultRow = result.data.find((m) => m.id === 'adult-1')!;
@@ -926,8 +1015,9 @@ describe('listMembers — minor redaction', () => {
   });
 
   it('does not redact for a guardian viewing their own child in the list', async () => {
-    // guardian has no SG-Lead role; select 1: SG branches → none; select 2: rows; select 3: count
-    setupSelectSequence([], [minorMember], [{ count: 1 }]);
+    // guardian has no SG-Lead role; 1: SG branches → none; 2: the members they
+    // guard → this child; 3: rows; 4: count
+    setupSelectSequence([], [{ memberId: 'minor-1' }], [minorMember], [{ count: 1 }]);
     const result = await listMembers(mockDb, guardianAuth, { page: 1, limit: 20 });
     const minorRow = result.data[0]!;
     expect(minorRow.redacted).toBe(false);
@@ -1074,15 +1164,17 @@ describe('upsertHealthRecord', () => {
 });
 
 describe('listUnguardedMinors', () => {
+  // The query now counts guardian LINKS and aggregates their names, rather
+  // than left-joining one column: "nobody was ever named" and "everyone named
+  // is deactivated" are different rows, and a child can have several.
   const unguardedRow = {
     id: 'minor-1',
     firstName: 'Lily',
     lastName: 'Thompson',
     dateOfBirth: '2016-01-01',
     branchName: 'Lagos Branch',
-    guardianMemberId: null,
-    guardianFirstName: null,
-    guardianLastName: null,
+    linkedGuardianCount: 0,
+    guardianNames: null,
   };
 
   it('admin gets the list (no capability query) with guardianStatus "none"', async () => {
@@ -1090,16 +1182,17 @@ describe('listUnguardedMinors', () => {
     const result = await listUnguardedMinors(mockDb, adminAuth, {});
     expect(result).toHaveLength(1);
     expect(result[0]!.guardianStatus).toBe('none');
-    expect(result[0]!.guardianName).toBeNull();
+    expect(result[0]!.guardianNames).toBeNull();
   });
 
-  it('maps an inactive-guardian row to guardianStatus "inactive" with the name', async () => {
+  it('maps an inactive-guardian row to guardianStatus "inactive" with the names', async () => {
     setupSelect([
-      { ...unguardedRow, guardianMemberId: guardianId, guardianFirstName: 'Emma', guardianLastName: 'Thompson' },
+      { ...unguardedRow, linkedGuardianCount: 2, guardianNames: 'Emma Thompson, Joseph Thompson' },
     ]);
     const result = await listUnguardedMinors(mockDb, adminAuth, {});
     expect(result[0]!.guardianStatus).toBe('inactive');
-    expect(result[0]!.guardianName).toBe('Emma Thompson');
+    // Both named guardians, primary first — the point of the aggregate.
+    expect(result[0]!.guardianNames).toBe('Emma Thompson, Joseph Thompson');
   });
 
   it('allows a Safeguarding Lead scoped to the branch', async () => {

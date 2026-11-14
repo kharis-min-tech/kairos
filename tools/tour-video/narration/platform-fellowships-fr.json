@@ -1,0 +1,25 @@
+{
+  "role": "platform-fellowships-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Les cellules",
+      "caption": "Chaque petit groupe, et son type.",
+      "speech": "Cellules liste chaque petit groupe. K-Groups, Kharis Express, New Breeds. Avec son responsable, et ses horaires."
+    },
+    {
+      "n": 2,
+      "title": "Filtrer par type",
+      "caption": "Réduire à ce que vous cherchez.",
+      "speech": "Les puces filtrent par type. Et le menu limite à une antenne, quand il y en a beaucoup."
+    },
+    {
+      "n": 3,
+      "title": "Trouver sur la carte",
+      "caption": "La cellule la plus proche.",
+      "speech": "La carte les place géographiquement. Elle répond à la vraie question : laquelle est la plus proche."
+    }
+  ]
+}

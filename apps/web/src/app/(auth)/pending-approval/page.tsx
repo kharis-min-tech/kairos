@@ -1,15 +1,32 @@
-import Link from 'next/link';
-import { KharisCardHeader } from '../kharis-logo';
+'use client';
 
-export default function PendingApprovalPage() {
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { KharisCardHeader } from '../kharis-logo';
+import { useAuthStore } from '@/lib/auth-store';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+
+export default function PendingApprovalPage() {  const { t } = useTranslation(['auth', 'common']);
+
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { logout, accessToken } = useAuthStore();
+
+  function handleSignOut() {
+    logout();
+    queryClient.clear();
+    router.replace('/login');
+  }
+
   return (
     <>
       <KharisCardHeader
-        heading="Account pending approval"
-        subtitle="Your email has been verified. A church administrator will review and approve your account shortly."
+        heading={t('auth:accountPendingApproval')}
+        subtitle={t('auth:yourEmailHasBeenVerifiedA')}
       />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5">
           <div className="rounded-lg bg-[#5D3FD3]/5 p-5 text-center">
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#5D3FD3]/10">
@@ -28,28 +45,32 @@ export default function PendingApprovalPage() {
                 />
               </svg>
             </div>
-            <p className="text-sm text-muted-foreground">
-              You&apos;ll receive a notification once your account is approved.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('auth:youLlReceiveNotificationOnceAccount')}</p>
           </div>
 
-          <div className="relative py-1">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-muted-foreground/10" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">
-                or
-              </span>
-            </div>
-          </div>
+          {accessToken ? (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="h-11 w-full rounded-lg border border-[#5D3FD3]/30 bg-transparent text-sm font-semibold text-[#5D3FD3] transition-colors hover:bg-[#5D3FD3]/5"
+            >{t('auth:signOut')}</button>
+          ) : (
+            <>
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-muted-foreground/10" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-3 text-xs uppercase tracking-wider text-muted-foreground/40">{t('auth:or')}</span>
+                </div>
+              </div>
 
-          <p className="text-center text-sm text-muted-foreground/70">
-            Already approved?{' '}
-            <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">
-              Sign in
-            </Link>
-          </p>
+              <p className="text-center text-sm text-muted-foreground/70">
+                {t('auth:alreadyApproved')}{' '}
+                <Link href="/login" className="font-semibold text-[#5D3FD3] hover:opacity-80">{t('auth:signIn')}</Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </>

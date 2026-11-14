@@ -25,6 +25,30 @@ export interface Env {
   AWS_REGION: string;
   EMAIL_FROM: string;
   FRONTEND_URL: string;
+  // Set per environment in wrangler.jsonc (prod: `kairos-transactional`,
+  // staging: `kairos-staging`). Optional — mailer falls back to SES identity
+  // default when absent.
+  SES_CONFIGURATION_SET?: string;
+  // Cloudflare Images. ACCOUNT_ID is the numeric account id (used in the API
+  // path); ACCOUNT_HASH is the short public hash (used in the delivery URL).
+  // TOKEN is an API token with `Images:Edit`. All three are set via
+  // `wrangler secret put` per environment.
+  CF_IMAGES_ACCOUNT_ID?: string;
+  CF_IMAGES_ACCOUNT_HASH?: string;
+  CF_IMAGES_TOKEN?: string;
+  // OAuth (Better-Auth Phase 1). All optional — a missing provider secret
+  // just makes that provider's /start return 501. See BETTER_AUTH_SETUP.md.
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  MICROSOFT_CLIENT_ID?: string;
+  MICROSOFT_CLIENT_SECRET?: string;
+  APPLE_CLIENT_ID?: string;
+  APPLE_TEAM_ID?: string;
+  APPLE_KEY_ID?: string;
+  APPLE_PRIVATE_KEY?: string;
+  // Optional override for the branch a new SSO-signup member is filed under.
+  // If unset the service falls through to the oldest active branch.
+  DEFAULT_HOME_BRANCH_ID?: string;
 }
 
 let app: ReturnType<typeof createApp> | null = null;
@@ -39,6 +63,7 @@ export default {
         awsRegion: env.AWS_REGION,
         emailFrom: env.EMAIL_FROM,
         frontendUrl: env.FRONTEND_URL,
+        configurationSetName: env.SES_CONFIGURATION_SET,
       });
       mailerBound = true;
     }
@@ -66,6 +91,7 @@ export default {
         awsRegion: env.AWS_REGION,
         emailFrom: env.EMAIL_FROM,
         frontendUrl: env.FRONTEND_URL,
+        configurationSetName: env.SES_CONFIGURATION_SET,
       });
       mailerBound = true;
     }

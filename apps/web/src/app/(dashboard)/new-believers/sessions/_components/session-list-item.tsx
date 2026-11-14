@@ -6,7 +6,10 @@ import {
   formatSessionTime,
   getSessionStageDef,
   isUpcomingSession,
+  sessionTopic,
 } from './session-helpers';
+import { stageLabel } from '../../_components/stage-config';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   session: NewBelieverSession;
@@ -23,6 +26,7 @@ export function SessionListItem({
   isSelected,
   onSelect,
 }: Props) {
+  const { t } = useTranslation(['newBelievers', 'common']);
   const stageDef = getSessionStageDef(session.sessionStage);
   const upcoming = isUpcomingSession(session.sessionDate);
 
@@ -56,15 +60,18 @@ export function SessionListItem({
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
           {stageDef && (
-            <span className="font-medium text-[#5D3FD3]">{stageDef.label}</span>
+            <span className="font-medium text-[#5D3FD3]">{stageLabel(t, stageDef)}</span>
           )}
-          <span className="truncate">{session.topic}</span>
+          <span className="truncate">{sessionTopic(t, session)}</span>
         </div>
         {(enrolledCount !== undefined || attendanceCount !== undefined) && (
           <div className="mt-1 text-xs text-muted-foreground">
             {upcoming
-              ? `${enrolledCount ?? 0} enrolled`
-              : `${attendanceCount ?? 0}/${enrolledCount ?? 0} attended`}
+              ? t('newBelievers:enrolledCount', { count: enrolledCount ?? 0 })
+              : t('newBelievers:attendedOfEnrolled', {
+                  attended: attendanceCount ?? 0,
+                  enrolled: enrolledCount ?? 0,
+                })}
           </div>
         )}
       </div>

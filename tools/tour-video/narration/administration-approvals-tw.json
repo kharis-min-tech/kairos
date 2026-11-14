@@ -1,0 +1,19 @@
+{
+  "role": "administration-approvals-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Nhwɛmu no",
+      "caption": "Nnipa a wɔretwɛn sɛ wɔbɛgye wɔn.",
+      "speech": "Ɔpene nhwɛmu no kura obiara a wakyerɛw ne din nanso wɔnnyee no ntoo mu. Kɔsɛ wɔgye no, ɔntumi nhyɛ mu."
+    },
+    {
+      "n": 2,
+      "title": "Gye obi to mu",
+      "caption": "Hwɛ asɔre baa no, na gye no.",
+      "speech": "Hwɛ asɔre baa a wayi ne nsɛm a ɔde maeɛ, na gye no to mu. Ɔbɛtumi ahyɛ mu firi saa berɛ no."
+    }
+  ]
+}

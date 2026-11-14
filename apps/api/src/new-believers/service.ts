@@ -1,6 +1,7 @@
-import { eq, and, or, asc, desc, lt, sql, count } from 'drizzle-orm';
+import { eq, and, or, asc, desc, lt, sql, count, inArray } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { authHasCapability } from '../lib/grants';
+import { resolveLeaderScopeMemberIds } from '../lib/leader-scope';
 import {
   newBelieverEnrollments,
   newBelieverSessions,
@@ -244,15 +245,26 @@ export async function listEnrollments(
       // No branch context for a non-admin/non-pastor → return empty rather than leak.
       return { data: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
     }
-    const [isNbLeader, hasTeacherRole] = await Promise.all([
+    const [isNbLeader, hasTeacherRole, ledMemberIds] = await Promise.all([
       isNewBelieversDeptLeader(db, auth.memberId, scopedBranchId),
       isNewBelieverTeacher(db, auth.memberId, scopedBranchId),
+      // A fellowship or department leader sees their own people's progress.
+      // Shepherding someone and being unable to see that they are three weeks
+      // into the New Believers pipeline is the same pastoral blindness the
+      // branch-level roles were given sight to avoid, one altitude down.
+      //
+      // Returns null for a caller who leads nothing, which here contributes
+      // no rows rather than meaning "no narrowing".
+      resolveLeaderScopeMemberIds(db, auth, scopedBranchId),
     ]);
     if (!isNbLeader && !hasTeacherRole) {
       const personaOr = or(
         eq(newBelieverEnrollments.memberId, auth.memberId),
         eq(newBelieverEnrollments.teacherId, auth.memberId),
         eq(newBelieverEnrollments.mentorId, auth.memberId),
+        ledMemberIds && ledMemberIds.length > 0
+          ? inArray(newBelieverEnrollments.memberId, ledMemberIds)
+          : undefined,
       );
       if (personaOr) personaConditions.push(personaOr);
     }
@@ -401,6 +413,7 @@ export async function getEnrollment(db: Database, auth: AuthContext, enrollmentI
       notes: newBelieverAttendance.notes,
       recordedAt: newBelieverAttendance.recordedAt,
       sessionDate: newBelieverSessions.sessionDate,
+      sessionStage: newBelieverSessions.sessionStage,
       topic: newBelieverSessions.topic,
     })
     .from(newBelieverAttendance)
@@ -509,11 +522,16 @@ export async function createEnrollmentInternal(
     const student = studentRows[0];
     if (mentor?.email) {
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'a new believer';
-      sendMentorAssignedEmail(
-        mentor.email,
-        `${mentor.firstName} ${mentor.lastName}`,
-        studentName,
-      ).catch((err: unknown) => logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) }));
+      // Await: CF Workers cancel un-awaited promises when fetch() returns.
+      try {
+        await sendMentorAssignedEmail(
+          mentor.email,
+          `${mentor.firstName} ${mentor.lastName}`,
+          studentName,
+        );
+      } catch (err) {
+        logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 
@@ -570,6 +588,24 @@ export async function updateEnrollment(
       throw new ForbiddenError('This member is currently enrolled as a New Believers student and cannot be assigned as a teacher');
     }
   }
+  // Attendance-first gate on mark-session-complete: setting sessionCompletedAt
+  // for a session stage that wasn't already marked requires the student to
+  // have an attendance row for that stage. Blocks the feedback modal from
+  // saving before a teacher has actually taken the register in a session.
+  if (data.sessionCompletedAt) {
+    const existingCompleted = (existing.sessionCompletedAt ?? {}) as Record<string, string>;
+    const newlyCompletedStages = Object.keys(data.sessionCompletedAt).filter(
+      (stage) => SESSION_STAGES.has(stage) && !existingCompleted[stage],
+    );
+    for (const stage of newlyCompletedStages) {
+      if (!(await hasAttendedSessionStage(db, enrollmentId, stage))) {
+        throw new ForbiddenError(
+          `Cannot mark ${stage} complete until attendance has been recorded for that session.`,
+        );
+      }
+    }
+  }
+
   if (
     data.stage &&
     data.stage !== existing.stage &&
@@ -643,11 +679,15 @@ export async function updateEnrollment(
     const student = studentRows[0];
     if (mentor?.email) {
       const studentName = student ? `${student.firstName} ${student.lastName}` : 'a student';
-      sendMentorAssignedEmail(
-        mentor.email,
-        `${mentor.firstName} ${mentor.lastName}`,
-        studentName,
-      ).catch((err: unknown) => logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) }));
+      try {
+        await sendMentorAssignedEmail(
+          mentor.email,
+          `${mentor.firstName} ${mentor.lastName}`,
+          studentName,
+        );
+      } catch (err) {
+        logger.warn('sendMentorAssignedEmail failed', { error: err instanceof Error ? err.message : String(err) });
+      }
     }
   }
 

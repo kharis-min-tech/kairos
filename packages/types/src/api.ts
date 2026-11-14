@@ -38,6 +38,9 @@ export interface SignupRequest {
   emergencyContactRelationship?: string;
   // Step 3: Password
   password: string;
+  // Signup-time acceptance of the current Terms & Conditions and Privacy
+  // Notice. Records a consent row per policy at the current published version.
+  acceptedPolicies: boolean;
 }
 
 export interface LoginRequest {
@@ -50,12 +53,40 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface DeleteAccountRequest {
+  currentPassword: string;
+}
+
+// The export endpoint returns a large, mixed-shape blob intended for download.
+// Kept unknown/loose so schema changes in the underlying tables don't force
+// this type to churn.
+export type MyDataExport = Record<string, unknown> & { exportedAt: string };
+
 // RoleScope narrows authority to a specific entity. Stamped into the JWT
 // alongside each grant; the client decodes it for UI affordances.
+//
+// `church` is the one scope that names no entity, because there is only one
+// church. It exists for authority over church-wide surfaces that no branch,
+// fellowship or department contains — membership cohorts being the first.
+// It still carries an `id` so the union stays uniform and every consumer can
+// read `scope.id` without narrowing, but that id is always CHURCH_SCOPE_ID.
 export type RoleScope =
   | { kind: 'branch'; id: string }
   | { kind: 'fellowship'; id: string }
-  | { kind: 'department'; id: string };
+  | { kind: 'department'; id: string }
+  | { kind: 'church'; id: string };
+
+/**
+ * The sentinel `scope_id` every church-scoped grant carries.
+ *
+ * `member_roles.scope_id` is a NOT NULL uuid and a church scope has nothing to
+ * point at, so church grants store the nil UUID. Never dereference it: it is a
+ * placeholder, not a foreign key, and no row anywhere carries this id.
+ */
+export const CHURCH_SCOPE_ID = '00000000-0000-0000-0000-000000000000';
+
+/** The only well-formed church scope. */
+export const CHURCH_SCOPE: RoleScope = { kind: 'church', id: CHURCH_SCOPE_ID };
 
 export interface LoginResponse {
   tokens: AuthTokens;
@@ -78,6 +109,51 @@ export interface ResetPasswordRequest {
 
 export interface VerifyEmailRequest {
   token: string;
+}
+
+// ── OAuth (Better-Auth Phase 1) ────────────────────────────
+
+export type OAuthProviderId = 'google' | 'microsoft' | 'apple';
+
+export interface OAuthConnection {
+  provider: OAuthProviderId;
+  /** Provider-side email at link time. May be null for Apple hide-my-email. */
+  providerEmail: string | null;
+  connectedAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface OAuthConfirmLinkRequest {
+  confirmationToken: string;
+  password: string;
+}
+
+/**
+ * Phase 1.5 SSO onboarding — the caller (an SSO-signup member with
+ * `mustCompleteProfile === true`) submits the missing profile fields so the
+ * server can flip the flag and route them to /pending-approval.
+ *
+ * `phone` + `homeBranchId` are required; `acceptedPolicies` is required only
+ * if the user has not already accepted the current published Terms + Privacy
+ * version. Every other field is surfaced on the onboarding form as OPTIONAL —
+ * users are far more likely to fill them at first sign-in than to come back
+ * later from the profile edit page, so we take what they give us and save it.
+ */
+export interface CompleteOAuthProfileRequest {
+  phone: string;
+  homeBranchId: string;
+  acceptedPolicies?: boolean;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  gender?: 'Male' | 'Female';
+  dateOfBirth?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelationship?: string;
 }
 
 // ── Auth Context (decoded JWT) ─────────────────────────────
@@ -170,10 +246,16 @@ export interface CreateBranchRequest {
   address?: string;
   city?: string;
   postalCode?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   phone?: string;
   email?: string;
   establishedDate?: string;
   serviceSchedule?: { day: string; time: string; type: string }[];
+  selfCheckInEnabled?: boolean;
+  selfCheckInOpenMinutesBefore?: number;
+  selfCheckInCloseMinutesAfter?: number;
+  selfCheckInLateAfterMinutes?: number;
 }
 
 export interface UpdateBranchRequest extends Partial<CreateBranchRequest> {}
@@ -257,6 +339,12 @@ export interface MemberListParams {
   branchId?: string;
   approvalStatus?: 'pending' | 'approved' | 'rejected';
   fellowshipId?: string;
+  /**
+   * Narrow to a single member type. Omit to show Members + Attendees (the
+   * default post-approval view). Visitor/child shells never appear here
+   * regardless — they have dedicated surfaces.
+   */
+  memberType?: 'member' | 'attendee';
 }
 
 // ── Minor data protection ──────────────────────────────────
@@ -318,8 +406,10 @@ export interface UnguardedMinor {
   lastName: string;
   dateOfBirth: string | null;
   branchName: string;
+  /** 'none' = nobody was ever named. 'inactive' = everyone named is deactivated. */
   guardianStatus: 'none' | 'inactive';
-  guardianName: string | null;
+  /** Comma-separated, primary first. A minor may have more than one. */
+  guardianNames: string | null;
 }
 
 // Task #4 Phase B: minor surfaced for SG-Lead review (dormant child shell).
@@ -350,8 +440,11 @@ export interface CreateFellowshipRequest {
   meetingSchedule?: string;
   meetingDay?: string;
   meetingTime?: string;
-  latitude?: number;
-  longitude?: number;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   country?: string;
 }
 
@@ -414,6 +507,28 @@ export interface CreateFellowshipFollowupRequest {
   notes?: string | null;
   nextFollowUpDate?: string | null;
   assignedToId?: string | null;
+  // Visit-shape (0046). New rows should always set `type`; when omitted the
+  // server infers 'contact' to keep old clients working.
+  type?: 'contact' | 'visit';
+  methods?: (
+    | 'phone_call'
+    | 'text_message'
+    | 'whatsapp'
+    | 'email'
+    | 'in_person'
+    | 'virtual'
+    | 'other'
+  )[];
+  contactReached?: boolean;
+  interestLevel?: 'interested' | 'not_interested' | 'undecided';
+  visitKind?: 'in_person' | 'virtual';
+  visitAnnounced?: boolean;
+  visitArrivalAt?: string;
+  visitDepartureAt?: string;
+  visitOutcome?: 'present' | 'not_present' | 'rescheduled';
+  companionMemberIds?: string[];
+  welfareConcern?: boolean;
+  safeguardingConcern?: boolean;
 }
 
 export interface UpdateFellowshipFollowupRequest extends Partial<CreateFellowshipFollowupRequest> {}
@@ -435,7 +550,7 @@ export interface GetLeadershipParams {
 
 export interface AssignLeadershipRequest {
   memberId: string;
-  role: 'Main Pastor' | 'Elder';
+  role: 'Main Pastor' | 'Minister';
   startDate?: string;
 }
 
@@ -464,6 +579,12 @@ export interface AdminDashboardStats {
   /** @deprecated read memberBreakdown.members. Kept for back-compat. */
   totalMembers: number;
   totalFellowships: number;
+  /**
+   * Count of members awaiting admin review. Includes self-signup users
+   * (inactive until approved) and non-real-member shells — matches what
+   * the /members?approvalStatus=pending list surfaces.
+   */
+  pendingApprovals: number;
   membersByApproval: { status: string; count: number }[];
   fellowshipsByType: { type: string; count: number }[];
 }
@@ -777,8 +898,6 @@ export interface SessionListParams {
 export interface SubmitFormRequest {
   /** Set when the altar-call UI search-and-select picked an existing member/attendee. */
   subjectMemberId?: string;
-  /** Ignored by the server — branch is forced to auth.branchId. */
-  branchId?: string;
   payload: FormSubmissionPayload | Record<string, unknown>;
   /**
    * GDPR / safeguarding consent — REQUIRED in production. Marked optional on the
@@ -958,9 +1077,56 @@ export interface ServiceAttendanceRow {
   recordedAt: string;
 }
 
+// ── Self check-in ─────────────────────────────────────────
+
+export interface SelfCheckInResult {
+  serviceId: string;
+  memberId: string;
+  status: 'Present' | 'Late';
+  arrivalTime: string;
+  alreadyCheckedIn: boolean;
+}
+
+/**
+ * Rotating QR token returned to admin-desk clients. Polled every ~30s.
+ * Client encodes the QR as `kairos://check-in/{serviceId}/{token}`.
+ */
+export interface QrTokenPayload {
+  token: string;
+  /** ms epoch when the current bucket ends — client should re-poll before then. */
+  expiresAt: number;
+  serviceId: string;
+}
+
+/** Body posted by the member scanner to the verify endpoint. */
+export interface SelfCheckInQrRequest {
+  token: string;
+}
+
+/** Per-service check-in candidate the mobile Check-in tab renders. */
+export interface SelfCheckInCandidate {
+  serviceId: string;
+  serviceDate: string;
+  serviceType: string;
+  serviceTitle: string | null;
+  windowOpensAt: string;
+  windowClosesAt: string;
+  lateAfterAt: string;
+  /** `open` = tap to check in. `opens-soon` = show countdown. `closed` = past the window. */
+  status: 'open' | 'opens-soon' | 'closed';
+  minutesUntilOpen: number | null;
+}
+
 export interface AttendanceTrendPoint {
   weekStart: string;
+  /** Attendee-weeks: each attendee counted once per week they showed up. */
   attendees: number;
+  /**
+   * Distinct members who attended at least one service in this week.
+   * Overlaid on the weekly line to separate same-regulars (line runs flat
+   * even as `attendees` climbs) from real growth (this line climbs too).
+   */
+  distinctAttendees: number;
   serviceCount: number;
 }
 
@@ -975,7 +1141,14 @@ export interface MissingMember {
   memberId: string;
   firstName: string;
   lastName: string;
+  /** Total services in the window used to compute the streak. */
   servicesConsidered: number;
+  /**
+   * Consecutive most-recent services this member missed. Always ≥ 1 for
+   * members on this list (streak-of-0 = present at the last service = not
+   * missing). Sort descending to surface the most disengaged first.
+   */
+  missedStreak: number;
 }
 
 export interface MissingMembersParams {
@@ -988,14 +1161,126 @@ export interface MissingMembersParams {
 export interface BranchAttendanceRate {
   branchId: string;
   branchName: string;
+  /** All active members on the roll (soft-delete denominator). */
   activeMembers: number;
+  /**
+   * Members who attended at least one service in the engagement window
+   * (default 3 months). This is the honest denominator for pastoral rates —
+   * people who stopped coming a year ago still sit in `activeMembers` because
+   * nobody flipped their soft-delete flag.
+   */
+  engagedMembers: number;
   distinctAttendees: number;
+  /** distinctAttendees ÷ engagedMembers, capped at 1.0. */
   attendanceRate: number;
 }
 
 export interface BranchAttendanceParams {
   branchId?: string;
   weeks?: number;
+  /**
+   * Engagement window in months for the `engagedMembers` denominator.
+   * User-configurable via the report page dropdown; default 3.
+   */
+  engagedWindowMonths?: number;
+}
+
+// ── Attendance heatmap (headline v2 visual) ────────────────
+// Rows = members in scope, columns = last N services on the branch.
+// Cells encode attendance status per service or "absent" if no row exists.
+
+export type AttendanceHeatmapCellStatus = 'present' | 'late' | 'virtual' | 'absent';
+
+export interface AttendanceHeatmapService {
+  id: string;
+  serviceDate: string;
+  serviceType: string;
+  serviceTitle: string | null;
+}
+
+export interface AttendanceHeatmapMember {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  /** Cell status per service, in the same order as the top-level services array. */
+  cells: AttendanceHeatmapCellStatus[];
+  /** Services attended (Present/Late/Virtual all count) in the window. */
+  attendedCount: number;
+  /** Distinct services in the window (denominator for attendancePct). */
+  servicesConsidered: number;
+  /** attendedCount / servicesConsidered, rounded to 3dp; 0 when window empty. */
+  attendancePct: number;
+  /** Leading consecutive-absence count from the most recent service. */
+  missedStreak: number;
+}
+
+export interface AttendanceHeatmap {
+  services: AttendanceHeatmapService[];
+  members: AttendanceHeatmapMember[];
+}
+
+export interface AttendanceHeatmapParams {
+  branchId: string;
+  weeks?: number;
+  departmentId?: string;
+  fellowshipId?: string;
+  engagedWindowMonths?: number;
+  /** When true, filter to members who attended at least once in the engagement window. */
+  engagedOnly?: boolean;
+}
+
+// ── Frequency buckets ──────────────────────────────────────
+// How often engaged members show up. Weekly / biweekly / monthly / occasional /
+// dormant — thresholds computed over the engagement window.
+
+export type FrequencyBucketKey =
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly'
+  | 'occasional'
+  | 'dormant';
+
+export interface FrequencyBucket {
+  key: FrequencyBucketKey;
+  label: string;
+  /** How many engaged members fall into this bucket. */
+  members: number;
+  /**
+   * Human-readable rule used to place a member in this bucket, e.g.
+   * "attended ≥75% of services in the window".
+   */
+  description: string;
+}
+
+export interface FrequencyBucketReport {
+  windowMonths: number;
+  servicesConsidered: number;
+  engagedMembers: number;
+  buckets: FrequencyBucket[];
+}
+
+export interface FrequencyBucketParams {
+  branchId?: string;
+  engagedWindowMonths?: number;
+  departmentId?: string;
+  fellowshipId?: string;
+}
+
+// ── First-time vs returning per week ───────────────────────
+
+export interface FirstTimeReturningPoint {
+  weekStart: string;
+  /** Members whose earliest attendance record falls in this week. */
+  firstTime: number;
+  /** Members who had attended before this week. */
+  returning: number;
+}
+
+export interface FirstTimeReturningParams {
+  branchId?: string;
+  weeks?: number;
+  departmentId?: string;
+  fellowshipId?: string;
 }
 
 // Dashboard summary feeding the Mission Control donuts: present/late/virtual
@@ -1142,6 +1427,171 @@ export interface MeLeadershipResponse {
   deputyDepartments: MeLeadershipDepartment[];
 }
 
+// ── Unified inbox — approvals + follow-ups ────────────────
+//
+// Cross-domain feeds that walk the caller's scope grants and roll up every
+// pending decision (approvals) or open task (follow-ups) into a single list
+// the mobile app can render behind /approvals and /follow-ups. Every row
+// discriminates on `kind` so callers can render + route per type.
+
+export type MeApprovalItem =
+  | {
+      kind: 'member_signup';
+      id: string;
+      subjectMemberId: string;
+      subjectName: string;
+      branchName: string | null;
+      createdAt: string;
+    }
+  | {
+      kind: 'fellowship_join';
+      id: string;
+      subjectMemberId: string;
+      subjectName: string;
+      fellowshipId: string;
+      fellowshipName: string;
+      createdAt: string;
+    }
+  | {
+      kind: 'department_join';
+      id: string;
+      subjectMemberId: string;
+      subjectName: string;
+      branchDeptId: string;
+      departmentName: string;
+      status: string;
+      createdAt: string;
+    };
+
+export type MeFollowupItem =
+  | {
+      kind: 'soul';
+      id: string;
+      subjectName: string;
+      status: string;
+      createdAt: string;
+    }
+  | {
+      kind: 'fellowship_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      fellowshipId: string;
+      fellowshipName: string;
+      nextFollowUpDate: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'department_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      branchDeptId: string;
+      departmentName: string;
+      nextFollowUpDate: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'mentor_enrollment';
+      /** Enrollment id — mentors are surfaced per enrollment, not per note. */
+      id: string;
+      memberId: string;
+      subjectName: string;
+      /** ISO string; null when the mentor has not logged any followup yet. */
+      lastContactedAt: string | null;
+    };
+
+// ── Follow-up history (0046) ────────────────────────────────
+//
+// Unified per-member follow-up timeline surfaced on the member profile.
+// Reads member_followups. Visit-shape fields are all optional so contact-only
+// rows serialise cleanly with nulls.
+//
+// `source` is the follow-up's declared context. A 'branch' row is a pastoral
+// follow-up made outside any group — the context people in no fellowship and
+// no department have, and the one a pastor uses deliberately — so it carries
+// no scope id or name.
+
+export interface MemberFollowupHistoryItem {
+  id: string;
+  source: 'fellowship' | 'department' | 'branch';
+  scopeId: string | null;
+  scopeName: string | null;
+  memberId: string;
+  recordedById: string;
+  recordedByFirstName: string;
+  recordedByLastName: string;
+  contactedAt: string;
+  notes: string | null;
+  contactMethod: string;
+  contactStatus: string;
+  type: 'contact' | 'visit';
+  methods: string[] | null;
+  contactReached: boolean | null;
+  interestLevel: 'interested' | 'not_interested' | 'undecided' | null;
+  visitKind: 'in_person' | 'virtual' | null;
+  visitAnnounced: boolean | null;
+  visitArrivalAt: string | null;
+  visitDepartureAt: string | null;
+  visitOutcome: 'present' | 'not_present' | 'rescheduled' | null;
+  companionMemberIds: string[] | null;
+  welfareConcern: boolean;
+  safeguardingConcern: boolean;
+  nextFollowUpDate: string | null;
+}
+
+// Welfare + safeguarding inbox item — same shape as the history item plus the
+// subject member's name so leaders can triage without an extra fetch.
+export interface ConcernInboxItem extends MemberFollowupHistoryItem {
+  memberFirstName: string;
+  memberLastName: string;
+}
+
+/**
+ * The log side of the followups screen — every touchpoint the caller has
+ * personally recorded, most-recent first. Complements MeFollowupItem which is
+ * the inbox (things needing attention). Distinct entries per followup, unlike
+ * the mentor_enrollment kind in MeFollowupItem which collapses to one per
+ * enrollment.
+ */
+export type MeActivityItem =
+  | {
+      kind: 'soul_capture';
+      id: string;
+      subjectName: string;
+      status: string;
+      createdAt: string;
+    }
+  | {
+      kind: 'fellowship_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      fellowshipId: string;
+      fellowshipName: string;
+      contactedAt: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'department_followup';
+      id: string;
+      memberId: string;
+      subjectName: string;
+      branchDeptId: string;
+      departmentName: string;
+      contactedAt: string;
+      notes: string | null;
+    }
+  | {
+      kind: 'mentor_followup';
+      id: string;
+      enrollmentId: string;
+      memberId: string;
+      subjectName: string;
+      contactedAt: string;
+      note: string;
+    };
+
 // ── Branch role management — Branch System Admin assignments ─
 
 export interface BranchRoleAssignment {
@@ -1160,4 +1610,210 @@ export interface BranchRoleAssignment {
 
 export interface AssignBranchRoleRequest {
   memberId: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Home / control centre (GET /api/me/home)
+//
+// One payload serving both the mobile home screen and the web control
+// centre. The four blocks are the same on both platforms; `altitude`
+// decides which appear and in what order. Mobile expresses priority by
+// vertical order, web by position and size — same blocks, same contents.
+//
+// Items carry IDS, never routes. The two clients have different route trees
+// (mobile `/rollcall/[fellowshipId]/[meetingId]`, web reaches the same
+// register from the fellowship detail page), so each client maps `kind` +
+// `refs` onto its own navigation.
+//
+// `altitude` is derived from capabilities only, never from systemRole as a
+// permission carrier. See resolveHomeAltitude in apps/api/src/lib/leader-scope.ts.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Which lens the home surface renders at. `church` inverts section order. */
+export type HomeAltitude = 'church' | 'branch' | 'group' | 'personal';
+
+/** Entity ids a client needs to build its own route for an item. */
+export interface HomeRefs {
+  serviceId?: string;
+  fellowshipId?: string;
+  meetingId?: string;
+  departmentId?: string;
+  branchId?: string;
+  memberId?: string;
+  cohortId?: string;
+  rotaInstanceId?: string;
+}
+
+/**
+ * Something happening on a timeline. Informational — a tap navigates, but
+ * the item itself is not a task the caller owes anyone.
+ */
+export interface HomeAgendaItem {
+  kind: 'service' | 'rota' | 'fellowship_meeting' | 'membership_session';
+  id: string;
+  title: string;
+  subtitle: string | null;
+  /** ISO timestamp. */
+  at: string;
+  refs: HomeRefs;
+}
+
+/**
+ * Something waiting on the caller. Always actionable. `count` is 1 for a
+ * single item and >1 when the row collapses a group ("3 member approvals").
+ */
+export interface HomeTaskItem {
+  kind:
+    | 'member_approval'
+    | 'fellowship_join'
+    | 'department_join'
+    | 'followup_due'
+    | 'register_missing'
+    | 'welfare_concern'
+    | 'safeguarding_concern'
+    | 'membership_interest'
+    | 'rota_swap'
+    | 'first_timer_followup';
+  id: string;
+  title: string;
+  subtitle: string | null;
+  count: number;
+  /** `high` sorts first and renders with the warning treatment. */
+  urgency: 'normal' | 'high';
+  refs: HomeRefs;
+}
+
+export interface HomePulseMetric {
+  key: string;
+  label: string;
+  value: number;
+  /** Pre-formatted comparison, e.g. "−4% vs 4wk". Null when not computed. */
+  delta: string | null;
+}
+
+export type HomeWarningKind =
+  | 'attendance_unrecorded'
+  | 'members_drifting'
+  | 'branches_behind'
+  | 'branch_without_pastor';
+
+export interface HomePulseWarning {
+  kind: HomeWarningKind;
+  /**
+   * English sentence, kept for older clients. Prefer `kind` + `count`: the
+   * server cannot know the reader's language, so the web composes the
+   * sentence from the catalogue and only falls back to this.
+   */
+  text: string;
+  /** How many things the warning is about, for pluralisation. */
+  count?: number;
+  refs: HomeRefs;
+}
+
+/**
+ * Live numbers. Present from `branch` altitude upward, null below it — a
+ * group leader gets the same information group-shaped in `groups`, which
+ * carries `lastPresent` / `lastTotal` per fellowship or department.
+ */
+export interface HomePulse {
+  scope: 'church' | 'branch';
+  scopeLabel: string;
+  metrics: HomePulseMetric[];
+  warnings: HomePulseWarning[];
+}
+
+/**
+ * The tail block. A fellowship or department for a leader, a branch for a
+ * system admin — `headcount` is members or congregation accordingly, and
+ * `lastPresent`/`lastTotal` the most recent register or service turnout.
+ */
+export interface HomeGroupSummary {
+  kind: 'fellowship' | 'department' | 'branch';
+  id: string;
+  name: string;
+  headcount: number;
+  lastPresent: number | null;
+  lastTotal: number | null;
+}
+
+/**
+ * Something that has already happened, newest first — the counterpart to the
+ * agenda's what's next. Scoped by altitude: church sees every branch, branch
+ * sees its own, a group leader sees only their groups, and a plain member
+ * gets none (there is no community feed at personal altitude).
+ */
+export interface HomeActivityItem {
+  kind:
+    | 'member_joined'
+    | 'soul_captured'
+    | 'form_submitted'
+    | 'membership_graduated'
+    | 'fellowship_met';
+  id: string;
+  /**
+   * English sentence, kept so older clients and tests keep working.
+   *
+   * Prefer `subject` + the `kind` discriminant: the server has no idea what
+   * language the reader uses, so a sentence composed here can never be
+   * translated. The web renders t(kind, { subject }) and only falls back to
+   * this when a kind has no catalogue entry yet.
+   */
+  title: string;
+  /** The person, form or fellowship the row is about, with no verb attached. */
+  subject?: string | null;
+  subtitle: string | null;
+  at: string;
+  refs: HomeRefs;
+}
+
+/** Shown only when a member has no group, no class and a thin profile. */
+export interface HomeGettingStartedItem {
+  key: 'join_fellowship' | 'membership_interest' | 'complete_profile';
+  title: string;
+}
+
+export interface MeHomeResponse {
+  altitude: HomeAltitude;
+  today: HomeAgendaItem[];
+  thisWeek: HomeAgendaItem[];
+  needsYou: HomeTaskItem[];
+  pulse: HomePulse | null;
+  groups: HomeGroupSummary[];
+  /** True when the caller is the Main Pastor of their branch (an identity on
+   *  `branch_leadership`, independent of any RBAC grant they hold). */
+  viewerIsBranchMainPastor: boolean;
+  recentActivity: HomeActivityItem[];
+  gettingStarted: HomeGettingStartedItem[];
+  /** Consecutive weeks present at a service. Null above group altitude. */
+  streakWeeks: number | null;
+}
+
+// ── Follow-up queues (GET /api/followups/queues/*) ─────────
+//
+// Two cohorts, deliberately two queues rather than one "needs follow-up"
+// list: a first-timer is a welcome motion on a clock of hours to days, a
+// member in no group is a retention motion on a clock of weeks.
+
+export interface FollowupQueueRow {
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  memberType: string;
+  branchName: string | null;
+  /** When they first appeared. */
+  since: string | null;
+  /** Who brought them, where the first-timer form recorded it. */
+  invitedByName: string | null;
+}
+
+export interface DueFollowupRow {
+  id: string;
+  memberId: string;
+  firstName: string;
+  lastName: string;
+  contextKind: string;
+  nextFollowUpDate: string | null;
+  assignedToId: string | null;
 }

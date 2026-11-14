@@ -1,0 +1,19 @@
+{
+  "role": "platform-outreach-fr",
+  "lang": "fr",
+  "voice": "aura-2-agathe-fr",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Programmes",
+      "caption": "L’évangélisation, datée et située.",
+      "speech": "Les programmes d’évangélisation sont les sorties. Où, quand, et quels ouvriers y participent."
+    },
+    {
+      "n": 2,
+      "title": "Enregistrer une âme",
+      "caption": "Un nom et un numéro suffisent.",
+      "speech": "Pendant une sortie, vous enregistrez les personnes rencontrées. Un nom et un téléphone suffisent. Le parcours prend le relais."
+    }
+  ]
+}

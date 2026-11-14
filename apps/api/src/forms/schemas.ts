@@ -58,35 +58,66 @@ export const testimonyPayloadSchema = z.object({
   details: z.string().min(1),
   shareAnonymously: z.boolean(),
   happyToShareSunday: z.boolean(),
-  acknowledged: z.literal(true, {
-    errorMap: () => ({ message: 'You must acknowledge before submitting' }),
-  }),
+  // No `acknowledged` here by design — the attestation was removed from the
+  // form. An older shipped client that still sends the key is accepted and
+  // the key is dropped, because z.object strips what it does not declare.
 });
+
+
+/**
+ * Each parent is satisfied by a member reference OR a typed name. A parent may
+ * genuinely not be a member, so either is legitimate — but where they ARE one
+ * we want the reference, so the record can be followed up. Which half arrived
+ * is also the answer to "are the parents members", and the only answer worth
+ * trusting: it is the same act that recorded who they are.
+ */
+function requireParent(
+  v: { fathersName?: string; fatherMemberId?: string; mothersName?: string; motherMemberId?: string },
+  ctx: z.RefinementCtx,
+) {
+  if (!v.fatherMemberId && !v.fathersName?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['fathersName'],
+      message: 'Father is required — pick a member or type their name',
+    });
+  }
+  if (!v.motherMemberId && !v.mothersName?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['mothersName'],
+      message: 'Mother is required — pick a member or type their name',
+    });
+  }
+}
 
 export const babyNamingPayloadSchema = z.object({
   babyFullName: z.string().min(1).max(200),
   dateOfBirth: z.string().min(1),
   gender: genderEnum.optional(),
-  fathersName: z.string().min(1).max(200),
-  mothersName: z.string().min(1).max(200),
+  fathersName: z.string().max(200).optional(),
+  fatherMemberId: z.string().uuid().optional(),
+  mothersName: z.string().max(200).optional(),
+  motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
   parentContactEmail: z.string().email().optional(),
   preferredCeremonyDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
-});
+}).superRefine(requireParent);
 
 export const babyDedicationPayloadSchema = z.object({
   babyFullName: z.string().min(1).max(200),
   dateOfBirth: z.string().min(1),
   gender: genderEnum.optional(),
-  fathersName: z.string().min(1).max(200),
-  mothersName: z.string().min(1).max(200),
+  fathersName: z.string().max(200).optional(),
+  fatherMemberId: z.string().uuid().optional(),
+  mothersName: z.string().max(200).optional(),
+  motherMemberId: z.string().uuid().optional(),
   parentContactPhone: z.string().min(1).max(20),
-  parentsAreMembers: z.boolean().optional(),
   parentContactEmail: z.string().email().optional(),
   preferredDedicationDate: z.string().optional(),
   additionalNotes: z.string().max(2000).optional(),
-});
+}).superRefine(requireParent);
 
 // ── First-time visitor (branching-aware) ───────────────────
 //
@@ -146,18 +177,26 @@ export const firstTimeVisitorPayloadSchema = z
       .enum(['fellowship', 'department', 'new_believers', 'just_visiting'])
       .optional(),
     howDidYouHear: z.string().max(500).optional(),
+    // Legacy free text, kept so historical submissions still validate.
     invitedBy: z.string().max(200).optional(),
+    invitedByMemberId: z.string().uuid().optional(),
+    guardianMemberId: z.string().uuid().optional(),
   })
   .superRefine((v, ctx) => {
     const under16 = isVisitorUnder16(v as Record<string, unknown>);
 
     if (under16) {
       // Guardian carries the contact burden; contact fields relaxed.
-      if (!v.guardianName || v.guardianName.trim().length === 0) {
+      // A member reference OR a typed name — a visiting child's guardian is
+      // often not in the directory yet, so requiring a pick would block the
+      // form, but where they ARE a member we want the reference.
+      const hasGuardian =
+        !!v.guardianMemberId || !!(v.guardianName && v.guardianName.trim().length > 0);
+      if (!hasGuardian) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['guardianName'],
-          message: 'Guardian name is required for visitors under 16',
+          message: 'Guardian is required for visitors under 16',
         });
       }
       if (!v.guardianPhone || v.guardianPhone.trim().length === 0) {
@@ -207,7 +246,9 @@ export type TestimonyPayload = z.infer<typeof testimonyPayloadSchema>;
 export type BabyNamingPayload = z.infer<typeof babyNamingPayloadSchema>;
 export type BabyDedicationPayload = z.infer<typeof babyDedicationPayloadSchema>;
 /** Baby naming and dedication share the fields the service touches (babyFullName,
- *  dateOfBirth, gender, parentContactPhone); dedication adds parentsAreMembers. */
+ *  dateOfBirth, gender, parentContactPhone). They now declare the same fields:
+ *  dedication's `parentsAreMembers` checkbox was removed in favour of reading
+ *  the parent member references, and its preferred-date key differs in name. */
 export type BabyPayload = BabyNamingPayload | BabyDedicationPayload;
 
 /** Map of formType → payload schema. Used to validate the submit body
@@ -228,7 +269,12 @@ export const payloadSchemaByFormType = {
  *  (Phase 2 GDPR/safeguarding). consentBy is derived server-side from auth. */
 export const submitFormSchema = z.object({
   subjectMemberId: z.string().uuid().optional(),
-  // branchId may be present on the wire but is ignored — auth.branchId is forced.
+  // Accepted and ignored. The branch is always auth.branchId: a submission
+  // belongs to the branch of the person capturing it, and letting a client
+  // name a different one would be a cross-branch write. The web picker that
+  // offered admins exactly that promise has been removed — it never worked,
+  // it just looked like it did. This stays only so an older shipped client
+  // that still sends the key is not rejected.
   branchId: z.string().uuid().optional(),
   payload: z.record(z.string(), z.unknown()),
   consentGivenAt: z.string().datetime({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -21,8 +21,10 @@ import {
   CardDescription,
   CustomSelect,
 } from '@kairos/ui';
+import { useTranslation } from 'react-i18next';
 
-const schema = z
+const makeSchema = (t: (key: string) => string) =>
+  z
   .object({
     departmentId: z.string().uuid('Select a ministry'),
     branchId: z.string().uuid('Select a branch'),
@@ -31,13 +33,15 @@ const schema = z
     description: z.string().optional(),
   })
   .refine((d) => !d.deputyMemberId || d.deputyMemberId !== d.leadMemberId, {
-    message: 'Deputy must differ from lead',
+    message: t('departments:vDeputyMustDifferFromLead'),
     path: ['deputyMemberId'],
   });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
-export default function NewDepartmentPage() {
+export default function NewDepartmentPage() {  const { t } = useTranslation(['departments', 'common']);
+  const schema = useMemo(() => makeSchema(t), [t]);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -113,20 +117,16 @@ export default function NewDepartmentPage() {
                 strokeLinejoin="round"
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
-            </svg>
-            Back to Departments
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">New Department</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Instantiate a ministry team for a branch
-          </p>
+            </svg>{t('departments:backToDepartments')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('departments:newDepartment')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('departments:instantiateAMinistryTeamForA')}</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Department Details</CardTitle>
-          <CardDescription>Pick a ministry and assign its lead</CardDescription>
+          <CardTitle>{t('departments:departmentDetails')}</CardTitle>
+          <CardDescription>{t('departments:pickAMinistryAndAssignIts')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -139,12 +139,12 @@ export default function NewDepartmentPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="departmentId">Ministry *</Label>
+              <Label htmlFor="departmentId">{t('departments:ministry')}</Label>
               <CustomSelect
                 id="departmentId"
                 value={watch('departmentId') ?? ''}
                 onValueChange={(v) => setValue('departmentId', v)}
-                placeholder={catalogueLoading ? 'Loading ministries...' : 'Select a ministry...'}
+                placeholder={catalogueLoading ? t('departments:loadingMinistries') : t('departments:selectMinistry')}
                 options={(catalogue ?? [])
                   .filter((d) => d.isActive)
                   .map((d) => ({ value: d.id, label: d.departmentName }))}
@@ -156,12 +156,12 @@ export default function NewDepartmentPage() {
 
             {isAdmin && (
               <div className="space-y-2">
-                <Label htmlFor="branchId">Branch *</Label>
+                <Label htmlFor="branchId">{t('departments:branch')}</Label>
                 <CustomSelect
                   id="branchId"
                   value={watch('branchId') ?? ''}
                   onValueChange={(v) => setValue('branchId', v)}
-                  placeholder={branchesLoading ? 'Loading branches...' : 'Select a branch...'}
+                  placeholder={branchesLoading ? t('departments:loadingBranches') : t('departments:selectBranch')}
                   options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
                 />
                 {errors.branchId && (
@@ -172,12 +172,12 @@ export default function NewDepartmentPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="leadMemberId">Lead *</Label>
+                <Label htmlFor="leadMemberId">{t('departments:lead')}</Label>
                 <CustomSelect
                   id="leadMemberId"
                   value={watch('leadMemberId') ?? ''}
                   onValueChange={(v) => setValue('leadMemberId', v)}
-                  placeholder="Select lead..."
+                  placeholder={t('departments:selectLead')}
                   options={branchMembers.map((m) => ({
                     value: m.id,
                     label: `${m.firstName} ${m.lastName}`,
@@ -188,12 +188,12 @@ export default function NewDepartmentPage() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="deputyMemberId">Deputy</Label>
+                <Label htmlFor="deputyMemberId">{t('departments:deputy')}</Label>
                 <CustomSelect
                   id="deputyMemberId"
                   value={watch('deputyMemberId') ?? ''}
                   onValueChange={(v) => setValue('deputyMemberId', v)}
-                  placeholder="Select deputy..."
+                  placeholder={t('departments:selectDeputy')}
                   options={branchMembers.map((m) => ({
                     value: m.id,
                     label: `${m.firstName} ${m.lastName}`,
@@ -206,24 +206,22 @@ export default function NewDepartmentPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('departments:description')}</Label>
               <textarea
                 id="description"
                 {...register('description')}
                 rows={3}
-                placeholder="Brief description of this ministry's mission..."
+                placeholder={t('departments:briefDescriptionOfThisMinistryS')}
                 className="flex w-full rounded-lg border border-input/15 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 resize-none"
               />
             </div>
 
             <div className="flex gap-3 pt-2">
               <Link href="/departments" className="flex-1">
-                <Button type="button" variant="outline" className="w-full">
-                  Cancel
-                </Button>
+                <Button type="button" variant="outline" className="w-full">{t('departments:cancel')}</Button>
               </Link>
               <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating...' : 'Create Department'}
+                {isSubmitting ? t('departments:creating') : t('departments:createDepartment')}
               </Button>
             </div>
           </form>

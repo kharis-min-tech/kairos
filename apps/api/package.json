@@ -9,6 +9,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint ."

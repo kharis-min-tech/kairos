@@ -13,10 +13,18 @@ export const createBranchSchema = z.object({
   address: z.string().optional(),
   city: z.string().max(100).optional(),
   postalCode: z.string().max(20).optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
   phone: z.string().max(20).optional(),
   email: z.string().email().max(100).optional(),
   establishedDate: z.string().optional(),
   serviceSchedule: z.array(serviceScheduleItemSchema).optional(),
+  // Self-check-in configuration — tuned per branch via the mobile My-Branch
+  // screen. Bounds mirror the DB CHECK constraints in migration 0041.
+  selfCheckInEnabled: z.boolean().optional(),
+  selfCheckInOpenMinutesBefore: z.number().int().min(0).max(240).optional(),
+  selfCheckInCloseMinutesAfter: z.number().int().min(0).max(480).optional(),
+  selfCheckInLateAfterMinutes: z.number().int().min(0).max(480).optional(),
 });
 
 export const updateBranchSchema = createBranchSchema.partial();
@@ -30,7 +38,7 @@ export const updateRegionSchema = createRegionSchema.partial();
 
 export const assignLeadershipSchema = z.object({
   memberId: z.string().uuid('Invalid member ID'),
-  role: z.enum(['Main Pastor', 'Elder']),
+  role: z.enum(['Main Pastor', 'Minister']),
   startDate: z.string().optional(),
 });
 

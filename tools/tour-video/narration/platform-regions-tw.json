@@ -1,0 +1,19 @@
+{
+  "role": "platform-regions-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Mpɔtam",
+      "caption": "Asɔre mmaa a wɔakyekyɛ wɔ asase so.",
+      "speech": "Mpɔtam kyekyɛ asɔre mmaa wɔ asase so, sɛdeɛ amanneɛbɔ bɛtumi aka ɔman mu nyinaa na ɛnyɛ beaeɛ baako."
+    },
+    {
+      "n": 2,
+      "title": "Asɔre mmaa a ɛbata ho",
+      "caption": "Ɔmantam a ɛwɔ mmaa no, wɔrentumi nyi.",
+      "speech": "Ɔmantam biara kyerɛ asɔre mmaa a ɛbata ho. Deɛ ɛwɔ bi no, wɔrentumi nyi no kɔsɛ wɔayi baa biara afiri hɔ."
+    }
+  ]
+}

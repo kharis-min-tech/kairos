@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,18 +10,22 @@ import { Input } from '@kairos/ui';
 import { useResetPassword } from '@/hooks/use-auth';
 import { PasswordStrength } from '@/components/password-strength';
 import { KharisCardHeader } from '../kharis-logo';
+import { useTranslation } from 'react-i18next';
 
-const resetPasswordSchema = z.object({
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+const makeResetPasswordSchema = (t: (key: string) => string) =>
+  z.object({
+  newPassword: z.string().min(8, t('auth:vPasswordMustBeAtLeastCharacters')),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
+  message: t('auth:vPasswordsDoNotMatch'),
   path: ['confirmPassword'],
 });
 
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordFormData = z.infer<ReturnType<typeof makeResetPasswordSchema>>;
 
-function ResetPasswordContent() {
+function ResetPasswordContent() {  const { t } = useTranslation(['auth', 'common']);
+  const resetPasswordSchema = useMemo(() => makeResetPasswordSchema(t), [t]);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -51,14 +55,12 @@ function ResetPasswordContent() {
     return (
       <>
         {/* Heading — outside card */}
-        <KharisCardHeader heading="Invalid reset link" subtitle="This link is invalid or has expired" />
+        <KharisCardHeader heading={t('auth:invalidResetLink')} subtitle={t('auth:thisLinkIsInvalidOrHas')} />
 
-        <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
-          <p className="mb-5 text-sm text-muted-foreground">Please request a new password reset link.</p>
+        <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+          <p className="mb-5 text-sm text-muted-foreground">{t('auth:pleaseRequestANewPasswordReset')}</p>
           <Link href="/forgot-password">
-            <button className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90">
-              Request New Link
-            </button>
+            <button className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90">{t('auth:requestNewLink')}</button>
           </Link>
         </div>
       </>
@@ -68,9 +70,9 @@ function ResetPasswordContent() {
   return (
     <>
       {/* Heading — outside card */}
-      <KharisCardHeader heading="Reset password" subtitle="Create a new secure password for your account" />
+      <KharisCardHeader heading={t('auth:resetPassword')} subtitle={t('auth:createANewSecurePasswordFor')} />
 
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           {error && (
             <div role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -82,9 +84,7 @@ function ResetPasswordContent() {
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              New Password
-            </label>
+            <label htmlFor="newPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:newPassword')}</label>
             <div className="relative">
               <Input
                 id="newPassword"
@@ -95,7 +95,7 @@ function ResetPasswordContent() {
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                aria-label={showNew ? 'Hide password' : 'Show password'}
+                aria-label={showNew ? t('auth:hidePassword') : t('auth:showPassword')}
                 aria-pressed={showNew}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -121,9 +121,7 @@ function ResetPasswordContent() {
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Confirm Password
-            </label>
+            <label htmlFor="confirmPassword" className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('auth:confirmPassword')}</label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -134,7 +132,7 @@ function ResetPasswordContent() {
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                aria-label={showConfirm ? 'Hide confirmation password' : 'Show confirmation password'}
+                aria-label={showConfirm ? t('auth:hideConfirmationPassword') : t('auth:showConfirmationPassword')}
                 aria-pressed={showConfirm}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -158,26 +156,25 @@ function ResetPasswordContent() {
             disabled={isSubmitting}
             className="flex h-11 w-full items-center justify-center rounded-lg bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] text-sm font-semibold text-white shadow-md shadow-[#5d3fd3]/20 transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
+            {isSubmitting ? t('auth:resettingPassword') : t('auth:resetPasswordAction')}
           </button>
 
           <Link href="/login" className="flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back to Sign In
-          </Link>
+            </svg>{t('auth:backToSignIn')}</Link>
         </form>
       </div>
     </>
   );
 }
 
-function ResetPasswordSkeleton() {
+function ResetPasswordSkeleton() {  const { t } = useTranslation(['auth', 'common']);
+
   return (
     <>
-      <KharisCardHeader heading="Reset password" subtitle="Loading…" />
-      <div className="rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
+      <KharisCardHeader heading={t('auth:resetPassword')} subtitle={t('auth:loading')} />
+      <div className="auth-halo rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
         <div className="space-y-5 animate-pulse" aria-busy="true" aria-live="polite">
           <div className="h-11 rounded-lg bg-muted/40" />
           <div className="h-11 rounded-lg bg-muted/40" />

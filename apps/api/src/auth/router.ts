@@ -15,6 +15,7 @@ import {
   changePasswordSchema,
   requestEmailChangeSchema,
   tokenSchema,
+  completeOauthProfileSchema,
 } from './schemas';
 import {
   signup,
@@ -25,6 +26,7 @@ import {
   resetPassword,
   getMe,
   changePassword,
+  completeOauthProfile,
 } from './service';
 import {
   requestEmailChange,
@@ -35,6 +37,7 @@ import { recordAuditEvent, hasPriorSigninFromUserAgent } from '../audit/service'
 import { extractRequestContext } from '../audit/context';
 import { dispatchNotification } from '../notifications/service';
 import { AuditAction, AuditOutcome, NotificationEventType } from '@kairos/types';
+import { oauthRouter } from './oauth/router';
 
 export const authRouter = new Hono();
 
@@ -43,10 +46,22 @@ export const authRouter = new Hono();
 authRouter.post('/signup', zValidator('json', signupSchema), async (c) => {
   const body = c.req.valid('json');
   const result = await signup(db, body);
+  // Keep the isolate alive so SES actually gets called after we return the
+  // 201. Without waitUntil, CF Workers cancel the send-email promise the
+  // instant fetch() resolves — nothing hits the wire, nothing logs. Hono
+  // throws on `c.executionCtx` access outside a Workers runtime (Node dev
+  // server, vitest), so try/catch it and just let the promise float there —
+  // Node doesn't freeze isolates.
+  try {
+    c.executionCtx.waitUntil(result.sendVerificationEmail);
+  } catch {
+    /* no executionCtx — Node/test environment */
+  }
   return c.json(successResponse({
     member: result.member,
-    // In dev mode, include token for easy testing — remove in production
-    verificationToken: result.verificationToken,
+    // Present only when the mailer isn't live (local dev). Staging/prod
+    // never see this field — email is the only path to verification.
+    ...(result.verificationToken ? { verificationToken: result.verificationToken } : {}),
   }, 'Signup successful. Please verify your email.'), 201);
 });
 
@@ -65,7 +80,7 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
       action: AuditAction.SigninSuccess,
       outcome: AuditOutcome.Success,
       ctx,
-      metadata: { isFirstLogin: result.isFirstLogin },
+      metadata: { method: 'password', isFirstLogin: result.isFirstLogin },
     });
 
     if (isNewDevice) {
@@ -89,7 +104,7 @@ authRouter.post('/login', zValidator('json', loginSchema), async (c) => {
       outcome: AuditOutcome.Failure,
       attemptedEmail: body.email,
       ctx,
-      metadata: { reason: err instanceof Error ? err.message : 'unknown' },
+      metadata: { method: 'password', reason: err instanceof Error ? err.message : 'unknown' },
     });
     throw err;
   }
@@ -130,6 +145,11 @@ authRouter.post('/reset-password', zValidator('json', resetPasswordSchema), asyn
   return c.json(successResponse(undefined, 'Password reset successful'));
 });
 
+// OAuth sub-router — mixed public (/start, /callback, /confirm-link) and
+// authed (/connections) routes. Mount here so the authed ones inherit the
+// same base path (/api/auth/oauth/…) as the public start/callback.
+authRouter.route('/oauth', oauthRouter);
+
 // ── Protected routes ───────────────────────────────────────
 
 authRouter.get('/me', authMiddleware, async (c) => {
@@ -144,6 +164,22 @@ authRouter.post('/change-password', authMiddleware, zValidator('json', changePas
   await changePassword(db, auth, currentPassword, newPassword);
   return c.json(successResponse(undefined, 'Password changed successfully'));
 });
+
+// Phase 1.5 Better-Auth: SSO onboarding submit. Requires an authenticated
+// session (the caller already came back through the OAuth callback + owns
+// a JWT) — the service refuses to run if the caller is not currently
+// flagged mustCompleteProfile.
+authRouter.post(
+  '/complete-oauth-profile',
+  authMiddleware,
+  zValidator('json', completeOauthProfileSchema),
+  async (c) => {
+    const auth = getAuth(c);
+    const body = c.req.valid('json');
+    const member = await completeOauthProfile(db, auth, body);
+    return c.json(successResponse({ member }, 'Profile completed'));
+  },
+);
 
 authRouter.post(
   '/email-change',

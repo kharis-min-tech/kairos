@@ -1,0 +1,55 @@
+{
+  "role": "member-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Wo Nhwɛbea",
+      "caption": "Deɛ ɛyɛ wo dea nko ara.",
+      "speech": "Yei ne wo nhwɛbea. Biribiara a ɛwɔ ha yɛ wo dea: wo akuo, wo mmaeɛ, ne deɛ asɔre no hia firi wo hɔ nnawɔtwe yi."
+    },
+    {
+      "n": 2,
+      "title": "Deɛ wotumi hunu",
+      "caption": "Nkyɛnmu tiawa nkyerɛ sɛ biribi ayera.",
+      "speech": "Wo nkyɛnmu yɛ tiawa ɛfiri sɛ Kairos fa kɛseɛ no nyɛ wo dea sɛ wohwɛ so. Yɛmfa biribiara nsie wo."
+    },
+    {
+      "n": 3,
+      "title": "Wo Mmaeɛ",
+      "caption": "Ɔsom biara a wɔkyerɛwee wo din.",
+      "speech": "Me Mmaeɛ kyerɛ ɔsom biara a wɔkyerɛwee wo, wo ntoatoasoɔ, ne sɛdeɛ wo mmaeɛ teɛ nnawɔtwe kakra a atwam."
+    },
+    {
+      "n": 4,
+      "title": "Wo Fekuo",
+      "caption": "Kuo ketewa a woka ho.",
+      "speech": "Fekuo kyerɛ kuo a woka ho, berɛ a wɔhyia ne baabi. Sɛ wonka bi ho a, mfonini no bɛhwehwɛ deɛ ɛbɛn wo."
+    },
+    {
+      "n": 5,
+      "title": "Wo Adwumakuo",
+      "caption": "Akuo a woyɛ adwuma wɔ mu.",
+      "speech": "Adwumakuo kyerɛ akuo a wosom wɔ mu, berɛ a ɛdi hɔ a wobɛyɛ adwuma, ne atadeɛ a wɔde bɛyɛ saa ɔsom no."
+    },
+    {
+      "n": 6,
+      "title": "Kyerɛw wo din",
+      "caption": "Skan, na wɔakyerɛw sɛ wobaeɛ.",
+      "speech": "Sɛ woduru a, bue Nkyerɛwee na skan kod a ɛwɔ ɛpono ano hɔ. Ɛno kyerɛw wo sɛ wobaeɛ a wonnyina ntoatoasoɔ mu."
+    },
+    {
+      "n": 7,
+      "title": "Nkrataa",
+      "caption": "Asubɔ, adanseɛ, ɔhɔhoɔ a ɔaba foforɔ.",
+      "speech": "Nkrataa ne baabi a wobisa asubɔ, woka adanseɛ, anaa wokyerɛw obi a ɔaba nnansa din. Ɔkannifoɔ gye firi hɔ."
+    },
+    {
+      "n": 8,
+      "title": "Wo Nsɛm",
+      "caption": "Wo nsɛm, ne hwan na ɔhunu.",
+      "speech": "Wo nsɛm kora wo nkitahodie ne wo nhyehyɛeɛ, a kasa a Kairos de kasa kyerɛ wo ka ho."
+    }
+  ]
+}

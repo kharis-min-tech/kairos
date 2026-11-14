@@ -1,0 +1,19 @@
+{
+  "role": "church-management-reporting",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "What is reported",
+      "caption": "Attendance, growth, engagement.",
+      "speech": "Reports cover attendance trends, membership growth, engagement and outreach, each scoped to what your role can see."
+    },
+    {
+      "n": 2,
+      "title": "Changing the window",
+      "caption": "The last month, or the last year.",
+      "speech": "Change the window to widen or narrow the period. The numbers and every chart follow it."
+    }
+  ]
+}

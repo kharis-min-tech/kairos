@@ -45,7 +45,11 @@ import type {
   RotaInstanceWithSummary,
   RotaTemplateWithSummary,
 } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
+// i18n-ignore(9): the English source; `common:weekdayNum_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const WEEKDAYS = [
   { value: '0', label: 'Sunday' },
   { value: '1', label: 'Monday' },
@@ -144,7 +148,8 @@ interface RotaTabProps {
   currentUserId?: string;
 }
 
-export function RotaTab({ branchDeptId, members, canManage, currentUserId }: RotaTabProps) {
+export function RotaTab({ branchDeptId, members, canManage, currentUserId }: RotaTabProps) {  const { t } = useTranslation(['departments', 'common']);
+
   const [subTab, setSubTab] = useState<'templates' | 'schedule' | 'swaps'>('schedule');
 
   return (
@@ -152,9 +157,9 @@ export function RotaTab({ branchDeptId, members, canManage, currentUserId }: Rot
       <div className="flex gap-2 border-b border-border/60">
         {(
           [
-            { key: 'schedule' as const, label: 'Schedule' },
-            { key: 'templates' as const, label: 'Templates' },
-            { key: 'swaps' as const, label: 'Swap Requests' },
+            { key: 'schedule' as const, label: t('departments:schedule') },
+            { key: 'templates' as const, label: t('departments:templates') },
+            { key: 'swaps' as const, label: t('departments:swapRequests') },
           ]
         ).map((t) => (
           <button
@@ -201,7 +206,8 @@ function ScheduleSection({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
   currentUserId?: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [showGenerate, setShowGenerate] = useState(false);
   const [expandedInstanceId, setExpandedInstanceId] = useState<string | null>(null);
   const [showCancelled, setShowCancelled] = useState(false);
@@ -239,14 +245,12 @@ function ScheduleSection({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold">Upcoming services</h3>
-          <p className="text-xs text-muted-foreground">
-            Next 90 days. Drafts can be edited or regenerated; publish to notify members. Click any service to manage assignments.
-          </p>
+          <h3 className="text-base font-semibold">{t('departments:upcomingServices')}</h3>
+          <p className="text-xs text-muted-foreground">{t('departments:next90DaysDraftsEditedRegenerated')}</p>
         </div>
         {canManage && activeTemplates.length > 0 && (
           <Button onClick={() => setShowGenerate((v) => !v)} variant="default">
-            {showGenerate ? 'Cancel' : 'Generate Schedule'}
+            {showGenerate ? t('departments:cancel') : t('departments:generateSchedule')}
           </Button>
         )}
       </div>
@@ -260,7 +264,7 @@ function ScheduleSection({
       )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-muted-foreground">Status:</span>
+        <span className="text-muted-foreground">{t('departments:status')}</span>
         {(
           [
             { v: 'all' as const, l: 'All' },
@@ -292,7 +296,7 @@ function ScheduleSection({
       </div>
 
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">Loading schedule...</p>
+        <p className="py-8 text-center text-sm text-muted-foreground">{t('departments:loadingSchedule')}</p>
       ) : list.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
@@ -300,8 +304,8 @@ function ScheduleSection({
               {activeTemplates.length === 0
                 ? 'No templates yet. Create a template first, then generate a schedule.'
                 : (instances ?? []).length === 0
-                  ? 'No upcoming rota instances. Click Generate Schedule to create them.'
-                  : 'No services match the current filter.'}
+                  ? t('departments:noUpcomingRotaInstancesClickGenerate')
+: t('departments:noServicesMatchCurrentFilter')}
             </p>
           </CardContent>
         </Card>
@@ -346,7 +350,8 @@ function ScheduleRow({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
   currentUserId?: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const isToday = instance.serviceDate === today && instance.status !== 'Cancelled';
   const time = formatTimeShort(instance.templateStartTime);
   const total = instance.totalSlots;
@@ -396,9 +401,7 @@ function ScheduleRow({
               </span>
             )}
             {isToday && (
-              <span className="rounded bg-[#f8b537] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                Today
-              </span>
+              <span className="rounded bg-[#f8b537] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">{t('departments:today')}</span>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -415,13 +418,13 @@ function ScheduleRow({
                         : 'font-medium text-zinc-700 dark:text-zinc-300'
                   }
                 >
-                  {filled}/{total} filled
+                  {t('departments:filledOfTotal', { filled, total })}
                 </span>
                 {open > 0 && (
                   <>
                     <span className="text-muted-foreground">•</span>
                     <span className="text-destructive">
-                      {open} open
+                      {t('departments:openCount', { count: open })}
                     </span>
                   </>
                 )}
@@ -455,7 +458,7 @@ function ScheduleRow({
 
         {/* Status */}
         <Badge className={`${STATUS_TONE[instance.status] ?? ''} flex-shrink-0 rounded-sm`}>
-          {instance.status}
+          {t(`departments:rotaStatus_${instance.status}`, { defaultValue: instance.status })}
         </Badge>
       </button>
       {expanded && (
@@ -481,7 +484,8 @@ function GenerateForm({
   branchDeptId: string;
   templates: RotaTemplateWithSummary[];
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [templateId, setTemplateId] = useState<string>(templates[0]?.id ?? '');
   const [weeks, setWeeks] = useState(4);
   const selected = templates.find((t) => t.id === templateId);
@@ -493,7 +497,7 @@ function GenerateForm({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!templateId) {
-      toast.error('Pick a template');
+      toast.error(t('departments:pickTemplate'));
       return;
     }
     generate.mutate(
@@ -501,7 +505,11 @@ function GenerateForm({
       {
         onSuccess: (res) => {
           toast.success(
-            `Generated ${res.instanceCount} services, ${res.assignmentCount} assignments (${res.openSlotCount} open)`,
+            t('departments:generatedServicesSummary', {
+              services: res.instanceCount,
+              assignments: res.assignmentCount,
+              open: res.openSlotCount,
+            }),
           );
           onDone();
         },
@@ -514,16 +522,13 @@ function GenerateForm({
   return (
     <Card className="rounded">
       <CardHeader>
-        <CardTitle className="text-sm">Generate Schedule</CardTitle>
-        <CardDescription className="text-xs">
-          Generate a number of weeks of service rota from a template. Open slots will be filled by
-          rotation pool members.
-        </CardDescription>
+        <CardTitle className="text-sm">{t('departments:generateSchedule')}</CardTitle>
+        <CardDescription className="text-xs">{t('departments:generateANumberOfWeeksOf')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <Label className="text-xs">Template</Label>
+            <Label className="text-xs">{t('departments:template')}</Label>
             <CustomSelect
               value={templateId}
               onValueChange={(v) => {
@@ -532,27 +537,27 @@ function GenerateForm({
                 if (t) setStartDate(nextOccurrenceOfWeekday(t.weekday));
               }}
               options={templates.map((t) => ({ value: t.id, label: t.name }))}
-              placeholder="Select template"
+              placeholder={t('departments:selectTemplate')}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Weeks</Label>
+            <Label className="text-xs">{t('departments:weeks')}</Label>
             <NumberStepper
               value={weeks}
               onValueChange={setWeeks}
               min={1}
               max={52}
               suffix="w"
-              ariaLabel="Number of weeks"
+              ariaLabel={t('departments:numberWeeks')}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Start date</Label>
+            <Label className="text-xs">{t('departments:startDate')}</Label>
             <DateSelect value={startDate} onChange={setStartDate} minDate={todayIso()} />
           </div>
           <div className="md:col-span-3">
             <Button type="submit" disabled={generate.isPending}>
-              {generate.isPending ? 'Generating...' : 'Generate'}
+              {generate.isPending ? t('departments:generating') : t('departments:generate')}
             </Button>
           </div>
         </form>
@@ -573,7 +578,8 @@ function InstanceDetail({
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
   currentUserId?: string;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data, isLoading } = useRotaInstance(branchDeptId, instanceId);
   const updateAssignment = useUpdateRotaAssignment();
   const updateStatus = useUpdateRotaInstanceStatus();
@@ -583,7 +589,7 @@ function InstanceDetail({
 
   const memberOptions = useMemo(
     () => [
-      { value: '', label: '— Open —' },
+      { value: '', label: t('departments:open') },
       ...members.map((m) => ({
         value: m.memberId,
         label: `${m.memberFirstName} ${m.memberLastName}`,
@@ -593,7 +599,7 @@ function InstanceDetail({
   );
 
   if (isLoading || !data) {
-    return <p className="text-sm text-muted-foreground">Loading assignments...</p>;
+    return <p className="text-sm text-muted-foreground">{t('departments:loadingAssignments')}</p>;
   }
 
   const sortedAssignments = [...data.assignments].sort((a, b) => {
@@ -608,7 +614,7 @@ function InstanceDetail({
       {confirmDialog}
       {canManage && (
         <div className="flex flex-wrap items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Status:</Label>
+          <Label className="text-xs text-muted-foreground">{t('departments:status')}</Label>
           <CustomSelect
             value={data.status}
             onValueChange={(v) =>
@@ -619,9 +625,9 @@ function InstanceDetail({
               })
             }
             options={[
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Published', label: 'Published' },
-              { value: 'Cancelled', label: 'Cancelled' },
+              { value: 'Draft', label: t('departments:draft') },
+              { value: 'Published', label: t('departments:published') },
+              { value: 'Cancelled', label: t('departments:cancelled') },
             ]}
           />
           {data.status === 'Draft' && (
@@ -630,9 +636,9 @@ function InstanceDetail({
               disabled={regenerate.isPending}
               onClick={async () => {
                 const ok = await confirm({
-                  title: 'Re-pick all assignments for this service?',
-                  description: 'Existing picks will be replaced with a fresh fair-rotation pass.',
-                  confirmLabel: 'Regenerate',
+                  title: t('departments:rePickAllAssignmentsForThis'),
+                  description: t('departments:existingPicksWillBeReplacedWith'),
+                  confirmLabel: t('departments:regenerate'),
                   variant: 'destructive',
                 });
                 if (!ok) return;
@@ -641,21 +647,20 @@ function InstanceDetail({
                   {
                     onSuccess: (res) =>
                       toast.success(
-                        `Regenerated — ${res.assignmentCount} assigned, ${res.openSlotCount} open`,
+                        t('departments:regeneratedSummary', {
+                          assigned: res.assignmentCount,
+                          open: res.openSlotCount,
+                        }),
                       ),
                     onError: (e: unknown) =>
                       toast.error(e instanceof Error ? e.message : 'Failed to regenerate'),
                   },
                 );
               }}
-            >
-              Regenerate
-            </Button>
+            >{t('departments:regenerate')}</Button>
           )}
           {data.status !== 'Draft' && (
-            <span className="text-xs text-muted-foreground">
-              Set status back to Draft to regenerate this service.
-            </span>
+            <span className="text-xs text-muted-foreground">{t('departments:setStatusBackToDraftTo')}</span>
           )}
         </div>
       )}
@@ -682,16 +687,18 @@ function InstanceDetail({
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-medium">{a.roleName ?? 'Unassigned slot'}</p>
+                  <p className="text-sm font-medium">{a.roleName ?? t('departments:unassignedSlot')}</p>
                   <p className="text-xs text-muted-foreground">
                     {a.memberId
                       ? `${a.memberFirstName ?? ''} ${a.memberLastName ?? ''}`.trim()
-                      : 'Open slot'}
+                      : t('departments:openSlot')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge className={`${STATUS_TONE[a.status] ?? ''} rounded-sm`}>{a.status}</Badge>
+                <Badge className={`${STATUS_TONE[a.status] ?? ''} rounded-sm`}>
+                  {t(`departments:rotaStatus_${a.status}`, { defaultValue: a.status })}
+                </Badge>
                 {canManage && (
                   <CustomSelect
                     value={a.memberId ?? ''}
@@ -700,6 +707,7 @@ function InstanceDetail({
                         branchDeptId,
                         instanceId,
                         assignmentId: a.id,
+                        // i18n-ignore: the rota status the API stores and compares on.
                         data: { memberId: v || null, status: v ? 'Assigned' : 'Open' },
                       })
                     }
@@ -710,7 +718,7 @@ function InstanceDetail({
                   <Button
                     variant="outline"
                     onClick={() => {
-                      const reason = prompt('Reason for swap (optional)') ?? '';
+                      const reason = prompt(t('departments:swapReasonPrompt')) ?? '';
                       createSwap.mutate(
                         {
                           branchDeptId,
@@ -719,15 +727,13 @@ function InstanceDetail({
                           data: { reason },
                         },
                         {
-                          onSuccess: () => toast.success('Swap request submitted'),
+                          onSuccess: () => toast.success(t('departments:swapRequestSubmitted')),
                           onError: (e: unknown) =>
                             toast.error(e instanceof Error ? e.message : 'Failed'),
                         },
                       );
                     }}
-                  >
-                    Request swap
-                  </Button>
+                  >{t('departments:requestSwap')}</Button>
                 )}
               </div>
             </div>
@@ -748,7 +754,8 @@ function TemplatesSection({
   branchDeptId: string;
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: allTemplates, isLoading } = useRotaTemplates(branchDeptId, {
     includeArchived: true,
   });
@@ -769,14 +776,12 @@ function TemplatesSection({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold">Service templates</h3>
-          <p className="text-xs text-muted-foreground">
-            Templates are the recurring blueprint of a service — the day, default time, and the roles you need filled.
-          </p>
+          <h3 className="text-base font-semibold">{t('departments:serviceTemplates')}</h3>
+          <p className="text-xs text-muted-foreground">{t('departments:templatesAreTheRecurringBlueprintOf')}</p>
         </div>
         {canManage && (
           <Button onClick={() => setShowCreate((v) => !v)}>
-            {showCreate ? 'Cancel' : 'New Template'}
+            {showCreate ? t('departments:cancel') : t('departments:newTemplate')}
           </Button>
         )}
       </div>
@@ -786,11 +791,11 @@ function TemplatesSection({
       )}
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">Loading templates...</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loadingTemplates')}</p>
       ) : active.length === 0 && archived.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">No templates yet.</p>
+            <p className="text-sm text-muted-foreground">{t('departments:noTemplatesYet')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -798,7 +803,7 @@ function TemplatesSection({
           {active.length === 0 ? (
             <Card className="rounded">
               <CardContent className="py-6 text-center">
-                <p className="text-sm text-muted-foreground">No active templates.</p>
+                <p className="text-sm text-muted-foreground">{t('departments:noActiveTemplates')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -856,7 +861,8 @@ function CreateTemplateForm({
 }: {
   branchDeptId: string;
   onDone: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [name, setName] = useState('');
   const [weekday, setWeekday] = useState('0');
   const [startTime, setStartTime] = useState('');
@@ -866,14 +872,14 @@ function CreateTemplateForm({
   return (
     <Card className="rounded">
       <CardHeader>
-        <CardTitle className="text-sm">New Template</CardTitle>
+        <CardTitle className="text-sm">{t('departments:newTemplate')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form
           onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim()) {
-              toast.error('Name is required');
+              toast.error(t('departments:nameRequired'));
               return;
             }
             create.mutate(
@@ -888,7 +894,7 @@ function CreateTemplateForm({
               },
               {
                 onSuccess: () => {
-                  toast.success('Template created');
+                  toast.success(t('departments:templateCreated'));
                   onDone();
                 },
                 onError: (err: unknown) =>
@@ -899,24 +905,24 @@ function CreateTemplateForm({
           className="grid grid-cols-1 gap-4 md:grid-cols-2"
         >
           <div className="space-y-1">
-            <Label className="text-xs">Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Sunday Service" />
+            <Label className="text-xs">{t('departments:name')}</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('departments:sundayService')} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Weekday</Label>
-            <CustomSelect value={weekday} onValueChange={setWeekday} options={WEEKDAYS} />
+            <Label className="text-xs">{t('departments:weekday')}</Label>
+            <CustomSelect value={weekday} onValueChange={setWeekday} options={localiseOptions(t, 'common:weekdayNum_', WEEKDAYS)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Default start time (optional)</Label>
+            <Label className="text-xs">{t('departments:defaultStartTimeOptional')}</Label>
             <TimeSelect value={startTime} onValueChange={setStartTime} />
           </div>
           <div className="space-y-1 md:col-span-2">
-            <Label className="text-xs">Notes</Label>
+            <Label className="text-xs">{t('departments:notes')}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
           <div className="md:col-span-2">
             <Button type="submit" disabled={create.isPending}>
-              {create.isPending ? 'Saving...' : 'Create'}
+              {create.isPending ? t('departments:savingEllipsis') : t('departments:create')}
             </Button>
           </div>
         </form>
@@ -939,10 +945,13 @@ function TemplateCard({
   canManage: boolean;
   expanded: boolean;
   onToggle: () => void;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const deactivate = useDeactivateRotaTemplate();
   const { confirm, dialog: confirmDialog } = useConfirm();
-  const weekdayLabel = WEEKDAYS.find((w) => w.value === String(template.weekday))?.label ?? '';
+  const weekdayLabel = localiseOptions(t, 'common:weekdayNum_', WEEKDAYS).find(
+    (w) => w.value === String(template.weekday),
+  )?.label ?? '';
   const time = formatTimeShort(template.defaultStartTime);
   const isDraft = template.lastGeneratedAt === null;
   const lastGen = template.lastGeneratedAt
@@ -963,18 +972,12 @@ function TemplateCard({
               <CardTitle className="text-sm font-semibold">{template.name}</CardTitle>
               {template.isActive ? (
                 isDraft ? (
-                  <span className="rounded-sm bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                    Draft
-                  </span>
+                  <span className="rounded-sm bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{t('departments:draft')}</span>
                 ) : (
-                  <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                    Active
-                  </span>
+                  <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">{t('departments:active')}</span>
                 )
               ) : (
-                <span className="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">
-                  Archived
-                </span>
+                <span className="rounded-sm bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">{t('departments:archived')}</span>
               )}
             </div>
             <CardDescription className="mt-1 text-xs">
@@ -989,44 +992,41 @@ function TemplateCard({
             <Button
               variant="ghost"
               size="sm"
-              title="Archive template"
+              title={t('departments:archiveTemplate')}
               onClick={async (e) => {
                 e.stopPropagation();
                 const ok = await confirm({
-                  title: `Archive template "${template.name}"?`,
-                  description: 'No new services will be generated from this template. Existing rotas keep working.',
-                  confirmLabel: 'Archive',
+                  title: t('departments:archiveTemplateV1', { v1: template.name }),
+                  description: t('departments:noNewServicesWillBeGenerated'),
+                  confirmLabel: t('departments:archive'),
                   variant: 'destructive',
                 });
                 if (!ok) return;
                 deactivate.mutate(
                   { branchDeptId, templateId: template.id },
                   {
-                    onSuccess: () => toast.success('Template archived'),
+                    onSuccess: () => toast.success(t('departments:templateArchived')),
                     onError: (err: unknown) =>
                       toast.error(err instanceof Error ? err.message : 'Failed'),
                   },
                 );
               }}
-            >
-              Archive
-            </Button>
+            >{t('departments:archive')}</Button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t pt-2 text-xs text-muted-foreground">
           <span>
             <strong className="text-foreground">{template.slotCount}</strong>{' '}
-            {template.slotCount === 1 ? 'role' : 'roles'}
+            {t('departments:roleWord', { count: template.slotCount })}
           </span>
           <span>•</span>
           <span>
             <strong className="text-foreground">{template.positionCount}</strong>{' '}
-            {template.positionCount === 1 ? 'position' : 'positions'}
+            {t('departments:positionWord', { count: template.positionCount })}
           </span>
           <span>•</span>
           <span>
-            <strong className="text-foreground">{template.poolCount}</strong> in pool
-          </span>
+            <strong className="text-foreground">{template.poolCount}</strong>{t('departments:inPool')}</span>
           <span className="ml-auto">
             {lastGen ? `Last generated ${lastGen}` : 'Never generated'}
           </span>
@@ -1055,7 +1055,8 @@ function SlotsManager({
   branchDeptId: string;
   templateId: string;
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: slots } = useRotaSlots(branchDeptId, templateId);
   const create = useCreateRotaSlot();
   const remove = useDeleteRotaSlot();
@@ -1077,14 +1078,10 @@ function SlotsManager({
   return (
     <div className="space-y-3">
       {confirmDialog}
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Slots
-      </h4>
-      <p className="text-xs text-muted-foreground">
-        Roles you need filled each service (e.g. Lead Vocal x1, Soprano x2). Positions = how many people for that role.
-      </p>
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('departments:slots')}</h4>
+      <p className="text-xs text-muted-foreground">{t('departments:rolesNeedFilledEachServiceE')}</p>
       {sorted.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No slots defined.</p>
+        <p className="text-sm text-muted-foreground">{t('departments:noSlotsDefined')}</p>
       ) : (
         <div className="space-y-2">
           {sorted.map((s) => (
@@ -1095,7 +1092,7 @@ function SlotsManager({
               <div>
                 <p className="text-sm font-medium">{s.roleName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {s.positionsRequired} {s.positionsRequired === 1 ? 'position' : 'positions'}
+                  {s.positionsRequired} {t('departments:positionWord', { count: s.positionsRequired })}
                 </p>
               </div>
               {canManage && (
@@ -1103,17 +1100,15 @@ function SlotsManager({
                   variant="ghost"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Delete slot "${s.roleName}"?`,
-                      description: 'The role definition is removed. Existing assignments are not changed.',
-                      confirmLabel: 'Delete',
+                      title: t('departments:deleteSlotV1', { v1: s.roleName }),
+                      description: t('departments:theRoleDefinitionIsRemovedExisting'),
+                      confirmLabel: t('departments:delete'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
                     remove.mutate({ branchDeptId, templateId, slotId: s.id });
                   }}
-                >
-                  Delete
-                </Button>
+                >{t('departments:delete')}</Button>
               )}
             </div>
           ))}
@@ -1124,7 +1119,7 @@ function SlotsManager({
           onSubmit={(e) => {
             e.preventDefault();
             if (!roleName.trim()) {
-              toast.error('Role name required');
+              toast.error(t('departments:roleNameRequired'));
               return;
             }
             create.mutate(
@@ -1135,7 +1130,7 @@ function SlotsManager({
               },
               {
                 onSuccess: () => {
-                  toast.success('Slot added');
+                  toast.success(t('departments:slotAdded'));
                   setRoleName('');
                   setPositions(1);
                 },
@@ -1147,22 +1142,20 @@ function SlotsManager({
           className="flex flex-col gap-2 sm:flex-row sm:items-end"
         >
           <div className="flex-1 space-y-1">
-            <Label className="text-xs">Role name</Label>
-            <Input value={roleName} onChange={(e) => setRoleName(e.target.value)} placeholder="Lead Vocalist" />
+            <Label className="text-xs">{t('departments:roleName')}</Label>
+            <Input value={roleName} onChange={(e) => setRoleName(e.target.value)} placeholder={t('departments:leadVocalist')} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Positions</Label>
+            <Label className="text-xs">{t('departments:positions')}</Label>
             <NumberStepper
               value={positions}
               onValueChange={setPositions}
               min={1}
               max={99}
-              ariaLabel="Number of positions"
+              ariaLabel={t('departments:numberPositions')}
             />
           </div>
-          <Button type="submit" disabled={create.isPending}>
-            Add Slot
-          </Button>
+          <Button type="submit" disabled={create.isPending}>{t('departments:addSlot')}</Button>
         </form>
       )}
     </div>
@@ -1179,7 +1172,8 @@ function PoolManager({
   templateId: string;
   members: DepartmentMemberWithDetails[];
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const { data: pool } = useRotaPool(branchDeptId, templateId);
   const add = useAddRotaPoolMember();
   const remove = useRemoveRotaPoolMember();
@@ -1201,14 +1195,10 @@ function PoolManager({
   return (
     <div className="space-y-3">
       {confirmDialog}
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Rotation Pool
-      </h4>
-      <p className="text-xs text-muted-foreground">
-        Members eligible to be auto-scheduled. Assign a preferred role to give them priority for that slot. The algorithm picks least-recently-scheduled first, so frequency stays fair on its own.
-      </p>
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('departments:rotationPool')}</h4>
+      <p className="text-xs text-muted-foreground">{t('departments:membersEligibleToBeAutoScheduled')}</p>
       {!pool || pool.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No members in pool yet.</p>
+        <p className="text-sm text-muted-foreground">{t('departments:noMembersInPoolYet')}</p>
       ) : (
         <div className="space-y-2">
           {pool.map((p) => (
@@ -1228,8 +1218,12 @@ function PoolManager({
                     {p.memberFirstName} {p.memberLastName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {p.preferredRoleName ? `Prefers ${p.preferredRoleName}` : 'Any role'}
-                    {p.lastScheduledAt ? ` • Last scheduled ${p.lastScheduledAt}` : ''}
+                    {p.preferredRoleName
+                      ? t('departments:prefersRole', { role: p.preferredRoleName })
+                      : t('departments:anyRole')}
+                    {p.lastScheduledAt
+                      ? ` • ${t('departments:lastScheduledOn', { date: p.lastScheduledAt })}`
+                      : ''}
                   </p>
                 </div>
               </div>
@@ -1238,17 +1232,15 @@ function PoolManager({
                   variant="ghost"
                   onClick={async () => {
                     const ok = await confirm({
-                      title: `Remove ${p.memberFirstName} from the pool?`,
-                      description: 'They will no longer be auto-scheduled for this template.',
-                      confirmLabel: 'Remove',
+                      title: t('departments:removeV1Pool', { v1: p.memberFirstName }),
+                      description: t('departments:theyWillNoLongerBeAuto'),
+                      confirmLabel: t('departments:remove'),
                       variant: 'destructive',
                     });
                     if (!ok) return;
                     remove.mutate({ branchDeptId, templateId, poolMemberId: p.id });
                   }}
-                >
-                  Remove
-                </Button>
+                >{t('departments:remove')}</Button>
               )}
             </div>
           ))}
@@ -1259,14 +1251,14 @@ function PoolManager({
           onSubmit={(e) => {
             e.preventDefault();
             if (!memberId) {
-              toast.error('Pick a member');
+              toast.error(t('departments:pickMember'));
               return;
             }
             add.mutate(
               { branchDeptId, templateId, data: { memberId } },
               {
                 onSuccess: () => {
-                  toast.success('Added to pool');
+                  toast.success(t('departments:addedPool'));
                   setMemberId('');
                 },
                 onError: (err: unknown) =>
@@ -1277,17 +1269,15 @@ function PoolManager({
           className="flex flex-col gap-2 sm:flex-row sm:items-end"
         >
           <div className="flex-1 space-y-1">
-            <Label className="text-xs">Member</Label>
+            <Label className="text-xs">{t('departments:member')}</Label>
             <CustomSelect
               value={memberId}
               onValueChange={setMemberId}
               options={availableOptions}
-              placeholder="Select member"
+              placeholder={t('departments:selectMember')}
             />
           </div>
-          <Button type="submit" disabled={add.isPending}>
-            Add
-          </Button>
+          <Button type="submit" disabled={add.isPending}>{t('departments:add')}</Button>
         </form>
       )}
     </div>
@@ -1302,7 +1292,8 @@ function SwapsSection({
 }: {
   branchDeptId: string;
   canManage: boolean;
-}) {
+}) {  const { t } = useTranslation(['departments', 'common']);
+
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected' | 'cancelled'>(
     'pending',
   );
@@ -1315,27 +1306,25 @@ function SwapsSection({
 
   const pendingCount = pendingForCount?.length ?? 0;
 
-  const tabs: { v: typeof statusFilter; l: string; count?: number }[] = [
-    { v: 'pending', l: 'Pending', count: pendingCount },
-    { v: 'approved', l: 'Approved' },
-    { v: 'rejected', l: 'Rejected' },
-    { v: 'cancelled', l: 'Cancelled' },
+  const tabs: { v: typeof statusFilter; label: string; count?: number }[] = [
+    { v: 'pending', label: t('departments:swapStatus_pending'), count: pendingCount },
+    { v: 'approved', label: t('departments:swapStatus_approved') },
+    { v: 'rejected', label: t('departments:swapStatus_rejected') },
+    { v: 'cancelled', label: t('departments:swapStatus_cancelled') },
   ];
 
   return (
     <div className="space-y-4">
       <div className="space-y-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-base font-semibold">Swap requests</h3>
+          <h3 className="text-base font-semibold">{t('departments:swapRequests2')}</h3>
           {pendingCount > 0 && (
             <span className="rounded-full bg-[#f8b537]/20 px-2.5 py-0.5 text-xs font-semibold text-[#a06b00] dark:text-[#f8b537]">
-              {pendingCount} awaiting review
+              {t('departments:awaitingReviewCount', { count: pendingCount })}
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Members request a swap on their assignment; you approve it here and the system reassigns automatically.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('departments:membersRequestSwapTheirAssignmentApprove')}</p>
       </div>
 
       <div className="flex gap-1 border-b border-border/60">
@@ -1349,7 +1338,7 @@ function SwapsSection({
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {tab.l}
+            {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
@@ -1366,11 +1355,13 @@ function SwapsSection({
       </div>
 
       {isLoading ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">Loading...</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t('departments:loading')}</p>
       ) : !requests || requests.length === 0 ? (
         <Card className="rounded">
           <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">No {statusFilter} swap requests.</p>
+            <p className="text-sm text-muted-foreground">
+              {t('departments:noStatusSwapRequests', { status: statusFilter })}
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -1409,7 +1400,7 @@ function SwapsSection({
                         </p>
                         {r.proposedFirstName && (
                           <p className="text-xs">
-                            <span className="text-muted-foreground">Proposed cover:</span>{' '}
+                            <span className="text-muted-foreground">{t('departments:proposedCover')}</span>{' '}
                             <span className="font-medium">
                               {r.proposedFirstName} {r.proposedLastName}
                             </span>
@@ -1423,8 +1414,7 @@ function SwapsSection({
                           r.status === 'pending'
                             ? 'Draft'
                             : r.status === 'approved'
-                              ? 'Confirmed'
-                              : 'Declined'
+                              ? t('departments:confirmed') : t('departments:declined')
                         ] ?? ''
                       } rounded-sm capitalize`}
                     >
@@ -1448,15 +1438,13 @@ function SwapsSection({
                               data: { decision: 'rejected' },
                             },
                             {
-                              onSuccess: () => toast.success('Rejected'),
+                              onSuccess: () => toast.success(t('departments:rejected')),
                               onError: (err: unknown) =>
                                 toast.error(err instanceof Error ? err.message : 'Failed'),
                             },
                           )
                         }
-                      >
-                        Reject
-                      </Button>
+                      >{t('departments:reject')}</Button>
                       <Button
                         onClick={() =>
                           review.mutate(
@@ -1466,15 +1454,13 @@ function SwapsSection({
                               data: { decision: 'approved' },
                             },
                             {
-                              onSuccess: () => toast.success('Approved'),
+                              onSuccess: () => toast.success(t('departments:approved')),
                               onError: (err: unknown) =>
                                 toast.error(err instanceof Error ? err.message : 'Failed'),
                             },
                           )
                         }
-                      >
-                        Approve
-                      </Button>
+                      >{t('departments:approve')}</Button>
                     </div>
                   )}
                 </CardContent>

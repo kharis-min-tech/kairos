@@ -1,0 +1,19 @@
+{
+  "role": "platform-profile",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Your details",
+      "caption": "Your contact information.",
+      "speech": "Your profile holds your contact details, your home branch, and the roles you have been given across the church."
+    },
+    {
+      "n": 2,
+      "title": "Your settings",
+      "caption": "Security, notifications, language.",
+      "speech": "Settings covers your password and sign-in methods, which notifications you get, and the language Kairos speaks to you in."
+    }
+  ]
+}

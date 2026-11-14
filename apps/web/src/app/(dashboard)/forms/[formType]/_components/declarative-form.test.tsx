@@ -77,7 +77,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
     it('hides the guardian section by default (not under 16)', () => {
       renderForm();
       expect(screen.queryByRole('heading', { name: 'Parent / guardian' })).not.toBeInTheDocument();
-      expect(screen.queryByText(/Guardian name/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Guardian phone/)).not.toBeInTheDocument();
     });
 
     it('hides the children repeatable group until brought-children is checked', () => {
@@ -94,7 +94,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       renderForm();
       await pickRadio(user, 'Are you under 16?', 'Yes');
       expect(await screen.findByRole('heading', { name: 'Parent / guardian' })).toBeInTheDocument();
-      expect(screen.getByText(/Guardian name/)).toBeInTheDocument();
+      expect(screen.getByText(/Guardian phone/)).toBeInTheDocument();
       expect(screen.getByText(/Guardian phone/)).toBeInTheDocument();
     });
 
@@ -185,7 +185,25 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
       await screen.findByText(/First name is required/);
       // Guardian section is hidden, so no guardian-required errors appear.
-      expect(screen.queryByText(/Guardian name is required/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Guardian is required/)).not.toBeInTheDocument();
+    });
+
+    // Pick-or-type (2026-10-05): a visiting child's guardian is often not in
+    // the directory, so a typed name satisfies the requirement just as a
+    // picked member does. Requiring the reference would have blocked the form.
+    it('accepts a typed guardian name in place of a member reference', async () => {
+      const user = userEvent.setup();
+      renderForm();
+      await pickRadio(user, 'Are you under 16?', 'Yes');
+      await screen.findByRole('heading', { name: 'Parent / guardian' });
+
+      await user.type(screen.getByRole('combobox', { name: /Guardian/ }), 'Grace Adeyemi');
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+      await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+
+      // Other fields still fail, but the guardian no longer does.
+      await screen.findByText(/First name is required/);
+      expect(screen.queryByText(/Guardian is required/)).not.toBeInTheDocument();
     });
 
     it('requires guardian fields once the guardian section is visible (under 16)', async () => {
@@ -195,7 +213,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       await screen.findByRole('heading', { name: 'Parent / guardian' });
       await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
       await user.click(screen.getByRole('button', { name: /^Submit$/ }));
-      expect(await screen.findByText(/Guardian name is required/)).toBeInTheDocument();
+      expect(await screen.findByText(/Guardian is required/)).toBeInTheDocument();
       expect(screen.getByText(/Guardian phone is required/)).toBeInTheDocument();
       // Under 16: email/phone are no longer required (relaxed variants render).
       expect(screen.queryByText(/Email is required/)).not.toBeInTheDocument();
@@ -318,6 +336,125 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       expect(call.data.payload.broughtChildren).toBe(true);
       expect(call.data.payload.children).toEqual([{ firstName: 'Kid', lastName: 'Bakare' }]);
     });
+
+    // The invariant the member-reference design exists to protect: an id means a
+    // real person who can be followed up, a name means we only have a name, and
+    // a payload never carries both under one answer.
+    describe('guardian — a reference or a name, never both', () => {
+      const noDob = {
+        ...FIRST_TIME_VISITOR_FORM,
+        blocks: FIRST_TIME_VISITOR_FORM.blocks.map((b) =>
+          b.kind === 'section' && b.id === 'about-you'
+            ? { ...b, fields: b.fields.filter((f) => f.id !== 'dateOfBirth') }
+            : b,
+        ),
+      };
+
+      async function fillUnder16(user: ReturnType<typeof userEvent.setup>) {
+        render(<DeclarativeForm definition={noDob} />, { wrapper });
+        await user.type(screen.getByLabelText(/^First name/), 'Tunde');
+        await user.type(screen.getByLabelText(/^Last name/), 'Bakare');
+        await pickRadio(user, 'Are you under 16?', 'Yes');
+        await screen.findByRole('heading', { name: 'Parent / guardian' });
+        await user.type(screen.getByLabelText(/Guardian phone/), '07123456789');
+      }
+
+      it('submits the typed name alone when no directory match is picked', async () => {
+        const user = userEvent.setup();
+        await fillUnder16(user);
+
+        await user.type(screen.getByRole('combobox', { name: /^Guardian/ }), 'Grace Adeyemi');
+        await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+        await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+        await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
+
+        const payload = submitMutate.mock.calls[0]![0].data.payload;
+        expect(payload.guardianName).toBe('Grace Adeyemi');
+        expect(payload.guardianMemberId).toBeUndefined();
+      });
+
+      it('submits the reference alone once a directory match is picked', async () => {
+        searchResults = [
+          { id: 'm-7', firstName: 'Ada', lastName: 'Lovelace', phone: '0700', memberType: 'member' },
+        ];
+        const user = userEvent.setup();
+        await fillUnder16(user);
+
+        const guardian = screen.getByRole('combobox', { name: /^Guardian/ });
+        await user.type(guardian, 'ada');
+        await user.click(screen.getByRole('option', { name: /^Ada Lovelace/ }));
+
+        await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+        await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+        await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
+
+        const payload = submitMutate.mock.calls[0]![0].data.payload;
+        expect(payload.guardianMemberId).toBe('m-7');
+        expect(payload.guardianName).toBeUndefined();
+      });
+    });
+  });
+
+  // The bespoke testimony form has always dropped the subject link for an
+  // anonymous testimony. The declarative renderer now carries subjectMemberId on
+  // both platforms, so it has to honour the same rule — otherwise the one form
+  // that promises anonymity is the one that leaks a reference to the submitter.
+  describe('anonymous submissions drop the subject link', () => {
+    const ANON_FORM = {
+      formType: 'testimony' as const,
+      title: 'Testimony',
+      subjectLink: {
+        label: 'Find an existing person',
+        helpText: 'Search by name or phone.',
+        linkedNote: 'Linked to an existing person.',
+        prefill: { firstName: 'firstName' },
+      },
+      blocks: [
+        {
+          kind: 'section' as const,
+          id: 'about',
+          title: 'About you',
+          fields: [
+            { id: 'firstName', type: 'text' as const, label: 'First name', required: true },
+            { id: 'shareAnonymously', type: 'checkbox' as const, label: 'Share anonymously' },
+          ],
+        },
+      ],
+    };
+
+    async function linkThenSubmit(anonymously: boolean) {
+      searchResults = [
+        { id: 'm-7', firstName: 'Ada', lastName: 'Lovelace', phone: '0700', memberType: 'member' },
+      ];
+      const user = userEvent.setup();
+      render(<DeclarativeForm definition={ANON_FORM} />, { wrapper });
+
+      await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
+      await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
+      if (anonymously) {
+        await user.click(screen.getByLabelText(/Share anonymously/));
+        // The question stays visible but locked, with the reason stated — the
+        // bespoke testimony form behaved this way and it reads better than the
+        // control vanishing, which looks like a bug.
+        expect(screen.getByLabelText(/Find an existing person/)).toBeDisabled();
+        expect(
+          screen.getByText(/An anonymous submission won’t be linked to anyone’s record/),
+        ).toBeInTheDocument();
+      }
+
+      await user.click(screen.getByRole('checkbox', { name: /privacy notice/i }));
+      await user.click(screen.getByRole('button', { name: /^Submit$/ }));
+      await waitFor(() => expect(submitMutate).toHaveBeenCalledTimes(1));
+      return submitMutate.mock.calls[0]![0].data;
+    }
+
+    it('carries the link when the submission is not anonymous', async () => {
+      expect((await linkThenSubmit(false)).subjectMemberId).toBe('m-7');
+    });
+
+    it('drops the link, and locks the control, once anonymity is ticked', async () => {
+      expect((await linkThenSubmit(true)).subjectMemberId).toBeUndefined();
+    });
   });
 
   describe('member typeahead', () => {
@@ -337,7 +474,7 @@ describe('DeclarativeForm — FIRST_TIME_VISITOR_FORM', () => {
       render(<DeclarativeForm definition={trimmed} />, { wrapper });
 
       await user.type(screen.getByLabelText(/Find an existing person/), 'ada');
-      await user.click(await screen.findByRole('button', { name: /Ada Lovelace/ }));
+      await user.click(await screen.findByRole('option', { name: /^Ada Lovelace/ }));
 
       expect(screen.getByLabelText(/^First name/)).toHaveValue('Ada');
       expect(screen.getByLabelText(/^Last name/)).toHaveValue('Lovelace');

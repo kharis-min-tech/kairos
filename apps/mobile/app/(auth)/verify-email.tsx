@@ -1,0 +1,191 @@
+import { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { CheckCircle2, XCircle, ChevronLeft } from 'lucide-react-native';
+import {
+  Button,
+  gradients,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import { api } from '@/lib/api-client';
+
+/**
+ * Email verification screen. Reached when the OS routes an
+ * `https://kairos.kharis.org/verify-email?token=XXX` universal-link to the
+ * app instead of the browser. Auto-posts the token on mount.
+ */
+export default function VerifyEmailScreen() {
+  const { t } = useTranslation(['auth', 'common']);
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+  const { token } = useLocalSearchParams<{ token?: string }>();
+  const [state, setState] = useState<'idle' | 'verifying' | 'done' | 'error'>(
+    token ? 'verifying' : 'error',
+  );
+  const [message, setMessage] = useState<string | null>(
+    token ? null : t('auth:verifyEmail.missingToken'),
+  );
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.auth.verifyEmail({ token });
+        if (cancelled) return;
+        if (!res.success) throw new Error(res.message ?? t('auth:verifyEmail.verificationFailed'));
+        setState('done');
+      } catch (e) {
+        if (cancelled) return;
+        setState('error');
+        setMessage(e instanceof Error ? e.message : t('auth:verifyEmail.verificationFailed'));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.replace('/(auth)/login')} hitSlop={8}>
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('auth:verifyEmail.heading')}</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.brand}>
+          <View style={styles.logoTile}>
+            <LinearGradient
+              colors={gradients.brand}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoGradientFill}
+            />
+            <Text style={styles.logoK}>K</Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          {state === 'verifying' ? (
+            <>
+              <ActivityIndicator color={c.primary} />
+              <Text style={styles.title}>{t('auth:verifyEmail.verifying')}</Text>
+              <Text style={styles.body}>{t('auth:verifyEmail.justAMoment')}</Text>
+            </>
+          ) : state === 'done' ? (
+            <>
+              <View style={[styles.badge, styles.badgeGood]}>
+                <CheckCircle2 color={c.success} size={22} strokeWidth={1.5} />
+              </View>
+              <Text style={styles.title}>{t('auth:verifyEmail.emailVerified')}</Text>
+              <Text style={styles.body}>{t('auth:verifyEmail.onceApproved')}</Text>
+              <Button
+                label={t('auth:shared.backToSignIn')}
+                size="lg"
+                fullWidth
+                onPress={() => router.replace('/(auth)/login')}
+                style={{ marginTop: spacing.md }}
+              />
+            </>
+          ) : (
+            <>
+              <View style={[styles.badge, styles.badgeBad]}>
+                <XCircle color={c.danger} size={22} strokeWidth={1.5} />
+              </View>
+              <Text style={styles.title}>{t('auth:verifyEmail.couldNotVerify')}</Text>
+              <Text style={styles.body}>
+                {message ?? t('auth:verifyEmail.linkMayHaveExpired')}
+              </Text>
+              <Button
+                label={t('auth:shared.backToSignIn')}
+                size="lg"
+                fullWidth
+                onPress={() => router.replace('/(auth)/login')}
+                style={{ marginTop: spacing.md }}
+              />
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
+  scroll: {
+    padding: spacing.lg,
+    gap: spacing.lg,
+  },
+  brand: { alignItems: 'center', marginTop: spacing.md },
+  logoTile: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  logoGradientFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  logoK: { fontSize: 28, fontWeight: '700', color: '#ffffff' },
+  card: {
+    backgroundColor: c.card,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  title: { ...typography.screenTitle, color: c.ink, textAlign: 'center' },
+  body: {
+    ...typography.body,
+    color: c.inkMuted,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  badge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeGood: { backgroundColor: 'rgba(16,185,129,0.12)' },
+  badgeBad: { backgroundColor: 'rgba(239,68,68,0.12)' },
+});
+}
+

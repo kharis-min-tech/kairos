@@ -38,6 +38,9 @@ interface BaseEntity {
 export interface Region extends BaseEntity {
   regionName: string;
   country: string;
+  /** Populated by GET /api/branches/regions to gate edit/delete in the UI.
+   *  Other consumers can ignore it. */
+  branchCount?: number;
 }
 
 // ── Branch ─────────────────────────────────────────────────
@@ -55,11 +58,17 @@ export interface Branch extends BaseEntity {
   address: string | null;
   city: string | null;
   postalCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
   phone: string | null;
   email: string | null;
   establishedDate: string | null; // ISO date string
   isActive: boolean;
   serviceSchedule?: ServiceSchedule[];
+  selfCheckInEnabled: boolean;
+  selfCheckInOpenMinutesBefore: number;
+  selfCheckInCloseMinutesAfter: number;
+  selfCheckInLateAfterMinutes: number;
 }
 
 export interface BranchWithRegion extends Branch {
@@ -98,13 +107,18 @@ export interface Member extends BaseEntity {
   // hold a ceremonial title.
   honorific: string | null;
   memberType: MemberType;
-  guardianMemberId: string | null;
   // Task #33 P1: ISO-8601 timestamp the member completed the 4-week
   // membership class. NULL = not yet a confirmed Member in the formal
   // sense. See docs/domain-model.md §0.
   membershipClassCompletedAt: string | null;
   emailVerified: boolean;
   mustChangePassword: boolean;
+  // Phase 1.5 Better-Auth: TRUE while an OAuth-signup member still needs to
+  // fill phone, home branch, and T&C consent via the onboarding profile
+  // screen. Dashboard guards redirect to /profile?onboarding=1 until the
+  // POST /api/auth/complete-oauth-profile endpoint clears it. Password
+  // signups always come back FALSE.
+  mustCompleteProfile: boolean;
 }
 
 export interface MemberWithBranch extends Member {
@@ -165,6 +179,9 @@ export interface Fellowship extends BaseEntity {
   meetingSchedule: string | null;
   meetingDay: string | null;
   meetingTime: string | null;
+  address: string | null;
+  city: string | null;
+  postalCode: string | null;
   latitude: number | null;
   longitude: number | null;
   country: string | null;
@@ -243,6 +260,22 @@ export interface FellowshipJoinRequestWithMember extends FellowshipJoinRequest {
 
 // ── Fellowship Followup ────────────────────────────────────
 
+// 0046 visit-shape: split follow-ups into contact + visit types, each with
+// their own set of populated fields. Legacy contactMethod/contactStatus stay
+// populated for back-compat with old readers.
+export type FollowupType = 'contact' | 'visit';
+export type FollowupMethod =
+  | 'phone_call'
+  | 'text_message'
+  | 'whatsapp'
+  | 'email'
+  | 'in_person'
+  | 'virtual'
+  | 'other';
+export type InterestLevel = 'interested' | 'not_interested' | 'undecided';
+export type VisitKind = 'in_person' | 'virtual';
+export type VisitOutcome = 'present' | 'not_present' | 'rescheduled';
+
 export interface FellowshipFollowup extends BaseEntity {
   fellowshipId: string;
   memberId: string;
@@ -254,6 +287,19 @@ export interface FellowshipFollowup extends BaseEntity {
   durationMinutes: number | null;
   notes: string | null;
   nextFollowUpDate: string | null; // ISO date string
+  // Visit-shape (0046)
+  type: FollowupType;
+  methods: FollowupMethod[] | null;
+  contactReached: boolean | null;
+  interestLevel: InterestLevel | null;
+  visitKind: VisitKind | null;
+  visitAnnounced: boolean | null;
+  visitArrivalAt: string | null; // ISO timestamp
+  visitDepartureAt: string | null;
+  visitOutcome: VisitOutcome | null;
+  companionMemberIds: string[] | null;
+  welfareConcern: boolean;
+  safeguardingConcern: boolean;
 }
 
 export interface FellowshipFollowupWithDetails extends FellowshipFollowup {
@@ -394,6 +440,26 @@ export interface NewBelieverEnrollmentWithMember extends NewBelieverEnrollment {
   mentorFirstName?: string | null;
   mentorLastName?: string | null;
 }
+
+export interface NewBelieverAttendanceLogItem {
+  sessionId: string;
+  sessionDate: string;
+  sessionStage: string;
+  topic?: string | null;
+  attended: boolean;
+  notes?: string | null;
+  recordedAt?: string | null;
+}
+
+/**
+ * Return shape of `GET /api/new-believers/enrollments/:id`. Extends the list
+ * row with the per-enrollment attendance history the server joins in — used
+ * by the mobile enrollment detail to gate "Mark session complete" when no
+ * attendance row exists for the current stage.
+ */
+export type NewBelieverEnrollmentDetail = NewBelieverEnrollmentWithMember & {
+  attendanceHistory?: NewBelieverAttendanceLogItem[];
+};
 
 export interface NewBelieverSession {
   id: string;
@@ -572,6 +638,19 @@ export interface DepartmentFollowup extends BaseEntity {
   durationMinutes: number | null;
   notes: string | null;
   nextFollowUpDate: string | null; // ISO date string
+  // Visit-shape (0046). See FellowshipFollowup for the field-by-field rationale.
+  type: FollowupType;
+  methods: FollowupMethod[] | null;
+  contactReached: boolean | null;
+  interestLevel: InterestLevel | null;
+  visitKind: VisitKind | null;
+  visitAnnounced: boolean | null;
+  visitArrivalAt: string | null;
+  visitDepartureAt: string | null;
+  visitOutcome: VisitOutcome | null;
+  companionMemberIds: string[] | null;
+  welfareConcern: boolean;
+  safeguardingConcern: boolean;
 }
 
 export interface DepartmentFollowupWithDetails extends DepartmentFollowup {
@@ -772,7 +851,14 @@ export interface TestimonyPayload {
   details: string;
   shareAnonymously: boolean;
   happyToShareSunday: boolean;
-  acknowledged: boolean;
+  /**
+   * Retired 2026-10-07. The form no longer asks for an attestation — the
+   * privacy notice every form already requires covers consent, and the old
+   * sentence asserted two different things at once (that the testimony is
+   * true, and that Kharis may make contact). Submissions captured before
+   * that still carry it, so this stays readable and stays optional.
+   */
+  acknowledged?: boolean;
 }
 
 export interface BabyNamingPayload {
@@ -793,6 +879,11 @@ export interface BabyDedicationPayload {
   gender?: 'Male' | 'Female';
   fathersName: string;
   mothersName: string;
+  /**
+   * Retired 2026-10-07. Derived from the parent member references instead —
+   * see the note on the dedication form's parents section. Dedications
+   * captured before that still carry it.
+   */
   parentsAreMembers?: boolean;
   parentContactPhone: string;
   parentContactEmail?: string;

@@ -16,6 +16,7 @@ import { api } from '@/lib/api';
 import type { MemberListParams } from '@kairos/types';
 import { MemberAvatar } from '@/components/member-avatar';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 function MembersListSkeleton() {
   return (
@@ -42,7 +43,8 @@ function MembersListSkeleton() {
   );
 }
 
-export default function MembersPage() {
+export default function MembersPage() {  const { t } = useTranslation(['members', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -115,7 +117,7 @@ export default function MembersPage() {
     setParams((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }));
   }
 
-  if (user !== null && (isMemberView || (caps.has('fellowship:write') || caps.has('department:write')))) {
+  if (user !== null && !canSeeMembers) {
     return null;
   }
 
@@ -139,36 +141,38 @@ export default function MembersPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Members</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('members:members')}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Church member directory{pagination ? ` — ${pagination.total} total` : ''}
+            {pagination
+              ? t('members:directoryWithTotal', { count: pagination.total })
+              : t('members:directory')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {(isAdmin || isPastor) && (
             <Link href="/members/new">
-              <Button size="sm">+ Add Member</Button>
+              <Button size="sm">+ {t('members:addMember')}</Button>
             </Link>
           )}
           {(isAdmin || isPastor) && (
             <Link href="/members/import">
-              <Button variant="outline" size="sm">Import CSV</Button>
+              <Button variant="outline" size="sm">{t('members:importCsv')}</Button>
             </Link>
           )}
           {(isAdmin || isPastor) && (
             <Button variant="outline" size="sm" onClick={handleExport} disabled={exportLoading}>
-              {exportLoading ? 'Exporting…' : 'Export CSV'}
+              {exportLoading ? t('members:exporting') : t('members:exportCsv')}
             </Button>
           )}
           {canSeeSafeguarding && (
             <Link href="/members/safeguarding">
-              <Button variant="outline" size="sm">Safeguarding review</Button>
+              <Button variant="outline" size="sm">{t('members:safeguardingReview')}</Button>
             </Link>
           )}
           {isAdmin && (
             <Link href="/members/approval">
               <Button variant="outline" size="sm" className="relative">
-                Approval Queue
+                {t('members:approvalQueue')}
                 {(pendingResult?.meta?.total ?? 0) > 0 && (
                   <span className="absolute -right-2 -top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#f8b537] px-1 text-xs font-bold text-[#3a2807]">
                     {pendingResult!.meta!.total}
@@ -183,47 +187,67 @@ export default function MembersPage() {
       {/* Search + Filters */}
       <div className="flex flex-wrap gap-2">
         <Input
-          placeholder="Search by name or email..."
+          placeholder={t('members:searchByNameOrEmail')}
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           className="max-w-sm"
         />
-        <Button onClick={handleSearch}>Search</Button>
+        <Button onClick={handleSearch}>{t('members:search')}</Button>
         {params.search && (
-          <Button variant="ghost" onClick={() => { setSearchInput(''); setParams((p) => ({ ...p, search: undefined, page: 1 })); }}>
-            Clear
-          </Button>
+          <Button variant="ghost" onClick={() => { setSearchInput(''); setParams((p) => ({ ...p, search: undefined, page: 1 })); }}>{t('members:clear')}</Button>
         )}
         <CustomSelect
           size="sm"
           value={params.fellowshipId ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, fellowshipId: v || undefined, page: 1 }))}
-          placeholder="All Fellowships"
-          options={(fellowshipsData?.data ?? []).map((f) => ({ value: f.id, label: f.fellowshipName }))}
+          placeholder={t('members:allFellowships')}
+          options={[
+            { value: '', label: t('members:allFellowships') },
+            ...(fellowshipsData?.data ?? []).map((f) => ({ value: f.id, label: f.fellowshipName })),
+          ]}
         />
         {isAdmin && (
           <CustomSelect
             size="sm"
             value={params.branchId ?? ''}
             onValueChange={(v) => setParams((p) => ({ ...p, branchId: v || undefined, page: 1 }))}
-            placeholder="All Branches"
-            options={(branches ?? []).map((b) => ({ value: b.id, label: b.branchName }))}
+            placeholder={t('members:allBranches')}
+            options={[
+              { value: '', label: t('members:allBranches') },
+              ...(branches ?? []).map((b) => ({ value: b.id, label: b.branchName })),
+            ]}
           />
         )}
         <CustomSelect
           size="sm"
           value={params.approvalStatus ?? ''}
           onValueChange={(v) => setParams((p) => ({ ...p, approvalStatus: (v || undefined) as MemberListParams['approvalStatus'], page: 1 }))}
-          placeholder="All Statuses"
-          options={[{ value: 'approved', label: 'Approved' }, { value: 'pending', label: 'Pending' }, { value: 'rejected', label: 'Rejected' }]}
+          placeholder={t('members:allStatuses')}
+          options={[
+            { value: '', label: t('members:allStatuses') },
+            { value: 'approved', label: t('members:approved') },
+            { value: 'pending', label: t('members:pending') },
+            { value: 'rejected', label: t('members:rejected') },
+          ]}
+        />
+        <CustomSelect
+          size="sm"
+          value={params.memberType ?? ''}
+          onValueChange={(v) => setParams((p) => ({ ...p, memberType: (v || undefined) as MemberListParams['memberType'], page: 1 }))}
+          placeholder={t('members:membersAttendees')}
+          options={[
+            { value: '', label: t('members:membersAttendees') },
+            { value: 'member', label: t('members:membersOnly') },
+            { value: 'attendee', label: t('members:attendeesOnly') },
+          ]}
         />
       </div>
 
       {!members || members.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No members found.</p>
+            <p className="text-muted-foreground">{t('members:noMembersFound')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -257,8 +281,8 @@ export default function MembersPage() {
                           )}
                         </div>
                         {showFullDetails && (
-                          <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusCls}`}>
-                            {member.approvalStatus}
+                          <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusCls}`}>
+                            {t(`members:approvalStatus_${member.approvalStatus}`)}
                           </span>
                         )}
                       </div>
@@ -268,7 +292,27 @@ export default function MembersPage() {
                         <div className="space-y-1 text-sm text-muted-foreground">
                           <p className="truncate">{member.email}</p>
                           {member.phone && <p>{member.phone}</p>}
-                          <p className="text-xs capitalize">{member.systemRole}</p>
+                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            {/* Membership badge derives from the class-completion
+                                timestamp — the real signal per docs/domain-model.md
+                                §0. memberType can drift (a member_type='member' row
+                                without a completed-at is not a confirmed Member) so
+                                we don't trust it for display. */}
+                            {member.membershipClassCompletedAt ? (
+                              <span
+                                title={t('members:confirmedMemberHasCompletedTheWeek')}
+                                className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+                              >{t('members:member')}</span>
+                            ) : member.memberType === 'attendee' ? (
+                              <span
+                                title={t('members:approvedAttendeeHasNotCompletedThe')}
+                                className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
+                              >{t('members:attendee')}</span>
+                            ) : null}
+                            {member.systemRole === 'admin' && (
+                              <span className="inline-flex items-center rounded-full bg-[#5D3FD3]/15 px-2 py-0.5 text-xs font-medium text-[#5D3FD3] dark:text-violet-300">{t('members:admin')}</span>
+                            )}
+                          </div>
                         </div>
                         {(isAdmin || isPastor) && (
                           <div className="mt-4">
@@ -278,20 +322,18 @@ export default function MembersPage() {
                               onClick={async (e) => {
                                 e.preventDefault();
                                 const ok = await confirm({
-                                  title: `Deactivate ${member.firstName} ${member.lastName}?`,
-                                  description: 'They will be removed from the active directory. You can reactivate them later from their profile.',
-                                  confirmLabel: 'Deactivate',
+                                  title: t('members:deactivateV1V2', { v1: member.firstName, v2: member.lastName }),
+                                  description: t('members:theyWillBeRemovedFromThe2'),
+                                  confirmLabel: t('members:deactivate'),
                                   variant: 'destructive',
                                 });
                                 if (!ok) return;
                                 deactivate.mutate(member.id, {
-                                  onSuccess: () => toast.success('Member removed from system.'),
-                                  onError: () => toast.error('Failed to deactivate member. Please try again.'),
+                                  onSuccess: () => toast.success(t('members:memberRemovedSystem')),
+                                  onError: () => toast.error(t('members:failedDeactivateMemberTryAgain')),
                                 });
                               }}
-                            >
-                              Deactivate
-                            </Button>
+                            >{t('members:deactivate')}</Button>
                           </div>
                         )}
                       </CardContent>
@@ -310,9 +352,7 @@ export default function MembersPage() {
                 size="sm"
                 disabled={pagination.page <= 1}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) - 1 }))}
-              >
-                Previous
-              </Button>
+              >{t('members:previous')}</Button>
               <span className="text-sm text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </span>
@@ -321,9 +361,7 @@ export default function MembersPage() {
                 size="sm"
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => setParams((p) => ({ ...p, page: (p.page ?? 1) + 1 }))}
-              >
-                Next
-              </Button>
+              >{t('members:next')}</Button>
             </div>
           )}
         </>

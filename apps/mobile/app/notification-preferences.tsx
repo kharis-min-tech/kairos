@@ -1,0 +1,301 @@
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, Bell, Lock } from 'lucide-react-native';
+import {
+  Badge,
+  Card,
+  radii,
+  spacing,
+  typography,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import {
+  NOTIFICATION_CATEGORIES,
+  NOTIFICATION_CATEGORY_LABEL,
+  NOTIFICATION_CATEGORY_DESCRIPTION,
+  NotificationCategory,
+  type NotificationCadence,
+  type UpdateNotificationPreferenceRequest,
+} from '@kairos/types';
+import { api } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
+import { localiseOptions, localiseMeta } from '@/lib/localise-options';
+
+type SelectValue = 'off' | 'immediate' | 'digest_daily';
+
+// i18n-ignore(5): the English source; `settings:notifyCadence_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
+const OPTIONS: { value: SelectValue; label: string }[] = [
+  { value: 'immediate', label: 'Now' },
+  { value: 'digest_daily', label: 'Daily' },
+  { value: 'off', label: 'Off' },
+];
+
+function toSelect(enabled: boolean, cadence: NotificationCadence): SelectValue {
+  if (!enabled) return 'off';
+  return cadence;
+}
+
+function fromSelect(value: SelectValue): { enabled: boolean; cadence: NotificationCadence } {
+  if (value === 'off') return { enabled: false, cadence: 'immediate' };
+  return { enabled: true, cadence: value };
+}
+
+const QUERY_KEY = ['me', 'notification-preferences'] as const;
+
+export default function NotificationPreferences() {  const { t } = useTranslation(['settings', 'common']);
+
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+  const qc = useQueryClient();
+
+  const prefs = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async () => (await api.me.notificationPreferences.list()).data!,
+  });
+
+  const update = useMutation({
+    mutationFn: async (data: UpdateNotificationPreferenceRequest) =>
+      (await api.me.notificationPreferences.update(data)).data!,
+    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
+
+  const prefByCategory = new Map(
+    (prefs.data?.preferences ?? []).map((p) => [p.category, p]),
+  );
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <View style={styles.headerBar}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <ChevronLeft color={c.ink} size={24} strokeWidth={1.5} />
+        </Pressable>
+        <Text style={styles.headerTitle}>{t('settings:notifications')}</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={prefs.isFetching}
+            onRefresh={() => prefs.refetch()}
+            tintColor={c.primary}
+          />
+        }
+      >
+        <View style={styles.introBlock}>
+          <Text style={styles.introTitle}>{t('settings:emailPreferences')}</Text>
+          <Text style={styles.introMeta}>{t('settings:chooseWhichCategoriesReachYourInbox')}</Text>
+        </View>
+
+        {prefs.isLoading ? (
+          <ActivityIndicator color={c.primary} style={{ marginVertical: spacing.xl }} />
+        ) : null}
+
+        {prefs.isError ? (
+          <Card padding="md">
+            <Text style={styles.errorLine}>
+              {t('settings:couldntLoadPreferences')}{' '}
+              {prefs.error instanceof Error ? prefs.error.message : t('common:unknownError')}
+            </Text>
+          </Card>
+        ) : null}
+
+        {prefs.data ? (
+          <Card padding="md">
+            <View style={styles.cardTitleRow}>
+              <Bell color={c.primary} size={16} strokeWidth={1.5} />
+              <Text style={styles.cardTitle}>{t('settings:byCategory')}</Text>
+            </View>
+
+            {NOTIFICATION_CATEGORIES.map((category, idx) => {
+              const pref = prefByCategory.get(category);
+              const isSecurity = category === NotificationCategory.Security;
+              const selectValue: SelectValue = pref
+                ? toSelect(pref.enabled, pref.cadence)
+                : 'immediate';
+
+              return (
+                <View
+                  key={category}
+                  style={[styles.prefRow, idx > 0 ? styles.rowDivider : null]}
+                >
+                  <View style={styles.prefTitleLine}>
+                    <Text style={styles.prefLabel}>
+                      {t(`settings:notifyCategory_${category}`, {
+                        defaultValue: NOTIFICATION_CATEGORY_LABEL[category],
+                      })}
+                    </Text>
+                    {isSecurity ? (
+                      <View style={styles.lockedBadge}>
+                        <Lock color={c.primary} size={10} strokeWidth={2} />
+                        <Badge label={t('settings:alwaysOn')} variant="primary" size="sm" />
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={styles.prefDesc}>
+                    {t(`settings:notifyCategoryDesc_${category}`, {
+                      defaultValue: NOTIFICATION_CATEGORY_DESCRIPTION[category],
+                    })}
+                  </Text>
+
+                  <View style={styles.segmentedControl}>
+                    {localiseOptions(t, 'settings:notifyCadence_', OPTIONS).map((opt) => {
+                      const selected = selectValue === opt.value;
+                      const disabled = isSecurity || update.isPending;
+                      return (
+                        <Pressable
+                          key={opt.value}
+                          onPress={() => {
+                            if (disabled || selected) return;
+                            const next = fromSelect(opt.value);
+                            update.mutate({
+                              category,
+                              enabled: next.enabled,
+                              cadence: next.cadence,
+                            });
+                          }}
+                          style={[
+                            styles.segment,
+                            selected && styles.segmentActive,
+                            disabled && !selected && styles.segmentDisabled,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.segmentLabel,
+                              selected && styles.segmentLabelActive,
+                            ]}
+                          >
+                            {opt.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              );
+            })}
+          </Card>
+        ) : null}
+
+        <Text style={styles.footnote}>{t('settings:dailyDigestSendsASingleAm')}</Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: c.page },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: { ...typography.cardTitle, color: c.ink },
+  container: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.lg,
+  },
+  introBlock: { gap: 2 },
+  introTitle: { ...typography.screenTitle, color: c.ink },
+  introMeta: { ...typography.meta, color: c.inkMuted },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  cardTitle: { ...typography.cardTitle, color: c.ink },
+  errorLine: {
+    ...typography.body,
+    color: c.danger,
+  },
+  prefRow: {
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+  },
+  rowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: c.divider,
+  },
+  prefTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  prefLabel: { ...typography.body, color: c.ink, fontWeight: '600' },
+  lockedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  prefDesc: {
+    ...typography.meta,
+    color: c.inkMuted,
+    lineHeight: 15,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: c.subtle,
+    borderRadius: radii.md,
+    padding: 3,
+    gap: 3,
+    marginTop: spacing.sm,
+  },
+  segment: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: c.card,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  segmentDisabled: {
+    opacity: 0.5,
+  },
+  segmentLabel: {
+    ...typography.body,
+    fontSize: 13,
+    color: c.inkMuted,
+    fontWeight: '500',
+  },
+  segmentLabelActive: {
+    color: c.primary,
+    fontWeight: '700',
+  },
+  footnote: {
+    ...typography.meta,
+    color: c.inkFaded,
+    paddingHorizontal: spacing.xs,
+    lineHeight: 15,
+  },
+});
+}
+

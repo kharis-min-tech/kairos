@@ -1,0 +1,19 @@
+{
+  "role": "administration-settings-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Yu Sɛtin dɛn",
+      "caption": "Akawnt, sikyuriti, aw i luk.",
+      "speech": "Sɛtin kɔva yu akawnt, aw yu de sayn in, aw Kairos de luk, ɛn wetin langwej i de tɔk to yu."
+    },
+    {
+      "n": 2,
+      "title": "Notifikeshɔn",
+      "caption": "Wetin de rich yu, ɛn omɔch tɛm.",
+      "speech": "Notifikeshɔn na pɛ katigɔri. Pik naw naw ɔ wan de sɔmari fɔ ɛvri wan, ɔ tɔn am ɔf. Sikyuriti alat de kam ɔltɛm."
+    }
+  ]
+}

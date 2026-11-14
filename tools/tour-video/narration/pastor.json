@@ -1,0 +1,61 @@
+{
+  "role": "pastor",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Your overview",
+      "caption": "Your branch, and what it needs today.",
+      "speech": "Your overview opens on your branch: how many are in the congregation, and what is waiting for you to deal with today."
+    },
+    {
+      "n": 2,
+      "title": "Your branch",
+      "caption": "Everything inside the one you lead.",
+      "speech": "My Branch is the whole of the one you lead. Its members, its groups, its services, and the people who have just joined."
+    },
+    {
+      "n": 3,
+      "title": "The directory",
+      "caption": "Everybody, with their status on the row.",
+      "speech": "The directory lists everybody in your branch. The row tells you whether they are a visitor, a regular, or have completed the membership class."
+    },
+    {
+      "n": 4,
+      "title": "Follow-ups",
+      "caption": "Three queues, on a short clock.",
+      "speech": "Follow-ups has three queues: first-timers nobody has contacted, people in no group, and anybody whose contact is overdue."
+    },
+    {
+      "n": 5,
+      "title": "Concerns",
+      "caption": "Welfare and safeguarding, kept apart.",
+      "speech": "Concerns is where welfare and safeguarding sit. They are two separate inboxes on purpose, read by deliberately different people."
+    },
+    {
+      "n": 6,
+      "title": "Your fellowship",
+      "caption": "The group you lead, and its register.",
+      "speech": "For the fellowship you lead you can take the register, log a follow-up, and see who has stopped coming."
+    },
+    {
+      "n": 7,
+      "title": "Your department",
+      "caption": "Roster, rota and recruitment.",
+      "speech": "For your department you manage the roster, publish the rota, and work through the people applying to join."
+    },
+    {
+      "n": 8,
+      "title": "The souls pipeline",
+      "caption": "From first contact to a department.",
+      "speech": "The souls pipeline tracks somebody reached through evangelism, from first contact through to joining a department."
+    },
+    {
+      "n": 9,
+      "title": "Reports",
+      "caption": "Your branch, in numbers.",
+      "speech": "Reports turns your branch into numbers: attendance trends, who is missing, and how the groups are growing."
+    }
+  ]
+}

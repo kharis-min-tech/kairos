@@ -12,6 +12,7 @@ import {
 import { useRespondToDepartmentOffer } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   offers: MyDepartmentJoinRequest[];
@@ -30,7 +31,8 @@ function formatDateTime(value: string | Date | null) {
   });
 }
 
-export function MyOffersBanner({ offers }: Props) {
+export function MyOffersBanner({ offers }: Props) {  const { t } = useTranslation(['departments', 'common']);
+
   const respond = useRespondToDepartmentOffer();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
@@ -40,27 +42,27 @@ export function MyOffersBanner({ offers }: Props) {
     respond.mutate(
       { branchDeptId, requestId, data: { offerResponse: 'accepted' } },
       {
-        onSuccess: () => toast.success('Offer accepted — welcome to the team!'),
+        onSuccess: () => toast.success(t('departments:offerAcceptedWelcomeTeam')),
         onError: (err) =>
-          toast.error(err instanceof Error ? err.message : 'Failed to accept offer.'),
+          toast.error(err instanceof Error ? err.message : t('departments:failedToAcceptOffer')),
       },
     );
   };
 
   const handleDecline = async (branchDeptId: string, requestId: string, departmentName: string) => {
     const ok = await confirm({
-      title: `Decline the offer from ${departmentName}?`,
-      description: 'You won’t be added to this department. You can apply again later if you change your mind.',
-      confirmLabel: 'Decline',
+      title: t('departments:declineOfferV1', { v1: departmentName }),
+      description: t('departments:youWonTBeAddedTo'),
+      confirmLabel: t('departments:decline'),
       variant: 'destructive',
     });
     if (!ok) return;
     respond.mutate(
       { branchDeptId, requestId, data: { offerResponse: 'declined' } },
       {
-        onSuccess: () => toast.success('Offer declined.'),
+        onSuccess: () => toast.success(t('departments:offerDeclined')),
         onError: (err) =>
-          toast.error(err instanceof Error ? err.message : 'Failed to decline offer.'),
+          toast.error(err instanceof Error ? err.message : t('departments:failedDeclineOffer')),
       },
     );
   };
@@ -78,7 +80,7 @@ export function MyOffersBanner({ offers }: Props) {
             <CardHeader className="pb-3">
               <div className="space-y-1">
                 <CardTitle className="text-base">
-                  You&rsquo;ve been offered a spot in {req.departmentName}
+                  {t('departments:offeredASpotIn', { name: req.departmentName })}
                 </CardTitle>
                 <CardDescription>
                   {req.branchName}
@@ -98,17 +100,13 @@ export function MyOffersBanner({ offers }: Props) {
                   size="sm"
                   onClick={() => handleAccept(req.branchDepartmentId, req.id)}
                   disabled={respond.isPending}
-                >
-                  Accept offer
-                </Button>
+                >{t('departments:acceptOffer')}</Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleDecline(req.branchDepartmentId, req.id, req.departmentName)}
                   disabled={respond.isPending}
-                >
-                  Decline
-                </Button>
+                >{t('departments:decline')}</Button>
               </div>
             </CardContent>
           </Card>

@@ -123,6 +123,23 @@ vi.mock('@/hooks/use-departments', () => ({
 }));
 
 vi.mock('@/hooks/use-attendance', () => ({
+  useMyAttendance: () => ({
+    data: {
+      windowWeeks: 8,
+      servicesInWindow: 0,
+      attendedCount: 0,
+      rate: 0,
+      presentOnTimeCount: 0,
+      lateCount: 0,
+      virtualCount: 0,
+      missedCount: 0,
+      currentStreak: { kind: 'attended', length: 0 },
+      lastAttendedAt: null,
+      lastService: null,
+      history: [],
+    },
+    isLoading: false,
+  }),
   useDepartmentAttendance: () => ({
     data: {
       department: { id: 'd-1', name: 'Worship', branchName: 'Central' },
@@ -338,7 +355,7 @@ describe('ReportsPage — department service-attendance', () => {
 // ── Phase 4: scope-aware persona tabs ────────────────────────────────
 //
 // /api/me/leadership now scope-filters its response. A user logged in as
-// "Fellowship Leader — K-Groups Central" gets back a single-fellowship
+// "Fellowship Leader, K-Groups Central" gets back a single-fellowship
 // leadership shape, so the reports page should:
 //   - show ONLY the "My Fellowship" tab,
 //   - not show the picker (only one fellowship in the list),

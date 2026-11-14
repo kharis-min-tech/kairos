@@ -1,0 +1,19 @@
+{
+  "role": "church-management-attendance-tracking-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Kyerɛw nkrataa",
+      "caption": "Ɛpono ano, bere a wɔreba.",
+      "speech": "Bue ɔsom no na kyerɛ sɛ obi wɔ hɔ, waka akyi anaa ɔwɔ intanɛt so bere a wɔreba. Deɛ wamma no, yɛhunu no, enti biribiara nni hɔ."
+    },
+    {
+      "n": 2,
+      "title": "W’ankasa nkyerɛwee",
+      "caption": "QR kod wɔ ɛpono ano.",
+      "speech": "Asɔrefoɔ tumi skan kod a ɛwɔ ɛpono ano na wɔakyerɛw sɛ wɔwɔ hɔ, na ɛma ɛpono ano hɔ da hɔ ma wɔn a wɔhia."
+    }
+  ]
+}

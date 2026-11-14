@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, FileText, Check, X, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, FileText, Check, X, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@kairos/ui';
 import {
   CONSENT_TYPE_LABEL,
@@ -9,8 +9,18 @@ import {
   ConsentType,
 } from '@kairos/types';
 import { useMyConsentStatuses, useRecordConsent } from '@/hooks/use-consent';
+import { useTranslation } from 'react-i18next';
 
-export default function LegalSettingsPage() {
+function docHrefFor(consentType: ConsentType): string | null {
+  if (consentType === ConsentType.Terms) return '/legal/terms';
+  if (consentType === ConsentType.Privacy) return '/legal/privacy';
+  if (consentType === ConsentType.AcceptableUse) return '/legal/acceptable-use';
+  if (consentType === ConsentType.AdminConfidentiality) return '/legal/confidentiality';
+  return null;
+}
+
+export default function LegalSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+
   const { data, isLoading, isError, error } = useMyConsentStatuses();
   const record = useRecordConsent();
 
@@ -19,29 +29,23 @@ export default function LegalSettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Legal &amp; consent</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Track which policies you&apos;ve accepted and when.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('legal:legalConsent')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('legal:trackWhichPoliciesVeAcceptedWhen')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Consent records
-          </CardTitle>
+            <FileText className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:consentRecords')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           {isLoading && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Loading…
-            </div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('settings:loading')}</div>
           )}
           {isError && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -53,8 +57,7 @@ export default function LegalSettingsPage() {
             const stateLabel = status.granted === true
               ? 'Granted'
               : status.granted === false
-              ? 'Declined'
-              : 'Not recorded';
+              ? t('legal:declined') : t('legal:notRecorded');
             const Icon = status.granted === true ? Check : status.granted === false ? X : AlertTriangle;
             const tone = status.granted === true
               ? 'text-emerald-700 dark:text-emerald-400'
@@ -73,14 +76,21 @@ export default function LegalSettingsPage() {
                       {CONSENT_TYPE_LABEL[status.consentType]}
                     </p>
                     {status.required && (
-                      <span className="rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-                        Required
-                      </span>
+                      <span className="rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">{t('settings:required')}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {CONSENT_TYPE_DESCRIPTION[status.consentType]}
                   </p>
+                  {docHrefFor(status.consentType) && (
+                    <Link
+                      href={docHrefFor(status.consentType)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#5D3FD3] hover:underline"
+                    >{t('settings:readTheCurrentVersion')}<ExternalLink className="h-3 w-3" aria-hidden />
+                    </Link>
+                  )}
                   <p className={`mt-1 inline-flex items-center gap-1 text-xs ${tone}`}>
                     <Icon className="h-3 w-3" /> {stateLabel}
                     {status.acceptedVersion && (
@@ -91,7 +101,7 @@ export default function LegalSettingsPage() {
                   </p>
                   {status.needsAccept && status.required && (
                     <p className="mt-1 text-xs text-destructive">
-                      Action needed — version {status.currentVersion} is now current.
+                      {t('settings:actionNeededVersionCurrent', { version: status.currentVersion })}
                     </p>
                   )}
                 </div>
@@ -109,7 +119,7 @@ export default function LegalSettingsPage() {
                       }
                       disabled={record.isPending}
                     >
-                      {status.granted ? 'Unsubscribe' : 'Subscribe'}
+                      {status.granted ? t('legal:unsubscribe') : t('legal:subscribe')}
                     </Button>
                   </div>
                 )}

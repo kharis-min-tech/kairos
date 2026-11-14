@@ -16,7 +16,8 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
+import { useTranslation } from 'react-i18next';
 
 /**
  * DateSelect — the application's standard date picker.
@@ -84,7 +85,8 @@ export function DateSelect({
   disabled = false,
   id,
   className,
-}: DateSelectProps) {
+}: DateSelectProps) {  const { t } = useTranslation(['common']);
+
   const effectiveMinDate = minDate ?? (minYear ? `${minYear}-01-01` : undefined);
   const effectiveMaxDate = maxDate ?? (maxYear ? `${maxYear}-12-31` : undefined);
 
@@ -269,7 +271,7 @@ export function DateSelect({
                 else setViewMonth((m) => new Date(m.getFullYear() - 12, m.getMonth(), 1));
               }}
               className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Previous"
+              aria-label={t('common:previous')}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -290,7 +292,7 @@ export function DateSelect({
                 else setViewMonth((m) => new Date(m.getFullYear() + 12, m.getMonth(), 1));
               }}
               className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label="Next"
+              aria-label={t('common:next')}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -409,9 +411,7 @@ export function DateSelect({
                 setView('day');
               }}
               className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Clear
-            </button>
+            >{t('common:clear')}</button>
             <button
               type="button"
               onClick={() => {
@@ -422,9 +422,7 @@ export function DateSelect({
                 }
               }}
               className="text-xs font-semibold text-primary transition-colors hover:text-primary/80"
-            >
-              Today
-            </button>
+            >{t('common:today')}</button>
           </div>
           </div>,
           portalContainer,

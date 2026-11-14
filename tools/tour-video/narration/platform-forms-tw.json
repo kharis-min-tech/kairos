@@ -1,0 +1,19 @@
+{
+  "role": "platform-forms-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Nkrataa no",
+      "caption": "Nsia, ma deɛ nnipa bisa.",
+      "speech": "Nkrataa fa ɔhɔhoɔ foforɔ, asubɔ, adanseɛ, abɔfra dintoɔ, abɔfra nhyira ne Gyidifoɔ Foforɔ adesua ho."
+    },
+    {
+      "n": 2,
+      "title": "Hyɛ bi ma",
+      "caption": "Ɛduru onipa a ɛsɛ no nkyɛn.",
+      "speech": "Hyɛ bi ma na ɛbɛduru obi a ɔhwɛ so nkyɛn, a wɔde onipa no abata ne nkrataa ho sɛ ɔwɔ bi dada a."
+    }
+  ]
+}

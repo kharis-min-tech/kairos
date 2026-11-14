@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import type { MeLeadershipResponse } from '@kairos/types';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import type { DeleteAccountRequest, MeHomeResponse, MeLeadershipResponse } from '@kairos/types';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import { buildDataExportHtml } from '@/lib/data-export-html';
+import i18n from '@/lib/i18n';
 
 export interface MyRotaParams {
   from?: string;
@@ -18,6 +20,26 @@ export function useMyRota(params?: MyRotaParams) {
       const res = await api.me.rota(params);
       return res.data!;
     },
+  });
+}
+
+/**
+ * The control-centre payload. One request for the whole page — agenda, the
+ * queue of things waiting on the caller, the pulse numbers and the tail —
+ * arranged server-side by altitude so the client holds no role logic.
+ *
+ * Shared with the mobile home screen; items carry ids rather than routes, so
+ * the route mapping lives in the page.
+ */
+export function useMeHome() {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  return useQuery<MeHomeResponse>({
+    queryKey: ['me', 'home'],
+    queryFn: async () => {
+      const res = await api.me.home();
+      return res.data!;
+    },
+    enabled: !!accessToken,
   });
 }
 
@@ -52,4 +74,56 @@ export function useMyLeadership() {
   }, [query.data, setBranchAdminAuthority]);
 
   return query;
+}
+
+function triggerDownload(filename: string, blob: Blob): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Fetch the caller's data export and download it as a readable HTML report.
+ * Opens in any browser by double-clicking; users can print or save-as-PDF
+ * from the browser's print dialog.
+ */
+export async function downloadMyDataExportHtml(): Promise<void> {
+  const res = await api.me.exportData();
+  const data = res.data;
+  if (!data) throw new Error('Export returned no data');
+  const html = buildDataExportHtml(data as Parameters<typeof buildDataExportHtml>[0], i18n.t.bind(i18n), i18n.language);
+  const filename = `kharis-my-data-${new Date().toISOString().slice(0, 10)}.html`;
+  triggerDownload(filename, new Blob([html], { type: 'text/html;charset=utf-8' }));
+}
+
+/**
+ * Fetch the caller's data export and download the raw JSON. Kept for GDPR
+ * portability (Art. 20 — structured, machine-readable) and anyone comfortable
+ * with the raw fields.
+ */
+export async function downloadMyDataExportJson(): Promise<void> {
+  const res = await api.me.exportData();
+  const data = res.data;
+  if (!data) throw new Error('Export returned no data');
+  const filename = `kharis-my-data-${new Date().toISOString().slice(0, 10)}.json`;
+  triggerDownload(filename, new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+}
+
+/**
+ * User-initiated account deletion. The API scrubs PII on the member row and
+ * flips isActive=false. On success the caller should log out and route to
+ * the login page.
+ */
+export function useDeleteMyAccount() {
+  return useMutation({
+    mutationFn: async (data: DeleteAccountRequest) => {
+      const res = await api.me.deleteAccount(data);
+      return res.data!;
+    },
+  });
 }

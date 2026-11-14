@@ -444,6 +444,121 @@ describe('recordAttendance', () => {
   });
 });
 
+// ── selfCheckIn ────────────────────────────────────────────
+
+describe('selfCheckIn', () => {
+  // Times are all "now = 2026-05-24T09:15:00Z"; service starts 09:00.
+  // With defaults (open 30 min before, close 90 after, late after 30) the
+  // window is [08:30, 10:30] and status flips to Late after 09:30.
+  const now = new Date('2026-05-24T09:15:00Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  const configRow = (overrides: Partial<{
+    enabled: boolean;
+    openBefore: number;
+    closeAfter: number;
+    lateAfter: number;
+    serviceDate: Date;
+    isActive: boolean;
+  }> = {}) => [{
+    serviceId,
+    serviceDate: overrides.serviceDate ?? new Date('2026-05-24T09:00:00Z'),
+    isActive: overrides.isActive ?? true,
+    branchId,
+    enabled: overrides.enabled ?? true,
+    openBefore: overrides.openBefore ?? 30,
+    closeAfter: overrides.closeAfter ?? 90,
+    lateAfter: overrides.lateAfter ?? 30,
+  }];
+
+  it('records Present inside the window before the late threshold', async () => {
+    setupSelectSequence(
+      configRow(), // service+branch config
+      [],          // no existing attendance row
+    );
+    setupInsert(undefined);
+    const { selfCheckIn } = await import('./service');
+    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    expect(r.status).toBe('Present');
+    expect(r.alreadyCheckedIn).toBe(false);
+  });
+
+  it('records Late when past the late threshold but inside the close window', async () => {
+    vi.setSystemTime(new Date('2026-05-24T09:45:00Z'));
+    setupSelectSequence(configRow(), []);
+    setupInsert(undefined);
+    const { selfCheckIn } = await import('./service');
+    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    expect(r.status).toBe('Late');
+  });
+
+  it('rejects when window has not opened yet', async () => {
+    vi.setSystemTime(new Date('2026-05-24T08:00:00Z'));
+    setupSelectSequence(configRow());
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('rejects when window has closed', async () => {
+    vi.setSystemTime(new Date('2026-05-24T11:00:00Z'));
+    setupSelectSequence(configRow());
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('rejects when branch has self-check-in disabled', async () => {
+    setupSelectSequence(configRow({ enabled: false }));
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('rejects cross-branch attempt from a non-admin', async () => {
+    setupSelectSequence([{
+      serviceId,
+      serviceDate: new Date('2026-05-24T09:00:00Z'),
+      isActive: true,
+      branchId: otherBranchId, // not the caller's branch
+      enabled: true,
+      openBefore: 30,
+      closeAfter: 90,
+      lateAfter: 30,
+    }]);
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+
+  it('is idempotent — returns the existing row if the member already checked in', async () => {
+    setupSelectSequence(
+      configRow(),
+      [{ status: 'Present', arrivalTime: new Date('2026-05-24T09:05:00Z') }],
+    );
+    const { selfCheckIn } = await import('./service');
+    const r = await selfCheckIn(mockDb, memberAuth, serviceId);
+    expect(r.alreadyCheckedIn).toBe(true);
+    expect(r.status).toBe('Present');
+  });
+
+  it('throws NotFound for an inactive or missing service', async () => {
+    setupSelectSequence([]);
+    const { selfCheckIn } = await import('./service');
+    await expect(selfCheckIn(mockDb, memberAuth, serviceId)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+});
+
 // ── listAttendance ─────────────────────────────────────────
 
 describe('listAttendance', () => {
@@ -483,9 +598,26 @@ describe('getMissingMembers', () => {
     });
   });
 
-  it('lets a pastor query any branch', async () => {
+  // Regression, 2026-10-06: this used to assert a branch-scoped pastor could
+  // query ANY branch, which is the bug a Branch System Admin for Kharis London
+  // Central hit — they saw every branch's attendance. `branch:read` checked
+  // without a scope is true when the caller holds it on any branch at all.
+  it('refuses a branch-scoped pastor another branch', async () => {
     setupSelectSequence([]);
-    const result = await getMissingMembers(mockDb, pastorAuth, { branchId: otherBranchId });
+    await expect(
+      getMissingMembers(mockDb, pastorAuth, { branchId: otherBranchId }),
+    ).rejects.toThrow(/only access attendance in your branch/i);
+  });
+
+  it('lets a branch-scoped pastor query their own branch', async () => {
+    setupSelectSequence([]);
+    const result = await getMissingMembers(mockDb, pastorAuth, { branchId });
+    expect(result).toEqual([]);
+  });
+
+  it('lets a system admin query any branch', async () => {
+    setupSelectSequence([]);
+    const result = await getMissingMembers(mockDb, adminAuth, { branchId: otherBranchId });
     expect(result).toEqual([]);
   });
 });
@@ -495,38 +627,59 @@ describe('getMissingMembers', () => {
 // counts per branch, (3) distinct attendees per branch over the window.
 
 describe('getAttendanceByBranch', () => {
-  it('merges per-branch member + attendee counts into a rate', async () => {
+  // Rate now uses the engaged-in-last-N-months denominator, not the active
+  // roll. Roll count is returned alongside for context. Four grouped queries:
+  // branches, active-count, distinct-attendees, engaged-member-ids.
+  const engagedRows = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ branchId, memberId: `eng-${i}` }));
+
+  it('uses engaged as rate denominator; returns the roll count alongside', async () => {
     setupSelectSequence(
       [{ id: branchId, branchName: 'London' }], // branchRows
-      [{ branchId, value: 100 }], // active member counts
-      [{ branchId, value: 80 }], // distinct attendees
+      [{ branchId, value: 100 }],                // active member counts (roll)
+      [{ branchId, value: 8 }],                  // distinct attendees in window
+      engagedRows(10),                           // engaged: 10 unique members in last N months
     );
 
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
 
     expect(result).toEqual([
-      { branchId, branchName: 'London', activeMembers: 100, distinctAttendees: 80, attendanceRate: 0.8 },
+      {
+        branchId,
+        branchName: 'London',
+        activeMembers: 100,
+        engagedMembers: 10,
+        distinctAttendees: 8,
+        attendanceRate: 0.8, // 8 / 10 engaged
+      },
     ]);
   });
 
-  it('caps the rate at 1.0 when visitors push attendees above active members', async () => {
+  it('caps the rate at 1.0 when a visitor pushes distinct attendees above engaged', async () => {
     setupSelectSequence(
       [{ id: branchId, branchName: 'London' }],
-      [{ branchId, value: 4 }],
+      [{ branchId, value: 100 }],
       [{ branchId, value: 5 }], // 5 attendees incl a first-time visitor
+      engagedRows(4),
     );
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
     expect(result[0]!.attendanceRate).toBe(1);
   });
 
-  it('reports 0 for a branch with no active members or attendees', async () => {
+  it('falls back to the active roll when engaged is zero so the display avoids /0', async () => {
     setupSelectSequence(
       [{ id: branchId, branchName: 'London' }],
-      [], // no member counts
-      [], // no attendees
+      [{ branchId, value: 10 }],
+      [{ branchId, value: 0 }],
+      [], // no engaged rows — nobody attended in the window
     );
     const result = await getAttendanceByBranch(mockDb, adminAuth, { weeks: 4 });
-    expect(result[0]!).toMatchObject({ activeMembers: 0, distinctAttendees: 0, attendanceRate: 0 });
+    expect(result[0]).toMatchObject({
+      activeMembers: 10,
+      engagedMembers: 0,
+      distinctAttendees: 0,
+      attendanceRate: 0,
+    });
   });
 
   it('returns empty when no branches are in scope', async () => {
@@ -633,6 +786,17 @@ describe('getCohortDiff', () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
+  it('rejects admin/pastor callers who omit branchId — no more silent fallback', async () => {
+    await expect(
+      getCohortDiff(mockDb, adminAuth, {
+        presentInServiceIds: [svcA],
+        absentFromServiceIds: [],
+        presentMode: 'any',
+        absentMode: 'all',
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
   it('forbids services outside the caller branch', async () => {
     // service-validation select returns fewer rows than requested
     setupSelectSequence([{ id: svcA }]); // 1 row, but 2 ids requested
@@ -642,6 +806,7 @@ describe('getCohortDiff', () => {
         absentFromServiceIds: [],
         presentMode: 'any',
         absentMode: 'all',
+        branchId,
       }),
     ).rejects.toMatchObject({ statusCode: 403 });
   });
@@ -664,6 +829,7 @@ describe('getCohortDiff', () => {
       absentFromServiceIds: [svcB],
       presentMode: 'any',
       absentMode: 'all',
+      branchId,
     });
     expect(result.members).toEqual([{ memberId: m2, firstName: 'Bob', lastName: 'B' }]);
   });
@@ -678,6 +844,7 @@ describe('getCohortDiff', () => {
       absentFromServiceIds: [],
       presentMode: 'any',
       absentMode: 'all',
+      branchId,
     });
     expect(result.members).toEqual([]);
   });
@@ -694,6 +861,7 @@ describe('getCohortDiff', () => {
       absentFromServiceIds: [],
       presentMode: 'all',
       absentMode: 'all',
+      branchId,
     });
     expect(result.members).toHaveLength(1);
     expect(result.members[0]?.memberId).toBe(m1);
@@ -938,5 +1106,124 @@ describe('getMissingMembers with dept/fellowship filter', () => {
     );
     const result = await getMissingMembers(mockDb, adminAuth, { branchId, services: 4, departmentId: 'dep-empty' });
     expect(result).toEqual([]);
+  });
+});
+
+// ── Rotating QR (admin-side token issuer + member-side verify) ────
+
+describe('generateQrToken', () => {
+  const secret = 'test-qr-secret';
+
+  it('returns a token + expiresAt for an Admin-dept caller', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }], // getService
+      [{ value: 0 }], // count
+      deptCheck(true), // Admin dept → passes enforceServiceWriter
+    );
+    const { generateQrToken } = await import('./service');
+    const result = await generateQrToken(mockDb, adminDeptAuth, serviceId, secret);
+    expect(result.serviceId).toBe(serviceId);
+    expect(result.token.length).toBeGreaterThan(0);
+    expect(result.expiresAt).toBeGreaterThan(Date.now());
+  });
+
+  it('forbids a plain member (not in Admin dept, no branch:read grant)', async () => {
+    setupSelectSequence(
+      [{ ...sampleService, preacherFirstName: null, preacherLastName: null }],
+      [{ value: 0 }],
+      deptCheck(false), // not in Admin dept
+    );
+    const { generateQrToken } = await import('./service');
+    await expect(generateQrToken(mockDb, memberAuth, serviceId, secret)).rejects.toMatchObject({
+      statusCode: 403,
+    });
+  });
+});
+
+describe('selfCheckInWithQrToken', () => {
+  const secret = 'test-qr-secret-2';
+  const now = new Date('2026-05-24T09:15:00Z');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  const configRow = () => [{
+    serviceId,
+    serviceDate: new Date('2026-05-24T09:00:00Z'),
+    isActive: true,
+    branchId,
+    enabled: true,
+    openBefore: 30,
+    closeAfter: 90,
+    lateAfter: 30,
+  }];
+
+  it('accepts a current-bucket token and records Present', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { token } = await signQrToken(secret, serviceId, now.getTime());
+
+    setupSelectSequence(configRow(), []); // service+branch, no existing attendance
+    setupInsert(undefined);
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
+    expect(r.status).toBe('Present');
+    expect(r.alreadyCheckedIn).toBe(false);
+  });
+
+  it('accepts a previous-bucket token (grace window across the 30s boundary)', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    // Sign at a moment that lands in the previous bucket. `now` sits on a
+    // 30s boundary in these tests, so we move BACK to inside the previous
+    // bucket (any millisecond in [now - 30_000, now - 1]) — we pick 15_000ms
+    // before to leave headroom, then re-freeze the clock to `now` for verify.
+    const prevBucketTs = now.getTime() - 15_000;
+    const { token } = await signQrToken(secret, serviceId, prevBucketTs);
+    vi.setSystemTime(now); // make sure verify runs at `now`
+
+    setupSelectSequence(configRow(), []);
+    setupInsert(undefined);
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
+    expect(r.alreadyCheckedIn).toBe(false);
+  });
+
+  it('rejects a token signed more than one bucket ago (expired)', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    // Sign 90s ago → three buckets stale → rejected.
+    const { token } = await signQrToken(secret, serviceId, now.getTime() - 90_000);
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    await expect(
+      selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('rejects a token signed for a different service', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { token } = await signQrToken(secret, 'some-other-service-id', now.getTime());
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    await expect(
+      selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret),
+    ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('is idempotent — a double-scan returns the existing row rather than inserting twice', async () => {
+    const { signQrToken } = await import('./self-check-in-qr');
+    const { token } = await signQrToken(secret, serviceId, now.getTime());
+
+    setupSelectSequence(
+      configRow(),
+      [{ status: 'Present', arrivalTime: new Date('2026-05-24T09:05:00Z') }], // already checked in
+    );
+
+    const { selfCheckInWithQrToken } = await import('./service');
+    const r = await selfCheckInWithQrToken(mockDb, memberAuth, serviceId, token, secret);
+    expect(r.alreadyCheckedIn).toBe(true);
+    expect(r.status).toBe('Present');
   });
 });

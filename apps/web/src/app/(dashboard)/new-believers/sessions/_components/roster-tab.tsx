@@ -5,13 +5,16 @@ import { Users } from 'lucide-react';
 import { useEnrollments } from '@/hooks/use-new-believers';
 import type { NewBelieverEnrollmentWithMember, NewBelieverStageValue } from '@kairos/types';
 import { getSessionStageDef } from './session-helpers';
+import { stageLabel } from '../../_components/stage-config';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   branchId: string;
   sessionStage: NewBelieverStageValue;
 }
 
-export function RosterTab({ branchId, sessionStage }: Props) {
+export function RosterTab({ branchId, sessionStage }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
   const stageDef = getSessionStageDef(sessionStage);
   const { data, isLoading } = useEnrollments(
     { branchId, stage: sessionStage, limit: 500 },
@@ -31,16 +34,16 @@ export function RosterTab({ branchId, sessionStage }: Props) {
 
   if (isLoading) {
     return (
-      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        Loading roster...
-      </p>
+      <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t('newBelievers:loadingRoster')}</p>
     );
   }
 
   if (enrolled.length === 0) {
     return (
       <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-        No active enrollments at {stageDef?.label ?? 'this stage'}.
+        {t('newBelievers:noActiveEnrollmentsAt', {
+          stage: stageLabel(t, stageDef, t('newBelievers:thisStage')),
+        })}
       </p>
     );
   }
@@ -48,8 +51,10 @@ export function RosterTab({ branchId, sessionStage }: Props) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Showing {enrolled.length} active enrollment{enrolled.length === 1 ? '' : 's'} currently at{' '}
-        {stageDef?.label ?? sessionStage}.
+        {t('newBelievers:showingActiveEnrollmentsAt', {
+          count: enrolled.length,
+          stage: stageLabel(t, stageDef, sessionStage),
+        })}
       </p>
       <div className="overflow-hidden rounded-lg border border-input/10">
         {enrolled.map((enrollment) => (

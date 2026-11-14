@@ -6,6 +6,7 @@ import { Button, Card, CardContent } from '@kairos/ui';
 import { useWithdrawDepartmentJoinRequest } from '@/hooks/use-departments';
 import type { MyDepartmentJoinRequest } from '@kairos/types';
 import { useConfirm } from '@/components/confirm-dialog';
+import { useTranslation } from 'react-i18next';
 
 const STATUS_LABELS: Record<string, string> = {
   applied: 'Applied · awaiting review',
@@ -30,7 +31,8 @@ function formatDateTime(value: string | Date | null) {
   });
 }
 
-export function MyApplicationsList({ items }: Props) {
+export function MyApplicationsList({ items }: Props) {  const { t } = useTranslation(['departments', 'common']);
+
   const withdraw = useWithdrawDepartmentJoinRequest();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
@@ -38,10 +40,8 @@ export function MyApplicationsList({ items }: Props) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-10 text-center">
-          <p className="text-sm font-medium">No applications in progress.</p>
-          <p className="text-xs text-muted-foreground">
-            Request to join a department from the list below.
-          </p>
+          <p className="text-sm font-medium">{t('departments:noApplicationsInProgress')}</p>
+          <p className="text-xs text-muted-foreground">{t('departments:requestToJoinADepartmentFrom')}</p>
         </CardContent>
       </Card>
     );
@@ -49,18 +49,18 @@ export function MyApplicationsList({ items }: Props) {
 
   const handleWithdraw = async (branchDeptId: string, requestId: string, departmentName: string) => {
     const ok = await confirm({
-      title: `Withdraw your application to ${departmentName}?`,
-      description: 'Your application will be cancelled. You can apply again later.',
-      confirmLabel: 'Withdraw',
+      title: t('departments:withdrawApplicationV1', { v1: departmentName }),
+      description: t('departments:yourApplicationWillBeCancelledYou'),
+      confirmLabel: t('departments:withdraw'),
       variant: 'destructive',
     });
     if (!ok) return;
     withdraw.mutate(
       { branchDeptId, requestId },
       {
-        onSuccess: () => toast.success('Application withdrawn.'),
+        onSuccess: () => toast.success(t('departments:applicationWithdrawn')),
         onError: (err) =>
-          toast.error(err instanceof Error ? err.message : 'Failed to withdraw.'),
+          toast.error(err instanceof Error ? err.message : t('departments:failedWithdraw')),
       },
     );
   };
@@ -97,9 +97,7 @@ export function MyApplicationsList({ items }: Props) {
                   variant="outline"
                   onClick={() => handleWithdraw(req.branchDepartmentId, req.id, req.departmentName)}
                   disabled={withdraw.isPending}
-                >
-                  Withdraw
-                </Button>
+                >{t('departments:withdraw')}</Button>
               </li>
             );
           })}

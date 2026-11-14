@@ -1,0 +1,19 @@
+{
+  "role": "platform-new-believers-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Kwan no",
+      "caption": "Adesua ɛnan, na adwumakuo.",
+      "speech": "Gyidifoɔ Foforɔ ne asuafoyɛ kwan no. Adesua ɛnan, na adwumakuo bi mu kɔ, a obiara wɔ board no so."
+    },
+    {
+      "n": 2,
+      "title": "Adesua",
+      "caption": "Wɔahyehyɛ, wɔakyerɛkyerɛ, wɔakyerɛw.",
+      "speech": "Wɔhyehyɛ adesua ma asɔre baa biara a ɔkyerɛkyerɛni ne ɛda ka ho. Kyerɛw mmaeɛ wɔ adesua no mu, na yi nnipa kɔ gyinaberɛ a ɛdi hɔ."
+    }
+  ]
+}

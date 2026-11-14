@@ -1,0 +1,18 @@
+{
+  "role": "smoke",
+  "voice": "athena",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Signing in",
+      "caption": "One account, whichever way you sign in.",
+      "speech": "Kairos opens on the sign-in page. You can use an email address and password, or Google, Microsoft or Apple."
+    },
+    {
+      "n": 2,
+      "title": "Your overview",
+      "caption": "Everything scoped to what you are responsible for.",
+      "speech": "The overview shows only what your role covers. A fellowship leader sees their fellowship; a pastor sees their branch."
+    }
+  ]
+}

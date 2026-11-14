@@ -50,7 +50,8 @@ async function seedSoulsData() {
         city: 'Metro City',
         description: 'Community outreach program for soul winning',
         coordinatorId: existingMembers[0]!.id,
-        coordinatorName: `${existingMembers[0]!.firstName} ${existingMembers[0]!.lastName}`,
+        // No coordinatorName: it is only for the institutional "Kharis" case.
+        // Setting both froze this string ahead of the member's live name.
         createdBy: existingMembers[0]!.id,
         totalSoulsReached: 0,
         isCompleted: false,

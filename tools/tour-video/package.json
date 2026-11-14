@@ -1,0 +1,26 @@
+{
+  "name": "@kairos/tour-video",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Renders the narrated Kairos product tours with Remotion.",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "node render.mjs",
+    "typecheck": "tsc --noEmit",
+    "voice": "node voice.mjs",
+    "smoke": "node smoke.mjs",
+    "test": "node lib/schedule.test.mjs && node lib/align.test.mjs",
+    "check:deepgram": "node check-deepgram.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.535",
+    "remotion": "4.0.535",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.3"
+  }
+}

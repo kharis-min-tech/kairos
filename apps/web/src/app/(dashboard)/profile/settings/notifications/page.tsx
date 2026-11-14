@@ -14,6 +14,8 @@ import {
   useNotificationPreferences,
   useUpdateNotificationPreference,
 } from '@/hooks/use-notification-preferences';
+import { useTranslation } from 'react-i18next';
+import { localiseOptions } from '@/lib/localise-options';
 
 type SelectValue = 'off' | 'immediate' | 'digest_daily';
 
@@ -27,13 +29,16 @@ function fromSelect(value: SelectValue): { enabled: boolean; cadence: Notificati
   return { enabled: true, cadence: value };
 }
 
+// i18n-ignore(5): the English source; `settings:notifyCadence_<value>` holds the display
+// text and `localiseOptions` swaps it in at the render site.
 const SELECT_OPTIONS = [
   { value: 'immediate', label: 'Immediate' },
   { value: 'digest_daily', label: 'Daily digest' },
   { value: 'off', label: 'Off' },
 ];
 
-export default function NotificationsSettingsPage() {
+export default function NotificationsSettingsPage() {  const { t } = useTranslation(['settings', 'common']);
+
   const { data, isLoading, isError, error } = useNotificationPreferences();
   const updateMutation = useUpdateNotificationPreference();
 
@@ -46,29 +51,23 @@ export default function NotificationsSettingsPage() {
       <div className="flex items-center gap-3 pb-2">
         <Link href="/profile/settings">
           <Button variant="ghost" size="sm" className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Settings
-          </Button>
+            <ArrowLeft className="h-4 w-4" />{t('settings:settings')}</Button>
         </Link>
       </div>
 
       <div className="pb-4">
-        <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Choose which categories reach your inbox and how often.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('settings:notifications')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('settings:chooseWhichCategoriesReachYourInbox')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Email preferences
-          </CardTitle>
+            <Bell className="h-4 w-4 text-[#5D3FD3]" aria-hidden />{t('settings:emailPreferences')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
           {isLoading && (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              Loading preferences…
-            </div>
+            <div className="py-8 text-center text-sm text-muted-foreground">{t('settings:loadingPreferences')}</div>
           )}
           {isError && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -88,16 +87,19 @@ export default function NotificationsSettingsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">
-                      {NOTIFICATION_CATEGORY_LABEL[category]}
+                      {t(`settings:notifyCategory_${category}`, {
+                        defaultValue: NOTIFICATION_CATEGORY_LABEL[category],
+                      })}
                     </p>
                     {isSecurity && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#5D3FD3]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#5D3FD3]">
-                        <Lock className="h-2.5 w-2.5" /> Always on
-                      </span>
+                        <Lock className="h-2.5 w-2.5" />{t('settings:alwaysOn')}</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {NOTIFICATION_CATEGORY_DESCRIPTION[category]}
+                    {t(`settings:notifyCategoryDesc_${category}`, {
+                      defaultValue: NOTIFICATION_CATEGORY_DESCRIPTION[category],
+                    })}
                   </p>
                 </div>
                 <div className="w-40 shrink-0">
@@ -111,7 +113,7 @@ export default function NotificationsSettingsPage() {
                         cadence: next.cadence,
                       });
                     }}
-                    options={SELECT_OPTIONS}
+                    options={localiseOptions(t, 'settings:notifyCadence_', SELECT_OPTIONS)}
                     disabled={isSecurity || updateMutation.isPending}
                   />
                 </div>
@@ -121,10 +123,7 @@ export default function NotificationsSettingsPage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Daily digest sends a single 8&#8239;AM roundup per category instead of an
-        email per event. Security alerts always go immediately.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('settings:dailyDigestSendsSingle88239')}</p>
     </div>
   );
 }

@@ -1,0 +1,338 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { resolveVerse, localiseReference } from '@kairos/core';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Avatar,
+  spacing,
+  typography,
+  radii,
+  useThemedStyles,
+  type ThemeColors,
+  useColors,
+} from '@kairos/ui-native';
+import type {
+  HomeActivityItem,
+  HomeAgendaItem,
+  HomeGettingStartedItem,
+  HomeGroupSummary,
+  HomePulseWarning,
+  HomeTaskItem,
+} from '@kairos/types';
+import { api } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth';
+import {
+  AgendaBlock,
+  GettingStartedBlock,
+  GroupsBlock,
+  HomeError,
+  HomeSkeleton,
+  NeedsYouBlock,
+  PulseBlock,
+  RecentActivityBlock,
+  StreakBlock,
+} from '@/components/home-blocks';
+
+/**
+ * The control centre. One set of blocks for every lens — `altitude` from
+ * GET /api/me/home decides which appear and in what order, so adding a role
+ * never means adding a branch here.
+ *
+ *   personal → agenda, streak, getting started
+ *   group    → agenda, needs you, my groups
+ *   branch   → agenda, needs you, pulse, this week
+ *   church   → pulse first (no personal duties), then needs you, branches
+ *
+ * Payload items carry ids, not routes; the mapping onto this app's route
+ * tree lives in the handlers below.
+ */
+export default function Home() {
+  const { t, i18n } = useTranslation(['home', 'common']);
+  const verse = resolveVerse(i18n.language);
+  const styles = useThemedStyles(makeStyles);
+  const c = useColors();
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+
+  const home = useQuery({
+    queryKey: ['me', 'home'],
+    queryFn: async () => (await api.me.home()).data ?? null,
+    enabled: !!user,
+  });
+
+  const dateHeader = useMemo(
+    () =>
+      new Date().toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+    [],
+  );
+
+  const data = home.data;
+  const altitude = data?.altitude ?? 'personal';
+
+
+  function openAgendaItem(item: HomeAgendaItem) {
+    switch (item.kind) {
+      case 'service':
+        router.push(`/attendance/${item.refs.serviceId}` as never);
+        return;
+      case 'rota':
+        router.push('/rota');
+        return;
+      case 'fellowship_meeting':
+        router.push(`/fellowships/${item.refs.fellowshipId}` as never);
+        return;
+      case 'membership_session':
+        router.push('/membership' as never);
+        return;
+    }
+  }
+
+  function openTask(item: HomeTaskItem) {
+    switch (item.kind) {
+      case 'register_missing':
+        router.push(`/rollcall/${item.refs.fellowshipId}/${item.refs.meetingId}` as never);
+        return;
+      case 'welfare_concern':
+      case 'safeguarding_concern':
+        router.push('/concerns' as never);
+        return;
+      case 'followup_due':
+        router.push('/follow-ups?queue=due' as never);
+        return;
+      case 'fellowship_join':
+        router.push(
+          (item.refs.fellowshipId ? `/fellowships/${item.refs.fellowshipId}` : '/fellowships') as never,
+        );
+        return;
+      case 'department_join':
+        // Mobile shows a department's pending requests on its recruitment tab.
+        router.push(
+          (item.refs.departmentId
+            ? `/departments/${item.refs.departmentId}/recruitment`
+            : '/departments') as never,
+        );
+        return;
+      case 'first_timer_followup':
+        router.push('/follow-ups?queue=first-timers' as never);
+        return;
+      case 'membership_interest':
+        router.push('/membership/interest' as never);
+        return;
+      case 'rota_swap':
+        router.push('/rota');
+        return;
+      default:
+        router.push('/approvals');
+    }
+  }
+
+  function openGroup(group: HomeGroupSummary) {
+    if (group.kind === 'fellowship') router.push(`/fellowships/${group.id}` as never);
+    else if (group.kind === 'department') router.push(`/departments/${group.id}` as never);
+    else router.push('/branches');
+  }
+
+  function openGettingStarted(item: HomeGettingStartedItem) {
+    if (item.key === 'join_fellowship') router.push('/fellowships');
+    else if (item.key === 'membership_interest') router.push('/membership/interest' as never);
+    else router.push('/profile');
+  }
+
+  function openActivity(item: HomeActivityItem) {
+    switch (item.kind) {
+      case 'member_joined':
+      case 'membership_graduated':
+        router.push(`/members/${item.refs.memberId}` as never);
+        return;
+      case 'fellowship_met':
+        router.push(`/fellowships/${item.refs.fellowshipId}` as never);
+        return;
+      case 'form_submitted':
+        router.push('/forms/submissions' as never);
+        return;
+      case 'soul_captured':
+        router.push('/souls' as never);
+        return;
+    }
+  }
+
+  function openWarning(warning: HomePulseWarning) {
+    if (warning.kind === 'members_drifting') router.push('/reports/missing-members' as never);
+    else if (warning.kind === 'attendance_unrecorded') router.push('/attendance' as never);
+    else router.push('/branches');
+  }
+
+  const agendaBlocks = (
+    <>
+      <AgendaBlock label={t('home:today')} items={data?.today ?? []} onPress={openAgendaItem} />
+      <AgendaBlock
+        label={t('home:thisWeek')}
+        items={data?.thisWeek ?? []}
+        withDay
+        onPress={openAgendaItem}
+      />
+    </>
+  );
+
+  const queueBlock = <NeedsYouBlock items={data?.needsYou ?? []} onPress={openTask} />;
+  const pulseBlock = data?.pulse ? (
+    <PulseBlock pulse={data.pulse} onWarningPress={openWarning} />
+  ) : null;
+  const activityBlock = (
+    <RecentActivityBlock items={data?.recentActivity ?? []} onPress={openActivity} />
+  );
+  const tailBlock = (
+    <GroupsBlock
+      label={altitude === 'church' ? t('common:allBranches') : t('common:groupsILead')}
+      groups={data?.groups ?? []}
+      onPress={openGroup}
+    />
+  );
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={home.isFetching}
+            onRefresh={() => home.refetch()}
+            tintColor={c.primary}
+          />
+        }
+      >
+        <View style={styles.greetingRow}>
+          <View style={styles.greetingText}>
+            <Text style={styles.dateLabel}>{dateHeader}</Text>
+            <Text style={styles.greeting}>
+              {t('common:goodDayName', { name: user?.firstName ?? t('common:friend') })}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => router.push('/profile')}
+            accessibilityRole="button"
+            accessibilityLabel={t('home:openProfile')}
+            hitSlop={8}
+          >
+            <Avatar
+              size="md"
+              photoUrl={user?.photoUrl}
+              firstName={user?.firstName}
+              lastName={user?.lastName}
+              notificationDot
+            />
+          </Pressable>
+        </View>
+
+        {home.isLoading ? (
+          <HomeSkeleton />
+        ) : home.isError || !data ? (
+          <HomeError
+            message={
+              home.error instanceof Error
+                ? home.error.message
+                : t('common:pleaseCheckYourConnectionAndTry')
+            }
+            onRetry={() => home.refetch()}
+          />
+        ) : altitude === 'church' ? (
+          // A system admin has no personal duties, so the numbers lead and the
+          // agenda — usually one line, often none — goes last.
+          <>
+            {pulseBlock}
+            {queueBlock}
+            {tailBlock}
+            {activityBlock}
+            {agendaBlocks}
+          </>
+        ) : (
+          <>
+            {agendaBlocks}
+            {queueBlock}
+            {pulseBlock}
+            {tailBlock}
+            {data?.streakWeeks ? (
+              <StreakBlock
+                weeks={data.streakWeeks}
+                onPress={() => router.push('/my-attendance')}
+              />
+            ) : null}
+            <GettingStartedBlock
+              items={data?.gettingStarted ?? []}
+              onPress={openGettingStarted}
+            />
+            {activityBlock}
+          </>
+        )}
+
+        <View style={styles.verseCard}>
+          <Text style={styles.verseEyebrow}>{t('home:dailyVerse')}</Text>
+          <Text style={styles.verseText}>{`\u201C${verse.text}\u201D`}</Text>
+          <Text style={styles.verseRef}>
+            {`— ${localiseReference(verse.ref, i18n.language)} (${verse.version})`}
+            {verse.fellBackToEnglish ? ` · ${t('home:verseInEnglish')}` : ''}
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function makeStyles(c: ThemeColors) {
+  return StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: c.page,
+    },
+    container: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xxl * 2,
+    },
+    greetingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    greetingText: {
+      flex: 1,
+    },
+    dateLabel: {
+      ...typography.meta,
+      color: c.inkFaded,
+    },
+    greeting: {
+      ...typography.screenTitle,
+      color: c.ink,
+      marginTop: 2,
+    },
+    verseCard: {
+      marginTop: spacing.xxl,
+      padding: spacing.lg,
+      borderRadius: radii.lg,
+      backgroundColor: c.subtle,
+    },
+    verseEyebrow: {
+      ...typography.eyebrow,
+      color: c.inkFaded,
+    },
+    verseText: {
+      ...typography.cardTitle,
+      color: c.ink,
+      marginTop: spacing.sm,
+    },
+    verseRef: {
+      ...typography.meta,
+      color: c.inkFaded,
+      marginTop: spacing.xs,
+    },
+  });
+}

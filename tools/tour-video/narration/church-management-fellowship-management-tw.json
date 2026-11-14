@@ -1,0 +1,19 @@
+{
+  "role": "church-management-fellowship-management-tw",
+  "lang": "tw",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Fekuo ho hwɛ",
+      "caption": "Wo kuo, wo nkrataa.",
+      "speech": "Sɛ wodi fekuo bi anim a, wohwɛ ne mufoɔ so, wokyerɛw nhyiam biara, na wohunu hwan na wagyae ba komm."
+    },
+    {
+      "n": 2,
+      "title": "Ne nhyiam",
+      "caption": "Din kenkan nhyiam biara mu.",
+      "speech": "Nhyiam biara wɔ n’ankasa din kenkan. Nnawɔtwe kakra akyi, ɛno na ɛyɛ mmaeɛ su a amanneɛbɔ no kenkan."
+    }
+  ]
+}

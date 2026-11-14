@@ -1,0 +1,19 @@
+{
+  "role": "platform-souls-dashboard-kri",
+  "lang": "kri",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Di Nɔmba dɛn",
+      "caption": "Aw di paiplain de du.",
+      "speech": "Di sol dashbɔd de tɔn di paiplain to nɔmba: omɔch na ɛvri stej, omɔch kɔnvat, ɛn aw fresh di fɔlo ɔp dɛn de."
+    },
+    {
+      "n": 2,
+      "title": "Bay Stetɔs",
+      "caption": "Klik wan ba fɔ si udat.",
+      "speech": "Di chat dɛn de brok am dɔŋ bay stetɔs ɛn bay ɔjɛnsi. Klik ɛni ba fɔ si ɛgzakli wetin pipul i de kawnt."
+    }
+  ]
+}

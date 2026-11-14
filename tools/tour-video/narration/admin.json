@@ -1,0 +1,61 @@
+{
+  "role": "admin",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Your overview",
+      "caption": "Every branch at once, and what needs you today.",
+      "speech": "This is the administrator view. Church Pulse counts every branch at once, and Needs You lists what is waiting on somebody today."
+    },
+    {
+      "n": 2,
+      "title": "Branches",
+      "caption": "Create them, group them by region, retire them.",
+      "speech": "Branches are yours alone. Only an administrator creates one, moves it between regions, or takes it out of active use."
+    },
+    {
+      "n": 3,
+      "title": "Inside a branch",
+      "caption": "Its details, and who currently leads it.",
+      "speech": "Open a branch to set its details and its leadership. Naming the main pastor here is what gives them sight of that branch's safeguarding queue."
+    },
+    {
+      "n": 4,
+      "title": "Regions",
+      "caption": "The geography your branches are grouped by.",
+      "speech": "Regions group branches by geography. Create the region first; a branch cannot be created until the region it belongs to exists."
+    },
+    {
+      "n": 5,
+      "title": "The approval queue",
+      "caption": "Nobody gets in until somebody lets them in.",
+      "speech": "Anyone who signs up themselves waits here. Approve them and they get full member access; reject them and the account is removed."
+    },
+    {
+      "n": 6,
+      "title": "Who holds what",
+      "caption": "Grants, not job titles, decide what people see.",
+      "speech": "Open a member to manage their grants. Kairos stores only two system roles, so everything else somebody can do comes from a grant."
+    },
+    {
+      "n": 7,
+      "title": "Membership classes",
+      "caption": "Church-wide, so no branch grant reaches it.",
+      "speech": "The membership programme is church-wide. Cohorts draw from every branch, so administering it takes a church-scoped grant, never a branch one."
+    },
+    {
+      "n": 8,
+      "title": "Reports across branches",
+      "caption": "The only view that compares one branch to another.",
+      "speech": "Reports are the cross-branch view. You are the only role that sees every branch side by side rather than one at a time."
+    },
+    {
+      "n": 9,
+      "title": "Your language",
+      "caption": "Kairos and this handbook, in four languages.",
+      "speech": "Kairos speaks English, French, Krio and Twi. Change it from the sidebar, and the handbook opens in the same language you chose."
+    }
+  ]
+}

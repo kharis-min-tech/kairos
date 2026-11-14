@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CalendarDays, MapPin, Users } from 'lucide-react';
 import { Badge } from '@kairos/ui';
 import type { NewBelieverSession, NewBelieverStageValue } from '@kairos/types';
+import { useCapabilities } from '@/hooks/use-capabilities';
 import { AttendanceTab } from './attendance-tab';
 import { NotesTab } from './notes-tab';
 import { RosterTab } from './roster-tab';
@@ -13,7 +14,10 @@ import {
   getSessionStageDef,
   isUpcomingSession,
   teacherName,
+  sessionTopic,
 } from './session-helpers';
+import { stageLabel } from '../../_components/stage-config';
+import { useTranslation } from 'react-i18next';
 
 type Tab = 'attendance' | 'notes' | 'roster';
 
@@ -21,19 +25,27 @@ interface Props {
   session: NewBelieverSession;
   branchId: string;
   userMemberId: string;
-  userRole: string;
 }
 
-export function SessionDetailPane({ session, branchId, userMemberId, userRole }: Props) {
+export function SessionDetailPane({ session, branchId, userMemberId }: Props) {  const { t } = useTranslation(['newBelievers', 'common']);
+
+  const caps = useCapabilities();
   const [tab, setTab] = useState<Tab>('attendance');
   const stageDef = getSessionStageDef(session.sessionStage);
   const upcoming = isUpcomingSession(session.sessionDate);
-  const status = upcoming ? 'Upcoming' : 'Past';
+  const status = upcoming ? t('newBelievers:upcoming') : t('newBelievers:past');
 
-  const isAdminOrPastor = userRole === 'admin' || userRole === 'pastor';
+  // Mirrors the server gate in apps/api/src/new-believers/service.ts: the
+  // session's own teacher, or anyone holding branch:read.
+  //
+  // This used to compare a role string against 'admin' | 'pastor' | 'leader'.
+  // SystemRole has only been 'admin' | 'member' since the RBAC rebuild, so the
+  // pastor and leader branches were dead and a branch pastor could neither
+  // edit session notes nor record attendance unless they happened to be the
+  // teacher. Authority comes from capabilities, never from a role name.
   const isTeacherOfSession = !!session.teacherId && session.teacherId === userMemberId;
-  const canEditNotes = isTeacherOfSession || isAdminOrPastor;
-  const canRecordAttendance = canEditNotes || userRole === 'leader';
+  const canEditNotes = isTeacherOfSession || caps.has('branch:read');
+  const canRecordAttendance = canEditNotes || caps.has('newbelievers:teach');
 
   return (
     <div className="rounded-xl border border-input/10 bg-card shadow-ambient">
@@ -44,7 +56,7 @@ export function SessionDetailPane({ session, branchId, userMemberId, userRole }:
               variant="outline"
               className="border-[#5D3FD3]/30 bg-[#5D3FD3]/10 text-[#5D3FD3]"
             >
-              {stageDef.label}
+              {stageLabel(t, stageDef)}
             </Badge>
           )}
           <Badge
@@ -58,7 +70,7 @@ export function SessionDetailPane({ session, branchId, userMemberId, userRole }:
             {status}
           </Badge>
         </div>
-        <h2 className="mt-2 text-xl font-semibold tracking-tight">{session.topic}</h2>
+        <h2 className="mt-2 text-xl font-semibold tracking-tight">{sessionTopic(t, session)}</h2>
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" />
@@ -74,17 +86,17 @@ export function SessionDetailPane({ session, branchId, userMemberId, userRole }:
           )}
           <span className="inline-flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
-            {teacherName(session)}
+            {teacherName(t, session)}
           </span>
         </div>
       </div>
 
       <div className="border-b border-foreground/10 px-5">
-        <nav className="-mb-px flex gap-4" aria-label="Session detail tabs">
+        <nav className="-mb-px flex gap-4" aria-label={t('newBelievers:sessionDetailTabs')}>
           {[
-            { value: 'attendance', label: 'Attendance' },
-            { value: 'notes', label: 'Notes' },
-            { value: 'roster', label: 'Roster' },
+            { value: 'attendance', label: t('newBelievers:attendance') },
+            { value: 'notes', label: t('newBelievers:notes') },
+            { value: 'roster', label: t('newBelievers:roster') },
           ].map((option) => {
             const isActive = tab === option.value;
             return (

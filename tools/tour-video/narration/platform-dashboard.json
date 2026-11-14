@@ -1,0 +1,25 @@
+{
+  "role": "platform-dashboard",
+  "lang": "en",
+  "voice": "aura-2-athena-en",
+  "stops": [
+    {
+      "n": 1,
+      "title": "Church Pulse",
+      "caption": "The four numbers that matter.",
+      "speech": "Church Pulse is the top of the dashboard: branches, total congregation, confirmed members and fellowships, all at a glance."
+    },
+    {
+      "n": 2,
+      "title": "Needs You",
+      "caption": "The things waiting on you.",
+      "speech": "Needs You lists what is actually waiting: approvals to make, branches without a pastor, anything stuck. Click a row to go straight to it."
+    },
+    {
+      "n": 3,
+      "title": "Recent activity",
+      "caption": "Who joined, and when.",
+      "speech": "Further down, recent activity shows who registered and when, so you can see the week without opening anything else."
+    }
+  ]
+}

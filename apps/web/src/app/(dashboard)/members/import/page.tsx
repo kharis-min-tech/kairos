@@ -7,8 +7,10 @@ import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } fro
 import { api } from '@/lib/api';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useAuthStore } from '@/lib/auth-store';
+import { useTranslation } from 'react-i18next';
 
-export default function MembersImportPage() {
+export default function MembersImportPage() {  const { t } = useTranslation(['members', 'common']);
+
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const caps = useCapabilities();
@@ -40,7 +42,7 @@ export default function MembersImportPage() {
       const res = await api.members.importCsv(file);
       setResult(res.data ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed. Please check your CSV format.');
+      setError(err instanceof Error ? err.message : t('members:importFailedPleaseCheckYourCsv'));
     } finally {
       setIsLoading(false);
     }
@@ -70,19 +72,17 @@ export default function MembersImportPage() {
           <Link href="/members" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-1">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Members
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Import Members</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Upload a CSV file to bulk-import church members</p>
+            </svg>{t('members:backToMembers')}</Link>
+          <h1 className="text-2xl font-bold tracking-tight">{t('members:importMembers')}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t('members:uploadACsvFileToBulk')}</p>
         </div>
       </div>
 
       {/* Template download */}
       <Card>
         <CardHeader>
-          <CardTitle>Step 1 — Download Template</CardTitle>
-          <CardDescription>Use the provided CSV template for correct formatting</CardDescription>
+          <CardTitle>{t('members:stepDownloadTemplate')}</CardTitle>
+          <CardDescription>{t('members:useTheProvidedCsvTemplateFor')}</CardDescription>
         </CardHeader>
         <CardContent>
           <button
@@ -91,20 +91,16 @@ export default function MembersImportPage() {
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download CSV Template
-          </button>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Required columns: firstName, lastName, email, homeBranchId. All other columns are optional.
-          </p>
+            </svg>{t('members:downloadCsvTemplate')}</button>
+          <p className="mt-2 text-xs text-muted-foreground">{t('members:requiredColumnsFirstnameLastnameEmailHomebra')}</p>
         </CardContent>
       </Card>
 
       {/* Upload */}
       <Card>
         <CardHeader>
-          <CardTitle>Step 2 — Upload CSV File</CardTitle>
-          <CardDescription>Select your filled-in CSV file</CardDescription>
+          <CardTitle>{t('members:stepUploadCsvFile')}</CardTitle>
+          <CardDescription>{t('members:selectYourFilledInCsvFile')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <button
@@ -119,7 +115,7 @@ export default function MembersImportPage() {
             {file ? (
               <p className="mt-2 text-sm font-medium text-foreground">{file.name}</p>
             ) : (
-              <p className="mt-2 text-sm text-muted-foreground">Click to select a CSV file</p>
+              <p className="mt-2 text-sm text-muted-foreground">{t('members:clickToSelectACsvFile')}</p>
             )}
           </button>
           <input
@@ -141,7 +137,7 @@ export default function MembersImportPage() {
             disabled={!file || isLoading}
             variant="success"
           >
-            {isLoading ? 'Importing…' : 'Import Members'}
+            {isLoading ? t('members:importing') : t('members:importMembers')}
           </Button>
         </CardContent>
       </Card>
@@ -150,18 +146,18 @@ export default function MembersImportPage() {
       {result && (
         <Card>
           <CardHeader>
-            <CardTitle>Import Complete</CardTitle>
+            <CardTitle>{t('members:importComplete')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3 rounded-lg bg-emerald-500/10 p-3">
               <svg className="h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{result.imported} member(s) imported successfully</p>
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('members:membersImportedSuccessfully', { count: result.imported })}</p>
             </div>
             {result.errors.length > 0 && (
               <div className="space-y-1">
-                <p className="text-sm font-medium text-destructive">Errors ({result.errors.length} rows skipped):</p>
+                <p className="text-sm font-medium text-destructive">{t('members:errorsRowsSkipped', { count: result.errors.length })}</p>
                 <ul className="max-h-48 space-y-0.5 overflow-y-auto rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
                   {result.errors.map((e, i) => (
                     <li key={i}>{e}</li>
@@ -170,7 +166,7 @@ export default function MembersImportPage() {
               </div>
             )}
             <Link href="/members">
-              <Button variant="outline">View Members</Button>
+              <Button variant="outline">{t('members:viewMembers')}</Button>
             </Link>
           </CardContent>
         </Card>

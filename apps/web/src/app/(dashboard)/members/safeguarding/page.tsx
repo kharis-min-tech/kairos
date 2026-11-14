@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { useUnguardedMinors, useDormantMinors, useReviewMinor } from '@/hooks/use-members';
 import { Button, Card, CardContent } from '@kairos/ui';
-import { formatShortDate } from '@/lib/date-format';
+import { formatShortDate } from '@kairos/core';
 import type { UnguardedMinor, DormantMinor } from '@kairos/types';
+import { useTranslation } from 'react-i18next';
 
-export default function SafeguardingReviewPage() {
+export default function SafeguardingReviewPage() {  const { t } = useTranslation(['members', 'common']);
+
   const unguarded = useUnguardedMinors();
   const dormant = useDormantMinors();
 
@@ -14,18 +16,14 @@ export default function SafeguardingReviewPage() {
     <div className="space-y-8">
       {/* Page header */}
       <div className="pb-2">
-        <h1 className="text-2xl font-bold tracking-tight">Safeguarding review</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Minor records that need a Safeguarding Lead&apos;s attention
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('members:safeguardingReview')}</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">{t('members:minorRecordsNeedSafeguardingLeadS')}</p>
       </div>
 
       <section className="space-y-3">
         <header className="space-y-0.5">
-          <h2 className="text-sm font-semibold text-foreground">Without an active guardian</h2>
-          <p className="text-xs text-muted-foreground">
-            Active minors whose guardian is missing or deactivated
-          </p>
+          <h2 className="text-sm font-semibold text-foreground">{t('members:withoutAnActiveGuardian')}</h2>
+          <p className="text-xs text-muted-foreground">{t('members:activeMinorsWhoseGuardianIsMissing')}</p>
         </header>
         <UnguardedSection
           minors={unguarded.data ?? []}
@@ -37,11 +35,8 @@ export default function SafeguardingReviewPage() {
 
       <section className="space-y-3">
         <header className="space-y-0.5">
-          <h2 className="text-sm font-semibold text-foreground">Dormant child shells — review</h2>
-          <p className="text-xs text-muted-foreground">
-            Child records created 60+ days ago with no recent review. Mark each as still active
-            or approve archiving — every decision is logged.
-          </p>
+          <h2 className="text-sm font-semibold text-foreground">{t('members:dormantChildShellsToReview')}</h2>
+          <p className="text-xs text-muted-foreground">{t('members:childRecordsCreatedDaysAgoWith')}</p>
         </header>
         <DormantSection
           minors={dormant.data ?? []}
@@ -66,15 +61,14 @@ function UnguardedSection({
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
-}) {
+}) {  const { t } = useTranslation(['members', 'common']);
+
   if (isLoading) return <SafeguardingSkeleton />;
   if (isError) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-12 text-center">
-          <p className="text-sm font-medium text-[#DC2626]">
-            You don&apos;t have safeguarding access to this list
-          </p>
+          <p className="text-sm font-medium text-[#DC2626]">{t('members:youDonTSafeguardingAccessList')}</p>
           {error?.message && <p className="text-xs text-muted-foreground">{error.message}</p>}
         </CardContent>
       </Card>
@@ -84,10 +78,8 @@ function UnguardedSection({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-12 text-center">
-          <p className="text-sm font-medium text-[#16A34A]">No minors currently need attention</p>
-          <p className="text-xs text-muted-foreground">
-            Every active minor has an active guardian on record.
-          </p>
+          <p className="text-sm font-medium text-[#16A34A]">{t('members:noMinorsCurrentlyNeedAttention')}</p>
+          <p className="text-xs text-muted-foreground">{t('members:everyActiveMinorHasAnActive')}</p>
         </CardContent>
       </Card>
     );
@@ -126,17 +118,16 @@ function UnguardedRow({ minor }: { minor: UnguardedMinor }) {
   );
 }
 
-function GuardianChip({ minor }: { minor: UnguardedMinor }) {
+function GuardianChip({ minor }: { minor: UnguardedMinor }) {  const { t } = useTranslation(['members', 'common']);
+
   if (minor.guardianStatus === 'none') {
     return (
-      <span className="flex-shrink-0 rounded-full bg-[#DC2626]/10 px-2.5 py-0.5 text-xs font-medium text-[#DC2626]">
-        No guardian
-      </span>
+      <span className="flex-shrink-0 rounded-full bg-[#DC2626]/10 px-2.5 py-0.5 text-xs font-medium text-[#DC2626]">{t('members:noGuardian')}</span>
     );
   }
   return (
     <span className="flex-shrink-0 rounded-full bg-[#f8b537]/15 px-2.5 py-0.5 text-xs font-medium text-[#9a6b04] dark:text-[#f8b537]">
-      Guardian inactive{minor.guardianName ? ` · ${minor.guardianName}` : ''}
+      Guardian inactive{minor.guardianNames ? ` · ${minor.guardianNames}` : ''}
     </span>
   );
 }
@@ -153,15 +144,14 @@ function DormantSection({
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
-}) {
+}) {  const { t } = useTranslation(['members', 'common']);
+
   if (isLoading) return <SafeguardingSkeleton />;
   if (isError) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-12 text-center">
-          <p className="text-sm font-medium text-[#DC2626]">
-            You don&apos;t have safeguarding access to this list
-          </p>
+          <p className="text-sm font-medium text-[#DC2626]">{t('members:youDonTSafeguardingAccessList')}</p>
           {error?.message && <p className="text-xs text-muted-foreground">{error.message}</p>}
         </CardContent>
       </Card>
@@ -171,10 +161,8 @@ function DormantSection({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-1 py-12 text-center">
-          <p className="text-sm font-medium text-[#16A34A]">Nothing to review</p>
-          <p className="text-xs text-muted-foreground">
-            No dormant child shells are awaiting a decision.
-          </p>
+          <p className="text-sm font-medium text-[#16A34A]">{t('members:nothingToReview')}</p>
+          <p className="text-xs text-muted-foreground">{t('members:noDormantChildShellsAreAwaiting')}</p>
         </CardContent>
       </Card>
     );
@@ -194,7 +182,8 @@ function DormantSection({
   );
 }
 
-function DormantRow({ minor }: { minor: DormantMinor }) {
+function DormantRow({ minor }: { minor: DormantMinor }) {  const { t } = useTranslation(['members', 'common']);
+
   const review = useReviewMinor();
   const lastReview = minor.lastReviewedAt
     ? `Last reviewed ${formatShortDate(minor.lastReviewedAt)}${minor.lastReviewerName ? ` by ${minor.lastReviewerName}` : ''}`
@@ -207,8 +196,10 @@ function DormantRow({ minor }: { minor: DormantMinor }) {
           {minor.firstName} {minor.lastName}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          Created {formatShortDate(minor.createdAt)}
-          {minor.dateOfBirth ? ` · DOB ${formatShortDate(minor.dateOfBirth)}` : ''}
+          {t('members:createdOn', { date: formatShortDate(minor.createdAt) })}
+          {minor.dateOfBirth
+            ? t('members:dobSuffix', { date: formatShortDate(minor.dateOfBirth) })
+            : ''}
         </p>
         <p className="truncate text-xs text-muted-foreground/80">{lastReview}</p>
       </div>
@@ -218,17 +209,13 @@ function DormantRow({ minor }: { minor: DormantMinor }) {
           variant="outline"
           disabled={review.isPending}
           onClick={() => review.mutate({ id: minor.id, decision: 'active' })}
-        >
-          Still active
-        </Button>
+        >{t('members:stillActive')}</Button>
         <Button
           size="sm"
           variant="destructive"
           disabled={review.isPending}
           onClick={() => review.mutate({ id: minor.id, decision: 'archived' })}
-        >
-          Approve archive
-        </Button>
+        >{t('members:approveArchive')}</Button>
       </div>
     </div>
   );

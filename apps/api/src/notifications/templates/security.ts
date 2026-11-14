@@ -19,7 +19,7 @@ export interface SecurityPasswordResetRequestedPayload {
 
 export function renderPasswordResetRequested(p: SecurityPasswordResetRequestedPayload) {
   return {
-    subject: 'Reset Your Password — Kharis Church',
+    subject: 'Reset Your Password | Kharis Church',
     html: renderLayout({
       heading: 'Password reset requested',
       greeting: p.memberName,
@@ -73,7 +73,7 @@ export interface SecurityRoleGrantedPayload {
 export function renderRoleGranted(p: SecurityRoleGrantedPayload) {
   const actor = p.grantedByName ? ` by ${escapeHtml(p.grantedByName)}` : '';
   return {
-    subject: `Role assigned — ${p.roleName}`,
+    subject: `Role assigned: ${p.roleName}`,
     html: renderLayout({
       heading: 'New role assigned',
       greeting: p.memberName,
@@ -119,6 +119,38 @@ export function renderSigninNewDevice(p: SecuritySigninNewDevicePayload) {
   };
 }
 
+export interface SecurityOAuthProviderLinkedPayload {
+  memberName: string;
+  providerLabel: string;
+  occurredAt: Date;
+  securityUrl: string;
+}
+
+export function renderOAuthProviderLinked(p: SecurityOAuthProviderLinkedPayload) {
+  const when = p.occurredAt.toLocaleString('en-GB');
+  return {
+    subject: `New sign-in method added to your Kharis account`,
+    html: renderLayout({
+      heading: 'New sign-in method added',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p>You signed in to Kairos with <strong>${escapeHtml(p.providerLabel)}</strong>
+           for the first time on <strong>${escapeHtml(when)}</strong>. That
+           provider is now linked to your Kharis Church account, so you can
+           use it to sign in again in the future.</p>
+        <p>If this was you, no action is needed.</p>
+        <p>If this wasn't you, secure your account by changing your password
+           and disconnecting the provider from your security settings.</p>
+      `,
+      cta: { label: 'Review account security', url: p.securityUrl },
+    }),
+  };
+}
+
+export function digestOAuthProviderLinked(p: SecurityOAuthProviderLinkedPayload): string {
+  return `New sign-in method linked: ${p.providerLabel}`;
+}
+
 export interface SecurityRoleRevokedPayload {
   memberName: string;
   roleName: string;
@@ -130,7 +162,7 @@ export interface SecurityRoleRevokedPayload {
 export function renderRoleRevoked(p: SecurityRoleRevokedPayload) {
   const actor = p.revokedByName ? ` by ${escapeHtml(p.revokedByName)}` : '';
   return {
-    subject: `Role removed — ${p.roleName}`,
+    subject: `Role removed: ${p.roleName}`,
     html: renderLayout({
       heading: 'Role removed',
       greeting: p.memberName,
@@ -205,5 +237,5 @@ export function digestSigninNewDevice(p: SecuritySigninNewDevicePayload): string
 
 export function digestProfileUpdatedByAdmin(p: SecurityProfileUpdatedByAdminPayload): string {
   const who = p.updatedByName ?? 'an administrator';
-  return `Profile updated by ${who} — ${p.changedFieldLabels.join(', ')}`;
+  return `Profile updated by ${who}: ${p.changedFieldLabels.join(', ')}`;
 }
