@@ -9,7 +9,12 @@
  * A kind listed here must be refused by `authMiddleware`. `jwtVerify` cannot
  * tell these apart from a real access token, because they are signed with the
  * same secret; the `kind` check is the only thing that does.
+ *
+ * The value itself now lives in `@kairos/types`, because the web and mobile
+ * sign-in screens need to recognise a pre-MFA token too and a hand-copied
+ * string in three packages is a string that eventually disagrees with itself.
+ * This module stays as the import site the middleware uses, for the reason
+ * above.
  */
 
-/** Issued between a correct password and a correct second-factor code. */
-export const MFA_TOKEN_KIND = 'mfa-pending';
+export { MFA_TOKEN_KIND } from '@kairos/types';

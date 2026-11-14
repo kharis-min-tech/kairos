@@ -1867,6 +1867,60 @@ export interface MfaChallenge {
 }
 
 /**
+ * The `kind` claim on a pre-MFA token.
+ *
+ * Defined here rather than in the API because three packages need to agree on
+ * it: the API signs it, `authMiddleware` refuses it, and the web and mobile
+ * sign-in screens read it to recognise one. It was an API-local constant and
+ * the clients were about to hand-copy the string, which is how two of them
+ * end up disagreeing.
+ */
+export const MFA_TOKEN_KIND = 'mfa-pending';
+
+/**
+ * Does this string even claim to be a pre-MFA token?
+ *
+ * **This is a shape check, not authentication.** It reads an unverified JWT
+ * payload, which anyone can write. Only the server's signature check decides
+ * whether a token is real, and nothing here grants anything.
+ *
+ * It exists because the OAuth callback receives this value in the URL
+ * fragment, where anyone can put anything, and a bare truthiness test on it
+ * let any non-empty string send a member into the second-factor flow. CodeQL
+ * flags that shape as `js/user-controlled-bypass`, and it is a fair
+ * complaint: rubbish in the fragment should fall through to the ordinary
+ * error path, not strand someone on a screen holding a token the server will
+ * refuse.
+ *
+ * Expiry is deliberately NOT checked. An expired token should still reach the
+ * server, so the member is told "please sign in again" by the only party that
+ * actually knows, rather than being guessed at here and sent away with a
+ * message about their provider.
+ */
+export function looksLikeMfaToken(raw: string | null | undefined): raw is string {
+  if (!raw) return false;
+
+  const parts = raw.split('.');
+  if (parts.length !== 3) return false;
+  // One character class, anchored, no nesting: linear, so no backtracking
+  // blow-up on a long fragment. (A previous regex in this codebase was not.)
+  if (!parts.every((part) => /^[A-Za-z0-9_-]+$/.test(part))) return false;
+
+  try {
+    const payload: unknown = JSON.parse(
+      atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/')),
+    );
+    return (
+      typeof payload === 'object' &&
+      payload !== null &&
+      (payload as Record<string, unknown>)['kind'] === MFA_TOKEN_KIND
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Where a member stands with their second factor. `GET /api/auth/mfa/status`.
  *
  * `enrolled` and `required` are independent on purpose, and the pair is what
