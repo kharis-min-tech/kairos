@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { MemberProfile } from '@kairos/types';
+import { looksLikeMfaToken, type MemberProfile } from '@kairos/types';
 import { persistAuthSuccess } from '@/hooks/use-auth';
+import { useMfaChallengeStore } from '@/stores/mfa-challenge-store';
 import { KharisCardHeader } from '../kharis-logo';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -63,6 +64,35 @@ export default function OAuthCallbackPage() {
         const refreshToken = params.get('refreshToken');
         const method = params.get('method');
         const returnTo = safeReturnTo(params.get('returnTo'));
+
+        // A second factor is outstanding, so the fragment carries a pre-MFA
+        // token instead of a session. Without this branch the check below
+        // sees no access token and bounces a perfectly good sign-in to
+        // /login with a provider error, which is both wrong and unfixable
+        // by the member: every retry would land here again.
+        // Checked for shape, not merely for presence. This value comes out
+        // of the URL fragment, so anyone can put anything in it, and a bare
+        // truthiness test let any non-empty string divert a member into the
+        // second-factor flow with a token the server was always going to
+        // refuse. CodeQL names that shape js/user-controlled-bypass.
+        //
+        // Nothing is authenticated here and nothing can be: the signature is
+        // checked by the API, which holds the secret. What this buys is that
+        // rubbish in the fragment now falls through to the ordinary error
+        // path instead of stranding someone on /mfa.
+        const mfaToken = params.get('mfaToken');
+        if (looksLikeMfaToken(mfaToken)) {
+          // Out of the address bar before anything else. It is short-lived,
+          // but it is still the credential that finishes a sign-in.
+          window.history.replaceState({}, '', window.location.pathname);
+          useMfaChallengeStore.getState().start({
+            token: mfaToken,
+            stage: params.get('mfaStage') === 'enrolment' ? 'enrolment' : 'challenge',
+            returnTo,
+          });
+          router.replace('/mfa');
+          return;
+        }
 
         if (!accessToken || !refreshToken) {
           router.replace('/login?oauth_error=provider_error');

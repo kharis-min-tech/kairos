@@ -1865,3 +1865,132 @@ export interface MfaChallenge {
   token: string;
   stage: 'challenge' | 'enrolment';
 }
+
+/**
+ * The `kind` claim on a pre-MFA token.
+ *
+ * Defined here rather than in the API because three packages need to agree on
+ * it: the API signs it, `authMiddleware` refuses it, and the web and mobile
+ * sign-in screens read it to recognise one. It was an API-local constant and
+ * the clients were about to hand-copy the string, which is how two of them
+ * end up disagreeing.
+ */
+export const MFA_TOKEN_KIND = 'mfa-pending';
+
+/**
+ * Does this string even claim to be a pre-MFA token?
+ *
+ * **This is a shape check, not authentication.** It reads an unverified JWT
+ * payload, which anyone can write. Only the server's signature check decides
+ * whether a token is real, and nothing here grants anything.
+ *
+ * It exists because the OAuth callback receives this value in the URL
+ * fragment, where anyone can put anything, and a bare truthiness test on it
+ * let any non-empty string send a member into the second-factor flow. CodeQL
+ * flags that shape as `js/user-controlled-bypass`, and it is a fair
+ * complaint: rubbish in the fragment should fall through to the ordinary
+ * error path, not strand someone on a screen holding a token the server will
+ * refuse.
+ *
+ * Expiry is deliberately NOT checked. An expired token should still reach the
+ * server, so the member is told "please sign in again" by the only party that
+ * actually knows, rather than being guessed at here and sent away with a
+ * message about their provider.
+ */
+export function looksLikeMfaToken(raw: string | null | undefined): raw is string {
+  if (!raw) return false;
+
+  const parts = raw.split('.');
+  if (parts.length !== 3) return false;
+  // One character class, anchored, no nesting: linear, so no backtracking
+  // blow-up on a long fragment. (A previous regex in this codebase was not.)
+  if (!parts.every((part) => /^[A-Za-z0-9_-]+$/.test(part))) return false;
+
+  try {
+    const payload: unknown = JSON.parse(
+      atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/')),
+    );
+    return (
+      typeof payload === 'object' &&
+      payload !== null &&
+      (payload as Record<string, unknown>)['kind'] === MFA_TOKEN_KIND
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Where a member stands with their second factor. `GET /api/auth/mfa/status`.
+ *
+ * `enrolled` and `required` are independent on purpose, and the pair is what
+ * the settings card reads:
+ *   - required and not enrolled  → the nag, and after the cutover a lock-out
+ *   - enrolled and not required  → a member who turned it on voluntarily
+ *   - neither                    → an ordinary member; offer it, don't push
+ */
+export interface MfaStatus {
+  /** A confirmed factor exists. Only this counts as having MFA. */
+  enrolled: boolean;
+  /** A QR code was generated and never proved. Not a factor. */
+  pendingEnrolment: boolean;
+  /** This member is privileged, so a factor is expected of them. */
+  required: boolean;
+  backupCodesRemaining: number;
+}
+
+/**
+ * `POST /api/auth/mfa/enrol`. The secret in two forms, because an authenticator
+ * on the same device as the browser cannot scan the screen it is drawn on.
+ */
+export interface MfaEnrolmentStart {
+  /** For the "enter a setup key instead" path. */
+  secretBase32: string;
+  /** `otpauth://totp/...`, which is what the QR encodes. */
+  enrolmentUri: string;
+}
+
+/** Shown once, never retrievable. Both `/confirm` and `/backup-codes` return it. */
+export interface MfaBackupCodes {
+  backupCodes: string[];
+}
+
+/**
+ * `POST /api/auth/mfa/confirm`.
+ *
+ * Carries a session only when the caller was mid-sign-in: confirming IS
+ * proving a factor, so someone the cutover forced into enrolment is signed in
+ * by the same call rather than sent back to type a second code.
+ */
+export interface MfaConfirmResponse extends MfaBackupCodes {
+  tokens?: AuthTokens;
+  member?: MemberProfile;
+  mfaSetupRecommended?: boolean;
+}
+
+/**
+ * `POST /api/auth/mfa/verify`. The pre-MFA token plus a code, exchanged for a
+ * real session.
+ *
+ * `tokens` is optional for the same reason it is on `LoginResponse`: the
+ * server's session shape is one type, and a client that assumes a session is
+ * always there finds out on the first 401 instead of at compile time.
+ */
+export interface MfaVerifyResponse {
+  tokens?: AuthTokens;
+  member: MemberProfile;
+  mfaSetupRecommended?: boolean;
+  /** Which kind of code was accepted, so the UI can warn after a backup code. */
+  mfaMethod: 'totp' | 'backup-code';
+  backupCodesRemaining: number;
+}
+
+/** A TOTP code or a formatted backup code. The server decides which it is. */
+export interface MfaCodeRequest {
+  code: string;
+}
+
+/** `/disable` and `/backup-codes` both re-ask for the password. */
+export interface MfaPasswordRequest {
+  currentPassword: string;
+}

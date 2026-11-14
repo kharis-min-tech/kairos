@@ -4,6 +4,13 @@ import type {
   LoginRequest,
   LoginResponse,
   MemberProfile,
+  MfaBackupCodes,
+  MfaCodeRequest,
+  MfaConfirmResponse,
+  MfaEnrolmentStart,
+  MfaPasswordRequest,
+  MfaStatus,
+  MfaVerifyResponse,
   SignupRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
@@ -309,6 +316,48 @@ export function createApiClient(
           client.delete<ApiResponse<OAuthConnection[]>>(`/api/auth/oauth/connections/${provider}`),
         confirmLink: (data: OAuthConfirmLinkRequest) =>
           client.post<ApiResponse<LoginResponse>>('/api/auth/oauth/confirm-link', data),
+      },
+
+      /**
+       * The TOTP second factor.
+       *
+       * Split in two by which credential the call is made with, because the
+       * same endpoint accepts both and getting it wrong is silent. The plain
+       * methods use the stored session (a member managing MFA in settings).
+       * The `*WithChallenge` methods use the short-lived pre-MFA token from
+       * `LoginResponse.mfa`, for a caller who has no session yet and whose
+       * whole purpose is to get one.
+       */
+      mfa: {
+        status: () => client.get<ApiResponse<MfaStatus>>('/api/auth/mfa/status'),
+        enrol: () => client.post<ApiResponse<MfaEnrolmentStart>>('/api/auth/mfa/enrol'),
+        confirm: (data: MfaCodeRequest) =>
+          client.post<ApiResponse<MfaConfirmResponse>>('/api/auth/mfa/confirm', data),
+        disable: (data: MfaPasswordRequest) =>
+          client.post<ApiResponse<MfaStatus>>('/api/auth/mfa/disable', data),
+        regenerateBackupCodes: (data: MfaPasswordRequest) =>
+          client.post<ApiResponse<MfaBackupCodes>>('/api/auth/mfa/backup-codes', data),
+
+        /** Mid-sign-in: the cutover caught an unenrolled privileged member. */
+        enrolWithChallenge: (challengeToken: string) =>
+          client.postWithToken<ApiResponse<MfaEnrolmentStart>>(
+            '/api/auth/mfa/enrol',
+            undefined,
+            challengeToken,
+          ),
+        confirmWithChallenge: (data: MfaCodeRequest, challengeToken: string) =>
+          client.postWithToken<ApiResponse<MfaConfirmResponse>>(
+            '/api/auth/mfa/confirm',
+            data,
+            challengeToken,
+          ),
+        /** The ordinary challenge: a factor exists, produce a code from it. */
+        verify: (data: MfaCodeRequest, challengeToken: string) =>
+          client.postWithToken<ApiResponse<MfaVerifyResponse>>(
+            '/api/auth/mfa/verify',
+            data,
+            challengeToken,
+          ),
       },
     },
 

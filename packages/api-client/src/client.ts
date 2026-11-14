@@ -118,6 +118,41 @@ export class ApiClient {
     return this.request<T>('POST', path, body);
   }
 
+  /**
+   * POST with an explicit bearer token, bypassing the stored session entirely.
+   *
+   * This exists for the pre-MFA token. That token is not an access token: it
+   * has no refresh counterpart, so `request`'s 401 handling would try to
+   * refresh, fail, and fire `onAuthFailure` - which logs out and redirects.
+   * A mistyped authenticator code is a 401, so going through `request` would
+   * turn every typo into a forced sign-out instead of "that code is wrong".
+   *
+   * It also deliberately does NOT read `getToken()`. During sign-in the store
+   * is empty; after sign-in (turning MFA on from settings) the store holds a
+   * real session, and sending that instead of the token the caller passed
+   * would silently change which identity the call is made as.
+   */
+  async postWithToken<T>(path: string, body: unknown, token: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+    const data = (await parseJsonSafely(response)) as Record<string, unknown>;
+    if (!response.ok) {
+      throw new ApiClientError(
+        response.status,
+        (data.message as string) ?? 'Request failed',
+        data.code as string | undefined,
+      );
+    }
+    return data as T;
+  }
+
   async postForm<T>(path: string, file: File): Promise<T> {
     const headers: Record<string, string> = {};
     const token = this.getToken();

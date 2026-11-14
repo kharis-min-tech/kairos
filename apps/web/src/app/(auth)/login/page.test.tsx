@@ -36,6 +36,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 import LoginPage from './page';
+import { useMfaChallengeStore } from '@/stores/mfa-challenge-store';
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({
@@ -253,4 +254,71 @@ describe('LoginPage — returnTo', () => {
       await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'));
     },
   );
+});
+
+// -- Second factor outstanding ------------------------------
+
+/**
+ * The password was right and there is still no session. These tests exist
+ * because the page used to throw "Unexpected login response: missing tokens"
+ * here, which is what every privileged member would have seen the moment the
+ * API started challenging them.
+ */
+describe('LoginPage - MFA challenge', () => {
+  beforeEach(() => useMfaChallengeStore.getState().clear());
+
+  async function signInWith(result: Record<string, unknown>) {
+    mutateAsync.mockResolvedValue(result);
+    render(<LoginPage />, { wrapper });
+    await userEvent.type(screen.getByLabelText(/Email Address/i), 'jane@example.com');
+    await userEvent.type(screen.getByLabelText(/^Password$/i), 'pass123');
+    await userEvent.click(screen.getByRole('button', { name: /^Sign in$/i }));
+  }
+
+  it('sends a challenged member to /mfa instead of erroring', async () => {
+    await signInWith({
+      member: mockMember,
+      isFirstLogin: false,
+      mfa: { token: 'pre-mfa', stage: 'challenge' },
+    });
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/mfa'));
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('never persists a session when a factor is outstanding', async () => {
+    await signInWith({
+      member: mockMember,
+      isFirstLogin: false,
+      mfa: { token: 'pre-mfa', stage: 'challenge' },
+    });
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/mfa'));
+    expect(persistAuthSuccess).not.toHaveBeenCalled();
+  });
+
+  it('hands the pre-MFA token and stage to the challenge store', async () => {
+    await signInWith({
+      member: mockMember,
+      isFirstLogin: false,
+      mfa: { token: 'pre-mfa', stage: 'enrolment' },
+    });
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/mfa'));
+    const state = useMfaChallengeStore.getState();
+    expect(state.token).toBe('pre-mfa');
+    expect(state.stage).toBe('enrolment');
+  });
+
+  it('carries returnTo across the challenge', async () => {
+    searchParamsString = 'returnTo=%2Fmembers';
+    await signInWith({
+      member: mockMember,
+      isFirstLogin: false,
+      mfa: { token: 'pre-mfa', stage: 'challenge' },
+    });
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/mfa'));
+    expect(useMfaChallengeStore.getState().returnTo).toBe('/members');
+  });
 });
