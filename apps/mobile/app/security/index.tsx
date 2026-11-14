@@ -11,6 +11,7 @@ import {
   Link2,
   AppWindow,
   Fingerprint,
+  Smartphone,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import {
@@ -45,12 +46,18 @@ export default function SecurityHub() {
         <View style={styles.introBlock}>
           <Text style={styles.introTitle}>Account security</Text>
           <Text style={styles.introMeta}>
-            Change your password, move your account to a new email, or review recent
-            sign-in activity.
+            Turn on two-step sign-in, change your password, move your account to a new
+            email, or review recent sign-in activity.
           </Text>
         </View>
 
         <View style={styles.list}>
+          <NavLink
+            icon={Smartphone}
+            title="Two-step sign-in"
+            meta="Ask for a code from your phone as well as your password."
+            onPress={() => router.push('/security/two-step' as never)}
+          />
           <NavLink
             icon={KeyRound}
             title="Change password"

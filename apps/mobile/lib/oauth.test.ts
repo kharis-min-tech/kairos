@@ -109,6 +109,82 @@ describe('parseCallbackUrl', () => {
   });
 });
 
+/**
+ * A privileged member's OAuth handshake comes back with no session in the
+ * fragment, only a pre-MFA token. Before this was handled the parser read
+ * that as callback_missing_tokens and the member was shown a provider error
+ * no amount of retrying could get past.
+ */
+describe('parseCallbackUrl - second factor outstanding', () => {
+  const seg = (v: object) =>
+    Buffer.from(JSON.stringify(v))
+      .toString('base64')
+      .split('+').join('-')
+      .split('/').join('_')
+      .split('=').join('');
+  const preMfaToken = (payload: object = { kind: 'mfa-pending', memberId: 'm-1' }) =>
+    `${seg({ alg: 'HS256' })}.${seg(payload)}.c2lnbmF0dXJl`;
+
+  it('returns the challenge instead of a missing-tokens error', () => {
+    const token = preMfaToken();
+    const r = parseCallbackUrl(
+      `https://frontend.example/oauth-callback#mfaToken=${token}&mfaStage=challenge`,
+      'google',
+    );
+    expect(r).toEqual({ kind: 'mfa_required', challenge: { token, stage: 'challenge' } });
+  });
+
+  it('carries the enrolment stage through', () => {
+    const r = parseCallbackUrl(
+      `https://frontend.example/oauth-callback#mfaToken=${preMfaToken()}&mfaStage=enrolment`,
+      'google',
+    );
+    expect(r).toMatchObject({ kind: 'mfa_required', challenge: { stage: 'enrolment' } });
+  });
+
+  it('treats an unrecognised stage as a challenge, not a forced re-enrolment', () => {
+    const r = parseCallbackUrl(
+      `https://frontend.example/oauth-callback#mfaToken=${preMfaToken()}&mfaStage=nonsense`,
+      'google',
+    );
+    expect(r).toMatchObject({ kind: 'mfa_required', challenge: { stage: 'challenge' } });
+  });
+
+  /**
+   * The API sends mfaToken='' when there is no challenge, and the fragment is
+   * attacker-supplied in any case, so presence alone must not divert a
+   * sign-in. Anything that is not shaped like a pre-MFA token falls through
+   * to the ordinary error path.
+   */
+  it.each([
+    ['an empty value', ''],
+    ['an arbitrary word', 'pre-mfa'],
+    ['a truncated token', 'aaa.bbb'],
+  ])('ignores %s', (_label, value) => {
+    const r = parseCallbackUrl(
+      `https://frontend.example/oauth-callback#mfaToken=${value}&mfaStage=challenge`,
+      'google',
+    );
+    expect(r).toEqual({ kind: 'error', slug: 'callback_missing_tokens' });
+  });
+
+  it('ignores a well-formed token of the wrong kind', () => {
+    const r = parseCallbackUrl(
+      `https://frontend.example/oauth-callback#mfaToken=${preMfaToken({ kind: 'access' })}`,
+      'google',
+    );
+    expect(r).toEqual({ kind: 'error', slug: 'callback_missing_tokens' });
+  });
+
+  it('prefers a real session when the fragment somehow carries both', () => {
+    const r = parseCallbackUrl(
+      `https://frontend.example/oauth-callback#accessToken=A1&refreshToken=R1&mfaToken=${preMfaToken()}`,
+      'google',
+    );
+    expect(r).toMatchObject({ kind: 'signed_in' });
+  });
+});
+
 describe('startOAuthFlow', () => {
   beforeEach(() => {
     WebBrowser.openAuthSessionAsync.mockReset();

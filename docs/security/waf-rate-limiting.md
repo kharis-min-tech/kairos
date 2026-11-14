@@ -1,6 +1,6 @@
 # Cloudflare WAF rate-limiting rules
 
-**Status:** specification, ready to implement by hand in the Cloudflare dashboard.
+**Status:** deployed. The rule in §3 is live on the zone (§6 records when, and §7 the MFA amendment).
 **Closes:** the "rate limiting" item on the pre-release cyber-security audit checklist.
 **Zone:** `kharis.org` — **Free plan** at time of writing.
 **Last verified against Cloudflare docs:** 2026-11-08.
@@ -139,10 +139,11 @@ rule — if a 1-minute period is offered, take it and adjust §3's threshold to 
 
 ---
 
-## 3. The rule to deploy today (Free plan, 1 rule)
+## 3. The deployed rule (Free plan, 1 rule)
 
-One rule, covering the six highest-value unauthenticated POST endpoints with a
-shared per-IP counter.
+One rule, covering the eight highest-value unauthenticated POST endpoints with
+a shared per-IP counter. Six at first deployment; the two MFA paths were added
+on 14 November 2026 (see §7).
 
 **Name:** `Auth burst limit (sensitive POST endpoints)`
 
@@ -151,7 +152,7 @@ shared per-IP counter.
 ```txt
 http.host in {"kairos.kharis.org" "staging.kairos.kharis.org"}
 and http.request.method eq "POST"
-and http.request.uri.path in {"/api/auth/login" "/api/auth/signup" "/api/auth/forgot-password" "/api/auth/reset-password" "/api/auth/resend-code" "/api/oauth/token"}
+and http.request.uri.path in {"/api/auth/login" "/api/auth/signup" "/api/auth/forgot-password" "/api/auth/reset-password" "/api/auth/resend-code" "/api/oauth/token" "/api/auth/mfa/verify" "/api/auth/mfa/confirm"}
 ```
 
 | Field | Value | Why |
@@ -171,12 +172,24 @@ far below any automated attack — chosen to be a rule nobody has a reason to
 switch off, which matters more than a tight number that gets disabled after the
 first Sunday it fires.
 
-**Why these six paths.** `login`, `signup` and `oauth/token` are the
+**Why these eight paths.** `login`, `signup` and `oauth/token` are the
 credential-and-token attack surface. `forgot-password` and `resend-code` each
 send mail through SES, so uncontrolled volume is both a mail-bomb vector against
 a member and a direct threat to the sender reputation on the
 `kairos-transactional` configuration set. `reset-password` consumes a token and
-is the endpoint a token-guessing attack would hammer.
+is the endpoint a token-guessing attack would hammer. The two MFA paths check
+a six-digit code, which is a one-in-a-million guess and therefore worth
+grinding; `/enrol`, `/disable` and `/backup-codes` are deliberately left out,
+the first because it is not guessable and the other two because they already
+require the account password.
+
+**The counter is shared, and on Free it has to be.** All eight paths draw on
+the same 30-requests-per-10-seconds budget per IP, so a login flood also
+throttles MFA verification for everyone behind that address. Free allows
+exactly one rate limiting rule, so a separate bucket for MFA is not available
+without Pro. It is tolerable because a genuine sign-in with a code is two or
+three POSTs, and because the per-account lock in `auth/mfa.ts` is the control
+that actually protects the code.
 
 **Why `http.host` is pinned.** Rate limiting rules are zone-scoped. The
 `kharis.org` zone also serves `design.kharis.org`, `docs.kairos.kharis.org` and
@@ -192,7 +205,7 @@ dashboard (`PUT /zones/{zone_id}/rulesets/phases/http_ratelimit/entrypoint`):
   "rules": [
     {
       "description": "Auth burst limit (sensitive POST endpoints)",
-      "expression": "http.host in {\"kairos.kharis.org\" \"staging.kairos.kharis.org\"} and http.request.method eq \"POST\" and http.request.uri.path in {\"/api/auth/login\" \"/api/auth/signup\" \"/api/auth/forgot-password\" \"/api/auth/reset-password\" \"/api/auth/resend-code\" \"/api/oauth/token\"}",
+      "expression": "http.host in {\"kairos.kharis.org\" \"staging.kairos.kharis.org\"} and http.request.method eq \"POST\" and http.request.uri.path in {\"/api/auth/login\" \"/api/auth/signup\" \"/api/auth/forgot-password\" \"/api/auth/reset-password\" \"/api/auth/resend-code\" \"/api/oauth/token\" \"/api/auth/mfa/verify\" \"/api/auth/mfa/confirm\"}",
       "action": "block",
       "ratelimit": {
         "characteristics": ["ip.src", "cf.colo.id"],
@@ -371,11 +384,18 @@ The §3 rule is live on zone `kharis.org`:
 | Rule id | `4da8ab6528a54cbf87da2d61d11cd2ed` |
 | Ruleset id | `8ca546c35ab94fbe86e8a027d632a4df` (phase `http_ratelimit`) |
 | Deployed | 12 November 2026, via the Cloudflare API |
+| Amended | 14 November 2026 — the two MFA paths added (§7). Ruleset version 2. |
 
 Verified before deployment: the zone had **no `http_ratelimit` ruleset at
 all**, confirming §1's claim that nothing was rate limited, and all six paths
 in the expression were checked against `app.ts`, `auth/router.ts` and
 `oauth-server/router.ts` rather than taken from this document.
+
+The 14 November amendment was made the same way: the live rule was read first,
+the two paths were added to the path set with every other field sent back
+unchanged, and the ruleset was read again afterwards to confirm that action,
+threshold, period, mitigation timeout, characteristics and the host predicate
+were all untouched.
 
 Two settings were checked at the same time and needed no change: **minimum TLS
 is already 1.2** and **Always Use HTTPS is on** (set 8 November 2026).
@@ -437,9 +457,10 @@ become a requirement.
 
 ---
 
-## 7. Amend the rule when MFA deploys
+## 7. Amend the rule when MFA deploys — done
 
-Added 12 November 2026.
+Added 12 November 2026. **Done 14 November 2026**, when the web enrolment UI
+merged and these endpoints gained their first clients.
 
 The deployed rule matches an **exact path list**, so a new endpoint is not
 covered until it is named. `/api/auth/mfa/verify` is a brute-force target of
@@ -447,14 +468,14 @@ exactly the kind this rule exists for: it accepts a six-digit code, which is a
 one-in-a-million guess, and a few hundred thousand requests is not a large
 number.
 
-**Before the MFA branch is deployed**, add these two paths to the expression:
+These two paths are now in the expression (§3 carries the current form):
 
 ```
 "/api/auth/mfa/verify" "/api/auth/mfa/confirm"
 ```
 
-Not before. The endpoints do not exist in production yet, and a rule that
-names a path nothing serves is a rule nobody can test.
+They were held back until the endpoints had clients, on the grounds that a
+rule naming a path nothing serves is a rule nobody can test.
 
 `/confirm` is included because it is the other place a code is checked, during
 enrolment. `/enrol`, `/disable` and `/backup-codes` are left out: the first

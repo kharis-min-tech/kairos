@@ -28,6 +28,7 @@ import { api } from '@/lib/api-client';
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import { useMfaChallengeStore } from '@/store/mfa-challenge';
 import { pickAuthVerse } from '@kairos/core';
 import * as biometric from '@/lib/biometric';
 import type { ArmedUser } from '@/lib/biometric';
@@ -168,14 +169,18 @@ export default function LoginScreen() {
       }
       return res.data;
     },
-    onSuccess: async ({ tokens, member }) => {
-      // A correct password no longer always ends in a session: privileged
-      // accounts get a second-factor challenge instead. The screen for it is
-      // not built yet, so this says so plainly rather than signing someone in
-      // without the factor. Unreachable until enrolment ships, because
-      // nothing can be enrolled before there is a way to enrol.
+    onSuccess: async ({ tokens, member, mfa }) => {
+      // A correct password does not always end in a session: privileged
+      // accounts get a second-factor challenge instead, and after the cutover
+      // an unenrolled one is sent to set a factor up. Either way the token
+      // goes into memory and (auth)/mfa takes it from there.
       if (!tokens) {
-        setError('This account needs an authenticator code. Please sign in on the web for now.');
+        if (!mfa) {
+          setError('Your sign-in could not be completed. Please try again.');
+          return;
+        }
+        useMfaChallengeStore.getState().start(mfa);
+        router.push('/(auth)/mfa' as never);
         return;
       }
       // setSession reseals biometric for users already opted in. It never
@@ -209,6 +214,11 @@ export default function LoginScreen() {
     if (result.kind === 'cancelled') return;
     if (result.kind === 'error') {
       setError(mapOAuthErrorSlug(result.slug));
+      return;
+    }
+    if (result.kind === 'mfa_required') {
+      useMfaChallengeStore.getState().start(result.challenge);
+      router.push('/(auth)/mfa' as never);
       return;
     }
     if (result.kind === 'confirm_link') {

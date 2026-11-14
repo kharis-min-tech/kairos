@@ -1,6 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import type { AuthTokens, OAuthProviderId } from '@kairos/types';
+import { looksLikeMfaToken, type AuthTokens, type MfaChallenge, type OAuthProviderId } from '@kairos/types';
 import { api } from './api-client';
 
 // Required for `openAuthSessionAsync` on web / Expo Go to clear a completed
@@ -22,6 +22,16 @@ export type OAuthStartResult =
       confirmationToken: string;
       email: string;
       provider: OAuthProviderId;
+    }
+  | {
+      /**
+       * The password or provider handshake succeeded and there is still no
+       * session: a second factor is outstanding. The caller sends the member
+       * to (auth)/mfa with this token, which is NOT an access token and
+       * grants nothing but the right to finish signing in.
+       */
+      kind: 'mfa_required';
+      challenge: MfaChallenge;
     }
   | { kind: 'error'; slug: string }
   | { kind: 'cancelled' };
@@ -101,6 +111,25 @@ export function parseCallbackUrl(
         method,
       };
     }
+
+    // No session, because a factor is outstanding. The server sends
+    // mfaToken='' when there is no challenge, so an empty value must not read
+    // as one; `looksLikeMfaToken` also refuses anything that is not shaped
+    // like a token, so a malformed callback lands on the error slug below
+    // rather than sending the member to a screen that cannot work. It is a
+    // shape check and nothing more - the API holds the signing secret and is
+    // the only thing that decides.
+    const mfaToken = params.get('mfaToken');
+    if (looksLikeMfaToken(mfaToken)) {
+      return {
+        kind: 'mfa_required',
+        challenge: {
+          token: mfaToken,
+          stage: params.get('mfaStage') === 'enrolment' ? 'enrolment' : 'challenge',
+        },
+      };
+    }
+
     return { kind: 'error', slug: 'callback_missing_tokens' };
   }
 
