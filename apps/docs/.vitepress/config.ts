@@ -16,6 +16,16 @@ const UI: Record<Lang, {
   prev: string;
   next: string;
   search: string;
+  /**
+   * The standing label beside the theme toggle.
+   *
+   * Separate from lightMode/darkMode, which are the hover titles. A title
+   * names the action the control performs ("Switch to dark theme"); a label
+   * names what the control is for. Using the action as the label left the
+   * row reading as an instruction that contradicted itself the moment the
+   * toggle was flipped.
+   */
+  appearance: string;
   lightMode: string;
   darkMode: string;
   returnToTop: string;
@@ -28,7 +38,7 @@ const UI: Record<Lang, {
 }> = {
   en: {
     label: 'English', outline: 'On this page', prev: 'Previous', next: 'Next',
-    search: 'Search', lightMode: 'Switch to light theme', darkMode: 'Switch to dark theme',
+    search: 'Search', appearance: 'Appearance', lightMode: 'Switch to light theme', darkMode: 'Switch to dark theme',
     returnToTop: 'Return to top', menu: 'Menu', langMenu: 'Change language',
     skipToContent: 'Skip to content',
     footerLine: 'Kairos: Church Administration System by Kharis Church',
@@ -36,7 +46,7 @@ const UI: Record<Lang, {
   },
   fr: {
     label: 'Français', outline: 'Sur cette page', prev: 'Précédent', next: 'Suivant',
-    search: 'Rechercher', lightMode: 'Passer au thème clair', darkMode: 'Passer au thème sombre',
+    search: 'Rechercher', appearance: 'Apparence', lightMode: 'Passer au thème clair', darkMode: 'Passer au thème sombre',
     returnToTop: 'Revenir en haut', menu: 'Menu', langMenu: 'Changer de langue',
     skipToContent: 'Aller au contenu',
     footerLine: 'Kairos : le système d’administration d’église de Kharis Church',
@@ -44,7 +54,7 @@ const UI: Record<Lang, {
   },
   kri: {
     label: 'Krio', outline: 'Pan dis pej', prev: 'Bifo', next: 'Nɛks',
-    search: 'Luk fɔ sɔntin', lightMode: 'Go na di layt tim', darkMode: 'Go na di dak tim',
+    search: 'Luk fɔ sɔntin', appearance: 'Aw i luk', lightMode: 'Go na di layt tim', darkMode: 'Go na di dak tim',
     returnToTop: 'Go bak na tɔp', menu: 'Menyu', langMenu: 'Chenj di langwej',
     skipToContent: 'Go stret to di kɔntɛnt',
     footerLine: 'Kairos: Chɔch Administreshɔn Sistem bay Kharis Church',
@@ -52,7 +62,7 @@ const UI: Record<Lang, {
   },
   tw: {
     label: 'Twi', outline: 'Saa kratafa yi so', prev: 'Deɛ Ɛdi Anim', next: 'Deɛ Ɛdi Hɔ',
-    search: 'Hwehwɛ', lightMode: 'Kɔ hann tebea mu', darkMode: 'Kɔ esum tebea mu',
+    search: 'Hwehwɛ', appearance: 'Tebea', lightMode: 'Kɔ hann tebea mu', darkMode: 'Kɔ esum tebea mu',
     returnToTop: 'San kɔ soro', menu: 'Menu', langMenu: 'Sesa kasa',
     skipToContent: 'Kɔ nsɛm no so tẽẽ',
     footerLine: 'Kairos: Kharis Church asɔre nhyehyɛeɛ',
@@ -77,7 +87,7 @@ function themeFor(lang: Lang) {
     sidebar: sidebarFor(lang),
     outline: { level: [2, 3] as [number, number], label: ui.outline },
     docFooter: { prev: ui.prev, next: ui.next },
-    darkModeSwitchLabel: ui.darkMode,
+    darkModeSwitchLabel: ui.appearance,
     lightModeSwitchTitle: ui.lightMode,
     darkModeSwitchTitle: ui.darkMode,
     sidebarMenuLabel: ui.menu,
