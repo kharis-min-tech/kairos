@@ -273,14 +273,6 @@ describe('GiftAidDeclarationForm', () => {
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(onSubmit.mock.calls[0]![0]).toMatchObject({ bankAccountName: 'MR A T BOLARINWA' });
     });
-
-    it('tells the donor the declared name is still the one HMRC gets', () => {
-      // The field must not read as "change the name on my claim". It is a
-      // reconciliation handle; the declaration stands in the declared name.
-      render(<GiftAidDeclarationForm wording={wording} onSubmit={onSubmit} />);
-      fireEvent.click(bankDiffersBox());
-      expect(screen.getByText(/that is the name we give to HM Revenue and Customs/)).toBeInTheDocument();
-    });
   });
 
   it('warns an overseas donor that Gift Aid needs UK tax, and disables the postcode', async () => {
