@@ -279,7 +279,7 @@ export function GiftAidDeclarationForm({
             onChange={(e) => setValue('bankNameDiffers', e.target.checked, { shouldValidate: true })}
           />
           <Label htmlFor="ga-bank-differs" className="text-sm font-normal leading-snug">
-            Tick if the name on your bank account is different from the name above, so we can match your bank transfers.
+            Tick if the name on your bank account is different from the name above, so we can match your bank transfers giving records.
           </Label>
         </div>
 
