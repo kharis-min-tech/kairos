@@ -210,3 +210,61 @@ describe('ApiClient', () => {
     });
   });
 });
+
+/**
+ * `postWithToken` carries the pre-MFA token, which is not an access token and
+ * has no refresh counterpart. Everything here is about it staying outside the
+ * refresh machinery: a mistyped authenticator code is a 401, and routing that
+ * through `request` would refresh, fail, and fire `onAuthFailure` - turning
+ * every typo into a forced sign-out.
+ */
+describe('ApiClient.postWithToken', () => {
+  it('sends the token it was given, not the stored one', async () => {
+    const client = new ApiClient({
+      baseUrl: 'http://localhost:3001',
+      getToken: () => 'session-access-token',
+    });
+    mockSuccess({ success: true, data: {} });
+
+    await client.postWithToken('/api/auth/mfa/verify', { code: '123456' }, 'pre-mfa-token');
+
+    const [, init] = mockFetch.mock.calls[0]!;
+    expect(init.headers.Authorization).toBe('Bearer pre-mfa-token');
+  });
+
+  it('does not refresh or retry on a 401', async () => {
+    const onAuthFailure = vi.fn();
+    const client = new ApiClient({
+      baseUrl: 'http://localhost:3001',
+      getRefreshToken: () => 'refresh-token',
+      onAuthFailure,
+    });
+    mockFailure({ success: false, message: 'That code is not right.' }, 401);
+
+    await expect(
+      client.postWithToken('/api/auth/mfa/verify', { code: '000000' }, 'pre-mfa-token'),
+    ).rejects.toThrow('That code is not right.');
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(onAuthFailure).not.toHaveBeenCalled();
+  });
+
+  it('surfaces the server message rather than a generic session error', async () => {
+    const client = new ApiClient({ baseUrl: 'http://localhost:3001' });
+    mockFailure({ success: false, message: 'Too many attempts. Try again in 15 minutes.' }, 429);
+
+    await expect(
+      client.postWithToken('/api/auth/mfa/verify', { code: '000000' }, 'pre-mfa-token'),
+    ).rejects.toBeInstanceOf(ApiClientError);
+  });
+
+  it('omits the body when there is none, for the enrol call', async () => {
+    const client = new ApiClient({ baseUrl: 'http://localhost:3001' });
+    mockSuccess({ success: true, data: {} });
+
+    await client.postWithToken('/api/auth/mfa/enrol', undefined, 'pre-mfa-token');
+
+    const [, init] = mockFetch.mock.calls[0]!;
+    expect(init.body).toBeUndefined();
+  });
+});

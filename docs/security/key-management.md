@@ -421,10 +421,22 @@ authenticator is still signed in, and the response tells the client to nag.
 That is deliberate: on the day this shipped nobody was enrolled, so enforcing
 immediately would have locked every leader out of the system at once.
 
+**Updated 14 November 2026: the web enrolment UI has shipped.** A member can
+now set up an authenticator from Settings > Security, and a privileged member
+without one sees a banner on every dashboard page that dismisses only for the
+browser session. The sign-in challenge and the forced-enrolment path at /mfa
+are both live, so the date below is now a scheduling question rather than a
+blocked one. Mobile is not done: a privileged member on the app is told to
+sign in on the web, which is why the clock should start from the mobile
+release and not from this one.
+
 > **DECISION NEEDED:** the date to set `MFA_REQUIRED_FROM` to.
 >
 > **Recommended: four weeks after the enrolment UI reaches the people who
-> need it**, not four weeks after it is merged. The set is wider than it
+> need it**, not four weeks after it is merged. Web enrolment merged on
+> 14 November 2026; "reaches them" means deployed, announced, and with the
+> mobile path done, since a leader who only uses the app cannot enrol at all
+> until then. The set is wider than it
 > sounds — it is every holder of any grant, which includes fellowship leaders
 > and department deputies, who are volunteers rather than staff. The trade is
 > straightforward: too early and volunteers are locked out of a system they

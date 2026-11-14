@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@kairos/ui';
 import { persistAuthSuccess, useLogin } from '@/hooks/use-auth';
 import { useAuthStore } from '@/lib/auth-store';
+import { useMfaChallengeStore } from '@/stores/mfa-challenge-store';
 import { safeReturnTo } from '@/lib/safe-return-to';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { Halo } from '@/components/motion/halo';
@@ -65,8 +66,18 @@ function LoginContent() {
     try {
       const result = await loginMutation.mutateAsync(data);
 
-      // RBAC Phase 5a: login always returns tokens + member. Capabilities
-      // travel on the access token via the `grants` array; no role picker.
+      // The password was right but the sign-in is not finished: this member
+      // needs a second factor, or needs to set one up. The pre-MFA token goes
+      // into memory only and /mfa takes it from there.
+      if (result.mfa) {
+        useMfaChallengeStore.getState().start({ ...result.mfa, returnTo });
+        router.push('/mfa');
+        return;
+      }
+
+      // RBAC Phase 5a: login returns tokens + member whenever no second
+      // factor is outstanding. Capabilities travel on the access token via
+      // the `grants` array; no role picker.
       const member = result.member;
       const tokens = result.tokens;
       if (!member || !tokens) {

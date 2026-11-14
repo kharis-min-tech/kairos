@@ -1865,3 +1865,78 @@ export interface MfaChallenge {
   token: string;
   stage: 'challenge' | 'enrolment';
 }
+
+/**
+ * Where a member stands with their second factor. `GET /api/auth/mfa/status`.
+ *
+ * `enrolled` and `required` are independent on purpose, and the pair is what
+ * the settings card reads:
+ *   - required and not enrolled  → the nag, and after the cutover a lock-out
+ *   - enrolled and not required  → a member who turned it on voluntarily
+ *   - neither                    → an ordinary member; offer it, don't push
+ */
+export interface MfaStatus {
+  /** A confirmed factor exists. Only this counts as having MFA. */
+  enrolled: boolean;
+  /** A QR code was generated and never proved. Not a factor. */
+  pendingEnrolment: boolean;
+  /** This member is privileged, so a factor is expected of them. */
+  required: boolean;
+  backupCodesRemaining: number;
+}
+
+/**
+ * `POST /api/auth/mfa/enrol`. The secret in two forms, because an authenticator
+ * on the same device as the browser cannot scan the screen it is drawn on.
+ */
+export interface MfaEnrolmentStart {
+  /** For the "enter a setup key instead" path. */
+  secretBase32: string;
+  /** `otpauth://totp/...`, which is what the QR encodes. */
+  enrolmentUri: string;
+}
+
+/** Shown once, never retrievable. Both `/confirm` and `/backup-codes` return it. */
+export interface MfaBackupCodes {
+  backupCodes: string[];
+}
+
+/**
+ * `POST /api/auth/mfa/confirm`.
+ *
+ * Carries a session only when the caller was mid-sign-in: confirming IS
+ * proving a factor, so someone the cutover forced into enrolment is signed in
+ * by the same call rather than sent back to type a second code.
+ */
+export interface MfaConfirmResponse extends MfaBackupCodes {
+  tokens?: AuthTokens;
+  member?: MemberProfile;
+  mfaSetupRecommended?: boolean;
+}
+
+/**
+ * `POST /api/auth/mfa/verify`. The pre-MFA token plus a code, exchanged for a
+ * real session.
+ *
+ * `tokens` is optional for the same reason it is on `LoginResponse`: the
+ * server's session shape is one type, and a client that assumes a session is
+ * always there finds out on the first 401 instead of at compile time.
+ */
+export interface MfaVerifyResponse {
+  tokens?: AuthTokens;
+  member: MemberProfile;
+  mfaSetupRecommended?: boolean;
+  /** Which kind of code was accepted, so the UI can warn after a backup code. */
+  mfaMethod: 'totp' | 'backup-code';
+  backupCodesRemaining: number;
+}
+
+/** A TOTP code or a formatted backup code. The server decides which it is. */
+export interface MfaCodeRequest {
+  code: string;
+}
+
+/** `/disable` and `/backup-codes` both re-ask for the password. */
+export interface MfaPasswordRequest {
+  currentPassword: string;
+}

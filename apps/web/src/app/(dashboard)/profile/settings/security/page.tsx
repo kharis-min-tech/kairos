@@ -46,6 +46,7 @@ import {
 } from '@/components/oauth-provider-icon';
 
 import { AuthorizedAppsCard } from './_components/authorized-apps-card';
+import { MfaCard } from './_components/mfa-card';
 
 const ALL_PROVIDERS: OAuthProviderId[] = ['google', 'microsoft', 'apple'];
 
@@ -268,6 +269,8 @@ export default function SecuritySettingsPage() {
           Manage the ways you sign in and review recent security activity.
         </p>
       </div>
+
+      <MfaCard />
 
       <ConnectedAccountsCard />
 

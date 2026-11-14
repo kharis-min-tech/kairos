@@ -15,6 +15,7 @@ vi.mock('@/hooks/use-auth', () => ({
 }));
 
 import OAuthCallbackPage from './page';
+import { useMfaChallengeStore } from '@/stores/mfa-challenge-store';
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -139,5 +140,56 @@ describe('OAuthCallbackPage', () => {
       render(<OAuthCallbackPage />, { wrapper });
       await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/dashboard'));
     });
+  });
+});
+
+/**
+ * A privileged member signing in with Google gets a fragment with no session
+ * in it, only a pre-MFA token. Before this branch existed the page read that
+ * as a failed handshake and sent them to /login?oauth_error=provider_error,
+ * which no amount of retrying could get past.
+ */
+describe('OAuthCallbackPage - second factor outstanding', () => {
+  beforeEach(() => useMfaChallengeStore.getState().clear());
+
+  it('routes to /mfa instead of reporting a provider error', async () => {
+    setHash('#mfaToken=pre-mfa&mfaStage=challenge&returnTo=%2Fmembers');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/mfa'));
+    expect(mockPersist).not.toHaveBeenCalled();
+  });
+
+  it('hands the token, stage and destination to the challenge store', async () => {
+    setHash('#mfaToken=pre-mfa&mfaStage=enrolment&returnTo=%2Fmembers');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/mfa'));
+    const state = useMfaChallengeStore.getState();
+    expect(state.token).toBe('pre-mfa');
+    expect(state.stage).toBe('enrolment');
+    expect(state.returnTo).toBe('/members');
+  });
+
+  it('treats an unrecognised stage as a challenge rather than forcing re-enrolment', async () => {
+    setHash('#mfaToken=pre-mfa&mfaStage=nonsense');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/mfa'));
+    expect(useMfaChallengeStore.getState().stage).toBe('challenge');
+  });
+
+  /**
+   * The API sends mfaToken='' when there is no challenge, so an empty value
+   * must not be mistaken for one.
+   */
+  it('ignores an empty mfaToken and falls through to the normal path', async () => {
+    setHash('#mfaToken=&mfaStage=challenge');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith('/login?oauth_error=provider_error'),
+    );
+    expect(useMfaChallengeStore.getState().token).toBeNull();
   });
 });
