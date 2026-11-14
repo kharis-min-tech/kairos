@@ -40,6 +40,7 @@ import {
   useMyOAuthConnections,
 } from '@/hooks/use-oauth-connections';
 import { api } from '@/lib/api';
+import { markOAuthFlowStarted } from '@/lib/oauth-flow-marker';
 import {
   OAUTH_PROVIDER_LABEL,
   OAuthProviderIcon,
@@ -119,6 +120,10 @@ function ConnectedAccountsCard() {
   }
 
   function startConnect(provider: OAuthProviderId) {
+    // Linking a provider comes back through the same callback, so it needs
+    // the same marker. Missing it here would make /oauth-callback refuse a
+    // legitimate link the moment the refusal is wired up.
+    markOAuthFlowStarted();
     window.location.assign(
       api.auth.oauth.startUrl(provider, '/profile/settings/security'),
     );

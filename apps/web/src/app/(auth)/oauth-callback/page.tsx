@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { looksLikeMfaToken, type MemberProfile } from '@kairos/types';
 import { persistAuthSuccess } from '@/hooks/use-auth';
 import { useMfaChallengeStore } from '@/stores/mfa-challenge-store';
+import { consumeOAuthFlowMarker } from '@/lib/oauth-flow-marker';
 import { KharisCardHeader } from '../kharis-logo';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -58,6 +59,18 @@ export default function OAuthCallbackPage() {
 
     async function run() {
       try {
+        // Did this browser start an OAuth flow? If not, whatever is in the
+        // fragment arrived from somewhere else, and acting on it is login
+        // CSRF: a crafted link carrying the sender's own session would sign
+        // the reader in as them, and everything typed afterwards would land
+        // in the sender's account. Nothing below is safe to read until this
+        // passes, so it is the first thing done.
+        if (!consumeOAuthFlowMarker()) {
+          window.history.replaceState({}, '', window.location.pathname);
+          router.replace('/login?oauth_error=unsolicited_callback');
+          return;
+        }
+
         const fragment = window.location.hash.slice(1);
         const params = new URLSearchParams(fragment);
         const accessToken = params.get('accessToken');

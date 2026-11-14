@@ -28,6 +28,12 @@ const OAUTH_ERROR_COPY: Record<string, string> = {
   id_token_invalid: 'Sign-in verification failed. Please try again.',
   provider_error: 'Your provider returned an error. Please try again or use email + password.',
   account_inactive: 'Your account has been deactivated. Please contact an administrator.',
+  // Set when /oauth-callback was reached without this browser having started
+  // a sign-in. Usually a stale or shared link rather than an attack, so the
+  // wording explains rather than accuses - but the refusal is what stops a
+  // crafted link signing someone into an account that is not theirs.
+  unsolicited_callback:
+    'That sign-in link did not start here, so we stopped. Please sign in from this page.',
 };
 
 function LoginContent() {
