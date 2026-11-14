@@ -24,6 +24,7 @@ import {
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
+import { useMfaChallengeStore } from '@/store/mfa-challenge';
 import {
   OAuthProviderIcon,
   OAUTH_PROVIDER_LABEL,
@@ -71,11 +72,16 @@ export default function OAuthConfirmLinkScreen() {
       }
       return res.data;
     },
-    onSuccess: async ({ tokens, member }) => {
+    onSuccess: async ({ tokens, member, mfa }) => {
       // Same as the password door: a privileged account is handed a
       // second-factor challenge rather than a session. See login.tsx.
       if (!tokens) {
-        setError('This account needs an authenticator code. Please sign in on the web for now.');
+        if (!mfa) {
+          setError('Your sign-in could not be completed. Please try again.');
+          return;
+        }
+        useMfaChallengeStore.getState().start(mfa);
+        router.replace('/(auth)/mfa' as never);
         return;
       }
       await setSession(tokens, member);

@@ -36,6 +36,7 @@ import { apiBaseUrl, mapboxPublicToken } from '@/lib/config';
 import { mapOAuthErrorSlug, type OAuthStartResult } from '@/lib/oauth';
 import { OAuthButtonGroup } from '@/components/oauth-button-group';
 import { useAuthStore } from '@/store/auth';
+import { useMfaChallengeStore } from '@/store/mfa-challenge';
 import { CanvasGround } from '@/components/motion/canvas-ground';
 import { CanvasCard } from '@/components/motion/canvas-card';
 import { CanvasLogo } from '@/components/motion/canvas-logo';
@@ -122,6 +123,15 @@ export default function SignupScreen() {
           provider: result.provider,
         },
       });
+      return;
+    }
+    if (result.kind === 'mfa_required') {
+      // A member signing up cannot already hold a grant, so this is not
+      // reachable today. Handled rather than cast away: the day someone links
+      // a provider to an existing privileged account through this screen, the
+      // alternative is a crash on `result.tokens`.
+      useMfaChallengeStore.getState().start(result.challenge);
+      router.push('/(auth)/mfa' as never);
       return;
     }
     try {

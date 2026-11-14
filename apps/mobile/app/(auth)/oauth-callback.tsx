@@ -15,6 +15,7 @@ import {
 import { apiBaseUrl } from '@/lib/config';
 import { mapOAuthErrorSlug, parseCallbackUrl } from '@/lib/oauth';
 import { useAuthStore } from '@/store/auth';
+import { useMfaChallengeStore } from '@/store/mfa-challenge';
 import { CanvasGround } from '@/components/motion/canvas-ground';
 import { CanvasCard } from '@/components/motion/canvas-card';
 
@@ -65,6 +66,11 @@ export default function OAuthCallbackScreen() {
             provider: parsed.provider,
           },
         });
+        return;
+      }
+      if (parsed.kind === 'mfa_required') {
+        useMfaChallengeStore.getState().start(parsed.challenge);
+        router.replace('/(auth)/mfa' as never);
         return;
       }
       try {
