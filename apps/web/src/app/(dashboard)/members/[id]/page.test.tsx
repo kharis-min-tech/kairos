@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
@@ -19,6 +20,7 @@ vi.mock('@/lib/auth-store', () => ({
 }));
 
 // ── hooks ──────────────────────────────────────────────────
+const resetMfaMutate = vi.fn();
 let memberData: Record<string, unknown>;
 let healthData: unknown;
 
@@ -28,6 +30,7 @@ vi.mock('@/hooks/use-members', () => ({
   useRemoveRole: () => ({ mutate: vi.fn() }),
   useDeactivateMember: () => ({ mutate: vi.fn() }),
   useReactivateMember: () => ({ mutate: vi.fn() }),
+  useResetMemberMfa: () => ({ mutate: resetMfaMutate }),
   useApproveMember: () => ({ mutate: vi.fn() }),
   useAssignRole: () => ({ mutate: vi.fn(), error: null, isPending: false }),
   useAllRoles: () => ({ data: [] }),
@@ -244,5 +247,48 @@ describe('MemberDetailPage — self-edit + fellowship request flow', () => {
     render(<MemberDetailPage />, { wrapper });
     expect(screen.getByText(/Assign this member to a fellowship/i)).toBeInTheDocument();
     expect(screen.queryByText(/send a join request/i)).toBeNull();
+  });
+});
+
+// -- Two-step reset (admin recovery path) -------------------
+
+/**
+ * The recovery path for a member who lost the phone holding their
+ * authenticator AND never saved their backup codes. Without it they are
+ * locked out permanently, which is why it is admin-only.
+ */
+describe('MemberDetailPage - resetting two-step sign-in', () => {
+  beforeEach(() => {
+    resetMfaMutate.mockReset();
+    memberData = { ...baseMember, dateOfBirth: '1990-01-01', isMinor: false, redacted: false };
+    auth = { user: { id: 'admin-1', systemRole: 'admin' }, activeRole: 'admin' };
+  });
+
+  it('offers the reset to an admin', () => {
+    render(<MemberDetailPage />, { wrapper });
+    expect(screen.getByRole('button', { name: /reset two-step/i })).toBeInTheDocument();
+  });
+
+  it('does not offer it to a member without the admin role', () => {
+    auth = { user: { id: 'other-1', systemRole: 'member' }, activeRole: 'member' };
+    render(<MemberDetailPage />, { wrapper });
+    expect(screen.queryByRole('button', { name: /reset two-step/i })).not.toBeInTheDocument();
+  });
+
+  it('does not offer it for a deactivated member', () => {
+    memberData = { ...memberData, isActive: false };
+    render(<MemberDetailPage />, { wrapper });
+    expect(screen.queryByRole('button', { name: /reset two-step/i })).not.toBeInTheDocument();
+  });
+
+  /**
+   * The confirmation is the control here: the server cannot tell whether the
+   * admin has verified who they are speaking to, so the dialog has to say
+   * what the reset costs before it happens.
+   */
+  it('asks before it resets anything', async () => {
+    render(<MemberDetailPage />, { wrapper });
+    await userEvent.click(screen.getByRole('button', { name: /reset two-step/i }));
+    expect(resetMfaMutate).not.toHaveBeenCalled();
   });
 });

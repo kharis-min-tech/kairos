@@ -15,6 +15,7 @@ import {
   renderRoleRevoked,
   renderSigninNewDevice,
   renderOAuthProviderLinked,
+  renderMfaReset,
   renderProfileUpdatedByAdmin,
   digestPasswordResetRequested,
   digestPasswordChanged,
@@ -22,6 +23,7 @@ import {
   digestRoleRevoked,
   digestSigninNewDevice,
   digestOAuthProviderLinked,
+  digestMfaReset,
   digestProfileUpdatedByAdmin,
 } from './templates/security';
 import {
@@ -113,6 +115,11 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateEntry> = {
     category: NotificationCategory.Security,
     render: renderProfileUpdatedByAdmin,
     digestLine: digestProfileUpdatedByAdmin,
+  },
+  [NotificationEventType.SecurityMfaReset]: {
+    category: NotificationCategory.Security,
+    render: renderMfaReset,
+    digestLine: digestMfaReset,
   },
   [NotificationEventType.WorkflowFellowshipJoinRequestReceived]: {
     category: NotificationCategory.Workflow,

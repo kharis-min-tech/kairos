@@ -454,5 +454,20 @@ Two things worth knowing before choosing a date:
   date set without that attached is a date that will be moved.
 - **Backup codes are the recovery path, and they are shown once.** A member
   who loses their phone and never saved the codes needs an admin to remove
-  the factor. For the single system admin there is no such admin, so their
-  codes genuinely must be kept somewhere offline.
+  the factor.
+
+  **That admin capability now exists** (`POST /api/members/:id/mfa-reset`,
+  added 14 November 2026). Until that date this paragraph described something
+  the code could not do: `disableMfa` was reachable only from the member's
+  own password-gated endpoint, so a locked-out leader could be recovered only
+  by hand-editing the database. The gate is `requireRole('admin')` rather
+  than a branch capability, the member is emailed, and it is audited as
+  `mfa_reset` whether or not a factor was there to remove.
+
+  Two things it does not do. It **does not end existing sessions**, because
+  nothing in Kairos does: there is no token version to bump, and a refresh
+  token already minted keeps working until it expires. For a lost phone that
+  costs nothing; for a *stolen* phone with a live app session it is a real
+  gap, and it is the same gap a password change has. And it does not help
+  **the single system admin**, who would need another admin to reset them.
+  Their codes genuinely must be kept somewhere offline.

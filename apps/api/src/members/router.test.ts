@@ -589,3 +589,31 @@ describe('GET /api/members/:id/roles', () => {
     expect(body.success).toBe(true);
   });
 });
+
+// ── POST /api/members/:id/mfa-reset ────────────────────────
+
+/**
+ * The gate, not the behaviour - the service test covers what the reset does.
+ *
+ * Removing someone else's second factor is a sharper power than granting them
+ * a role, so it is gated on systemRole rather than a branch capability. These
+ * assert that the gate rejects before any of that runs.
+ */
+describe('POST /api/members/:id/mfa-reset', () => {
+  it('returns 403 for a member without the admin role', async () => {
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/mfa-reset`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${memberToken}` },
+    });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 401 without a token at all', async () => {
+    const res = await app.request(`/api/members/${TEST_IDS.memberId}/mfa-reset`, {
+      method: 'POST',
+    });
+
+    expect(res.status).toBe(401);
+  });
+});

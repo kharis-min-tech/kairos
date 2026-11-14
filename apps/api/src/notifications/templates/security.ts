@@ -212,6 +212,45 @@ export function renderProfileUpdatedByAdmin(p: SecurityProfileUpdatedByAdminPayl
   };
 }
 
+export interface SecurityMfaResetPayload {
+  memberName: string;
+  resetByName: string | null;
+  occurredAt: Date;
+  setupUrl: string;
+}
+
+/**
+ * An administrator removed this member's second factor.
+ *
+ * The member did not ask for this at the time - they could not, they were
+ * locked out - so this mail is the only thing that reaches them if the reset
+ * was not legitimate. That shapes the wording: it names who did it, says
+ * plainly what it means for their account, and tells them who to contact if
+ * it was not them. No "no action needed" reassurance, because the whole point
+ * is that action may very much be needed.
+ */
+export function renderMfaReset(p: SecurityMfaResetPayload) {
+  const when = p.occurredAt.toLocaleString('en-GB');
+  const actor = p.resetByName ? escapeHtml(p.resetByName) : 'an administrator';
+  return {
+    subject: 'Two-step sign-in was removed from your account',
+    html: renderLayout({
+      heading: 'Two-step sign-in was removed',
+      greeting: p.memberName,
+      bodyHtml: `
+        <p>On <strong>${escapeHtml(when)}</strong>, <strong>${actor}</strong> removed
+           two-step sign-in from your Kharis Church account.</p>
+        <p>This is normally done when someone has lost the phone holding their
+           authenticator app and their backup codes. Until you set it up again,
+           your password on its own will get into your account.</p>
+        <p><strong>If you did not ask for this</strong>, contact your branch
+           administrator straight away and change your password.</p>
+      `,
+      cta: { label: 'Set up two-step sign-in again', url: p.setupUrl },
+    }),
+  };
+}
+
 // ── Digest lines (security defaults to immediate but supported for completeness) ──
 
 export function digestPasswordResetRequested(_p: SecurityPasswordResetRequestedPayload): string {
@@ -233,6 +272,10 @@ export function digestRoleRevoked(p: SecurityRoleRevokedPayload): string {
 export function digestSigninNewDevice(p: SecuritySigninNewDevicePayload): string {
   const where = [p.country, p.ip].filter(Boolean).join(' · ');
   return `Sign-in from new device${where ? ` (${where})` : ''}`;
+}
+
+export function digestMfaReset(p: SecurityMfaResetPayload): string {
+  return `Two-step sign-in removed by ${p.resetByName ?? 'an administrator'}`;
 }
 
 export function digestProfileUpdatedByAdmin(p: SecurityProfileUpdatedByAdminPayload): string {

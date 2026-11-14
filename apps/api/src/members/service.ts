@@ -15,6 +15,7 @@ import { resolveBranchAuthority } from '../notifications/recipients';
 import { recordAuditEvent, type RequestContext } from '../audit/service';
 import { deleteStoredImage, type CfImagesConfig } from '../media/service';
 import { linkGuardians } from '../lib/member-shell';
+import { disableMfa, hasConfirmedFactor } from '../auth/mfa';
 import { NotificationEventType, AuditAction, AuditOutcome } from '@kairos/types';
 import {
   NotFoundError,
@@ -2093,4 +2094,105 @@ export async function switchActiveBranch(
   const tokens = await generateTokenPair(authContext, secrets);
 
   return { tokens, isAtSecondaryBranch: nextIsAtSecondary, activeBranchId };
+}
+
+/**
+ * Remove another member's second factor, as an administrator.
+ *
+ * This is the recovery path for the one failure the TOTP design cannot
+ * recover from on its own: a member who has lost the phone holding their
+ * authenticator AND never saved their backup codes. Without it they are
+ * locked out permanently, and `docs/security/key-management.md` §9 already
+ * described an admin doing this long before anything could.
+ *
+ * It is a sharp power, so three things are true of it by construction:
+ *
+ *   - `requireRole('admin')` gates it, not a capability. Removing someone's
+ *     second factor is a bigger move than granting them a role, and the
+ *     branch-level grant holders who can do the latter should not get this
+ *     by inheritance.
+ *   - The member is emailed. They cannot consent at the time - being locked
+ *     out is the premise - so the notification is the only thing that reaches
+ *     them if the reset was not legitimate. It is sent before this function
+ *     returns, not queued behind a digest.
+ *   - It is audited, including when there was nothing to remove.
+ *
+ * Stripping a second factor is exactly what an attacker who had taken over an
+ * admin account would do before taking over a leader's. The alarm and the
+ * record are therefore part of the feature, not decoration on it.
+ *
+ * **It does not end existing sessions**, because nothing in Kairos does yet:
+ * there is no token version to bump, and a refresh token already minted keeps
+ * working until it expires. For the honest case - a lost phone - that costs
+ * nothing, because the member still holds the password. For a stolen phone
+ * with a live app session it is a real gap, and it is the same gap a password
+ * change has. Closing it needs a `token_version` column on `members`, checked
+ * in `refreshAccessToken`, which is its own piece of work.
+ */
+export async function resetMemberMfa(
+  db: Database,
+  auth: AuthContext,
+  memberId: string,
+  ctx?: RequestContext,
+): Promise<{ hadFactor: boolean }> {
+  const [member] = await db
+    .select({
+      id: members.id,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      isActive: members.isActive,
+    })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1);
+
+  if (!member || !member.isActive) throw new NotFoundError('Member not found');
+
+  // Asked before removing, so the audit row can say which of the two
+  // happened. "Nothing to remove" is worth recording: an admin who resets an
+  // account that never had a factor is either confused or fishing, and a log
+  // that only kept successes could not tell those apart from nothing at all.
+  const hadFactor = await hasConfirmedFactor(db, memberId);
+
+  await disableMfa(db, memberId);
+
+  await recordAuditEvent(db, {
+    actorMemberId: auth.memberId,
+    action: AuditAction.MfaReset,
+    outcome: AuditOutcome.Success,
+    targetType: 'member',
+    targetId: memberId,
+    // Never any part of the secret. A row carrying it would hand a reader the
+    // factor it describes destroying.
+    metadata: { outcome: hadFactor ? 'removed' : 'nothing-to-remove' },
+    ...(ctx && { ctx }),
+  });
+
+  if (hadFactor) {
+    try {
+      const [actor] = await db
+        .select({ firstName: members.firstName, lastName: members.lastName })
+        .from(members)
+        .where(eq(members.id, auth.memberId))
+        .limit(1);
+
+      await dispatchNotification(db, {
+        eventType: NotificationEventType.SecurityMfaReset,
+        recipientMemberIds: [memberId],
+        subjectType: 'member',
+        subjectId: memberId,
+        payload: {
+          resetByName: actor ? `${actor.firstName} ${actor.lastName ?? ''}`.trim() : null,
+          occurredAt: new Date(),
+          setupUrl: `${process.env['FRONTEND_URL'] ?? 'http://localhost:3002'}/profile/settings/security`,
+        },
+      });
+    } catch {
+      // dispatchNotification logs its own failures. Swallowed so a mail
+      // outage cannot leave a locked-out member still locked out: the audit
+      // row above is already written, which is the part that must not be lost.
+    }
+  }
+
+  return { hadFactor };
 }
