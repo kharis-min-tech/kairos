@@ -167,8 +167,17 @@ authRouter.get('/me', authMiddleware, async (c) => {
 authRouter.post('/change-password', authMiddleware, zValidator('json', changePasswordSchema), async (c) => {
   const auth = getAuth(c);
   const { currentPassword, newPassword } = c.req.valid('json');
-  await changePassword(db, auth, currentPassword, newPassword);
-  return c.json(successResponse(undefined, 'Password changed successfully'));
+  // A password change now ends every session this member has, including the
+  // one making the request. The fresh pair keeps THIS device signed in; every
+  // other device fails at its next refresh, which is what the UI promises.
+  const tokens = await changePassword(
+    db,
+    auth,
+    currentPassword,
+    newPassword,
+    getAuthSecrets(c),
+  );
+  return c.json(successResponse(tokens, 'Password changed successfully'));
 });
 
 // Phase 1.5 Better-Auth: SSO onboarding submit. Requires an authenticated

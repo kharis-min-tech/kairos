@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, date, boolean, timestamp, index, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, date, boolean, integer, timestamp, index, uniqueIndex, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { branches } from './branches';
 import { memberRoles } from './member-roles';
@@ -66,6 +66,21 @@ export const members = pgTable('members', {
   emailVerificationExpiry: timestamp('email_verification_expiry'),
   lastLoginAt: timestamp('last_login_at'),
   mustChangePassword: boolean('must_change_password').default(false).notNull(),
+  /**
+   * Bumped to end every session this member already has.
+   *
+   * Refresh tokens carry the value they were minted under. `refreshAccessToken`
+   * compares the two and refuses a token from an earlier generation, so a
+   * password change or an administrator's second-factor reset actually evicts
+   * whoever is already signed in, rather than only stopping the next sign-in.
+   *
+   * Access tokens are NOT checked against this, deliberately: that check would
+   * be a database read on every authenticated request and would give up the
+   * reason the tokens are stateless. So revocation bites within one access
+   * token's lifetime (15 minutes) rather than instantly, and immediately for
+   * anything that needs a refresh.
+   */
+  tokenVersion: integer('token_version').default(0).notNull(),
   // Phase 1.5 Better-Auth: TRUE while an OAuth-signup member still needs
   // to fill phone, home branch, and T&C consent through the onboarding
   // profile screen. The dashboard guard redirects to /profile?onboarding=1

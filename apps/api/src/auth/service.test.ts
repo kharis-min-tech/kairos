@@ -119,6 +119,9 @@ const baseMember = {
   homeBranchId: '660e8400-e29b-41d4-a716-446655440000',
   membershipDate: '2024-01-01',
   isActive: true,
+  // Generation zero: refreshAccessToken compares this against the token's
+  // `tv` claim, and a fixture without it reads as a revoked session.
+  tokenVersion: 0,
   photoUrl: null,
   emergencyContactName: null,
   emergencyContactPhone: null,

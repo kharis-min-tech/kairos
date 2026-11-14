@@ -1,0 +1,29 @@
+-- 0070_members_token_version.sql
+--
+-- A generation counter per member, so that changing a credential can end the
+-- sessions that already exist.
+--
+-- Until now nothing in Kairos revoked a session. Changing a password did not
+-- evict other devices, and neither did an administrator resetting a locked-out
+-- member's second factor. A refresh token already minted kept working until it
+-- expired on its own, which on mobile is a year. Every other answer in the
+-- security documentation to "what if a credential is compromised" was "change
+-- it", and changing it did not do the thing the reader would assume.
+--
+-- The mobile change-password screen also told members "Other devices will need
+-- to sign in again on their next request", which was not true. That copy is
+-- what made this a correctness bug rather than only a missing feature.
+--
+-- Refresh tokens carry the version they were minted under; refreshAccessToken
+-- compares and refuses an older generation. Access tokens are deliberately NOT
+-- checked against this: that would be a database read on every authenticated
+-- request and would give up the reason they are stateless. Revocation
+-- therefore bites within one access-token lifetime, 15 minutes, and
+-- immediately for anything needing a refresh.
+--
+-- DEFAULT 0 and NOT NULL so the backfill is implicit and every existing row is
+-- generation zero. Tokens minted before this column existed carry no version
+-- claim and are read as generation zero too, so deploying this does not sign
+-- anybody out.
+
+ALTER TABLE members ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0;

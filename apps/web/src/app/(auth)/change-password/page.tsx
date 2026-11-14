@@ -59,10 +59,13 @@ export default function ChangePasswordPage() {
   async function onSubmit(data: ChangePasswordFormData) {
     setError(null);
     try {
-      await api.auth.changePassword({
+      const res = await api.auth.changePassword({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
+      // Every session was just revoked, this one included. Swap in the pair
+      // the server minted or the next refresh signs this browser out.
+      if (res.data) useAuthStore.getState().setTokens(res.data);
       setMustChangePassword(false);
       router.push('/dashboard');
     } catch (err) {

@@ -22,7 +22,7 @@ import { resetMemberMfa } from './service';
 
 function createChain(result: unknown) {
   const chain: Record<string, unknown> = {};
-  for (const m of ['select', 'from', 'where', 'innerJoin', 'leftJoin', 'orderBy', 'limit']) {
+  for (const m of ['select', 'from', 'where', 'innerJoin', 'leftJoin', 'orderBy', 'limit', 'update', 'set']) {
     chain[m] = vi.fn().mockReturnValue(chain);
   }
   chain['then'] = (resolve: (v: unknown) => void) => resolve(result);
@@ -32,7 +32,12 @@ function createChain(result: unknown) {
 let selectResults: unknown[] = [];
 let selectCallIndex = 0;
 
-const mockDb = { select: vi.fn() } as unknown as import('@kairos/database').Database;
+// `update` is here because resetMemberMfa now revokes the member's sessions
+// as well as removing the factor.
+const mockDb = {
+  select: vi.fn(),
+  update: vi.fn(() => createChain(undefined)),
+} as unknown as import('@kairos/database').Database;
 
 function selectSequence(...results: unknown[]) {
   selectResults = results;

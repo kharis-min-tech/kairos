@@ -537,10 +537,19 @@ quietly.
   The justification at `:11-23` is genuine — consumer-app norms, and the mobile
   app seals the token behind the OS keychain's biometric requirement, so an
   attacker needs the phone *and* the enrolled biometric. But there is **no
-  server-side store, no rotation, no reuse detection and no revocation list**,
-  so a stolen refresh token is valid for a year against any active member and
-  you cannot tell whether it was used. Deactivating the member is the only
-  containment, and it works within 15 minutes.
+  server-side store, no rotation and no reuse detection**, so a stolen refresh
+  token is valid for a year against any active member and you cannot tell
+  whether it was used.
+
+  **Revocation now exists** (14 November 2026): `members.token_version` is a
+  generation counter carried in the refresh token and compared on every
+  refresh, bumped by a password change, a password reset and an
+  administrator's second-factor reset. That closes the containment half of
+  this finding: a compromised session can now be ended. Detection is still
+  open, because without rotation or reuse detection nobody learns that a
+  token WAS stolen, so the revocation has to be triggered by a human noticing
+  something else. Deactivating the member remains the blunt instrument, and
+  both act within 15 minutes.
   The instructive contrast is inside this same repository: the OAuth2 server
   has rotating refresh tokens *with* reuse detection, idle (30d) and absolute
   (90d) bounds, and an `oauth_token_reuse` audit action. **The first-party
