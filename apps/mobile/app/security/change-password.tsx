@@ -25,6 +25,7 @@ import {
   useColors,
 } from '@kairos/ui-native';
 import { api } from '@/lib/api-client';
+import { useAuthStore } from '@/store/auth';
 
 export default function ChangePassword() {
   const styles = useThemedStyles(makeStyles);
@@ -35,6 +36,7 @@ export default function ChangePassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const updateTokens = useAuthStore((s) => s.updateTokens);
 
   const change = useMutation({
     mutationFn: (data: { currentPassword: string; newPassword: string }) =>
@@ -67,7 +69,10 @@ export default function ChangePassword() {
     setServerError(null);
     if (!validate()) return;
     try {
-      await change.mutateAsync({ currentPassword, newPassword });
+      const res = await change.mutateAsync({ currentPassword, newPassword });
+      // Every session was just revoked, this one included. Store the pair the
+      // server minted, or this device is signed out at its next refresh.
+      if (res.success && res.data) await updateTokens(res.data);
       alert.show({
         title: 'Password changed',
         message: 'Your password has been updated.',
@@ -106,7 +111,7 @@ export default function ChangePassword() {
             </View>
             <Text style={styles.introText}>
               You&apos;ll stay signed in on this device after the change. Other devices
-              will need to sign in again on their next request.
+              are signed out within a few minutes.
             </Text>
           </View>
 

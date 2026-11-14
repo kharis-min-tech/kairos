@@ -470,10 +470,13 @@ Two things worth knowing before choosing a date:
   than a branch capability, the member is emailed, and it is audited as
   `mfa_reset` whether or not a factor was there to remove.
 
-  Two things it does not do. It **does not end existing sessions**, because
-  nothing in Kairos does: there is no token version to bump, and a refresh
-  token already minted keeps working until it expires. For a lost phone that
-  costs nothing; for a *stolen* phone with a live app session it is a real
-  gap, and it is the same gap a password change has. And it does not help
-  **the single system admin**, who would need another admin to reset them.
-  Their codes genuinely must be kept somewhere offline.
+  **It also ends their existing sessions** (added 14 November 2026).
+  `revokeSessions` bumps `members.token_version`, which strands every refresh
+  token already minted, so a stolen phone with a live app session loses it.
+  An access token already issued survives until it expires, at most fifteen
+  minutes, because checking the version on every request would mean a database
+  read per request and would give up the reason access tokens are stateless.
+
+  One thing it does not do: help **the single system admin**, who would need
+  another admin to reset them. Their codes genuinely must be kept somewhere
+  offline.

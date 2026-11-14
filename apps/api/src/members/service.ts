@@ -6,7 +6,7 @@ import type { AuthContext } from '@kairos/types';
 import type { SwitchActiveBranchResponse, MemberHealthRecord } from '@kairos/types';
 import { isMinorMember, MINOR_AGE_THRESHOLD, CHURCH_SCOPE_ID, RoleScopeKind } from '@kairos/types';
 import type { Capability } from '@kairos/types';
-import { getActiveBranchId, generateTokenPair } from '../auth/service';
+import { getActiveBranchId, generateTokenPair, revokeSessions } from '../auth/service';
 import type { AuthSecrets } from '../lib/auth-secrets';
 import { enforceScopeAllows } from '../lib/scope';
 import { authHasAnyCapability, authHasCapability, DB_ROLE_NAME_TO_FUNCTIONAL } from '../lib/grants';
@@ -2055,6 +2055,7 @@ export async function switchActiveBranch(
       isAtSecondaryBranch: members.isAtSecondaryBranch,
       systemRole: members.systemRole,
       email: members.email,
+      tokenVersion: members.tokenVersion,
       activeRole: sql<string>`${auth.activeRole}`,
     })
     .from(members)
@@ -2091,7 +2092,10 @@ export async function switchActiveBranch(
     grants: [],
   };
 
-  const tokens = await generateTokenPair(authContext, secrets);
+  // The member's CURRENT generation, not the default. Minting a generation
+  // zero token here for somebody on a later generation would sign them out on
+  // their next refresh for doing nothing but switching branch.
+  const tokens = await generateTokenPair(authContext, secrets, true, member.tokenVersion);
 
   return { tokens, isAtSecondaryBranch: nextIsAtSecondary, activeBranchId };
 }
@@ -2121,13 +2125,11 @@ export async function switchActiveBranch(
  * admin account would do before taking over a leader's. The alarm and the
  * record are therefore part of the feature, not decoration on it.
  *
- * **It does not end existing sessions**, because nothing in Kairos does yet:
- * there is no token version to bump, and a refresh token already minted keeps
- * working until it expires. For the honest case - a lost phone - that costs
- * nothing, because the member still holds the password. For a stolen phone
- * with a live app session it is a real gap, and it is the same gap a password
- * change has. Closing it needs a `token_version` column on `members`, checked
- * in `refreshAccessToken`, which is its own piece of work.
+ * **It also ends their existing sessions.** `revokeSessions` bumps the
+ * member's token version, which strands every refresh token already minted.
+ * An access token already issued keeps working until it expires, at most
+ * fifteen minutes, because checking the version on every request would mean
+ * a database read per request.
  */
 export async function resetMemberMfa(
   db: Database,
@@ -2155,6 +2157,12 @@ export async function resetMemberMfa(
   const hadFactor = await hasConfirmedFactor(db, memberId);
 
   await disableMfa(db, memberId);
+
+  // End their sessions too. The premise of this endpoint is that the member
+  // has lost the device holding their authenticator, and "lost" covers
+  // "somebody else has it". Removing the factor while leaving a live session
+  // on that device would hand the finder an account with one lock fewer.
+  await revokeSessions(db, memberId);
 
   await recordAuditEvent(db, {
     actorMemberId: auth.memberId,

@@ -279,8 +279,13 @@ export function createApiClient(
         client.post<ApiResponse<{ resetToken?: string }>>('/api/auth/forgot-password', data),
       resetPassword: (data: ResetPasswordRequest) =>
         client.post<ApiResponse<void>>('/api/auth/reset-password', data),
+      /**
+       * Returns a fresh token pair. A password change revokes every session
+       * the member has, so a caller that ignores these is signed out at its
+       * next refresh.
+       */
       changePassword: (data: ChangePasswordRequest) =>
-        client.post<ApiResponse<void>>('/api/auth/change-password', data),
+        client.post<ApiResponse<AuthTokens>>('/api/auth/change-password', data),
       requestEmailChange: (data: { currentPassword: string; newEmail: string }) =>
         client.post<ApiResponse<void>>('/api/auth/email-change', data),
       confirmEmailChange: (data: { token: string }) =>

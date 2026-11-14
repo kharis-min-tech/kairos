@@ -40,6 +40,9 @@ const baseMember = {
   secondaryBranchId: null,
   isAtSecondaryBranch: false,
   isActive: true,
+  // Generation zero. Tokens these tests mint carry no `tv` claim, which
+  // reads as zero, so they match.
+  tokenVersion: 0,
   approvalStatus: 'approved',
   emailVerified: true,
   mustChangePassword: false,

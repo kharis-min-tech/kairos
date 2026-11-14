@@ -121,9 +121,13 @@ async function signRefreshToken(
   memberId: string,
   secrets: AuthSecrets,
   mfa: boolean,
+  tokenVersion: number,
 ): Promise<string> {
   const key = new TextEncoder().encode(secrets.refreshSecret);
-  return new SignJWT({ memberId, mfa })
+  // `tv` is the generation this token belongs to. Bumping members.token_version
+  // strands every token minted before the bump, which is how a password change
+  // or an administrator's factor reset evicts sessions that already exist.
+  return new SignJWT({ memberId, mfa, tv: tokenVersion })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(secrets.refreshTokenExpiry)
@@ -190,12 +194,42 @@ export async function generateTokenPair(
   authContext: AuthContext,
   secrets: AuthSecrets,
   mfaSatisfied = true,
+  tokenVersion = 0,
 ): Promise<{ accessToken: string; refreshToken: string }> {
   const [accessToken, refreshToken] = await Promise.all([
     signAccessToken(authContext, secrets),
-    signRefreshToken(authContext.memberId, secrets, mfaSatisfied),
+    signRefreshToken(authContext.memberId, secrets, mfaSatisfied, tokenVersion),
   ]);
   return { accessToken, refreshToken };
+}
+
+/**
+ * The generation a refresh token belongs to.
+ *
+ * Absent on every token minted before `token_version` existed. Those are read
+ * as generation zero, which is the generation every member is on until
+ * something revokes, so deploying this signs nobody out. A token claiming a
+ * non-numeric generation is not a token this system minted.
+ */
+function tokenGenerationOf(payload: Record<string, unknown>): number {
+  const claimed = payload['tv'];
+  return typeof claimed === 'number' ? claimed : 0;
+}
+
+/**
+ * End every session this member currently has.
+ *
+ * Call it from anywhere a credential changes or is taken away. It strands
+ * refresh tokens immediately; access tokens already issued keep working until
+ * they expire, at most 15 minutes, because checking this on every request
+ * would mean a database read per request and would give up the reason access
+ * tokens are stateless.
+ */
+export async function revokeSessions(db: Database, memberId: string): Promise<void> {
+  await db
+    .update(members)
+    .set({ tokenVersion: sql`${members.tokenVersion} + 1`, updatedAt: sql`NOW()` })
+    .where(eq(members.id, memberId));
 }
 
 /**
@@ -478,7 +512,7 @@ export async function issueAuthenticatedSession(
     // during the grace period with no factor. If they enrol later, this
     // token stops working and they sign in again, because a token minted
     // before the factor existed proves nothing about it.
-    signRefreshToken(member.id, secrets, Boolean(options.mfaSatisfied) || !mfaRequired),
+    signRefreshToken(member.id, secrets, Boolean(options.mfaSatisfied) || !mfaRequired, member.tokenVersion),
   ]);
 
   await db
@@ -582,12 +616,14 @@ export async function refreshAccessToken(
   const key = new TextEncoder().encode(secrets.refreshSecret);
   let memberId: string;
   let mfaSatisfied: boolean;
+  let generation: number;
   try {
     const { payload } = await jwtVerify(refreshToken, key);
     if (typeof payload['memberId'] !== 'string') {
       throw new Error('invalid payload');
     }
     memberId = payload['memberId'];
+    generation = tokenGenerationOf(payload as Record<string, unknown>);
     // Absent on every token minted before MFA existed, which is correct:
     // those sessions never saw a code, so they must not inherit a pass.
     mfaSatisfied = payload['mfa'] === true;
@@ -603,6 +639,17 @@ export async function refreshAccessToken(
 
   if (!member) {
     throw new UnauthorizedError('Member not found or inactive');
+  }
+
+  // The session was revoked: a password change, a password reset, or an
+  // administrator resetting this member's second factor. The token is
+  // cryptographically valid and belongs to a generation that no longer runs.
+  //
+  // Checked before the grant and MFA work below, because none of that is
+  // worth doing for a session that is already over, and because a 401 here
+  // must not depend on anything that could throw first.
+  if (generation !== member.tokenVersion) {
+    throw new UnauthorizedError('Your session has ended. Please sign in again.');
   }
 
   const [authority, grants] = await Promise.all([
@@ -653,7 +700,7 @@ export async function refreshAccessToken(
     signAccessToken(authContext, secrets),
     // Carried forward, not re-asserted. Rotation must not launder a session
     // into a stronger one than the sign-in that created it.
-    signRefreshToken(member.id, secrets, mfaSatisfied),
+    signRefreshToken(member.id, secrets, mfaSatisfied, member.tokenVersion),
   ]);
   return { accessToken, refreshToken: newRefreshToken };
 }
@@ -773,9 +820,19 @@ export async function resetPassword(db: Database, token: string, newPassword: st
 
   const passwordHash = await hashPassword(newPassword);
 
+  // Revoked unconditionally here, unlike `changePassword`, and no fresh
+  // tokens are handed back. Somebody resetting a forgotten password is the
+  // case where an attacker most plausibly already holds a session, and the
+  // member is at a sign-in screen anyway: there is no session worth sparing.
   await db
     .update(members)
-    .set({ passwordHash, passwordResetToken: null, passwordResetExpiry: null, mustChangePassword: false })
+    .set({
+      passwordHash,
+      passwordResetToken: null,
+      passwordResetExpiry: null,
+      mustChangePassword: false,
+      tokenVersion: sql`${members.tokenVersion} + 1`,
+    })
     .where(eq(members.id, match.id));
 
   await dispatchNotification(db, {
@@ -809,12 +866,25 @@ export async function getMe(db: Database, memberId: string): Promise<MemberProfi
   return toMemberProfile(member);
 }
 
+/**
+ * Change a password, and end every other session.
+ *
+ * Returns a fresh token pair for the device doing the change, so the member
+ * is not signed out of the session they are sitting in. Without that, this
+ * function would log them out of the browser they just used, which is why
+ * revocation was never wired up here before.
+ *
+ * It is also what makes the mobile screen's promise true. That screen has
+ * told members "Other devices will need to sign in again on their next
+ * request" since it was written, and until now nothing did.
+ */
 export async function changePassword(
   db: Database,
   auth: AuthContext,
   currentPassword: string,
   newPassword: string,
-): Promise<void> {
+  secrets?: AuthSecrets,
+): Promise<AuthTokens | undefined> {
   const [member] = await db
     .select({ id: members.id, passwordHash: members.passwordHash })
     .from(members)
@@ -828,10 +898,26 @@ export async function changePassword(
 
   const passwordHash = await hashPassword(newPassword);
 
+  // One statement, so a crash between the two cannot leave the password
+  // changed and the old sessions alive.
   await db
     .update(members)
-    .set({ passwordHash, mustChangePassword: false, updatedAt: sql`NOW()` })
+    .set({
+      passwordHash,
+      mustChangePassword: false,
+      tokenVersion: sql`${members.tokenVersion} + 1`,
+      updatedAt: sql`NOW()`,
+    })
     .where(eq(members.id, auth.memberId));
+
+  // Re-read rather than assume the new value: another revocation could have
+  // landed between the read above and this write, and minting a token for a
+  // generation that is not the current one would sign this device out too.
+  const [updated] = await db
+    .select({ tokenVersion: members.tokenVersion })
+    .from(members)
+    .where(eq(members.id, auth.memberId))
+    .limit(1);
 
   await dispatchNotification(db, {
     eventType: NotificationEventType.SecurityPasswordChanged,
@@ -848,6 +934,17 @@ export async function changePassword(
     outcome: AuditOutcome.Success,
     metadata: { via: 'change_password' },
   });
+
+  // No secrets passed means the caller does not want a session back. Nothing
+  // in the app does that today; it keeps the function usable from a script.
+  if (!secrets) return undefined;
+
+  return generateTokenPair(
+    { ...auth, grants: auth.grants ?? [] },
+    secrets,
+    true,
+    updated?.tokenVersion ?? 0,
+  );
 }
 
 // ── SSO onboarding: complete-oauth-profile ────────────────
