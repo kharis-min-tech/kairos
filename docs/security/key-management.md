@@ -430,22 +430,28 @@ blocked one. Mobile is not done: a privileged member on the app is told to
 sign in on the web, which is why the clock should start from the mobile
 release and not from this one.
 
-> **DECISION NEEDED:** the date to set `MFA_REQUIRED_FROM` to.
->
-> **Recommended: four weeks after the enrolment UI reaches the people who
-> need it**, not four weeks after it is merged. Web enrolment merged on
-> 14 November 2026; "reaches them" means deployed, announced, and with the
-> mobile path done, since a leader who only uses the app cannot enrol at all
-> until then. The set is wider than it
-> sounds — it is every holder of any grant, which includes fellowship leaders
-> and department deputies, who are volunteers rather than staff. The trade is
-> straightforward: too early and volunteers are locked out of a system they
-> use on a Sunday with nobody to call; too late and the control is advisory,
-> which is the state the checklist asked about in the first place.
->
-> Setting it needs `wrangler secret put` or a `wrangler.jsonc` var and a
-> deploy, so it is reversible within one deploy if the first attempt is too
-> aggressive.
+**DECIDED 14 November 2026: enforced from the start, in both environments.**
+`MFA_REQUIRED_FROM` is set to `2026-11-14` in `apps/api/wrangler.jsonc` for
+staging and for production.
+
+The recommendation this replaced was four weeks after the enrolment UI
+reached people. That reasoning assumed an existing population being put
+through a change mid-flight, and the grace period existed to protect them.
+There is no such population: there is no production deployment, and staging
+carries seeded data only. Launching with the requirement already on is not a
+cutover, it is simply how the product works, and nobody is ever locked out by
+a change they did not expect.
+
+Staging is enforced first and deliberately, because it is the only place
+where being locked out costs nothing, and because device enrolment has not
+yet been proved on a real phone.
+
+**The bootstrap hazard, which replaces the old one.** The risk is no longer
+locking out a population. It is locking out the FIRST administrator. If they
+cannot complete enrolment, nobody can sign in, and there is no second admin
+to reset them: `POST /api/members/:id/mfa-reset` requires an admin. So:
+create and enrol a second administrator account before either environment
+carries real data. This is recorded as a measure in the DPIA.
 
 Two things worth knowing before choosing a date:
 

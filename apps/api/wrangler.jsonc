@@ -51,7 +51,23 @@
   //   wrangler secret put DEFAULT_HOME_BRANCH_ID   # optional; falls through to oldest branch
   "vars": {
     "AWS_REGION": "eu-west-2",
-    "SES_CONFIGURATION_SET": "kairos-transactional"
+    "SES_CONFIGURATION_SET": "kairos-transactional",
+    // Two-step sign-in is mandatory for anyone holding an administrative
+    // grant, from this date. It is in the past deliberately: production has
+    // no users yet, so there is no population to lock out and nothing to
+    // phase in. A member who has not enrolled is sent through setup at
+    // sign-in rather than refused.
+    //
+    // The grace period this setting was built for existed to protect people
+    // already using the system from a mid-flight change. Launching with the
+    // requirement already on is not a cutover at all.
+    //
+    // BOOTSTRAP HAZARD, and the reason staging is proved first: the very
+    // first administrator must complete enrolment. If they cannot, nobody can
+    // sign in and there is no second admin to reset them
+    // (POST /api/members/:id/mfa-reset needs an admin). Create and enrol a
+    // second administrator account before this environment carries real data.
+    "MFA_REQUIRED_FROM": "2026-11-14"
   },
 
   // Enable head sampling for logs in the Cloudflare dashboard.
@@ -113,7 +129,11 @@
       ],
       "vars": {
         "AWS_REGION": "eu-west-2",
-        "SES_CONFIGURATION_SET": "kairos-staging"
+        "SES_CONFIGURATION_SET": "kairos-staging",
+        // Enforced on staging first, on purpose: this is where we find out
+        // whether enrolment actually works on a real phone, and staging is
+        // the only place where being locked out costs nothing.
+        "MFA_REQUIRED_FROM": "2026-11-14"
       },
       "observability": {
         "enabled": true
