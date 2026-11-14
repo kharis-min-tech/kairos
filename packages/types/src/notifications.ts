@@ -93,6 +93,7 @@ export const NotificationEventType = {
   SecurityEmailChangeConfirmed: 'security.email_change_confirmed',
   SecurityEmailChangedAlert: 'security.email_changed_alert',
   SecurityProfileUpdatedByAdmin: 'security.profile_updated_by_admin',
+  SecurityMfaReset: 'security.mfa_reset',
   // ── Workflow ──
   WorkflowFellowshipJoinRequestReceived: 'workflow.fellowship_join_request_received',
   WorkflowFellowshipJoinRequestDecided: 'workflow.fellowship_join_request_decided',

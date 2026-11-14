@@ -552,6 +552,26 @@ quietly.
   makes the missing CSP in §4.6 more than a checklist item. Note also that the
   privacy notice tells members Kairos "uses a single first-party cookie to keep
   you signed in", which is not what happens.
+- **Login CSRF through the OAuth callback — mitigated 14 November 2026.**
+  `/oauth-callback` read a session out of the URL fragment and persisted it,
+  with no check that this browser had started a sign-in. A link of the form
+  `/oauth-callback#accessToken=…&refreshToken=…` carrying the *sender's* own
+  session therefore signed the reader in as the sender. Nothing is stolen by
+  that - no access to the victim's account, no credentials - but everything
+  the victim typed afterwards landed in the attacker's account. The sharp
+  version is a "renew your Gift Aid declaration" link: full name, home
+  address, postcode and bank account name, entered in good faith into someone
+  else's account, plus an audit trail attributing the victim's actions to the
+  attacker.
+
+  The mitigation is a single-use, 15-minute `sessionStorage` marker written
+  at the two places the app starts a flow and required by the callback
+  (`apps/web/src/lib/oauth-flow-marker.ts`). A cold link to the callback now
+  does nothing. It does **not** bind which session comes back, so an attacker
+  who could get a victim to start a genuine flow and substitute the fragment
+  mid-flight would still succeed; closing that needs a nonce carried through
+  the API's OAuth `state` and compared on return, which is a change to the
+  round trip on both sides and is **still open**.
 - **The audit log cannot answer a data-access question.** No
   `member_updated`, no `member_viewed`, no `member_exported`; the CSV export
   routes write no audit row. This is a design gap, not a bug, and it is the one

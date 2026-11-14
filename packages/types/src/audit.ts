@@ -66,6 +66,13 @@ export const AuditAction = {
   // survived is an INCOMPLETE erasure, and the controller cannot know that
   // without a record. The metadata carries the outcome, never the data erased.
   MemberErased: 'member_erased',
+  // An administrator removed someone else's second factor. The member cannot
+  // consent to this at the time - the whole reason it exists is that they are
+  // locked out - so the audit row is the only contemporaneous record of who
+  // did it. It is also the exact move an attacker who had taken over an admin
+  // account would make before taking over a leader's, which is why it is here
+  // and not filed as directory bookkeeping.
+  MfaReset: 'mfa_reset',
 } as const;
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction];
 
@@ -95,6 +102,7 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   AuditAction.SubmissionsExported,
   AuditAction.DonorRegisterExported,
   AuditAction.MemberErased,
+  AuditAction.MfaReset,
 ];
 
 export const AuditOutcome = {
@@ -132,6 +140,7 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   submissions_exported: 'Form submissions exported',
   donor_register_exported: 'Gift Aid register exported',
   member_erased: 'Account erased',
+  mfa_reset: 'Two-step sign-in reset by an administrator',
 };
 
 export interface AuditLogRow {

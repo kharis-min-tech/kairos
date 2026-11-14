@@ -501,6 +501,12 @@ export function createApiClient(
         client.getBlob('/api/members/export'),
       reactivate: (id: string) =>
         client.post<ApiResponse<Member>>(`/api/members/${encodeURIComponent(id)}/reactivate`, {}),
+      /** Admin only. Clears a locked-out member's second factor. */
+      resetMfa: (id: string) =>
+        client.post<ApiResponse<{ hadFactor: boolean }>>(
+          `/api/members/${encodeURIComponent(id)}/mfa-reset`,
+          {},
+        ),
       setMembershipClass: (id: string, completedAt: string | null) =>
         client.post<ApiResponse<Member>>(
           `/api/members/${encodeURIComponent(id)}/membership-class`,

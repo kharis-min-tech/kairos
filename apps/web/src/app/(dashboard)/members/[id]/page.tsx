@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useAssignRole, useAllRoles, useSetMembershipClass, useMemberFollowupHistory } from '@/hooks/use-members';
+import { useMember, useMemberRoles, useRemoveRole, useDeactivateMember, useApproveMember, useReactivateMember, useResetMemberMfa, useAssignRole, useAllRoles, useSetMembershipClass, useMemberFollowupHistory } from '@/hooks/use-members';
 import { useCapabilities } from '@/hooks/use-capabilities';
 import { useMyChildren } from '@/hooks/use-me';
 import { useFellowships, useAddFellowshipMember } from '@/hooks/use-fellowships';
@@ -29,6 +29,7 @@ export default function MemberDetailPage() {
   const removeRole = useRemoveRole();
   const deactivate = useDeactivateMember();
   const reactivate = useReactivateMember();
+  const resetMfa = useResetMemberMfa();
   const approve = useApproveMember();
   const assignRole = useAssignRole();
   const setMembershipClass = useSetMembershipClass();
@@ -178,6 +179,47 @@ export default function MemberDetailPage() {
                   }}
                 >
                   Approve
+                </Button>
+              )}
+              {/*
+                The recovery path for a member who lost the phone holding
+                their authenticator AND never saved their backup codes. They
+                are locked out permanently otherwise.
+
+                Deliberately not hidden behind "does this member have MFA" -
+                that would need a second request per member to answer, and a
+                locked-out leader is on the phone asking for help, not waiting
+                for a page to decide whether the button applies. The server
+                says which of the two happened and the toast repeats it.
+              */}
+              {member.isActive !== false && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: `Reset two-step sign-in for ${member.firstName} ${member.lastName}?`,
+                      description:
+                        'Only do this if you have confirmed who you are speaking to. Their password alone will get into the account until they set it up again, and they will be emailed to say you did this.',
+                      confirmLabel: 'Reset it',
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    resetMfa.mutate(member.id, {
+                      onSuccess: (result) =>
+                        toast.success(
+                          result.hadFactor
+                            ? 'Two-step sign-in removed. They can sign in with their password now.'
+                            : 'This member did not have two-step sign-in set up.',
+                        ),
+                      onError: (err) =>
+                        toast.error(
+                          err instanceof Error ? err.message : 'Could not reset two-step sign-in.',
+                        ),
+                    });
+                  }}
+                >
+                  Reset two-step
                 </Button>
               )}
               {member.isActive !== false && (

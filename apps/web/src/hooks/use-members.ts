@@ -87,6 +87,22 @@ export function useDeactivateMember() {
   });
 }
 
+/**
+ * Clear a locked-out member's second factor. Admin only, server-side.
+ *
+ * No cache to invalidate: MFA state is not part of the member record the
+ * directory shows, and the only reader of /mfa/status is the member
+ * themselves, on their own device.
+ */
+export function useResetMemberMfa() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.members.resetMfa(id);
+      return res.data!;
+    },
+  });
+}
+
 export function useReactivateMember() {
   const qc = useQueryClient();
   return useMutation({

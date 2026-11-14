@@ -42,6 +42,7 @@ import {
   setMembershipClassCompleted,
   attachGuardian,
   detachGuardian,
+  resetMemberMfa,
 } from './service';
 import { getMemberStats } from '../analytics/service';
 import { getMemberFollowupHistory } from './followups-history-service';
@@ -198,6 +199,31 @@ membersRouter.patch('/:id/active-branch', async (c) => {
 membersRouter.delete('/:id', requireCapability('branch:write'), async (c) => {
   const member = await deactivateMember(db, c.req.param('id')!, getAuth(c));
   return c.json(successResponse(member, 'Member deactivated'));
+});
+
+/**
+ * Remove a member's second factor.
+ *
+ * `requireRole('admin')` and not a capability: this is a sharper power than
+ * granting a role, so the branch-level grant holders who can do that should
+ * not inherit it. See the service function for what else is true of it by
+ * construction - the member is emailed, and it is audited either way.
+ */
+membersRouter.post('/:id/mfa-reset', requireRole('admin'), async (c) => {
+  const result = await resetMemberMfa(
+    db,
+    getAuth(c),
+    c.req.param('id')!,
+    extractRequestContext(c),
+  );
+  return c.json(
+    successResponse(
+      result,
+      result.hadFactor
+        ? 'Two-step sign-in removed. They can sign in with their password and set it up again.'
+        : 'This member did not have two-step sign-in set up.',
+    ),
+  );
 });
 
 membersRouter.post('/:id/reactivate', requireCapability('branch:write'), async (c) => {

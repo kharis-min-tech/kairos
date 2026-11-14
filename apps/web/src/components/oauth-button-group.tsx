@@ -2,6 +2,7 @@
 
 import type { OAuthProviderId } from '@kairos/types';
 import { api } from '@/lib/api';
+import { markOAuthFlowStarted } from '@/lib/oauth-flow-marker';
 import { OAuthProviderIcon, oauthButtonClassName } from './oauth-provider-icon';
 
 interface OAuthButtonGroupProps {
@@ -54,6 +55,7 @@ export function OAuthButtonGroup({
             disabled={disabled}
             onClick={() => {
               if (disabled) return;
+              markOAuthFlowStarted();
               window.location.assign(api.auth.oauth.startUrl(p.id, returnTo));
             }}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-muted-foreground/15 bg-transparent transition-colors hover:bg-muted/40 disabled:cursor-not-allowed disabled:opacity-50"
@@ -75,6 +77,7 @@ export function OAuthButtonGroup({
           disabled={disabled}
           onClick={() => {
             if (disabled) return;
+            markOAuthFlowStarted();
             window.location.assign(api.auth.oauth.startUrl(p.id, returnTo));
           }}
           className={`${oauthButtonClassName(p.variant)} disabled:cursor-not-allowed disabled:opacity-50`}

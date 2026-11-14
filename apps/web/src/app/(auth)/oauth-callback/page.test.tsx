@@ -16,6 +16,7 @@ vi.mock('@/hooks/use-auth', () => ({
 
 import OAuthCallbackPage from './page';
 import { useMfaChallengeStore } from '@/stores/mfa-challenge-store';
+import { markOAuthFlowStarted } from '@/lib/oauth-flow-marker';
 import { MFA_TOKEN_KIND } from '@kairos/types';
 
 /**
@@ -53,6 +54,10 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
   // Reset sessionStorage between tests.
   window.sessionStorage.clear();
+  // Every test below describes a flow this browser started. The callback
+  // refuses a fragment that arrived any other way, so the marker has to be
+  // in place or they would all be testing the refusal instead.
+  markOAuthFlowStarted();
 });
 
 afterEach(() => {
@@ -249,5 +254,97 @@ describe('OAuthCallbackPage - a fragment is not a credential', () => {
     render(<OAuthCallbackPage />, { wrapper });
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/mfa'));
+  });
+});
+
+// -- Login CSRF ---------------------------------------------
+
+/**
+ * A crafted link of the form
+ *
+ *     /oauth-callback#accessToken=…&refreshToken=…
+ *
+ * carrying the sender's own session would sign the reader in as them, and
+ * everything the reader typed afterwards would land in the sender's account.
+ * Nothing is stolen, but a Gift Aid declaration entered in good faith hands
+ * over a name, an address and a bank account name.
+ *
+ * The callback therefore acts only on a flow this browser started.
+ */
+describe('OAuthCallbackPage - a fragment this browser did not ask for', () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    useMfaChallengeStore.getState().clear();
+  });
+
+  it('refuses a session fragment when no flow was started here', async () => {
+    setHash('#accessToken=attacker-at&refreshToken=attacker-rt');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith('/login?oauth_error=unsolicited_callback'),
+    );
+    expect(mockPersist).not.toHaveBeenCalled();
+  });
+
+  it('refuses an MFA challenge fragment the same way', async () => {
+    setHash(`#mfaToken=${preMfaToken()}&mfaStage=challenge`);
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith('/login?oauth_error=unsolicited_callback'),
+    );
+    expect(useMfaChallengeStore.getState().token).toBeNull();
+  });
+
+  it('does not fetch the profile before deciding', async () => {
+    setHash('#accessToken=attacker-at&refreshToken=attacker-rt');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  /**
+   * One start buys one callback, so a captured URL cannot be replayed. The
+   * marker is spent before anything reads the fragment, which is why this
+   * holds regardless of how the first attempt ended.
+   */
+  it('spends the marker, so the same link does not work twice', async () => {
+    markOAuthFlowStarted();
+    setHash('#accessToken=at&refreshToken=rt');
+
+    const first = render(<OAuthCallbackPage />, { wrapper });
+    await waitFor(() => expect(window.sessionStorage.getItem('kairos.oauth_flow')).toBeNull());
+    first.unmount();
+
+    mockReplace.mockReset();
+    mockPersist.mockReset();
+
+    render(<OAuthCallbackPage />, { wrapper });
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith('/login?oauth_error=unsolicited_callback'),
+    );
+    expect(mockPersist).not.toHaveBeenCalled();
+  });
+
+  it('refuses a marker older than the flow could reasonably take', async () => {
+    window.sessionStorage.setItem('kairos.oauth_flow', String(Date.now() - 16 * 60 * 1000));
+    setHash('#accessToken=at&refreshToken=rt');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith('/login?oauth_error=unsolicited_callback'),
+    );
+  });
+
+  it('wipes the fragment before sending them away', async () => {
+    const replaceState = vi.spyOn(window.history, 'replaceState');
+    setHash('#accessToken=attacker-at&refreshToken=attacker-rt');
+    render(<OAuthCallbackPage />, { wrapper });
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+    expect(replaceState).toHaveBeenCalled();
+    replaceState.mockRestore();
   });
 });
