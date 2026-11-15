@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { and, eq, gte, isNull, or, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { branchLeadership, memberRoles, roles } from '@kairos/database';
 import {
@@ -96,6 +96,29 @@ async function selectMainPastorBranchIds(db: Database, memberId: string): Promis
   return rows.map((r) => r.branchId);
 }
 
+/**
+ * The grants a member currently holds.
+ *
+ * `member_roles.end_date` is the expiry an administrator sets when they give
+ * someone temporary authority: cover for a holiday, a one-off safeguarding
+ * delegation, a trial of a new leader. The column has existed since the table
+ * did, with a CHECK constraint keeping it on or after the assigned date, and
+ * until now nothing read it. A grant whose end date passed last March still
+ * conferred every capability it ever did.
+ *
+ * That is worse than having no expiry field at all. An administrator who sets
+ * one stops thinking about the grant, because the system has told them it is
+ * handled. The field created the belief and then did not honour it.
+ *
+ * Enforced here rather than by a scheduled job, deliberately. A job that
+ * flipped `is_active` would leave a window between expiry and the next run in
+ * which the grant still worked, and would need somewhere to run and something
+ * to watch it. A predicate cannot drift, cannot be late, and cannot fail
+ * quietly: every permission question in the system resolves through this one
+ * query, so a grant expires at the instant its date passes.
+ *
+ * NULL means no expiry, which is what nearly every grant carries.
+ */
 function selectRoleGrants(db: Database, memberId: string) {
   return db
     .select({
@@ -111,6 +134,10 @@ function selectRoleGrants(db: Database, memberId: string) {
         eq(memberRoles.memberId, memberId),
         eq(memberRoles.isActive, true),
         eq(roles.isActive, true),
+        // Compared in the database rather than against a JS clock, so the
+        // boundary is the database's own date and there is no timezone skew
+        // between a Worker and the rows it reads.
+        or(isNull(memberRoles.endDate), gte(memberRoles.endDate, sql`CURRENT_DATE`)),
       ),
     );
 }
