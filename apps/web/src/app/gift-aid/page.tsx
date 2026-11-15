@@ -50,8 +50,7 @@ export default function PublicGiftAidPage() {
               applying until you tell us otherwise, so there is nothing further to do.
             </p>
             <p>
-              You can cancel it at any time by emailing the church office, or from your profile
-              once you have a Kairos account. Cancelling it stops Gift Aid on gifts you make from
+              You can cancel it at any time by emailing the church office. Cancelling it stops Gift Aid on gifts you make from
               the day you tell us, and does not affect anything already claimed.
             </p>
             <p className="text-muted-foreground">
