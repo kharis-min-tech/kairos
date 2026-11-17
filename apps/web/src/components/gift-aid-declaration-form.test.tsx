@@ -14,8 +14,8 @@ const wording: GiftAidDeclarationTextResponse = {
   },
   texts: {
     past_and_future:
-      'I want to Gift Aid all qualifying gifts of money I make to Kharis Ministries today, in the future, and in the past 4 years.',
-    future: 'I want to Gift Aid all qualifying gifts of money I make to Kharis Ministries today and in the future.',
+      'I want to Gift Aid all qualifying gifts of money I make to Kharis Ministries (1139291) today, in the future, and in the past 4 years.',
+    future: 'I want to Gift Aid all qualifying gifts of money I make to Kharis Ministries (1139291) today and in the future.',
   },
   notes: 'Kharis Ministries is a registered charity, number 1139291.',
 };

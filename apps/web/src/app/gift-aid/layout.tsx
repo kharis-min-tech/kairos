@@ -11,13 +11,13 @@ import { KharisLogoIcon } from '@/app/(auth)/kharis-logo';
  * nothing to them.
  */
 export const metadata: Metadata = {
-  title: 'Gift Aid declaration | Kharis Church',
+  title: 'Gift Aid declaration | Kharis Ministries',
   description:
-    'Make a Gift Aid declaration so Kharis Church can reclaim 25p for every £1 you give, at no extra cost to you.',
+    'Make a Gift Aid declaration so Kharis Ministries can reclaim 25p for every £1 you give, at no extra cost to you.',
   openGraph: {
-    title: 'Gift Aid declaration | Kharis Church',
+    title: 'Gift Aid declaration | Kharis Ministries',
     description:
-      'Make a Gift Aid declaration so Kharis Church can reclaim 25p for every £1 you give, at no extra cost to you.',
+      'Make a Gift Aid declaration so Kharis Ministries can reclaim 25p for every £1 you give, at no extra cost to you.',
     type: 'website',
   },
 };
@@ -44,7 +44,7 @@ export default function GiftAidLayout({ children }: { children: React.ReactNode 
           <a href={CHURCH_SITE} className="flex items-center gap-2">
             <KharisLogoIcon size={28} />
             <span className="text-sm font-bold uppercase tracking-widest text-gray-900 dark:text-white">
-              Kharis Church
+              Kharis Ministries
             </span>
           </a>
           <ThemeToggle variant="icon" />

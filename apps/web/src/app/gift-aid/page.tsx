@@ -64,7 +64,7 @@ export default function PublicGiftAidPage() {
           account, so the Kairos landing page is a dead end for them.
         */}
         <a href="https://kharis.org">
-          <Button variant="outline">Back to Kharis Church</Button>
+          <Button variant="outline">Back to Kharis Ministries</Button>
         </a>
       </div>
     );
