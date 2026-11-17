@@ -192,25 +192,30 @@ These are not quibbles; each one changes what an investigation can conclude.
 > deliberately.
 
 > **~~DECISION NEEDED: confirm whether Cloudflare WAF rate-limiting rules are
-> configured at the edge.~~ ANSWERED 8 November 2026: there are none, and
-> creating them is deliberately deferred.**
-> Confirmed rather than assumed. Nothing in the codebase or `wrangler.jsonc`
-> rate-limits anything, and no edge rules exist.
+> configured at the edge.~~ ANSWERED 8 November 2026: there were none.
+> DEPLOYED 12 November 2026, amended 14 November 2026.**
+> The rule is live on zone `kharis.org`: one rate limiting rule named
+> `Auth burst limit (sensitive POST endpoints)`, blocking at 30 requests per
+> 10 seconds per IP across eight POST paths, pinned to the two Kairos
+> hostnames. `waf-rate-limiting.md` §3 carries the expression and §6 the
+> deployment record. **This item is no longer a Fail**, with the
+> qualification §4 of that document makes: it stops a burst, not a patient
+> attacker at a low sustained rate, which the Free plan's 10-second window
+> cannot express.
 > **The rules are now fully specified** in `waf-rate-limiting.md`, derived from
 > the real route surface, as Cloudflare edge rules rather than in-Hono counters —
 > the Worker binds Hyperdrive and nothing else, so there is nowhere to keep a
 > counter, and the `http_ratelimit` phase runs *before* the Worker, which is the
 > whole point against the argon2id amplification path in `secure-sdlc.md` §4.6.
-> **Deferred by decision, not oversight:** the zone is on the Cloudflare Free
-> plan, and the church's position is to create these rules at the production
-> rollout rather than pay for them against synthetic staging traffic. **This is
-> the only Fail on the cyber-security checklist that is deferred rather than
-> outstanding**, and it is flagged in that document for the cyber team to
-> challenge if they disagree.
-> **What remains, therefore, is not a question but a task with a trigger:**
-> create the rules when production takes real traffic. Until then login,
-> forgot-password and the OIDC token endpoint are unthrottled, and detection of
-> a credential-stuffing run depends on §2's absent alerting.
+> **Originally deferred to the production rollout; brought forward and
+> deployed on 12 November 2026** against the staging and production hostnames
+> together, because the rule costs nothing on the Free plan and a rule nobody
+> has ever seen fire is not a rule anyone should trust on launch day.
+> **What remains is the sustained-rate half**, which needs Pro and was
+> declined with the risk accepted (`waf-rate-limiting.md` §6). Login,
+> forgot-password and the OIDC token endpoint are now throttled against burst
+> traffic; a slow credential-stuffing run still depends on §2's absent
+> alerting, which is the honest residual.
 
 > **~~DECISION NEEDED: add `member_exported` and `member_updated` to the audit
 > taxonomy before the pilot.~~ CLOSED 8 November 2026 — implemented.**
@@ -383,13 +388,16 @@ Q7. Record it regardless of outcome. Article 33(5) requires a record of EVERY
 
 ## 5. Containment
 
-Pick by what is compromised. Most of these are dashboard actions, not scripted
-ones — the absence of a scripted kill switch is itself a finding.
+Pick by what is compromised, and prefer the narrowest row that covers it.
+Most of these are dashboard or database actions, not scripted ones — the
+absence of a scripted kill switch is itself a finding.
 
 | Situation | Action | Note |
 |---|---|---|
-| Session tokens forgeable or stolen | Rotate `JWT_SECRET` and `JWT_REFRESH_SECRET` (`key-management.md` §4) | Logs out every user. Refresh tokens are stateless with no revocation list, so rotation is the **only** bulk revocation. |
-| One account compromised | Set `members.is_active = false` for that member | Blocks refresh within ≤15 min (the access-token TTL) and sign-in on every door. A grant revocation takes effect on the **next API call**, because `authMiddleware:64` re-resolves grants from the database every request. |
+| Session tokens forgeable or stolen | Rotate `JWT_SECRET` and `JWT_REFRESH_SECRET` (`key-management.md` §4) | Logs out every user. Still the only option when the **signing key** is the thing compromised, because a key that can mint tokens defeats any per-member counter. |
+| One member's session compromised | Bump `members.token_version` for that member (`revokeSessions` in `auth/service.ts`) | **Added 14 November 2026.** Strands every refresh token they hold without touching anybody else. A password change, a password reset and an administrator's second-factor reset all do this already, so "tell them to change their password" is now real containment rather than advice. Takes effect immediately for anything needing a refresh and within ≤15 min otherwise. |
+| One account compromised | Set `members.is_active = false` for that member | Blocks refresh within ≤15 min (the access-token TTL) and sign-in on every door. A grant revocation takes effect on the **next API call**, because `authMiddleware:64` re-resolves grants from the database every request. Prefer the row above when the account itself is fine and only the session is suspect: deactivation also stops the member working. |
+| A member locked out, or their phone lost or stolen | `POST /api/members/:id/mfa-reset` as an administrator | **Added 14 November 2026.** Removes their second factor, ends their sessions, emails them, and is audited as `mfa_reset` either way. The email is the alarm if the reset was not legitimate. |
 | Over-broad role grant | Revoke the `member_roles` row | Immediate, same reason. This is a genuine strength: there is no cached-permission window. |
 | Leaked QR check-in secret | Rotate `SELF_CHECK_IN_QR_SECRET` | Invalidates every displayed QR within 60s. Cheap. Not during a service unless necessary. |
 | Database credential leaked | Rotate the PlanetScale password; review PlanetScale query insights | Direct DB access bypasses all application RBAC, so assume everything was readable. |
@@ -574,8 +582,10 @@ also evidences that the plan is tested.
 2. **Enable Logpush before the pilot** (§2). Confirmed off: it needs
    `"logpush": true` in both Worker configs *and* an account-level job. Adds a
    processor — see `ropa.md` §3.
-3. Confirm whether Cloudflare WAF rate-limiting rules exist at the edge (§2) —
-   still genuinely unknown, unlike Logpush.
+3. ~~Confirm whether Cloudflare WAF rate-limiting rules exist at the edge~~ —
+   **CLOSED.** They did not on 8 November; they were deployed on 12 November
+   and amended on 14 November to cover the two MFA code-checking endpoints.
+   Verified by reading the live ruleset, not by assuming the deploy ran.
 4. ~~Add `member_exported` and `member_updated` to the audit taxonomy before the
    pilot~~ — **CLOSED 8 November 2026**, together with `submissions_exported`
    and `donor_register_exported` for the forms and Gift Aid exports, which had
