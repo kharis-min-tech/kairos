@@ -366,18 +366,19 @@ export interface DeclarationTextInput {
  */
 export function renderDeclarationText(input: DeclarationTextInput): string {
   const charity = GIFT_AID_CHARITY_NAME;
+  const charityNumber = GIFT_AID_CHARITY_NUMBER;
   const covered =
     input.coverage === 'single'
       ? `my gift of ${input.singleGiftDescription ?? '(gift not described)'} to ${charity}`
       : input.coverage === 'future'
-        ? `all qualifying gifts of money I make to ${charity} (${GIFT_AID_CHARITY_NUMBER}) today and in the future`
-        : `all qualifying gifts of money I make to ${charity} (${GIFT_AID_CHARITY_NUMBER}) today, in the future, and in the past 4 years`;
+        ? `all qualifying gifts of money I make to ${charity} (${charityNumber}) today and in the future`
+        : `all qualifying gifts of money I make to ${charity} (${charityNumber}) today, in the future, and in the past 4 years`;
 
   return [
     `I want to Gift Aid ${covered}.`,
-    `I am a UK taxpayer. I understand that ${charity} (${GIFT_AID_CHARITY_NUMBER}) will reclaim 25p of tax on every 1 pound I give, and that if I pay less Income Tax and/or Capital Gains Tax in a tax year than the amount of Gift Aid claimed on all my donations to all charities in that year, it is my responsibility to pay the difference to HM Revenue and Customs.`,
+    `I am a UK taxpayer. I understand that ${charity} (${charityNumber}) will reclaim 25p of tax on every 1 pound I give, and that if I pay less Income Tax and/or Capital Gains Tax in a tax year than the amount of Gift Aid claimed on all my donations to all charities in that year, it is my responsibility to pay the difference to HM Revenue and Customs.`,
     `I confirm this is my own money, that it is not the proceeds of a collection or a payment from a company, and that I am not receiving anything in return for it.`,
-    `I will tell ${charity} (${GIFT_AID_CHARITY_NUMBER}) if I change my name or home address, if I stop paying enough tax, or if I want to cancel this declaration.`,
+    `I will tell ${charity} (${charityNumber}) if I change my name or home address, if I stop paying enough tax, or if I want to cancel this declaration.`,
   ].join('\n\n');
 }
 
