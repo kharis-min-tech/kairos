@@ -421,7 +421,7 @@ export function GiftAidDeclarationForm({
               }
             />
             <Label htmlFor="ga-confirm" className="cursor-pointer text-sm font-medium">
-              Yes, I want to Gift Aid my gifts to {wording?.charityName ?? 'the church'}, and I
+              Yes, I want to Gift Aid my gifts to {wording?.charityName ?? 'the church'} ({wording?.charityNumber ?? 'the charity'}), and I
               confirm the statement above applies to me.
             </Label>
           </div>
