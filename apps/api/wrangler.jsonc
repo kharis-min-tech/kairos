@@ -68,6 +68,44 @@
     // (POST /api/members/:id/mfa-reset needs an admin). Create and enrol a
     // second administrator account before this environment carries real data.
     "MFA_REQUIRED_FROM": "2026-11-14"
+
+    // Retention periods, in days. Every one of these deletes personal data on
+    // a schedule, so read retention-policy.ts before changing one.
+    //
+    // LEAVING A LINE OUT MEANS THAT CATEGORY IS NEVER PURGED. That is the
+    // fail-safe direction and it is deliberate: keeping data too long is a
+    // finding you fix next week, deleting it too early is a record that no
+    // longer exists. The two are not symmetrical.
+    //
+    // Each has a floor. A value below it is refused and logged rather than
+    // applied, so a mistyped 3 where 300 was meant cannot empty a table
+    // overnight. Change these here and deploy; no code change is needed.
+    //
+    // THESE ARE PLACEHOLDERS, NOT ADVICE. The real numbers are a decision for
+    // the church and its data protection adviser. The questions being asked
+    // of her are in docs/security/data-retention.md.
+    //
+    //   RETENTION_SIGNIN_DAYS            audit rows for sign-in success and
+    //                                    failure. Defaults to 90, which is the
+    //                                    number the privacy notice publishes.
+    //                                    Changing it without editing the notice
+    //                                    logs a warning, because a member
+    //                                    reading one number while the system
+    //                                    enforces another is the defect this
+    //                                    job exists to close. Floor 7.
+    //   RETENTION_OUTREACH_CONTACT_DAYS  people who gave their details at an
+    //                                    outreach event, never became members
+    //                                    and have had no activity since. They
+    //                                    have no account and may not know a
+    //                                    record exists. Converted contacts are
+    //                                    never deleted by this. Floor 30.
+    //   RETENTION_EMAIL_CHANGE_DAYS      finished email change requests, which
+    //                                    hold BOTH the old and new address.
+    //                                    Pending ones are untouched. Floor 7.
+    //   RETENTION_OAUTH_CODE_DAYS        spent or expired OAuth codes. Not
+    //                                    really personal data; an unbounded
+    //                                    table is its own small liability.
+    //                                    Floor 1.
   },
 
   // Enable head sampling for logs in the Cloudflare dashboard.
@@ -134,6 +172,44 @@
         // whether enrolment actually works on a real phone, and staging is
         // the only place where being locked out costs nothing.
         "MFA_REQUIRED_FROM": "2026-11-14"
+
+        // Retention periods, in days. Every one of these deletes personal data on
+        // a schedule, so read retention-policy.ts before changing one.
+        //
+        // LEAVING A LINE OUT MEANS THAT CATEGORY IS NEVER PURGED. That is the
+        // fail-safe direction and it is deliberate: keeping data too long is a
+        // finding you fix next week, deleting it too early is a record that no
+        // longer exists. The two are not symmetrical.
+        //
+        // Each has a floor. A value below it is refused and logged rather than
+        // applied, so a mistyped 3 where 300 was meant cannot empty a table
+        // overnight. Change these here and deploy; no code change is needed.
+        //
+        // THESE ARE PLACEHOLDERS, NOT ADVICE. The real numbers are a decision for
+        // the church and its data protection adviser. The questions being asked
+        // of her are in docs/security/data-retention.md.
+        //
+        //   RETENTION_SIGNIN_DAYS            audit rows for sign-in success and
+        //                                    failure. Defaults to 90, which is the
+        //                                    number the privacy notice publishes.
+        //                                    Changing it without editing the notice
+        //                                    logs a warning, because a member
+        //                                    reading one number while the system
+        //                                    enforces another is the defect this
+        //                                    job exists to close. Floor 7.
+        //   RETENTION_OUTREACH_CONTACT_DAYS  people who gave their details at an
+        //                                    outreach event, never became members
+        //                                    and have had no activity since. They
+        //                                    have no account and may not know a
+        //                                    record exists. Converted contacts are
+        //                                    never deleted by this. Floor 30.
+        //   RETENTION_EMAIL_CHANGE_DAYS      finished email change requests, which
+        //                                    hold BOTH the old and new address.
+        //                                    Pending ones are untouched. Floor 7.
+        //   RETENTION_OAUTH_CODE_DAYS        spent or expired OAuth codes. Not
+        //                                    really personal data; an unbounded
+        //                                    table is its own small liability.
+        //                                    Floor 1.
       },
       "observability": {
         "enabled": true
