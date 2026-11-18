@@ -16,6 +16,20 @@ const tour = () => tours.find(t => t.id === chosen.value)
 // expression at build time and leaves any variation of it alone.
 const CLIPS = (import.meta.env.VITE_CLIPS_BASE || '/clips').replace(/\/$/, '')
 const clip = id => `${CLIPS}/${id}${LANG}`
+
+/**
+ * Tours that could not load.
+ *
+ * The clips are not in the repo, so a site built from a checkout alone has
+ * none of them and this page drew a black player with a dead scrubber. The
+ * section clips already hid themselves on failure; these two did not,
+ * because they carry their own markup rather than going through SectionClip.
+ *
+ * The source sits on the element rather than in a child <source>, because the
+ * error event of a <source> does not reach a handler bound to the <video>.
+ */
+const failed = ref({})
+const onFail = id => { failed.value = { ...failed.value, [id]: true } }
 </script>
 
 <style scoped>
@@ -71,7 +85,7 @@ Neuf arrêts à travers toute la plateforme, enregistrés en tant qu'administrat
 pour que la forme de l'ensemble soit visible. C'est la seule visite qui montre
 des sections que votre propre rôle n'a peut-être pas.
 
-<video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Votre navigateur ne peut pas lire cette vidéo. <a :href="`${clip('general')}.mp4`">Téléchargez la visite</a>.</video>
+<video v-if="!failed['general']" class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`" :src="`${clip('general')}.mp4`" @error="onFail('general')">Votre navigateur ne peut pas lire cette vidéo. <a :href="`${clip('general')}.mp4`">Téléchargez la visite</a>.</video>
 
 <p class="silentnote">Le krio et le twi n’ont pas encore de voix de synthèse : ces visites sont lues par une voix anglaise et la prononciation est approximative. Les sous-titres portent la vraie langue.</p>
 
@@ -89,7 +103,7 @@ des sections que votre propre rôle n'a peut-être pas.
   <div class="meta">{{ tour().stops }} arrêts · {{ tour().blurb }}</div>
 </div>
 
-<video :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`"><source :src="`${clip(chosen)}.mp4`" type="video/mp4" />Votre navigateur ne peut pas lire cette vidéo. <a :href="`${clip(chosen)}.mp4`">Téléchargez la visite</a>.</video>
+<video v-if="!failed[chosen]" :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`" :src="`${clip(chosen)}.mp4`" @error="onFail(chosen)">Votre navigateur ne peut pas lire cette vidéo. <a :href="`${clip(chosen)}.mp4`">Téléchargez la visite</a>.</video>
 
 ## Quelle visite est la mienne ?
 

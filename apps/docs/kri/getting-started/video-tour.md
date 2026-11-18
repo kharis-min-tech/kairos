@@ -16,6 +16,20 @@ const tour = () => tours.find(t => t.id === chosen.value)
 // expression at build time and leaves any variation of it alone.
 const CLIPS = (import.meta.env.VITE_CLIPS_BASE || '/clips').replace(/\/$/, '')
 const clip = id => `${CLIPS}/${id}${LANG}`
+
+/**
+ * Tours that could not load.
+ *
+ * The clips are not in the repo, so a site built from a checkout alone has
+ * none of them and this page drew a black player with a dead scrubber. The
+ * section clips already hid themselves on failure; these two did not,
+ * because they carry their own markup rather than going through SectionClip.
+ *
+ * The source sits on the element rather than in a child <source>, because the
+ * error event of a <source> does not reach a handler bound to the <video>.
+ */
+const failed = ref({})
+const onFail = id => { failed.value = { ...failed.value, [id]: true } }
 </script>
 
 <style scoped>
@@ -68,7 +82,7 @@ kɛr yu pas skrin we yu nɔ kin opin.
 Nayn stɔp akrɔs di ful platfɔm, we dɛn rɛkɔd as admin so dat yu kin si di shep
 fɔ di ful tin. Na di onli tɔ we de sho sɛkshɔn dɛn we yu yon rol kin nɔ gɛt.
 
-<video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Yu brawza nɔ kin ple dis vidio. <a :href="`${clip('general')}.mp4`">Dawnlod di tɔ</a>.</video>
+<video v-if="!failed['general']" class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`" :src="`${clip('general')}.mp4`" @error="onFail('general')">Yu brawza nɔ kin ple dis vidio. <a :href="`${clip('general')}.mp4`">Dawnlod di tɔ</a>.</video>
 
 <p class="silentnote">Nɔ Krio tɔk-vɔys nɔ de yet, so na Inglish vɔys de rid di Krio — di sawnd nɔ go rayt ɔltɛm. Di kapshɔn dɛn na di tru Krio, so fɔlo dɛn.</p>
 
@@ -86,7 +100,7 @@ fɔ di ful tin. Na di onli tɔ we de sho sɛkshɔn dɛn we yu yon rol kin nɔ g�
   <div class="meta">{{ tour().stops }} stɔp · {{ tour().blurb }}</div>
 </div>
 
-<video :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`"><source :src="`${clip(chosen)}.mp4`" type="video/mp4" />Yu brawza nɔ kin ple dis vidio. <a :href="`${clip(chosen)}.mp4`">Dawnlod di tɔ</a>.</video>
+<video v-if="!failed[chosen]" :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`" :src="`${clip(chosen)}.mp4`" @error="onFail(chosen)">Yu brawza nɔ kin ple dis vidio. <a :href="`${clip(chosen)}.mp4`">Dawnlod di tɔ</a>.</video>
 
 ## Us tɔ na mi yon?
 

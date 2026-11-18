@@ -16,6 +16,20 @@ const tour = () => tours.find(t => t.id === chosen.value)
 // expression at build time and leaves any variation of it alone.
 const CLIPS = (import.meta.env.VITE_CLIPS_BASE || '/clips').replace(/\/$/, '')
 const clip = id => `${CLIPS}/${id}${LANG}`
+
+/**
+ * Tours that could not load.
+ *
+ * The clips are not in the repo, so a site built from a checkout alone has
+ * none of them and this page drew a black player with a dead scrubber. The
+ * section clips already hid themselves on failure; these two did not,
+ * because they carry their own markup rather than going through SectionClip.
+ *
+ * The source sits on the element rather than in a child <source>, because the
+ * error event of a <source> does not reach a handler bound to the <video>.
+ */
+const failed = ref({})
+const onFail = id => { failed.value = { ...failed.value, [id]: true } }
 </script>
 
 <style scoped>
@@ -69,7 +83,7 @@ Nine stops across the whole platform, recorded as an administrator so the
 shape of the thing is visible. It is the only tour that shows sections your
 own role may not have.
 
-<video class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`"><source :src="`${clip('general')}.mp4`" type="video/mp4" />Your browser cannot play embedded video. <a :href="`${clip('general')}.mp4`">Download this tour instead</a>.</video>
+<video v-if="!failed['general']" class="tourvid" controls preload="metadata" playsinline :poster="`${clip('general')}.jpg`" :src="`${clip('general')}.mp4`" @error="onFail('general')">Your browser cannot play embedded video. <a :href="`${clip('general')}.mp4`">Download this tour instead</a>.</video>
 
 <p class="silentnote">Krio and Twi have no text-to-speech voice yet, so those tours are read by an English voice and the pronunciation is approximate. The subtitles carry the real language.</p>
 
@@ -87,7 +101,7 @@ own role may not have.
   <div class="meta">{{ tour().stops }} stops · {{ tour().blurb }}</div>
 </div>
 
-<video :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`"><source :src="`${clip(chosen)}.mp4`" type="video/mp4" />Your browser cannot play embedded video. <a :href="`${clip(chosen)}.mp4`">Download this tour instead</a>.</video>
+<video v-if="!failed[chosen]" :key="chosen" class="tourvid" controls preload="metadata" playsinline :poster="`${clip(chosen)}.jpg`" :src="`${clip(chosen)}.mp4`" @error="onFail(chosen)">Your browser cannot play embedded video. <a :href="`${clip(chosen)}.mp4`">Download this tour instead</a>.</video>
 
 ## Which tour is mine?
 
