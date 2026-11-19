@@ -220,3 +220,125 @@ describe('legacy cleanup', () => {
     expect(await biometric.listArmedUsers()).toEqual([]);
   });
 });
+
+// ── The sealed token's MFA claim ─────────────────────────────────────────
+//
+// These guard the fix for a bug that made biometric fail permanently, not
+// intermittently. A member who armed biometric before enrolling a second
+// factor had a token sealed with `mfa: false`; once they confirmed a factor
+// the API refused it on every refresh, nothing resealed, and the login screen
+// advised a password sign-in that did not repair it either. So the properties
+// that matter are: the flag always describes what is actually sealed, and a
+// refused reseal costs the user nothing.
+
+/** A refresh token shaped like the real one, with just the claim under test. */
+function tokenWith(claims: Record<string, unknown>): string {
+  const b64 = (o: unknown) =>
+    Buffer.from(JSON.stringify(o)).toString('base64url');
+  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(claims)}.sig`;
+}
+
+const MFA_TOKEN = tokenWith({ memberId: 'user-alice', mfa: true, tv: 0 });
+const PLAIN_TOKEN = tokenWith({ memberId: 'user-alice', mfa: false, tv: 0 });
+
+describe('tokenHasMfa', () => {
+  it('reads the claim', () => {
+    expect(biometric.tokenHasMfa(MFA_TOKEN)).toBe(true);
+    expect(biometric.tokenHasMfa(PLAIN_TOKEN)).toBe(false);
+  });
+
+  /**
+   * Every unreadable shape resolves to false, because false means "assume the
+   * seal is stale", which costs at most one unnecessary reseal offer. True
+   * would mean trusting a seal we cannot vouch for and leaving biometric
+   * broken with no way out, which is the bug being fixed.
+   */
+  it.each([
+    ['null', null],
+    ['empty', ''],
+    ['not a JWT', 'nonsense'],
+    ['two segments', 'a.b'],
+    ['payload is not JSON', 'aaa.bbb.ccc'],
+    ['claim absent', tokenWith({ memberId: 'user-alice' })],
+    ['claim is the string true', tokenWith({ mfa: 'true' })],
+  ])('treats %s as not satisfied', (_label, token) => {
+    expect(biometric.tokenHasMfa(token as string | null)).toBe(false);
+  });
+});
+
+describe('the seal MFA flag', () => {
+  it('is false for a user who was never armed', async () => {
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(false);
+  });
+
+  it('records what enable actually sealed', async () => {
+    await biometric.enable(PLAIN_TOKEN, alice);
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(false);
+
+    await biometric.enable(MFA_TOKEN, alice);
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(true);
+  });
+
+  it('goes with the seal when biometric is turned off', async () => {
+    await biometric.enable(MFA_TOKEN, alice);
+    await biometric.disable(alice.id);
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(false);
+  });
+
+  it('is per user', async () => {
+    await biometric.enable(MFA_TOKEN, alice);
+    await biometric.enable(PLAIN_TOKEN, bob);
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(true);
+    expect(await biometric.sealedTokenHasMfa(bob.id)).toBe(false);
+  });
+});
+
+describe('reseal', () => {
+  it('replaces the sealed token and updates the flag', async () => {
+    await biometric.enable(PLAIN_TOKEN, alice);
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(false);
+
+    expect(await biometric.reseal(alice.id, MFA_TOKEN)).toBe(true);
+
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(true);
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe(MFA_TOKEN);
+  });
+
+  it('seals under requireAuthentication, like enable does', async () => {
+    await biometric.enable(PLAIN_TOKEN, alice);
+    secure.setItemAsync.mockClear();
+    await biometric.reseal(alice.id, MFA_TOKEN);
+
+    expect(secure.setItemAsync).toHaveBeenCalledWith(
+      REFRESH_KEY(alice.id),
+      MFA_TOKEN,
+      expect.objectContaining({ requireAuthentication: true }),
+    );
+  });
+
+  /**
+   * The property that separates reseal from enable. A refused prompt during
+   * first-time opt-in leaves a button that cannot work, so enable cleans up by
+   * disarming. A refused prompt during a repair must cost nothing: the user
+   * did not ask for it, and disarming them would turn a cancelled dialog into
+   * a lost feature.
+   */
+  it('leaves the user armed when the keychain refuses', async () => {
+    await biometric.enable(PLAIN_TOKEN, alice);
+    secure.__denyAuth(true);
+
+    expect(await biometric.reseal(alice.id, MFA_TOKEN)).toBe(false);
+
+    secure.__denyAuth(false);
+    expect(await biometric.isArmedFor(alice.id)).toBe(true);
+    // Still the old token, and still flagged stale, so the offer comes back.
+    expect(await biometric.sealedTokenHasMfa(alice.id)).toBe(false);
+    expect(await biometric.unlockRefreshToken(alice.id, 'Fingerprint')).toBe(PLAIN_TOKEN);
+  });
+
+  it('does nothing when the device cannot do biometrics', async () => {
+    (LocalAuthentication.isEnrolledAsync as jest.Mock).mockResolvedValue(false);
+    expect(await biometric.reseal(alice.id, MFA_TOKEN)).toBe(false);
+    expect(secure.__has(REFRESH_KEY(alice.id))).toBe(false);
+  });
+});
