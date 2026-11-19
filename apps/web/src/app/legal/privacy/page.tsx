@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Notice | Kharis Church',
-  description: 'How Kharis Church handles your personal data in Kairos.',
+  description: 'How Kharis Church handles your personal data in iKharis.',
 };
 
 const PRIVACY_VERSION = '2026-07-v1';
@@ -26,14 +26,14 @@ export default function PrivacyPage() {
         <p>
           This notice explains how Kharis Church (&ldquo;we&rdquo;,
           &ldquo;us&rdquo;, &ldquo;the church&rdquo;) collects and uses your
-          personal data when you use Kairos, our internal church administration
+          personal data when you use iKharis, our internal church administration
           platform. It is written to comply with the UK General Data Protection
           Regulation (UK GDPR) and the Data Protection Act 2018.
         </p>
         <p>
           Kharis Ministries, operating as Kharis Church, is the{' '}
           <strong>data controller</strong> for personal data processed in
-          Kairos. Kharis Ministries is registered with the Information
+          iKharis. Kharis Ministries is registered with the Information
           Commissioner&rsquo;s Office under reference ZB659958. If you have any
           questions about this notice, or you want to exercise any of the
           rights described below, please contact us at{' '}
@@ -50,10 +50,10 @@ export default function PrivacyPage() {
       <Section title="1. Who this notice applies to">
         <p>
           This notice applies to members of Kharis Church who create an account
-          in Kairos, to people whose information is entered into Kairos by our
+          in iKharis, to people whose information is entered into iKharis by our
           leaders (for example first-time visitors captured on a welcome form,
           or children whose parents provide information on their behalf), and
-          to anyone who submits information through a public Kairos form.
+          to anyone who submits information through a public iKharis form.
         </p>
       </Section>
 
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
             account against unauthorised access
           </li>
           <li>
-            Error reports automatically generated if part of Kairos fails while
+            Error reports automatically generated if part of iKharis fails while
             you are using it. These may incidentally include personal
             data such as the URL you were viewing at the time
           </li>
@@ -205,7 +205,7 @@ export default function PrivacyPage() {
               </tr>
               <tr>
                 <td className="py-2 pr-4">
-                  Protecting Kairos against fraud and abuse, and keeping audit
+                  Protecting iKharis against fraud and abuse, and keeping audit
                   logs of consent and admin actions
                 </td>
                 <td className="py-2">
@@ -231,10 +231,10 @@ export default function PrivacyPage() {
           so that leaders only see the data for the people and areas they are
           responsible for.
         </p>
-        <p>We share data with the following third parties who help us run Kairos:</p>
+        <p>We share data with the following third parties who help us run iKharis:</p>
         <ul className="list-disc space-y-2 pl-6">
           <li>
-            <strong>Cloudflare, Inc.</strong> hosts the Kairos website,
+            <strong>Cloudflare, Inc.</strong> hosts the iKharis website,
             application server, database gateway and image storage.
           </li>
           <li>
@@ -246,7 +246,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Amazon Web Services, Inc.</strong> sends the
-            transactional emails Kairos generates (for example account
+            transactional emails iKharis generates (for example account
             verification, password reset, notification digests). Region: EU
             (London / Frankfurt).
           </li>
@@ -414,9 +414,9 @@ export default function PrivacyPage() {
         <p>
           Kharis Church takes the safeguarding of children very seriously. If
           you are under 16, please ask a parent or guardian to complete
-          Kairos-related forms on your behalf. Children&rsquo;s records are
+          iKharis-related forms on your behalf. Children&rsquo;s records are
           created and managed by a parent or a designated safeguarding lead,
-          and their visibility inside Kairos is restricted to leaders whose
+          and their visibility inside iKharis is restricted to leaders whose
           role requires them to see it. When a child reaches an appropriate
           age, we support them in taking over their own record.
         </p>
@@ -424,7 +424,7 @@ export default function PrivacyPage() {
 
       <Section title="8. Cookies and tracking">
         <p>
-          <strong>Kairos does not use a cookie to keep you signed in.</strong>{' '}
+          <strong>iKharis does not use a cookie to keep you signed in.</strong>{' '}
           Your session is stored in your browser&rsquo;s local storage &mdash; a
           private area of your own browser, on your own device. It is never sent
           to another website, and signing out or clearing your browser data
@@ -453,7 +453,7 @@ export default function PrivacyPage() {
         <p>
           Passwords are stored as one-way cryptographic hashes and cannot be
           read by anyone, including us. Data in transit is protected by TLS.
-          Access to Kairos administration is gated by role-based permissions
+          Access to iKharis administration is gated by role-based permissions
           and audit-logged. We keep our platform patched and monitored, and
           run regular reviews of who has access to what.
         </p>
@@ -482,7 +482,7 @@ export default function PrivacyPage() {
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-xs text-amber-900 dark:text-[#f8b537]">
         <p className="font-semibold">Draft for review</p>
         <p className="mt-1">
-          This document is an initial draft written from what Kairos actually
+          This document is an initial draft written from what iKharis actually
           collects and how it is stored. It has not yet been reviewed by
           Kharis Church leadership or a data-protection professional. Please
           treat it as a starting point rather than a settled policy.

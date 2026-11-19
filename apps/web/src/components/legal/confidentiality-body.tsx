@@ -29,7 +29,7 @@ export function ConfidentialityBody() {
           This undertaking is a written agreement between{' '}
           <strong>Kharis Ministries / Kharis Church</strong> (&ldquo;the
           church&rdquo;) and any person who is granted a leadership or
-          administrative role inside Kairos, the church&rsquo;s internal
+          administrative role inside iKharis, the church&rsquo;s internal
           platform. It exists because those roles give you access to personal
           information about other members that ordinary members do not see, and
           the law requires the church to make clear, in writing, the
@@ -72,7 +72,7 @@ export function ConfidentialityBody() {
       <Section title="2. Legal framework">
         <p>
           The church is the <strong>data controller</strong> for personal data
-          held in Kairos. This undertaking is the written authority required by
+          held in iKharis. This undertaking is the written authority required by
           Article 32(4) of the UK GDPR, which says that any person acting under
           the authority of a data controller who has access to personal data
           must not process it except on instructions from the controller.
@@ -108,7 +108,7 @@ export function ConfidentialityBody() {
           For the purposes of this undertaking, &ldquo;confidential
           information&rdquo; means any information about an identified or
           identifiable person that you see, hear, are told, or otherwise
-          receive because of your Kairos role, including but not limited to:
+          receive because of your iKharis role, including but not limited to:
         </p>
         <ul className="list-disc space-y-1 pl-6">
           <li>name, address, email, phone, date of birth, gender;</li>
@@ -219,7 +219,7 @@ export function ConfidentialityBody() {
 
       <Section title="6. Monitoring and audit">
         <p>
-          The church logs administrator and leader actions in Kairos (
+          The church logs administrator and leader actions in iKharis (
           sign-ins, permission changes, exports, and access to sensitive
           screens) and may review those logs where there is reasonable
           suspicion of a breach of this undertaking. Monitoring is carried out
@@ -240,15 +240,15 @@ export function ConfidentialityBody() {
           role. The obligation of confidentiality continues after your role
           ends and does not expire, because the underlying personal data
           remains sensitive regardless of whether you can still see it in
-          Kairos.
+          iKharis.
         </p>
       </Section>
 
       <Section title="8. Consequences of breach">
         <p>Breaching this undertaking is serious. The church may:</p>
         <ul className="list-disc space-y-1 pl-6">
-          <li>Suspend or revoke your Kairos role with immediate effect.</li>
-          <li>Suspend or terminate your Kairos account entirely.</li>
+          <li>Suspend or revoke your iKharis role with immediate effect.</li>
+          <li>Suspend or terminate your iKharis account entirely.</li>
           <li>
             Follow up through the church&rsquo;s pastoral, disciplinary or
             employment processes as applicable.

@@ -24,9 +24,9 @@ export function AcceptableUseBody() {
 
       <section className="space-y-3">
         <p>
-          Kairos is the internal platform Kharis Church uses to keep in touch
+          iKharis is the internal platform Kharis Church uses to keep in touch
           with its members, run fellowships and departments, and support
-          pastoral care. Because Kairos holds real information about real
+          pastoral care. Because iKharis holds real information about real
           people, everyone who signs in agrees to a shared set of rules for how
           they will behave inside the platform. This policy sets out those
           rules.
@@ -46,7 +46,7 @@ export function AcceptableUseBody() {
 
       <Section title="1. Who this policy applies to">
         <p>
-          This policy applies to every person who signs into Kairos:
+          This policy applies to every person who signs into iKharis:
           members of Kharis Church, fellowship and department leaders, branch
           administrators, and any volunteer or member of staff who has been
           granted access. By signing in you confirm you have read and will
@@ -57,7 +57,7 @@ export function AcceptableUseBody() {
       <Section title="2. Your account is yours alone">
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            Do not share your Kairos password with anyone, including your
+            Do not share your iKharis password with anyone, including your
             spouse, children, or a leader. If a leader needs information, they
             have their own account.
           </li>
@@ -70,7 +70,7 @@ export function AcceptableUseBody() {
             turn on multi-factor authentication (MFA).
           </li>
           <li>
-            Lock or sign out of Kairos when you leave a shared device
+            Lock or sign out of iKharis when you leave a shared device
             unattended.
           </li>
           <li>
@@ -90,7 +90,7 @@ export function AcceptableUseBody() {
 
       <Section title="3. Handling other people's data">
         <p>
-          Kairos may show you personal information about other members,
+          iKharis may show you personal information about other members,
           for example the phone number of someone in your fellowship, a
           new-believer&rsquo;s discipleship notes, or a child&rsquo;s emergency
           contact. That information is entrusted to you for one purpose only:
@@ -99,7 +99,7 @@ export function AcceptableUseBody() {
         <p>You must not:</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            Use member details you see in Kairos for personal reasons, business
+            Use member details you see in iKharis for personal reasons, business
             activity, political campaigning, or evangelism outside the flow of
             your ministry role.
           </li>
@@ -136,8 +136,8 @@ export function AcceptableUseBody() {
 
       <Section title="4. Behaviour inside the platform">
         <p>
-          Kairos exists to build up the church family. When you interact with
-          other members through Kairos (for example messaging a
+          iKharis exists to build up the church family. When you interact with
+          other members through iKharis (for example messaging a
           fellowship, updating notes about a follow-up, or posting an
           announcement) you must not:
         </p>
@@ -155,7 +155,7 @@ export function AcceptableUseBody() {
             Impersonate another person or misrepresent your role in the church.
           </li>
           <li>
-            Use Kairos for personal business, gambling, political campaigning
+            Use iKharis for personal business, gambling, political campaigning
             or paid promotion.
           </li>
           <li>
@@ -169,21 +169,21 @@ export function AcceptableUseBody() {
         <ul className="list-disc space-y-1 pl-6">
           <li>
             Do not attempt to bypass, disable or interfere with any security
-            control in Kairos, including permission checks, rate limits, or
+            control in iKharis, including permission checks, rate limits, or
             audit logging.
           </li>
           <li>
-            Do not attempt to reverse-engineer, scrape, or automate Kairos in
+            Do not attempt to reverse-engineer, scrape, or automate iKharis in
             ways that were not intended, or run software against it that we
             have not published.
           </li>
           <li>
             Do not upload anything you know or suspect contains malware, or any
             file whose purpose is to damage, disrupt or gain unauthorised
-            access to Kairos or any device connecting to it.
+            access to iKharis or any device connecting to it.
           </li>
           <li>
-            Do not connect your Kairos account to third-party services (browser
+            Do not connect your iKharis account to third-party services (browser
             extensions, integrations, bots) unless we have listed that
             integration as supported.
           </li>
@@ -192,7 +192,7 @@ export function AcceptableUseBody() {
 
       <Section title="6. Monitoring">
         <p>
-          To keep Kairos safe and available, we monitor how it is used. We keep
+          To keep iKharis safe and available, we monitor how it is used. We keep
           audit logs of sign-ins, permission changes, and administrator
           actions. If we have reason to suspect a breach of this policy or of
           the law, a Branch Administrator or an appointed leader may review
@@ -209,7 +209,7 @@ export function AcceptableUseBody() {
 
       <Section title="7. Reporting concerns">
         <p>
-          If you notice something that looks like misuse of Kairos (for
+          If you notice something that looks like misuse of iKharis (for
           example another user sharing member information inappropriately, a
           screen you can see that you don&rsquo;t think you should, or an
           apparent security weakness) please report it promptly to your
@@ -230,7 +230,7 @@ export function AcceptableUseBody() {
         <p>If you break this policy, we may:</p>
         <ul className="list-disc space-y-1 pl-6">
           <li>
-            Suspend or withdraw your access to Kairos, or to specific parts of
+            Suspend or withdraw your access to iKharis, or to specific parts of
             it.
           </li>
           <li>
@@ -275,7 +275,7 @@ export function AcceptableUseBody() {
             >
               Terms &amp; Conditions
             </Link>{' '}
-            is the agreement that governs your use of Kairos; and
+            is the agreement that governs your use of iKharis; and
           </li>
           <li>
             if you hold or are granted an administrative or leadership role,
@@ -316,7 +316,7 @@ export function AcceptableUseBody() {
         <p className="mt-1">
           This document is an initial draft, adapted from the existing Kharis
           Ministries Acceptable Use of Assets Policy so that it fits the way
-          Kairos is used day to day. It has not yet been reviewed by Kharis
+          iKharis is used day to day. It has not yet been reviewed by Kharis
           Church leadership. Please treat it as a starting point rather than a
           settled policy.
         </p>

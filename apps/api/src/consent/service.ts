@@ -13,15 +13,37 @@ import {
  * Resolve the current version of each consent type from env. Bumping a
  * version triggers the re-prompt banner on next page load — no DB write
  * needed at deploy time.
+ *
+ * ── Why four of these moved to 2026-11-v2 ─────────────────────────────────
+ *
+ * The rebrand from Kairos to iKharis rewrote the body of the terms, the
+ * privacy notice, the acceptable use policy and the confidentiality
+ * undertaking. A consent record stores (member, type, VERSION), so the
+ * version string is the only thing that identifies WHICH words somebody
+ * agreed to. Editing the text while leaving the version alone would mean
+ * every stored acceptance of `2026-07-v1` now points at a document that no
+ * longer exists, and we could not show a member, an auditor or the ICO what
+ * was actually accepted. That is an audit-integrity problem rather than a
+ * legal one: a rename is not a material change to anyone's obligations.
+ *
+ * Bumping re-prompts everyone, which is normally a real cost and the reason
+ * to think twice. It costs nothing today, because no environment holds member
+ * data yet. This is therefore the cheapest moment this will ever be correct,
+ * and leaving it until there is a population to re-prompt would turn a
+ * one-line default into a decision with a price attached.
+ *
+ * `marketing` is deliberately NOT bumped. Its copy never named the product,
+ * so its text is unchanged and re-asking for marketing consent would be
+ * asking a fresh question we have no reason to ask.
  */
 export function getCurrentConsentVersions(): Record<ConsentType, string> {
   return {
-    terms: process.env['CONSENT_VERSION_TERMS'] ?? '2026-07-v1',
-    privacy: process.env['CONSENT_VERSION_PRIVACY'] ?? '2026-07-v1',
+    terms: process.env['CONSENT_VERSION_TERMS'] ?? '2026-11-v2',
+    privacy: process.env['CONSENT_VERSION_PRIVACY'] ?? '2026-11-v2',
     marketing: process.env['CONSENT_VERSION_MARKETING'] ?? '1.0',
-    acceptable_use: process.env['CONSENT_VERSION_ACCEPTABLE_USE'] ?? '2026-07-v1',
+    acceptable_use: process.env['CONSENT_VERSION_ACCEPTABLE_USE'] ?? '2026-11-v2',
     admin_confidentiality:
-      process.env['CONSENT_VERSION_ADMIN_CONFIDENTIALITY'] ?? '2026-07-v1',
+      process.env['CONSENT_VERSION_ADMIN_CONFIDENTIALITY'] ?? '2026-11-v2',
   };
 }
 
