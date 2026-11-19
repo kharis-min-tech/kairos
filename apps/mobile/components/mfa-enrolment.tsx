@@ -139,7 +139,7 @@ export function MfaEnrolment({
       file.create();
       file.write(
         [
-          'Kairos backup codes',
+          'iKharis backup codes',
           '',
           'Each code works once. Keep them somewhere only you can reach,',
           'and not on the phone that holds your authenticator app.',
@@ -151,7 +151,7 @@ export function MfaEnrolment({
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'text/plain',
-          dialogTitle: 'Save your Kairos backup codes',
+          dialogTitle: 'Save your iKharis backup codes',
         });
       } else {
         alert.info('Saved', `Backup codes saved to app storage:\n${file.uri}`);
@@ -219,7 +219,7 @@ export function MfaEnrolment({
 
       {enrolment ? (
         <Card padding="md" style={{ gap: spacing.md }}>
-          <Text style={styles.stepTitle}>1. Add Kairos to your authenticator</Text>
+          <Text style={styles.stepTitle}>1. Add iKharis to your authenticator</Text>
           <Button
             label="Open your authenticator app"
             variant="secondary"

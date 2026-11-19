@@ -63,7 +63,7 @@ export function AuthorizedAppsCard() {
           <AppWindow className="h-4 w-4 text-[#5D3FD3]" aria-hidden /> Apps with access
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Apps you&apos;ve let sign you in with your Kairos account. Remove one and it can no longer see your details.
+          Apps you&apos;ve let sign you in with your iKharis account. Remove one and it can no longer see your details.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -120,7 +120,7 @@ export function AuthorizedAppsCard() {
           <DialogHeader>
             <DialogTitle>Remove {confirming?.clientName ?? 'this app'}?</DialogTitle>
             <DialogDescription>
-              It will be signed out straight away and can&apos;t see your Kairos details any more. You can allow it
+              It will be signed out straight away and can&apos;t see your iKharis details any more. You can allow it
               again the next time it asks.
             </DialogDescription>
           </DialogHeader>

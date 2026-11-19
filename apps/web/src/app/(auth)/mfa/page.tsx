@@ -109,7 +109,7 @@ export default function MfaPage() {
         />
         <div className="w-full rounded-2xl bg-card p-8 shadow-[0_8px_40px_rgba(26,28,28,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
           <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-            You can see other people&apos;s personal details in Kairos, so we ask for a second
+            You can see other people&apos;s personal details in iKharis, so we ask for a second
             step at sign-in. It takes about a minute and you only do it once.
           </p>
           <MfaEnrolment challengeToken={token} onComplete={finish} />

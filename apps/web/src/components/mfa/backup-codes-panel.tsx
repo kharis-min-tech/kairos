@@ -27,7 +27,7 @@ export function BackupCodesPanel({
   const [copied, setCopied] = useState(false);
 
   const asText = [
-    'Kairos backup codes',
+    'iKharis backup codes',
     '',
     'Each code works once. Keep them somewhere only you can reach,',
     'and not on the phone that holds your authenticator app.',

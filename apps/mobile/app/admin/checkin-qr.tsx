@@ -111,7 +111,7 @@ export default function AdminCheckinQr() {
               backgroundColor="#ffffff"
             />
             <Text style={styles.qrHint}>
-              Open Kairos → Check-in → Scan QR
+              Open iKharis → Check-in → Scan QR
             </Text>
             <Text style={styles.qrSubHint}>
               Rotates every 30s. Previous code stays valid a moment longer.

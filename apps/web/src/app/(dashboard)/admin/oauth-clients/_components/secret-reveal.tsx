@@ -27,7 +27,7 @@ export function SecretReveal({
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           {clientSecret
-            ? "This is the only time it will be shown. Kairos stores a one-way hash, so it can't be recovered. If it's lost, rotate to a new one."
+            ? "This is the only time it will be shown. iKharis stores a one-way hash, so it can't be recovered. If it's lost, rotate to a new one."
             : 'This is a public client, so it has no secret. It relies on PKCE alone.'}
         </p>
       </CardHeader>

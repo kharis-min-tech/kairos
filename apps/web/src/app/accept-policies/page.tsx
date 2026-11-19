@@ -134,7 +134,7 @@ export default function AcceptPoliciesPage() {
           Please review and accept before continuing
         </h1>
         <p className="text-sm text-muted-foreground">
-          You&apos;ll need to accept the policies below to keep using Kairos.
+          You&apos;ll need to accept the policies below to keep using iKharis.
           Take a moment to read each one. You can also{' '}
           {pending.map((s, i) => (
             <span key={s.consentType}>

@@ -42,7 +42,7 @@ export default function ExportSettings() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'application/json',
-          dialogTitle: 'Save Kairos data export',
+          dialogTitle: 'Save iKharis data export',
         });
       } else {
         alert.info('Saved', `Export saved to app storage:\n${file.uri}`);

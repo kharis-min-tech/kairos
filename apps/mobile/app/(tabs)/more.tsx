@@ -334,7 +334,7 @@ export default function More() {
           />
           <NavRow
             icon={Info}
-            label="About Kairos"
+            label="About iKharis"
             onPress={() => Linking.openURL(ABOUT_URL)}
           />
         </Section>
@@ -344,7 +344,7 @@ export default function More() {
           <Text style={styles.signOutLabel}>Sign out</Text>
         </Pressable>
 
-        <Text style={styles.footerLabel}>Kairos v1.0 · Kharis Church</Text>
+        <Text style={styles.footerLabel}>iKharis v1.0 · Kharis Church</Text>
       </ScrollView>
     </SafeAreaView>
   );

@@ -64,7 +64,7 @@ export default function SelfCheckInPage() {
     setScannerOpen(false);
     const parsed = parseCheckInQr(payload);
     if (!parsed) {
-      setError("That QR isn't a Kairos check-in code.");
+      setError("That QR isn't an iKharis check-in code.");
       return;
     }
     setError(null);

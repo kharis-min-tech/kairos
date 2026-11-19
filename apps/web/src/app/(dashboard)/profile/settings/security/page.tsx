@@ -225,7 +225,7 @@ function ConnectedAccountsCard() {
             <DialogDescription>
               You&apos;ll no longer be able to sign in with{' '}
               {confirming ? OAUTH_PROVIDER_LABEL[confirming] : 'this provider'}. Your
-              Kairos account and other sign-in methods stay unchanged.
+              iKharis account and other sign-in methods stay unchanged.
             </DialogDescription>
           </DialogHeader>
           {inlineError && (

@@ -156,7 +156,7 @@ export default function MfaScreen() {
         >
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
             <Text style={styles.body}>
-              You can see other people&apos;s personal details in Kairos, so we ask for a second
+              You can see other people&apos;s personal details in iKharis, so we ask for a second
               step at sign-in. It takes about a minute and you only do it once.
             </Text>
             <MfaEnrolment challengeToken={token} onComplete={(r) => void finish(r)} />

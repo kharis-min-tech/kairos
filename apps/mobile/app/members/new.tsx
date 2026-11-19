@@ -63,7 +63,7 @@ export default function NewMember() {
     if (!created) return;
     try {
       await Share.share({
-        message: `Welcome to Kairos! Sign in with:\nEmail: ${created.member.email}\nTemporary password: ${created.generatedPassword}\n\nYou'll be prompted to change this on first sign-in.`,
+        message: `Welcome to iKharis! Sign in with:\nEmail: ${created.member.email}\nTemporary password: ${created.generatedPassword}\n\nYou'll be prompted to change this on first sign-in.`,
       });
     } catch (err) {
       alert.info(

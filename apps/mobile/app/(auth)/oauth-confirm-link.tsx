@@ -156,7 +156,7 @@ export default function OAuthConfirmLinkScreen() {
 
             <Input
               canvas
-              label="Kairos password"
+              label="iKharis password"
               value={password}
               onChangeText={(v) => {
                 setPassword(v);

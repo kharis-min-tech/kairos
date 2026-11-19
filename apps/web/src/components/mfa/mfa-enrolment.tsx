@@ -115,7 +115,7 @@ export function MfaEnrolment({
         codes={codes}
         onAcknowledge={() => onComplete(result)}
         acknowledgeLabel={
-          challengeToken ? 'I have saved them, continue to Kairos' : 'I have saved my backup codes'
+          challengeToken ? 'I have saved them, continue to iKharis' : 'I have saved my backup codes'
         }
       />
     );
@@ -135,7 +135,7 @@ export function MfaEnrolment({
         </li>
 
         <li className="space-y-3">
-          <p className="text-sm font-medium">2. Add Kairos to it</p>
+          <p className="text-sm font-medium">2. Add iKharis to it</p>
 
           {starting && (
             <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
@@ -154,7 +154,7 @@ export function MfaEnrolment({
               {qrDataUrl && (
                 <img
                   src={qrDataUrl}
-                  alt="QR code to add Kairos to your authenticator app"
+                  alt="QR code to add iKharis to your authenticator app"
                   width={220}
                   height={220}
                   className="rounded-lg border bg-white p-2"
