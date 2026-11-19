@@ -156,11 +156,15 @@ describe('useAuthStore', () => {
     expect(await biometric.isArmedFor('m2')).toBe(false);
   });
 
-  it('setSession never reseals biometric — arming is user-initiated only', async () => {
+  it('setSession does not reseal biometric for an ordinary sign-in', async () => {
     // Automatic reseal on every login used to raise a keychain-write biometric
     // prompt on Android, so users got a second prompt right after logging in.
-    // The seal is now touched only via the enrolment modal or the Security
-    // toggle. The sealed token keeps its original 90-day TTL until either.
+    // Arming therefore stays user-initiated: the enrolment modal or the
+    // Security toggle.
+    //
+    // One narrow repair was added on 19 November 2026 and does not weaken this
+    // test, because `r-new` carries no `mfa` claim and the repair fires only
+    // when that claim goes from false to true. See the describe block below.
     const armed = {
       id: fakeUser.id,
       displayName: 'Alice Test',
@@ -174,5 +178,118 @@ describe('useAuthStore', () => {
     // Sealed token is UNCHANGED — no prompt was raised, and the pre-existing
     // sealed value is what a biometric login would still unlock.
     expect(await biometric.unlockRefreshToken(fakeUser.id, 'Fingerprint')).toBe('r-original');
+  });
+});
+
+/**
+ * Repairing a seal that predates the member's second factor.
+ *
+ * Mandatory MFA broke biometric for anyone who armed it first. Their sealed
+ * token carries `mfa: false`; once they confirm a factor the API refuses it on
+ * every refresh, and nothing replaced it, so biometric failed permanently
+ * while the login screen advised a password sign-in that did not repair it
+ * either. The recovery was toggling biometric off and on in Security, which
+ * nothing told them.
+ *
+ * The repair is gated on the claim CHANGING from false to true. That gate is
+ * what keeps it from becoming the thing it replaced: a keychain prompt after
+ * every single sign-in.
+ */
+describe('useAuthStore — the biometric seal and the second factor', () => {
+  /** A refresh token shaped like the real one, carrying just the claim. */
+  const tokenWith = (claims: Record<string, unknown>) => {
+    const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(claims)}.sig`;
+  };
+  const MFA_REFRESH = tokenWith({ memberId: 'm1', mfa: true, tv: 0 });
+  const PLAIN_REFRESH = tokenWith({ memberId: 'm1', mfa: false, tv: 0 });
+
+  const armAlice = async (refreshToken: string) =>
+    biometric.enable(refreshToken, {
+      id: fakeUser.id,
+      displayName: 'Alice Test',
+      email: fakeUser.email,
+      addedAt: '2026-09-30T00:00:00.000Z',
+    });
+
+  it('reseals when the claim goes from false to true', async () => {
+    await armAlice(PLAIN_REFRESH);
+    expect(await biometric.sealedTokenHasMfa(fakeUser.id)).toBe(false);
+
+    await useAuthStore
+      .getState()
+      .setSession({ accessToken: 'a2', refreshToken: MFA_REFRESH }, fakeUser);
+
+    expect(await biometric.sealedTokenHasMfa(fakeUser.id)).toBe(true);
+    expect(await biometric.unlockRefreshToken(fakeUser.id, 'Fingerprint')).toBe(MFA_REFRESH);
+  });
+
+  it('only does it once, because the flag moves with the seal', async () => {
+    await armAlice(PLAIN_REFRESH);
+    await useAuthStore
+      .getState()
+      .setSession({ accessToken: 'a2', refreshToken: MFA_REFRESH }, fakeUser);
+
+    const later = tokenWith({ memberId: 'm1', mfa: true, tv: 1 });
+    (SecureStore.setItemAsync as jest.Mock).mockClear();
+    await useAuthStore.getState().setSession({ accessToken: 'a3', refreshToken: later }, fakeUser);
+
+    const resealWrites = (SecureStore.setItemAsync as jest.Mock).mock.calls.filter(
+      ([key]) => key === `kairos.biometric_refresh_${fakeUser.id}`,
+    );
+    expect(resealWrites).toHaveLength(0);
+  });
+
+  /**
+   * The anti-nag property, and the reason the gate is a transition rather than
+   * "is the seal missing the claim". A member with no second factor gets
+   * `mfa: false` on every token they will ever hold, so a weaker gate would
+   * raise a keychain prompt at every sign-in forever, which is exactly the
+   * behaviour this design replaced.
+   */
+  it('does not reseal for a member with no second factor', async () => {
+    await armAlice(PLAIN_REFRESH);
+    (SecureStore.setItemAsync as jest.Mock).mockClear();
+
+    await useAuthStore
+      .getState()
+      .setSession({ accessToken: 'a2', refreshToken: PLAIN_REFRESH }, fakeUser);
+
+    const resealWrites = (SecureStore.setItemAsync as jest.Mock).mock.calls.filter(
+      ([key]) => key === `kairos.biometric_refresh_${fakeUser.id}`,
+    );
+    expect(resealWrites).toHaveLength(0);
+    expect(await biometric.sealedTokenHasMfa(fakeUser.id)).toBe(false);
+  });
+
+  it('never arms biometric for a member who has not opted in', async () => {
+    await useAuthStore
+      .getState()
+      .setSession({ accessToken: 'a2', refreshToken: MFA_REFRESH }, fakeUser);
+
+    expect(await biometric.isArmedFor(fakeUser.id)).toBe(false);
+    expect(await biometric.sealedTokenHasMfa(fakeUser.id)).toBe(false);
+  });
+
+  /**
+   * The session being persisted has already succeeded. A refused keychain
+   * prompt is the user declining a repair they never asked for, and it must
+   * not make a good sign-in look broken or cost them the biometric they had.
+   */
+  it('still establishes the session when the repair is refused, and keeps the user armed', async () => {
+    await armAlice(PLAIN_REFRESH);
+    const secure = SecureStore as unknown as { __denyAuth: (v: boolean) => void };
+    secure.__denyAuth(true);
+
+    await expect(
+      useAuthStore.getState().setSession({ accessToken: 'a2', refreshToken: MFA_REFRESH }, fakeUser),
+    ).resolves.toBeUndefined();
+
+    expect(useAuthStore.getState().accessToken).toBe('a2');
+
+    secure.__denyAuth(false);
+    expect(await biometric.isArmedFor(fakeUser.id)).toBe(true);
+    // Flag untouched, so the repair is offered again next sign-in.
+    expect(await biometric.sealedTokenHasMfa(fakeUser.id)).toBe(false);
   });
 });

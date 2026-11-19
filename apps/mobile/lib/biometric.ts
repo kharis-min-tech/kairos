@@ -38,6 +38,17 @@ const KEY_ARMED_USERS = 'kairos.biometric_armed_users';
 const KEY_REFRESH_PREFIX = 'kairos.biometric_refresh_';
 /** AsyncStorage key prefix for "user said Not now on the enrolment prompt". */
 const KEY_DECLINED_PREFIX = 'kairos.biometric_declined_';
+/**
+ * AsyncStorage key prefix recording whether the SEALED refresh token for a
+ * user carries `mfa: true`.
+ *
+ * Plain storage, not the keychain, and that is the entire point. Reading the
+ * sealed token itself raises a biometric prompt, so there is no cheap way to
+ * ask "is what I have sealed still good enough?" without one. This flag
+ * answers that question for free, and it holds no secret: one boolean about a
+ * token, not the token.
+ */
+const KEY_SEAL_MFA_PREFIX = 'kairos.biometric_seal_mfa_';
 
 // Legacy single-user keys, kept only long enough to migrate.
 const LEGACY_KEY_REFRESH = 'kairos.biometric_refresh_token';
@@ -111,6 +122,62 @@ function refreshKeyFor(memberId: string): string {
 
 function declinedKeyFor(memberId: string): string {
   return `${KEY_DECLINED_PREFIX}${memberId}`;
+}
+
+function sealMfaKeyFor(memberId: string): string {
+  return `${KEY_SEAL_MFA_PREFIX}${memberId}`;
+}
+
+// ── Is a refresh token second-factor satisfied? ───────────────────────────
+
+/**
+ * Read the `mfa` claim off a refresh token.
+ *
+ * The signature is not verified and must not be: the API is the only enforcer
+ * and it verifies properly on every refresh. This is used to decide whether a
+ * LOCAL seal is worth replacing, which is a UI decision about which prompt to
+ * raise, not an authorisation one. Mirrors how `lib/capabilities.ts` reads the
+ * access token to decide which buttons to draw.
+ *
+ * Returns false for anything it cannot read, which is the safe direction: a
+ * token we cannot parse is treated as not-satisfied, so the worst case is
+ * offering a reseal that was not strictly needed rather than leaving a broken
+ * seal in place.
+ */
+export function tokenHasMfa(token: string | null | undefined): boolean {
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const json = atob(parts[1]!.replace(/-/g, '+').replace(/_/g, '/'));
+    return (JSON.parse(json) as { mfa?: unknown }).mfa === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Does the token currently sealed for this user carry `mfa: true`?
+ *
+ * False also means "we have never recorded one", which is correct for every
+ * seal written before this flag existed: those were sealed when nothing
+ * checked the claim, so they must be assumed stale rather than trusted.
+ */
+export async function sealedTokenHasMfa(memberId: string): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(sealMfaKeyFor(memberId))) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+async function recordSealMfa(memberId: string, hasMfa: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(sealMfaKeyFor(memberId), hasMfa ? 'true' : 'false');
+  } catch {
+    // Best effort. A missing flag reads as false, which costs at most one
+    // unnecessary reseal offer and never leaves a stale seal trusted.
+  }
 }
 
 /**
@@ -199,6 +266,7 @@ export async function enable(refreshToken: string, user: ArmedUser): Promise<Ena
       ...current.filter((u) => u.id !== user.id),
     ];
     await writeArmedUsers(next);
+    await recordSealMfa(user.id, tokenHasMfa(refreshToken));
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -221,12 +289,53 @@ export async function disable(memberId: string): Promise<void> {
     // go so the login screen doesn't offer a button that cannot work.
   }
   try {
+    await AsyncStorage.removeItem(sealMfaKeyFor(memberId));
+  } catch {
+    // A stale flag with no seal behind it is harmless: every read of it is
+    // guarded by an armed-users check first.
+  }
+  try {
     const current = await listArmedUsers();
     const next = current.filter((u) => u.id !== memberId);
     if (next.length === current.length) return;
     await writeArmedUsers(next);
   } catch {
     // Nothing useful to do; the next read defaults to no armed users.
+  }
+}
+
+/**
+ * Replace the sealed refresh token for a user who is ALREADY armed, without
+ * re-adding them to the list and without disarming them if it fails.
+ *
+ * Why this is not `enable`. `enable` treats a refused keychain write as a
+ * half-configured state and calls `disable` to clean up, which is right for
+ * first-time opt-in: the user asked for biometric, it did not work, leaving a
+ * button that cannot function would be worse. For a reseal the arithmetic
+ * reverses. The user did not ask for anything; we are repairing a seal behind
+ * a sign-in they have already completed. Cancelling that prompt must cost them
+ * nothing, so a failure here leaves the old seal and the arming exactly as
+ * they were and we try again next time.
+ *
+ * The caller decides WHEN this is worth a prompt. See `setSession` in
+ * store/auth.ts: only on a false-to-true transition of the `mfa` claim, which
+ * can happen at most once per member.
+ */
+export async function reseal(memberId: string, refreshToken: string): Promise<boolean> {
+  const cap = await getCapability();
+  if (!cap.available) return false;
+  try {
+    await SecureStore.setItemAsync(refreshKeyFor(memberId), refreshToken, {
+      requireAuthentication: true,
+      keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
+      authenticationPrompt: 'Confirm to keep biometric sign-in working',
+    });
+    await recordSealMfa(memberId, tokenHasMfa(refreshToken));
+    return true;
+  } catch (err) {
+    if (__DEV__) console.warn('[biometric.reseal] refused:', err);
+    // Deliberately NOT calling disable(). See above.
+    return false;
   }
 }
 
@@ -273,6 +382,28 @@ export async function unlockRefreshToken(
 // consumer-app norms (see apps/api DEFAULT_REFRESH_EXPIRY). When it
 // eventually expires biometric fails once, the user password-signs-in, and
 // can re-arm from Security if they want another window.
+//
+// THE ONE EXCEPTION, added 19 November 2026, and why it had to exist.
+//
+// Mandatory MFA broke the paragraph above. A member who armed biometric
+// BEFORE enrolling a second factor has a token sealed with `mfa: false`.
+// Once they confirm a factor, `refreshAccessToken` rejects that token
+// (apps/api/src/auth/service.ts, "Please sign in again to confirm your
+// authenticator"), so every biometric sign-in fails. Nothing resealed, so it
+// failed FOREVER, and the login screen told them to use their email and
+// password — which did not fix it either, because a password sign-in did not
+// reseal. The only recovery was toggling biometric off and on in Security,
+// which nothing told them. That was not an edge case: it was the guaranteed
+// fate of every armed user the moment MFA reached them.
+//
+// So `reseal` exists, and `setSession` calls it on exactly one transition:
+// the sealed token says `mfa: false` and the new one says `mfa: true`. That
+// can happen at most once per member, it happens immediately after they have
+// typed a code (so a confirmation prompt is in context rather than out of
+// nowhere), and it never fires for a member with no second factor, because
+// their new token carries `mfa: false` too and the transition never occurs.
+// That last property is what keeps this from degenerating back into
+// "resealing after every sign-in", which is the thing that read as broken.
 //
 // The proper long-term fix is a WebAuthn-style device keypair that
 // decouples biometric arming from the session token, so biometric never

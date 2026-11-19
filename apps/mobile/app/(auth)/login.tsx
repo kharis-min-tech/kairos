@@ -106,19 +106,32 @@ export default function LoginScreen() {
     if (!cap?.available || bioBusy) return;
     setBioBusy(user.id);
     setError(null);
-    const ok = await signInWithBiometric(user.id, cap.label);
+    const result = await signInWithBiometric(user.id, cap.label);
     setBioBusy(null);
-    if (ok) {
+    if (result.ok) {
       router.replace('/(tabs)');
       return;
     }
-    // Deliberately NOT disabling on a single failure. Every reason a biometric
-    // login can fail — cancelled prompt, phone locked mid-authentication,
-    // wrong finger, transient OS glitch — is retriable. The one path that
-    // genuinely warrants disarming is a server-rejected refresh token (the
-    // sealed value is no longer redeemable), but the user can figure that
-    // out from repeated failures and turn it off themselves in Security.
-    // Auto-wiping their opt-in for a phone-lock timeout was overreach.
+
+    // One failure reason needs its own advice. A seal written before this
+    // member had a second factor is refused by the API permanently, so
+    // "try again" is false and so, on its own, is "use your email and
+    // password" — the password alone never repaired the seal. Completing a
+    // full sign-in does, because setSession reseals on the way through, so
+    // the message says that and nothing more.
+    if (result.reason === 'stale_seal') {
+      setError(
+        `${cap.label} needs reconnecting for ${user.displayName}. Sign in with your email and password below and it will be switched back on.`,
+      );
+      return;
+    }
+
+    // Deliberately NOT disabling on a single failure. Every other reason a
+    // biometric login can fail — cancelled prompt, phone locked mid-
+    // authentication, wrong finger, transient OS glitch — is retriable, and
+    // auto-wiping someone's opt-in for a phone-lock timeout was overreach.
+    // A seal that is genuinely spent now says so above; anything left here is
+    // worth retrying before the user goes near the Security screen.
     setError(`Could not sign in as ${user.displayName}. Try again or use your email and password.`);
   }
 
@@ -183,9 +196,11 @@ export default function LoginScreen() {
         router.push('/(auth)/mfa' as never);
         return;
       }
-      // setSession reseals biometric for users already opted in. It never
-      // turns biometric ON for a new user — enrolment lives here so the
-      // login screen owns the one-time prompt.
+      // setSession never turns biometric ON for a new user — enrolment lives
+      // below, so the login screen owns that one-time offer. It does repair a
+      // seal written before this member had a second factor, which is the one
+      // case where leaving it alone meant biometric failing forever. See the
+      // call to maybeResealBiometric in store/auth.ts.
       await setSession(tokens, member);
       await maybeOfferBiometricEnrolment({
         id: member.id,
