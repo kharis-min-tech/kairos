@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: Kairos
+  name: iKharis
   text: Church Admin, Finally Sorted.
   tagline: One platform for every branch. Manage members, fellowships, departments, outreach, and more. No spreadsheets, no guesswork.
   actions:
@@ -10,7 +10,7 @@ hero:
       text: Get Started
       link: /getting-started/introduction
     - theme: alt
-      text: What is Kairos?
+      text: What is iKharis?
       link: /getting-started/what-is-kairos
 
 features:

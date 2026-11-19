@@ -4,13 +4,13 @@ The dashboard is the first thing you see after logging in. It gives you an at-a-
 
 <div class="screenshot-window screenshot-light">
 
-![Kairos admin dashboard showing stats, upcoming fellowships, and mission control reports](/screenshots/dashboard.png)
+![iKharis admin dashboard showing stats, upcoming fellowships, and mission control reports](/screenshots/dashboard.png)
 
 </div>
 
 <div class="screenshot-window screenshot-dark">
 
-![Kairos admin dashboard in dark mode showing stats, upcoming fellowships, and mission control reports](/screenshots/dashboard-dark.png)
+![iKharis admin dashboard in dark mode showing stats, upcoming fellowships, and mission control reports](/screenshots/dashboard-dark.png)
 
 </div>
 

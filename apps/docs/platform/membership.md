@@ -5,7 +5,7 @@ The Membership page runs the four-week membership class: the programme that make
 ::: warning What "Member" means here
 In this church, a Member is specifically somebody who has completed the four-week membership class and received their certificate. Nothing else confers it. Attending every Sunday for a year does not. Serving in a department does not. Leading a fellowship does not. Completing the New Believers programme does not. Signing up for an account certainly does not.
 
-Everybody with a record in Kairos is listed in the directory and counted in attendance, because they are part of the church and need to be counted. But the **Members** figure on the dashboard and in reports counts class graduates, and the **Returners** figure counts the faithful regulars who have not done the class yet. Both are real; they are not the same number.
+Everybody with a record in iKharis is listed in the directory and counted in attendance, because they are part of the church and need to be counted. But the **Members** figure on the dashboard and in reports counts class graduates, and the **Returners** figure counts the faithful regulars who have not done the class yet. Both are real; they are not the same number.
 :::
 
 ## Who runs it
@@ -104,7 +104,7 @@ Graduation is gated. A person is ready only when **all six** of these are true:
 5. They took the final test on or before the deadline, if the cohort set one
 6. They attended the induction
 
-If you try to graduate somebody who is not ready, Kairos refuses and tells you which of the six is outstanding, per person, so you can see at a glance who is waiting on what.
+If you try to graduate somebody who is not ready, iKharis refuses and tells you which of the six is outstanding, per person, so you can see at a glance who is waiting on what.
 
 ::: tip Scheduled, not theoretical
 "Every session" means every session you actually scheduled. If a cohort only ever got two sessions on the calendar, readiness only asks about those two. Schedule all four before you start marking.
@@ -116,7 +116,7 @@ An admin can graduate somebody who is not ready, but must give a written reason,
 
 ### What graduation does
 
-Graduating stamps the date the class was completed on the member's record. That stamp is the single signal that makes somebody a confirmed Member, and it is what the Members figure in reports counts. There is also a manual admin override on the member record itself, for historical members who completed the class long before Kairos existed.
+Graduating stamps the date the class was completed on the member's record. That stamp is the single signal that makes somebody a confirmed Member, and it is what the Members figure in reports counts. There is also a manual admin override on the member record itself, for historical members who completed the class long before iKharis existed.
 
 ## Notifications
 

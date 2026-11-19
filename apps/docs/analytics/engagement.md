@@ -28,7 +28,7 @@ Watch the shape, not any single bar. A church whose Weekly band is shrinking whi
 
 ## Being embedded, not just present
 
-Service attendance on its own is a weak signal. Somebody attending every week with no fellowship, no department, and no pastoral contact is connected to the building rather than to the church. Kairos surfaces each of those separately:
+Service attendance on its own is a weak signal. Somebody attending every week with no fellowship, no department, and no pastoral contact is connected to the building rather than to the church. iKharis surfaces each of those separately:
 
 | Signal | Where to see it |
 |--------|----------------|

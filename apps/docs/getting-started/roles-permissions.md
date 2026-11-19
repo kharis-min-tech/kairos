@@ -1,10 +1,10 @@
 # Roles & Permissions
 
-What you can see and do in Kairos is decided by the **grants** on your account, not by a job title. There is no role switcher, and no step after signing in where you pick who to be. Your permissions are set when your account is configured and take effect from your next sign-in.
+What you can see and do in iKharis is decided by the **grants** on your account, not by a job title. There is no role switcher, and no step after signing in where you pick who to be. Your permissions are set when your account is configured and take effect from your next sign-in.
 
 ## The one thing to understand first
 
-Kairos stores only two system roles: `admin` and `member`. Everyone who is not on the small platform team is a `member`, including the Senior Pastor.
+iKharis stores only two system roles: `admin` and `member`. Everyone who is not on the small platform team is a `member`, including the Senior Pastor.
 
 Real authority comes from **grants**: a named role bundle pinned to one branch, one fellowship, one department, or the whole church. Hold a Fellowship Leader grant for Grace K-Group and you can run Grace K-Group. Hold nothing and you can manage your own profile. Hold several grants and you get all of them, each inside its own boundary.
 

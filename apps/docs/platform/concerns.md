@@ -4,7 +4,7 @@ The **Concerns** page is the inbox for [follow-ups](/platform/follow-ups) that s
 
 ## Welfare and safeguarding are not the same thing
 
-They are not two severity levels of one thing. They are separate domains, and Kairos keeps them separate on purpose.
+They are not two severity levels of one thing. They are separate domains, and iKharis keeps them separate on purpose.
 
 | | Welfare | Safeguarding |
 |---|---------|--------------|
@@ -22,7 +22,7 @@ This is the part worth reading carefully, because it is the whole reason the spl
 
 **Safeguarding deliberately does not follow branch administration.** A Branch System Admin does not get the safeguarding tab from that grant. Safeguarding sight comes from one of three places:
 
-- **Being the branch's Main Pastor.** Kairos works this out from the branch's leadership record, automatically, every time you make a request. It is not a grant anybody assigns.
+- **Being the branch's Main Pastor.** iKharis works this out from the branch's leadership record, automatically, every time you make a request. It is not a grant anybody assigns.
 - **Holding the Safeguarding Lead grant** for the branch. This is meant to be somebody other than the Main Pastor: the role exists to be independent of branch leadership.
 - **Holding the Safeguarding Head grant**, which is church-wide and reads every branch's queue from one grant. This is the escalation route above a branch's lead, for when a concern raised in one branch needs to leave that branch entirely.
 
@@ -44,6 +44,6 @@ Flagged follow-ups are found by **branch**, not by group. A concern raised about
 
 You do not raise a concern on this page. You raise it by ticking **welfare concern** or **safeguarding concern** when you log a follow-up, from a fellowship, a department, the Follow-ups page, or a member's profile. See [Follow-ups](/platform/follow-ups#the-two-concern-flags).
 
-::: warning Kairos is not the escalation
+::: warning iKharis is not the escalation
 The inbox makes sure the right person sees it. It does not discharge your church's safeguarding policy, and it is not a substitute for ringing somebody. Follow your written procedure; use the flag so the record exists.
 :::

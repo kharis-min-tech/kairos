@@ -1,26 +1,26 @@
-# What is Kairos?
+# What is iKharis?
 
-Kairos is a church administration system built for Kharis Church. It replaces spreadsheets, WhatsApp threads, and disconnected tools with a single platform that every role in the church can use, from a first-time member to a church administrator managing multiple branches.
+iKharis is a church administration system built for Kharis Church. It replaces spreadsheets, WhatsApp threads, and disconnected tools with a single platform that every role in the church can use, from a first-time member to a church administrator managing multiple branches.
 
 <div class="screenshot-window screenshot-light">
 
-![Kairos login screen with Kharis Church branding](/screenshots/login.png)
+![iKharis login screen with Kharis Church branding](/screenshots/login.png)
 
 </div>
 
 <div class="screenshot-window screenshot-dark">
 
-![Kairos login screen with Kharis Church branding in dark mode](/screenshots/login-dark.png)
+![iKharis login screen with Kharis Church branding in dark mode](/screenshots/login-dark.png)
 
 </div>
 
 ## The problem it solves
 
-Running a multi-branch church creates real data problems: member records scattered across branches, no visibility into who is following up new souls, no easy way to see which departments need attention, and no audit trail for approvals. Kairos brings all of that into one place.
+Running a multi-branch church creates real data problems: member records scattered across branches, no visibility into who is following up new souls, no easy way to see which departments need attention, and no audit trail for approvals. iKharis brings all of that into one place.
 
 > "Let all things be done decently and in order." (1 Corinthians 14:40)
 
-That's the design principle behind Kairos.
+That's the design principle behind iKharis.
 
 ## What makes it different
 
@@ -34,7 +34,7 @@ Sign in with an email address and password, or with **Google**, **Microsoft**, o
 
 ## The church it's built for
 
-Kairos is designed around Kharis Church's structure:
+iKharis is designed around Kharis Church's structure:
 
 - Multiple branches across different countries (UK, Ghana, Sierra Leone)
 - Branches grouped into geographic regions

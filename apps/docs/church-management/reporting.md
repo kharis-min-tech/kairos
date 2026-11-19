@@ -1,6 +1,6 @@
 # Reporting
 
-Kairos has built-in reports for tracking church health over time. Reports are role-scoped, so you always see data relevant to your level of access.
+iKharis has built-in reports for tracking church health over time. Reports are role-scoped, so you always see data relevant to your level of access.
 
 ## Accessing reports
 
@@ -41,7 +41,7 @@ For a dedicated analytics view of the souls pipeline, including the conversion f
 
 ## Exporting data
 
-Most list views in Kairos have a CSV export. From the Reports page:
+Most list views in iKharis have a CSV export. From the Reports page:
 - Use filters to narrow the dataset
 - Click **Export CSV** to download
 

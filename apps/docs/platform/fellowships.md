@@ -1,6 +1,6 @@
 # Fellowships
 
-Fellowships are the small groups within each branch. Kairos supports multiple fellowship types, a map view for finding nearby groups, and full meeting and attendance tracking.
+Fellowships are the small groups within each branch. iKharis supports multiple fellowship types, a map view for finding nearby groups, and full meeting and attendance tracking.
 
 <div class="screenshot-window screenshot-light">
 
@@ -57,7 +57,7 @@ Click any marker on the map to see the fellowship name, branch, and next meeting
 
 ### Nearest fellowship
 
-Search by postcode or country to find the closest fellowship. Kairos shows:
+Search by postcode or country to find the closest fellowship. iKharis shows:
 
 - Distance in km
 - Walking, bus, car, and train travel times

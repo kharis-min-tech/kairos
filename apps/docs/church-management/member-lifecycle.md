@@ -1,6 +1,6 @@
 # Member Lifecycle
 
-This guide covers the full journey of a member in Kairos, from first registration through approval, active membership, and eventual deactivation.
+This guide covers the full journey of a member in iKharis, from first registration through approval, active membership, and eventual deactivation.
 
 ## 1. Registration
 
