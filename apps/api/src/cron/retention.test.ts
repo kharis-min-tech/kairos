@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SIGNIN_ACTIONS, SIGNIN_RETENTION_DAYS, runRetentionCron } from './retention';
+import { SIGNIN_ACTIONS, runRetentionCron } from './retention';
+import { PUBLISHED_SIGNIN_DAYS } from './retention-policy';
 import { AuditAction } from '@kairos/types';
 
 // The delete is `db.delete(auditLog).where(...).returning({ id })`, so the
@@ -68,8 +69,8 @@ describe('runRetentionCron', () => {
 
     const cutoff = new Date(summary.cutoff);
     const days = (now.getTime() - cutoff.getTime()) / 86_400_000;
-    expect(days).toBe(SIGNIN_RETENTION_DAYS);
-    expect(SIGNIN_RETENTION_DAYS).toBe(90);
+    expect(days).toBe(PUBLISHED_SIGNIN_DAYS);
+    expect(PUBLISHED_SIGNIN_DAYS).toBe(90);
   });
 
   it('reports zero without failing when there is nothing old enough', async () => {

@@ -123,7 +123,7 @@ export default {
         // stops working needs to say so where someone reading Workers Logs
         // will see it.
         try {
-          const retention = await runRetentionCron(db);
+          const retention = await runRetentionCron(db, env as unknown as Record<string, unknown>);
           logger.info('cron.retention.complete', { module: 'cron', ...retention });
         } catch (err) {
           logger.error('cron.retention.failed', {
