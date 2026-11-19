@@ -34,11 +34,12 @@ vi.mock('../db', async () => {
       last_name varchar(100) NOT NULL,
       home_branch_id uuid NOT NULL,
       is_active boolean NOT NULL DEFAULT true,
-      approval_status varchar(20) NOT NULL DEFAULT 'approved'
+      approval_status varchar(20) NOT NULL DEFAULT 'approved',
+      system_role varchar(20) NOT NULL DEFAULT 'member'
     );
-    INSERT INTO members (id, email, email_verified, first_name, last_name, home_branch_id) VALUES
-      ('11111111-1111-1111-1111-111111111111', 'admin@kharis.org', true, 'Ada', 'Admin', '33333333-3333-3333-3333-333333333333'),
-      ('22222222-2222-2222-2222-222222222222', 'grace@kharis.org', true, 'Grace', 'Okafor', '33333333-3333-3333-3333-333333333333');
+    INSERT INTO members (id, email, email_verified, first_name, last_name, home_branch_id, system_role) VALUES
+      ('11111111-1111-1111-1111-111111111111', 'admin@kharis.org', true, 'Ada', 'Admin', '33333333-3333-3333-3333-333333333333', 'admin'),
+      ('22222222-2222-2222-2222-222222222222', 'grace@kharis.org', true, 'Grace', 'Okafor', '33333333-3333-3333-3333-333333333333', 'member');
     INSERT INTO members (id, email, email_verified, first_name, last_name, home_branch_id, approval_status) VALUES
       ('44444444-4444-4444-4444-444444444444', 'pending@kharis.org', true, 'Pat', 'Pending', '33333333-3333-3333-3333-333333333333', 'pending');
   `);
@@ -266,6 +267,7 @@ describe('authorization code flow', () => {
     expect(info.body.grants).toEqual([
       { role: 'FellowshipLeader', scope: { kind: 'fellowship', id: 'fel-1' }, branchId: BRANCH_ID },
     ]);
+    expect(info.body.kairos_system_role).toBe('member');
 
     // Second authorisation for the same scopes skips the consent screen.
     const again = await call('GET', `/authorize/context?${new URLSearchParams(authorizeQuery(client, challenge))}`, { token: member });
@@ -284,6 +286,57 @@ describe('authorization code flow', () => {
     expect(info.body).toMatchObject({ sub: MEMBER_ID, email: 'grace@kharis.org' });
     expect(info.body).not.toHaveProperty('name');
     expect(info.body).not.toHaveProperty('grants');
+    // Authority information rides with the grants scope and nowhere else. A
+    // client holding only `openid email` must not learn who the admins are.
+    expect(info.body).not.toHaveProperty('kairos_system_role');
+  });
+
+  /**
+   * Church-wide authority cannot be read off `grants`, because an admin holds
+   * no grant that says so: they bypass the scope check instead. Without this
+   * claim a relying party has to keep its own allowlist of administrator
+   * accounts, which is exactly what the analytics integration was doing.
+   */
+  it('releases the system role so church-wide admins need no allowlist', async () => {
+    const client = await registerClient();
+    const { verifier, challenge } = await pkcePair();
+    const { code } = await authorizeAs(ADMIN_ID, client, challenge, { scope: 'openid kairos:grants' });
+    const tok = await call('POST', '/token', {
+      basic: basicOf(client),
+      form: { grant_type: 'authorization_code', code, redirect_uri: REDIRECT, code_verifier: verifier },
+    });
+    const info = await call('GET', '/userinfo', { token: tok.body.access_token });
+    expect(info.status).toBe(200);
+    expect(info.body.kairos_system_role).toBe('admin');
+  });
+
+  /**
+   * The claim is read from the member row when /userinfo is called, not from
+   * whatever drove the consent. `authorizeAs` deliberately signs its
+   * first-party token with systemRole 'member' for every caller, so an `admin`
+   * here can only have come from the database. That is the property that makes
+   * a demotion take effect on the next call rather than at token expiry.
+   */
+  it('reads the system role live rather than from the authorizing token', async () => {
+    const client = await registerClient();
+    const { verifier, challenge } = await pkcePair();
+    const { code } = await authorizeAs(ADMIN_ID, client, challenge, { scope: 'openid kairos:grants' });
+    const tok = await call('POST', '/token', {
+      basic: basicOf(client),
+      form: { grant_type: 'authorization_code', code, redirect_uri: REDIRECT, code_verifier: verifier },
+    });
+
+    expect((await call('GET', '/userinfo', { token: tok.body.access_token })).body.kairos_system_role).toBe('admin');
+
+    const { db } = await import('../db');
+    const { sql } = await import('drizzle-orm');
+    await db.execute(sql`UPDATE members SET system_role = 'member' WHERE id = ${ADMIN_ID}`);
+    try {
+      const after = await call('GET', '/userinfo', { token: tok.body.access_token });
+      expect(after.body.kairos_system_role).toBe('member');
+    } finally {
+      await db.execute(sql`UPDATE members SET system_role = 'admin' WHERE id = ${ADMIN_ID}`);
+    }
   });
 
   it('skips consent for a trusted first-party client', async () => {

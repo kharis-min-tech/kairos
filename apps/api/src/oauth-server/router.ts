@@ -94,7 +94,23 @@ oauthServerRouter.get('/.well-known/openid-configuration', (c) => {
       scopes_supported: OAUTH_SCOPE_LIST,
       token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post', 'none'],
       code_challenge_methods_supported: ['S256'],
-      claims_supported: ['sub', 'name', 'given_name', 'family_name', 'home_branch_id', 'email', 'email_verified', 'nonce'],
+      // `grants` and `kairos_system_role` are released from /userinfo only,
+      // never from the ID token, and only to a client holding `kairos:grants`.
+      // Advertised here because a relying party that reads discovery to learn
+      // what authority information exists would otherwise conclude there is
+      // none and fall back to maintaining its own allowlist.
+      claims_supported: [
+        'sub',
+        'name',
+        'given_name',
+        'family_name',
+        'home_branch_id',
+        'email',
+        'email_verified',
+        'nonce',
+        'grants',
+        'kairos_system_role',
+      ],
       authorization_response_iss_parameter_supported: true,
     },
     200,

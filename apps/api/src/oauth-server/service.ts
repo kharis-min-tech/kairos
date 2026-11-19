@@ -307,6 +307,7 @@ async function loadMember(db: Database, memberId: string) {
       homeBranchId: members.homeBranchId,
       isActive: members.isActive,
       approvalStatus: members.approvalStatus,
+      systemRole: members.systemRole,
     })
     .from(members)
     .where(eq(members.id, memberId))
@@ -536,6 +537,33 @@ export async function getUserInfo(
   if (verified.scopes.includes('kairos:grants')) {
     // Same shape as `grants` on /api/me, resolved live — never baked into a token.
     claims['grants'] = await resolveGrants(db, member.id);
+
+    // Why the system role has to be released alongside the grants, and not
+    // left for the relying party to infer:
+    //
+    // `admin` is church-wide authority and is deliberately not expressible as
+    // a grant. No `RoleScope` kind means "every branch"; even the `church`
+    // kind names no entity and belongs to exactly one role. An admin's reach
+    // therefore comes from bypassing the scope check, not from a row anyone
+    // can read. A relying party reconstructing reach from `grants` alone
+    // cannot distinguish an administrator from a member holding no grants at
+    // all, so it has to keep a hand-maintained allowlist of administrator
+    // accounts instead, which is a second authority store that drifts the
+    // moment someone is promoted or stood down here.
+    //
+    // Released under `kairos:grants` rather than a scope of its own because it
+    // answers the same question the scope already exists to answer: what this
+    // person is allowed to reach. A client that asked only for `profile` still
+    // learns nothing about authority.
+    //
+    // Read from the member row at request time, like every other claim here,
+    // so a demotion takes effect on the next /userinfo call rather than when
+    // some token expires. The name is the relying party's spelling, not ours:
+    // `kairos_system_role` is namespaced where `grants` is not, which is
+    // inconsistent and deliberate, because their policy layer already honours
+    // this key and a rename would buy tidiness at the cost of a working
+    // integration.
+    claims['kairos_system_role'] = member.systemRole;
   }
   await db.update(oauthGrants).set({ lastUsedAt: new Date() }).where(eq(oauthGrants.id, grant.id));
   return claims;
