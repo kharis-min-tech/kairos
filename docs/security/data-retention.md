@@ -233,7 +233,7 @@ Two further points the audit team will ask about:
 >
 > **The action list is a literal, not a prefix match**, so a future
 > `signin_mfa_challenge` has to be added by somebody who has decided it is not
-> evidence. `SIGNIN_RETENTION_DAYS` and the published period are tied together
+> evidence. `RETENTION_SIGNIN_DAYS` and the published period are tied together
 > in a comment, because changing one without the other reintroduces exactly
 > the defect this closes.
 >
@@ -466,3 +466,71 @@ church's trustees:
 7. Whether to add the expired-auth-artefact sweep (§2, auth artefacts).
 
 Items 3 and 7 are the cheapest and should not wait for the rest.
+
+---
+
+## 7. The interim periods now running, and where the numbers came from
+
+Added 2026-11-19. Since `feat/configurable-retention`, four periods live in
+`apps/api/wrangler.jsonc` as `RETENTION_*` vars and are read by
+`apps/api/src/cron/retention-policy.ts`. They can be changed with a deploy
+instead of a code change.
+
+**These are interim defaults, not the decisions in §6.** They exist so the
+mechanism is doing something defensible while the church's adviser considers
+the open questions, rather than sitting switched off. Each has a floor; a value
+below it is refused and logged rather than applied, so a mistyped `3` where
+`300` was meant cannot empty a table overnight. Leaving a setting out means the
+category is never purged, which is the fail-safe direction and deliberate.
+
+| Setting | Value | Floor | Basis |
+|---|---|---|---|
+| `RETENTION_SIGNIN_DAYS` | 90 | 7 | The number the privacy notice already publishes, and the minimum retention CIS Control 8.10 sets for audit logs. |
+| `RETENTION_OUTREACH_CONTACT_DAYS` | 1095 (3 years) | 30 | No statutory number exists. Three years from last interaction matches the published schedules of comparable UK charities for a general, non-major contact. |
+| `RETENTION_EMAIL_CHANGE_DAYS` | 90 | 7 | Set equal to the sign-in window on purpose: a disputed or malicious email change is investigated from both together. |
+| `RETENTION_OAUTH_CODE_DAYS` | 7 | 1 | RFC 6749 recommends an authorization code lifetime of ten minutes at most, single use. A week-old code has been useless for nearly all of that week; the only reason to keep one is to show a replay was attempted. |
+
+### The sign-in period is the one worth arguing about
+
+90 days satisfies CIS Control 8.10 and matches the published notice, so it is
+defensible today without any further decision. It is nonetheless **shorter than
+the NCSC's own recommendation**: 10 Steps to Cyber Security advises keeping
+"your most important logs" for at least six months, on the grounds that
+incidents routinely take months to surface. Repeated `signin_failure` rows are
+exactly how a slow credential-stuffing run is found after the fact. The UK
+Ministry of Justice sets 13 months for services accessed with a government
+identity, for the same reason.
+
+Two things keep this from being a serious gap:
+
+1. **`signin_success` and `signin_failure` are the only audit actions this job
+   can ever delete.** `member_exported`, `member_updated`,
+   `submissions_exported`, `donor_register_exported`, the role grants, the
+   guardian links and the OAuth authorization events are all retained
+   indefinitely. The evidence a breach is actually scoped from is not on a
+   90-day clock and never has been.
+2. The setting is a var, so lengthening it is a deploy, not a release.
+
+**Recommendation for the adviser:** move `RETENTION_SIGNIN_DAYS` to 180 and
+edit the privacy notice sentence in the same change. Going to 180 without
+editing the notice is possible and logs a warning naming the published number,
+because a member reading one figure while the system enforces another is the
+transparency defect this whole job was written to close. Note that the notice
+sentence needs an edit regardless, for an unrelated reason: it also promises
+deletion of "error reports", and no error reporting exists (§4).
+
+### Outreach contacts: why three years and not two
+
+Two years is the number most people reach for, and the UK charity sector
+specifically names "charities may not keep data beyond two years" as a myth
+rather than a rule. UK GDPR sets no period for this at all; what it asks for is
+a documented period, justified against the purpose, which is what this table is.
+
+The clock runs on `updatedAt` rather than `createdAt`, so somebody contacted
+again last month is not deleted for having first been met three years ago.
+Contacts who converted to members are never deleted by this job at any age:
+they are members now, and the member rules govern them.
+
+This does not close §6 item 5. The open half of that question is whether an
+outreach contact gets a delete endpoint of their own, which is an access-rights
+question rather than a retention one.

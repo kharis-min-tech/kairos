@@ -67,7 +67,7 @@
     // sign in and there is no second admin to reset them
     // (POST /api/members/:id/mfa-reset needs an admin). Create and enrol a
     // second administrator account before this environment carries real data.
-    "MFA_REQUIRED_FROM": "2026-11-14"
+    "MFA_REQUIRED_FROM": "2026-11-14",
 
     // Retention periods, in days. Every one of these deletes personal data on
     // a schedule, so read retention-policy.ts before changing one.
@@ -81,9 +81,11 @@
     // applied, so a mistyped 3 where 300 was meant cannot empty a table
     // overnight. Change these here and deploy; no code change is needed.
     //
-    // THESE ARE PLACEHOLDERS, NOT ADVICE. The real numbers are a decision for
-    // the church and its data protection adviser. The questions being asked
-    // of her are in docs/security/data-retention.md.
+    // THE VALUES BELOW ARE INTERIM DEFAULTS, NOT A DECISION. They are
+    // benchmarked rather than guessed, and the reasoning for each is kept with
+    // the value itself. The real numbers are still a decision for the church
+    // and its data protection adviser; the questions being asked of her are in
+    // docs/security/data-retention.md.
     //
     //   RETENTION_SIGNIN_DAYS            audit rows for sign-in success and
     //                                    failure. Defaults to 90, which is the
@@ -106,6 +108,40 @@
     //                                    really personal data; an unbounded
     //                                    table is its own small liability.
     //                                    Floor 1.
+    
+    // 90 days. CIS Control 8.10 sets 90 days as the minimum retention for
+    // audit logs, and 90 is the number the privacy notice already publishes,
+    // so this is the one setting that needs no decision to be defensible.
+    // NCSC's 10 Steps asks for six months on "your most important logs", and
+    // repeated sign-in failures are how credential stuffing is found months
+    // later, so 180 is the better security answer. It is not set here because
+    // lengthening it means editing a published promise to members first.
+    // Note the narrow blast radius either way: these two actions are the only
+    // audit rows this job can ever delete. Exports, role grants, guardian
+    // links and the OAuth events are kept indefinitely.
+    "RETENTION_SIGNIN_DAYS": "90",
+    
+    // 1095 days, three years from last contact. No statute sets a number for
+    // this. The sector pattern is a documented period measured from last
+    // interaction rather than from collection, which is what this job already
+    // does: the clock runs on updatedAt, so contacting someone again resets
+    // it. Three years matches the published schedules of comparable UK
+    // charities for a general, non-major contact. Two years is the number
+    // people reach for first, and is specifically named in the sector as a
+    // myth rather than a rule, so it would be needlessly short.
+    "RETENTION_OUTREACH_CONTACT_DAYS": "1095",
+    
+    // 90 days, deliberately the same window as the sign-in rows above. A
+    // disputed or malicious email change is investigated from both together,
+    // and a period where one half of that story survives and the other has
+    // gone is worse than either number on its own.
+    "RETENTION_EMAIL_CHANGE_DAYS": "90",
+    
+    // 7 days. RFC 6749 recommends an authorization code lifetime of ten
+    // minutes at most and single use, so a week-old code has been useless for
+    // six days and twenty three hours. The only reason to keep one at all is
+    // to be able to show that a replay was attempted.
+    "RETENTION_OAUTH_CODE_DAYS": "7"
   },
 
   // Enable head sampling for logs in the Cloudflare dashboard.
@@ -171,7 +207,7 @@
         // Enforced on staging first, on purpose: this is where we find out
         // whether enrolment actually works on a real phone, and staging is
         // the only place where being locked out costs nothing.
-        "MFA_REQUIRED_FROM": "2026-11-14"
+        "MFA_REQUIRED_FROM": "2026-11-14",
 
         // Retention periods, in days. Every one of these deletes personal data on
         // a schedule, so read retention-policy.ts before changing one.
@@ -185,9 +221,11 @@
         // applied, so a mistyped 3 where 300 was meant cannot empty a table
         // overnight. Change these here and deploy; no code change is needed.
         //
-        // THESE ARE PLACEHOLDERS, NOT ADVICE. The real numbers are a decision for
-        // the church and its data protection adviser. The questions being asked
-        // of her are in docs/security/data-retention.md.
+        // THE VALUES BELOW ARE INTERIM DEFAULTS, NOT A DECISION. They are
+        // benchmarked rather than guessed, and the reasoning for each is kept with
+        // the value itself. The real numbers are still a decision for the church
+        // and its data protection adviser; the questions being asked of her are in
+        // docs/security/data-retention.md.
         //
         //   RETENTION_SIGNIN_DAYS            audit rows for sign-in success and
         //                                    failure. Defaults to 90, which is the
@@ -210,6 +248,40 @@
         //                                    really personal data; an unbounded
         //                                    table is its own small liability.
         //                                    Floor 1.
+        
+        // 90 days. CIS Control 8.10 sets 90 days as the minimum retention for
+        // audit logs, and 90 is the number the privacy notice already publishes,
+        // so this is the one setting that needs no decision to be defensible.
+        // NCSC's 10 Steps asks for six months on "your most important logs", and
+        // repeated sign-in failures are how credential stuffing is found months
+        // later, so 180 is the better security answer. It is not set here because
+        // lengthening it means editing a published promise to members first.
+        // Note the narrow blast radius either way: these two actions are the only
+        // audit rows this job can ever delete. Exports, role grants, guardian
+        // links and the OAuth events are kept indefinitely.
+        "RETENTION_SIGNIN_DAYS": "90",
+        
+        // 1095 days, three years from last contact. No statute sets a number for
+        // this. The sector pattern is a documented period measured from last
+        // interaction rather than from collection, which is what this job already
+        // does: the clock runs on updatedAt, so contacting someone again resets
+        // it. Three years matches the published schedules of comparable UK
+        // charities for a general, non-major contact. Two years is the number
+        // people reach for first, and is specifically named in the sector as a
+        // myth rather than a rule, so it would be needlessly short.
+        "RETENTION_OUTREACH_CONTACT_DAYS": "1095",
+        
+        // 90 days, deliberately the same window as the sign-in rows above. A
+        // disputed or malicious email change is investigated from both together,
+        // and a period where one half of that story survives and the other has
+        // gone is worse than either number on its own.
+        "RETENTION_EMAIL_CHANGE_DAYS": "90",
+        
+        // 7 days. RFC 6749 recommends an authorization code lifetime of ten
+        // minutes at most and single use, so a week-old code has been useless for
+        // six days and twenty three hours. The only reason to keep one at all is
+        // to be able to show that a replay was attempted.
+        "RETENTION_OAUTH_CODE_DAYS": "7"
       },
       "observability": {
         "enabled": true
