@@ -28,7 +28,7 @@ const PARAM_KEYS = [
 
 /** Friendly copy for the failures a person can actually act on. */
 const ERROR_COPY: Record<string, string> = {
-  invalid_client: 'This application is not registered with Kairos, or has been switched off.',
+  invalid_client: 'This application is not registered with iKharis, or has been switched off.',
   invalid_request: 'The sign-in request from this application is incomplete or invalid.',
   invalid_scope: 'This application asked for access it is not allowed to request.',
 };
@@ -169,7 +169,7 @@ function AuthorizeContent() {
             {ERROR_COPY[ctx.error] ?? ctx.description}
           </p>
           <p className="text-sm text-muted-foreground">
-            Nothing has been shared. If you trust this app, ask whoever runs it to check their Kairos sign-in settings.
+            Nothing has been shared. If you trust this app, ask whoever runs it to check their iKharis sign-in settings.
           </p>
           <Link href="/dashboard" className={PRIMARY_BUTTON}>Go to your dashboard</Link>
         </div>

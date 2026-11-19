@@ -109,7 +109,7 @@ function ConfirmLinkContent() {
             <OAuthProviderIcon provider={provider as OAuthProviderId} className="mt-0.5 h-5 w-5 shrink-0" />
           )}
           <p className="text-sm text-foreground">
-            We found a Kairos account for <span className="font-semibold">{email ?? 'your email'}</span>.
+            We found an iKharis account for <span className="font-semibold">{email ?? 'your email'}</span>.
             Enter your password to link it with your {providerName} account.
           </p>
         </div>

@@ -116,7 +116,7 @@ The server honoured it immediately; their screen did not. Menu items and buttons
 
 No. The honorific is display-only. For a member to have pastor-level access to a branch, they need a `BranchAdmin` grant assigned by an Admin.
 
-**Does Kairos handle giving or donations?**
+**Does iKharis handle giving or donations?**
 
 No. Financial records are deliberately out of scope, and there is no donation data in the system.
 
@@ -126,7 +126,7 @@ No. Financial records are deliberately out of scope, and there is no donation da
 
 **Is my data ever deleted?**
 
-Kairos uses soft deletes, so deactivating a member or group preserves all historical records. You can download a copy of your own data, and request deletion of your account, from **Settings → Privacy & Data**.
+iKharis uses soft deletes, so deactivating a member or group preserves all historical records. You can download a copy of your own data, and request deletion of your account, from **Settings → Privacy & Data**.
 
 **Who can see my attendance?**
 

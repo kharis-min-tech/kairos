@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 import { eq } from 'drizzle-orm';
 import { members } from '@kairos/database';
+import { BRAND_MFA_ISSUER } from '@kairos/types';
 import { successResponse, UnauthorizedError, verifyPassword } from '@kairos/utils';
 import { db } from '../db';
 import { authMiddleware, getAuth } from '../middleware/auth';
@@ -40,7 +41,13 @@ const codeSchema = z.object({
 const passwordSchema = z.object({ currentPassword: z.string().min(1) });
 
 function issuer(c: Parameters<typeof readSetting>[0]): string {
-  return readSetting(c, 'MFA_ISSUER', 'Kairos');
+  // The label an authenticator app shows beside the code. Only ever read at
+  // ENROLMENT: the label is baked into the authenticator entry when the QR is
+  // scanned, so everyone enrolled before the rebrand keeps seeing the old
+  // name. That is cosmetic and must not be repaired by re-enrolling anyone,
+  // because re-enrolment issues a new secret and invalidates every unused
+  // backup code to change a word on a screen.
+  return readSetting(c, 'MFA_ISSUER', BRAND_MFA_ISSUER);
 }
 
 async function loadMember(memberId: string) {

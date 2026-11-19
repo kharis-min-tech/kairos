@@ -6,13 +6,13 @@ title: Privacy Notice
 
 **Effective 23 July 2026 · Version 2026-07-v1**
 
-This notice explains how Kharis Church ("we", "us", "the church") collects and uses your personal data when you use Kairos, our internal church administration platform. It is written to comply with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
+This notice explains how Kharis Church ("we", "us", "the church") collects and uses your personal data when you use iKharis, our internal church administration platform. It is written to comply with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
 
-Kharis Church is the data controller for personal data processed in Kairos. If you have any questions about this notice, or you want to exercise any of the rights described below, please contact us at [privacy@kharis.org](mailto:privacy@kharis.org).
+Kharis Church is the data controller for personal data processed in iKharis. If you have any questions about this notice, or you want to exercise any of the rights described below, please contact us at [privacy@kharis.org](mailto:privacy@kharis.org).
 
 ## 1. Who this notice applies to
 
-This notice applies to members of Kharis Church who create an account in Kairos, to people whose information is entered into Kairos by our leaders (for example first-time visitors captured on a welcome form, or children whose parents provide information on their behalf), and to anyone who submits information through a public Kairos form.
+This notice applies to members of Kharis Church who create an account in iKharis, to people whose information is entered into iKharis by our leaders (for example first-time visitors captured on a welcome form, or children whose parents provide information on their behalf), and to anyone who submits information through a public iKharis form.
 
 ## 2. What personal data we collect
 
@@ -46,7 +46,7 @@ This notice applies to members of Kharis Church who create an account in Kairos,
 
 - Sign-in timestamps, session tokens and the browser you used
 - IP address and coarse device information, used only to secure your account against unauthorised access
-- Error reports automatically generated if part of Kairos fails while you are using it
+- Error reports automatically generated if part of iKharis fails while you are using it
 
 ### 2.5 Special category and safeguarding data
 
@@ -62,7 +62,7 @@ Under UK GDPR we can only process your data if we have a lawful basis for doing 
 | Recording attendance, tracking discipleship progress, and co-ordinating rotas | Legitimate interests of the church in running services and ministries |
 | Pastoral care, prayer follow-up and safeguarding of vulnerable people (including children under 16) | Legitimate interests, and where relevant our legal obligations under safeguarding law |
 | Sending you optional newsletters, event invitations, or outreach communications | Your explicit consent |
-| Protecting Kairos against fraud and abuse, and keeping audit logs | Legitimate interests in maintaining a secure platform |
+| Protecting iKharis against fraud and abuse, and keeping audit logs | Legitimate interests in maintaining a secure platform |
 
 We do not use your data for automated decision-making that significantly affects you, and we do not sell your data to anyone.
 
@@ -70,12 +70,12 @@ We do not use your data for automated decision-making that significantly affects
 
 Your data is visible inside Kharis Church to leaders whose role requires it. Access is scoped so that leaders only see the data for the people and areas they are responsible for.
 
-We share data with the following third parties who help us run Kairos:
+We share data with the following third parties who help us run iKharis:
 
-- **Cloudflare, Inc.**: hosts the Kairos website, application server, database gateway and image storage
+- **Cloudflare, Inc.**: hosts the iKharis website, application server, database gateway and image storage
 - **PlanetScale, Inc.**: runs the Postgres database that stores your member record. Data is stored in the UK / EEA
 - **Amazon Web Services, Inc.**: sends transactional emails. Region: EU (London / Frankfurt)
-- **Sentry, Inc.**: receives error reports when Kairos fails, so we can diagnose and fix issues
+- **Sentry, Inc.**: receives error reports when iKharis fails, so we can diagnose and fix issues
 
 These providers act as data processors: they process your data only under our instructions and are bound by contract to protect it.
 
@@ -110,15 +110,15 @@ If you believe we have handled your data unlawfully, you can complain to the UK 
 
 ## 7. Children and young people
 
-Kharis Church takes the safeguarding of children very seriously. If you are under 16, please ask a parent or guardian to complete Kairos-related forms on your behalf. Children's records are created and managed by a parent or a designated safeguarding lead, and their visibility inside Kairos is restricted to leaders whose role requires them to see it.
+Kharis Church takes the safeguarding of children very seriously. If you are under 16, please ask a parent or guardian to complete iKharis-related forms on your behalf. Children's records are created and managed by a parent or a designated safeguarding lead, and their visibility inside iKharis is restricted to leaders whose role requires them to see it.
 
 ## 8. Cookies and tracking
 
-Kairos uses a single first-party cookie to keep you signed in during a session. We do not use advertising cookies, we do not run third-party analytics that track you across the web, and we do not share your usage patterns with marketing platforms.
+iKharis uses a single first-party cookie to keep you signed in during a session. We do not use advertising cookies, we do not run third-party analytics that track you across the web, and we do not share your usage patterns with marketing platforms.
 
 ## 9. Security
 
-Passwords are stored as one-way cryptographic hashes and cannot be read by anyone, including us. Data in transit is protected by TLS. Access to Kairos administration is gated by role-based permissions and audit-logged.
+Passwords are stored as one-way cryptographic hashes and cannot be read by anyone, including us. Data in transit is protected by TLS. Access to iKharis administration is gated by role-based permissions and audit-logged.
 
 ## 10. Changes to this notice
 
@@ -131,5 +131,5 @@ Kharis Church: [privacy@kharis.org](mailto:privacy@kharis.org)
 ---
 
 ::: warning Draft for review
-This document is an initial draft written from what Kairos actually collects and how it is stored. It has not yet been reviewed by Kharis Church leadership or a data-protection professional. Please treat it as a starting point rather than a settled policy.
+This document is an initial draft written from what iKharis actually collects and how it is stored. It has not yet been reviewed by Kharis Church leadership or a data-protection professional. Please treat it as a starting point rather than a settled policy.
 :::

@@ -151,7 +151,7 @@ export default function KairosLanding() {
             <span className="text-[#f8b537]">K</span>AIROS
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm text-black/55 dark:text-white/55">
-            <a href="#why" className="hover:text-black dark:hover:text-white transition-colors">Why Kairos</a>
+            <a href="#why" className="hover:text-black dark:hover:text-white transition-colors">Why iKharis</a>
             <a href="#features" className="hover:text-black dark:hover:text-white transition-colors">Features</a>
             <a href="#preview" className="hover:text-black dark:hover:text-white transition-colors">Preview</a>
             <a
@@ -186,7 +186,7 @@ export default function KairosLanding() {
       */}
       <section
         className="relative isolate min-h-[max(100vh,788px)] overflow-hidden pt-[68px] [background-image:radial-gradient(hsl(var(--foreground)/0.14)_1px,transparent_1.2px)] [background-size:24px_24px]"
-        aria-label="Kairos church administration platform"
+        aria-label="iKharis church administration platform"
       >
         {/* Fade the grid out behind the headline. */}
         <div
@@ -303,7 +303,7 @@ export default function KairosLanding() {
           </h1>
           <TypedText
             className="mt-11 min-h-[52px] max-w-[500px] text-[17px] leading-[1.55] text-black/55 dark:text-white/55"
-            text="Kairos replaces the spreadsheets, WhatsApp groups, and manual registers that are slowing your church down."
+            text="iKharis replaces the spreadsheets, WhatsApp groups, and manual registers that are slowing your church down."
           />
           <div className="mo-load mt-7 flex gap-3" style={{ ["--i" as string]: 6 }}>
             <Halo radiusClass="rounded-full" className="mo-lift [--lift-rot:-1deg]">
@@ -355,7 +355,7 @@ export default function KairosLanding() {
             </Reveal>
             <Reveal as="p" index={2} className="mt-6 text-black/55 dark:text-white/55 leading-relaxed max-w-md">
               Most churches are managed with a patchwork of tools that don't
-              talk to each other. Kairos changes that.
+              talk to each other. iKharis changes that.
             </Reveal>
           </div>
           <ul className="md:col-span-7 space-y-3">
@@ -619,7 +619,7 @@ export default function KairosLanding() {
                       <span className="text-white text-[9px] font-black">K</span>
                     </span>
                     <div className="min-w-0">
-                      <div className="text-[10px] font-bold text-[#1a1c1c] dark:text-white leading-tight">Kairos</div>
+                      <div className="text-[10px] font-bold text-[#1a1c1c] dark:text-white leading-tight">iKharis</div>
                       <div className="text-[7px] text-black/45 dark:text-white/40 leading-tight">Church Admin</div>
                     </div>
                   </div>
@@ -1025,7 +1025,7 @@ export default function KairosLanding() {
             One platform. Every branch. Every member.
           </span>
           <span className="text-black/35 dark:text-white/25">
-            © {new Date().getFullYear()} Kairos, Church Administration Platform
+            © {new Date().getFullYear()} iKharis
           </span>
         </div>
         <div className="flex items-center gap-6 self-start md:self-auto">

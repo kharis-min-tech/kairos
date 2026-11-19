@@ -70,13 +70,23 @@ beforeEach(() => {
 });
 
 describe('getCurrentConsentVersions', () => {
+  /**
+   * This one SHOULD pin the literals. The published version string is the
+   * only record of which words a member agreed to, so a change to it must be
+   * deliberate and visible in a diff rather than absorbed silently.
+   *
+   * 2026-11-v2 is the rebrand: the terms, privacy notice, acceptable use
+   * policy and confidentiality undertaking all had their text rewritten from
+   * Kairos to iKharis. Marketing stays at 1.0 because its copy never named
+   * the product, so there is nothing new to ask anybody.
+   */
   it('defaults to the current published version for terms + privacy + acceptable use + admin confidentiality, and 1.0 for marketing', () => {
     expect(getCurrentConsentVersions()).toEqual({
-      terms: '2026-07-v1',
-      privacy: '2026-07-v1',
+      terms: '2026-11-v2',
+      privacy: '2026-11-v2',
       marketing: '1.0',
-      acceptable_use: '2026-07-v1',
-      admin_confidentiality: '2026-07-v1',
+      acceptable_use: '2026-11-v2',
+      admin_confidentiality: '2026-11-v2',
     });
   });
 
@@ -91,7 +101,7 @@ describe('getCurrentConsentVersions', () => {
     expect(versions.acceptable_use).toBe('2027-01');
     expect(versions.admin_confidentiality).toBe('2027-02');
     // privacy falls back to its published default when the env var is unset
-    expect(versions.privacy).toBe('2026-07-v1');
+    expect(versions.privacy).toBe('2026-11-v2');
   });
 });
 
@@ -105,15 +115,25 @@ describe('listConsentStatuses', () => {
     expect(terms.granted).toBeNull();
   });
 
+  /**
+   * The stored version is derived rather than written out, because what this
+   * test means by it is "whatever the current version happens to be". Pinning
+   * the literal made it fail when the rebrand bumped the published version,
+   * which told us nothing: the behaviour under test, that a record at the
+   * current version does not need re-accepting, had not changed at all. The
+   * stale-version path has its own test below, which is where a hardcoded
+   * version belongs.
+   */
   it('marks required consent as accepted when version matches + granted=true', async () => {
+    const current = getCurrentConsentVersions().terms;
     setupSelectSequence([
-      { consentType: 'terms', version: '2026-07-v1', granted: true, grantedAt: new Date('2026-07-23') },
+      { consentType: 'terms', version: current, granted: true, grantedAt: new Date('2026-07-23') },
     ]);
     const out = await listConsentStatuses(mockDb, memberId);
     const terms = out.find((s) => s.consentType === ConsentType.Terms)!;
     expect(terms.needsAccept).toBe(false);
     expect(terms.granted).toBe(true);
-    expect(terms.acceptedVersion).toBe('2026-07-v1');
+    expect(terms.acceptedVersion).toBe(current);
   });
 
   it('re-prompts after env version bumps past stored version', async () => {
@@ -164,7 +184,8 @@ describe('listConsentStatuses', () => {
     setupSelectSequence([
       {
         consentType: 'admin_confidentiality',
-        version: '2026-07-v1',
+        // Derived for the same reason as the terms case above.
+        version: getCurrentConsentVersions().admin_confidentiality,
         granted: true,
         grantedAt: new Date('2026-07-28'),
       },

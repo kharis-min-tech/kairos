@@ -64,7 +64,7 @@ export default function AuthorizedAppsScreen() {
     const confirmed = await alert.confirm({
       title: `Remove ${app.clientName}?`,
       message:
-        "It will be signed out straight away and can't see your Kairos details any more. You can allow it again the next time it asks.",
+        "It will be signed out straight away and can't see your iKharis details any more. You can allow it again the next time it asks.",
       confirmLabel: 'Remove',
       destructive: true,
     });
@@ -88,9 +88,9 @@ export default function AuthorizedAppsScreen() {
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Signed in with Kairos</Text>
+          <Text style={styles.introTitle}>Signed in with iKharis</Text>
           <Text style={styles.introMeta}>
-            Apps you&apos;ve let sign you in with your Kairos account. Remove one and it can no
+            Apps you&apos;ve let sign you in with your iKharis account. Remove one and it can no
             longer see your details.
           </Text>
         </View>

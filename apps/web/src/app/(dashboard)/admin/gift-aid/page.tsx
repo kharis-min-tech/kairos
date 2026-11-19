@@ -114,7 +114,7 @@ export default function GiftAidAdminPage() {
             <HandCoins className="h-6 w-6 text-[#5D3FD3]" aria-hidden /> Gift Aid
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Declarations across the whole church. Kairos does not hold giving records, so the
+            Declarations across the whole church. iKharis does not hold giving records, so the
             register is exported and joined against them.
           </p>
         </div>
@@ -292,7 +292,7 @@ export default function GiftAidAdminPage() {
             <div className="space-y-3 rounded-lg border p-4">
               <p className="text-sm font-medium">Match this declaration to a member</p>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Matching links the declaration to a Kairos profile so the member can see and
+                Matching links the declaration to an iKharis profile so the member can see and
                 cancel it themselves. The name and address on the declaration are left exactly
                 as the donor gave them, because those are the HMRC evidence and the profile may
                 well disagree with them.
@@ -332,7 +332,7 @@ export default function GiftAidAdminPage() {
                 !memberResults.isLoading &&
                 !memberResults.data?.length && (
                   <p className="text-xs text-muted-foreground">
-                    No member matches that. The donor may not have a Kairos account yet, in which
+                    No member matches that. The donor may not have an iKharis account yet, in which
                     case leave the declaration unmatched. It is still in force.
                   </p>
                 )}

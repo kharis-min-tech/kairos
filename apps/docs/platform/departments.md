@@ -1,6 +1,6 @@
 # Departments
 
-Departments are the ministry teams within each branch. Kairos supports the full range of Kharis Church ministries.
+Departments are the ministry teams within each branch. iKharis supports the full range of Kharis Church ministries.
 
 <div class="screenshot-window screenshot-light">
 
@@ -18,7 +18,7 @@ Departments are the ministry teams within each branch. Kairos supports the full 
 
 A department is created from a **catalogue** of ministry types rather than by typing a name, so the same ministry means the same thing in every branch. The catalogue is a managed list; the dropdown on the create form is always the authority for your church.
 
-These are the types Kairos ships with:
+These are the types iKharis ships with:
 
 | Ministry | Description |
 |----------|-------------|

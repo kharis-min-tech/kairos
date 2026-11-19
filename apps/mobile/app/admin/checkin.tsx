@@ -293,7 +293,7 @@ export default function AdminCheckin() {
         onClose={() => setScannerOpen(false)}
         onScan={handleScannedMemberQr}
         title="Scan member code"
-        hint="Point the camera at a member's Kairos QR to check them in."
+        hint="Point the camera at a member's iKharis QR to check them in."
       />
     </SafeAreaView>
   );

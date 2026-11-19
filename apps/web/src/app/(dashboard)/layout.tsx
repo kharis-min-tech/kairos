@@ -462,7 +462,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5">
         <img src="/logo.png" alt="Kharis Church" className="h-9 w-9 object-contain" />
         <div>
-          <p className="text-base font-bold leading-tight text-foreground">Kairos</p>
+          <p className="text-base font-bold leading-tight text-foreground">iKharis</p>
           <p className="text-xs text-muted-foreground">Church Admin</p>
         </div>
       </Link>
@@ -608,7 +608,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <rect y="15" width="20" height="2" rx="1" />
               </svg>
             </button>
-            <span className="text-lg font-bold text-foreground">Kairos</span>
+            <span className="text-lg font-bold text-foreground">iKharis</span>
           </div>
           <ThemeToggle className="text-muted-foreground hover:bg-foreground/5 hover:text-foreground" />
         </header>

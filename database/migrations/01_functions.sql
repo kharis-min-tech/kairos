@@ -38,7 +38,7 @@ COMMENT ON FUNCTION public.update_updated_at_column() IS 'Automatically updates 
 -- SCHEMA DOCUMENTATION
 -- ============================================================================
 
-COMMENT ON SCHEMA dev IS 'Development schema containing all Kharis Church Administration System tables';
+COMMENT ON SCHEMA dev IS 'Development schema containing all iKharis tables';
 
 -- ============================================================================
 -- END OF FUNCTIONS

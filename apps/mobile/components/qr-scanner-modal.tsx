@@ -40,7 +40,7 @@ export function QrScannerModal({
   onScan,
   title,
   hint,
-  rejectionMessage = 'Not a Kairos code. Keep scanning',
+  rejectionMessage = 'Not an iKharis code. Keep scanning',
 }: {
   visible: boolean;
   onClose: () => void;
@@ -158,7 +158,7 @@ export function QrScannerModal({
               <Text style={styles.permissionMeta}>
                 {permission.canAskAgain
                   ? 'Tap allow so we can scan the QR code.'
-                  : `Enable camera access for Kairos in ${Platform.OS === 'ios' ? 'Settings' : 'App info'} to scan.`}
+                  : `Enable camera access for iKharis in ${Platform.OS === 'ios' ? 'Settings' : 'App info'} to scan.`}
               </Text>
               {permission.canAskAgain ? (
                 <Pressable style={styles.permissionBtn} onPress={requestPermission}>

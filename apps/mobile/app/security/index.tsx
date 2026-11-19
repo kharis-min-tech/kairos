@@ -79,7 +79,7 @@ export default function SecurityHub() {
           <NavLink
             icon={AppWindow}
             title="Apps with access"
-            meta="Apps you've let sign you in with Kairos. Remove any you no longer use."
+            meta="Apps you've let sign you in with iKharis. Remove any you no longer use."
             onPress={() => router.push('/security/apps' as never)}
           />
           <NavLink

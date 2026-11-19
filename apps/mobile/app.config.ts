@@ -2,7 +2,7 @@ import type { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Kairos',
+  name: 'iKharis',
   slug: 'kairos-mobile',
   version: '1.0.0',
   runtimeVersion: { policy: 'appVersion' },
@@ -94,7 +94,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-local-authentication',
       {
-        faceIDPermission: 'Kairos uses Face ID to unlock your saved sign-in.',
+        faceIDPermission: 'iKharis uses Face ID to unlock your saved sign-in.',
       },
     ],
     [
@@ -110,7 +110,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-image-picker',
       {
         photosPermission:
-          'Kairos needs access to your photo library so you can pick a profile photo.',
+          'iKharis needs access to your photo library so you can pick a profile photo.',
       },
     ],
     '@react-native-community/datetimepicker',

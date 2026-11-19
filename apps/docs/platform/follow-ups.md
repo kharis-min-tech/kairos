@@ -14,7 +14,7 @@ Every follow-up is attached to a person, and also to a **context**: the setting 
 
 The branch context is the one that changed recently, and it changed something important: **a person who belongs to no fellowship and no department can now be followed up.** Before, a follow-up had to hang off a group, so the people most in need of contact, the ones nobody had drawn in yet, were precisely the people the system could not record contact for.
 
-The context is stated by whoever logs the follow-up. Kairos does not guess it from the person's memberships, because the setting of a conversation is a fact about the conversation, not about the person.
+The context is stated by whoever logs the follow-up. iKharis does not guess it from the person's memberships, because the setting of a conversation is a fact about the conversation, not about the person.
 
 ## The three queues
 

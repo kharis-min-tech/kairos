@@ -42,7 +42,7 @@ export default function OAuthClientsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Connected apps</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Apps that let members sign in with their Kairos account{clients ? `, ${clients.length} registered` : ''}.
+            Apps that let members sign in with their iKharis account{clients ? `, ${clients.length} registered` : ''}.
           </p>
         </div>
         {!creating && !created && (
@@ -109,7 +109,7 @@ export default function OAuthClientsPage() {
             <AppWindow className="h-8 w-8 text-muted-foreground/60" aria-hidden />
             <p className="text-muted-foreground">No apps registered yet.</p>
             <p className="max-w-sm text-xs text-muted-foreground">
-              Register one when another Kharis app needs to sign members in with Kairos, such as analytics.
+              Register one when another Kharis app needs to sign members in with iKharis, such as analytics.
             </p>
           </CardContent>
         </Card>

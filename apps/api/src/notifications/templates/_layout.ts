@@ -24,7 +24,7 @@ export function renderLayout(input: LayoutInput): string {
     : '';
   const footer = input.footerLine
     ? `<p style="font-size:12px;color:#6b7280;">${escapeHtml(input.footerLine)}</p>`
-    : `<p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>`;
+    : `<p style="font-size:12px;color:#6b7280;">iKharis</p>`;
 
   return `
     <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">

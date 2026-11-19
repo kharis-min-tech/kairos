@@ -74,7 +74,7 @@ export default function WelcomePage() {
           </Link>
 
           <p className="text-center text-xs text-muted-foreground">
-            New to Kairos?{' '}
+            New to iKharis?{' '}
             <a
               href="https://docs.kairos.kharis.org/getting-started/introduction"
               target="_blank"

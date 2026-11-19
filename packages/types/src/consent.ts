@@ -47,9 +47,9 @@ export const CONSENT_TYPE_DESCRIPTION: Record<ConsentType, string> = {
   privacy: 'How Kharis Church handles your personal data.',
   marketing: 'Optional emails about events, news, and updates beyond your active fellowship.',
   acceptable_use:
-    'The rules for how you use Kairos day to day, and how you handle information you see about other members.',
+    'The rules for how you use iKharis day to day, and how you handle information you see about other members.',
   admin_confidentiality:
-    'Written undertaking required from anyone granted a leadership or administrative role in Kairos.',
+    'Written undertaking required from anyone granted a leadership or administrative role in iKharis.',
 };
 
 /**

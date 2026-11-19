@@ -50,7 +50,7 @@ export default function Appearance() {
 
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.intro}>
-          Kairos matches your phone&apos;s appearance by default. Force a
+          iKharis matches your phone&apos;s appearance by default. Force a
           scheme here if you&apos;d rather.
         </Text>
 

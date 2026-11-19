@@ -6,7 +6,7 @@ export const OAUTH_SCOPES = {
   openid: 'Sign you in',
   profile: 'Your name and home branch',
   email: 'Your email address',
-  'kairos:grants': 'Your roles, and the branches, fellowships and departments they cover',
+  'kairos:grants': 'Your roles, the branches, fellowships and departments they cover, and whether you administer the church',
 } as const;
 
 export type OAuthScope = keyof typeof OAUTH_SCOPES;

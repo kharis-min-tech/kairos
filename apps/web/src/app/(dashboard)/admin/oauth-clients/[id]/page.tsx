@@ -202,7 +202,7 @@ export default function OAuthClientDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Connection details</CardTitle>
-              <CardDescription>What the app&apos;s team needs to set up &ldquo;Sign in with Kairos&rdquo;.</CardDescription>
+              <CardDescription>What the app&apos;s team needs to set up &ldquo;Sign in with iKharis&rdquo;.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <CopyField label="Client ID" value={client.clientId} />

@@ -36,7 +36,7 @@ The Dashboard shows the total congregation broken down into four categories, and
 | Children | Tracked separately, with their own protections |
 
 ::: warning Members is not "everyone with an account"
-This is the single most misread number in Kairos. A faithful regular who has served in a department for five years is a **Returner**, not a Member, until they complete the class. A rising Returners count with a flat Members count means people are arriving and staying but the class is not running often enough. See [Membership Classes](/platform/membership).
+This is the single most misread number in iKharis. A faithful regular who has served in a department for five years is a **Returner**, not a Member, until they complete the class. A rising Returners count with a flat Members count means people are arriving and staying but the class is not running often enough. See [Membership Classes](/platform/membership).
 :::
 
 ## Branch-level vs church-wide

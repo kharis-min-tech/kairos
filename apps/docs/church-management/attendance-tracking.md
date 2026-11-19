@@ -1,6 +1,6 @@
 # Attendance Tracking
 
-Kairos tracks two types of attendance: **service attendance** for Sunday, midweek, and special services, and **fellowship meeting attendance** for small group gatherings.
+iKharis tracks two types of attendance: **service attendance** for Sunday, midweek, and special services, and **fellowship meeting attendance** for small group gatherings.
 
 ## Service attendance
 

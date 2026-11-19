@@ -1,6 +1,6 @@
 # Fellowship Management
 
-This guide covers how fellowship leaders and admins create, run, and maintain small groups in Kairos.
+This guide covers how fellowship leaders and admins create, run, and maintain small groups in iKharis.
 
 ## Creating a fellowship
 

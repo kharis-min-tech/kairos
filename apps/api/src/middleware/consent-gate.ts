@@ -88,7 +88,7 @@ export async function consentGateMiddleware(c: Context, next: Next) {
         error: {
           code: 'CONSENT_REQUIRED',
           message:
-            'You must accept required policies before continuing. Sign in to Kairos and complete the consent screen.',
+            'You must accept required policies before continuing. Sign in to iKharis and complete the consent screen.',
           pending: pending.map((p) => ({
             consentType: p.consentType,
             currentVersion: p.currentVersion,

@@ -2,7 +2,7 @@
 
 This page is the precise version of [User Permissions](/administration/permissions). It is written for whoever has to answer "why can this person see that?" with certainty, and for developers extending the system.
 
-Grants are not checked directly. Every grant is translated into a set of **capabilities**, and every gate in Kairos, on the server and in both apps, asks the same question: does this person hold this capability, at this scope?
+Grants are not checked directly. Every grant is translated into a set of **capabilities**, and every gate in iKharis, on the server and in both apps, asks the same question: does this person hold this capability, at this scope?
 
 ## The capability catalogue
 

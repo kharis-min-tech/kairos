@@ -200,7 +200,7 @@ export async function sendEmailChangedAlertEmail(
         </p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
         <p style="font-size:12px;color:#6b7280;">
-          Kharis Church Administration System
+          iKharis
         </p>
       </div>
     `,
@@ -294,7 +294,7 @@ export async function sendAccountApprovedEmail(
           </a>
         </p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -311,11 +311,11 @@ export async function sendAccountRejectedEmail(
       <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #5D3FD3;">Account Request Update</h2>
         <p>Hi ${memberName},</p>
-        <p>Thank you for registering with the Kharis Church Administration System.</p>
+        <p>Thank you for registering with iKharis.</p>
         <p>After review, we were unable to approve your account at this time.
            If you believe this is an error, please contact your branch leadership directly.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -340,7 +340,7 @@ export async function sendJoinRequestReceivedEmail(
            this is an estimate and not a guarantee; responses may take longer during busy periods.</p>
         <p>We'll be in touch once your request has been reviewed.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -362,7 +362,7 @@ export async function sendJoinRequestApprovedEmail(
            You are now an active member of the fellowship.</p>
         <p>Log in to the Kharis Church portal to view fellowship details, meetings, and more.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -384,7 +384,7 @@ export async function sendJoinRequestRejectedEmail(
            After review, we're unable to approve your request at this time.</p>
         <p>If you have any questions, please reach out to your branch leadership directly.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -408,7 +408,7 @@ export async function sendMentorAssignedEmail(
         <p>Please reach out to them and support them through their journey of faith.</p>
         <p>Log in to the Kharis Church portal to view their enrolment details.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -440,7 +440,7 @@ export async function sendInterviewScheduledEmail(
         </ul>
         <p>Please reach out to your branch leadership if you need to reschedule.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -469,7 +469,7 @@ export async function sendOfferExtendedEmail(
         ${expiresLabel ? `<p>${expiresLabel}</p>` : ''}
         <p>Log in to the Kharis portal to accept or decline the offer.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -492,7 +492,7 @@ export async function sendProbationStartedEmail(
            <strong>${details.probationDays}-day probation</strong>.</p>
         <p>Your team lead will check in with you at the end of the probation to confirm your full membership.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );
@@ -513,7 +513,7 @@ export async function sendProbationPassedEmail(
         <p>Congratulations, you've completed probation and are now a full member of
            <strong>${departmentName}</strong>.</p>
         <hr style="margin:32px 0;border:none;border-top:1px solid #e5e7eb;" />
-        <p style="font-size:12px;color:#6b7280;">Kharis Church Administration System</p>
+        <p style="font-size:12px;color:#6b7280;">iKharis</p>
       </div>
     `,
   );

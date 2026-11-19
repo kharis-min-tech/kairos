@@ -18,7 +18,7 @@ export const OAUTH_SERVER_SCOPES: readonly OAuthScopeInfo[] = [
   { scope: 'openid', description: 'Sign you in' },
   { scope: 'profile', description: 'Your name and home branch' },
   { scope: 'email', description: 'Your email address' },
-  { scope: 'kairos:grants', description: 'Your roles, and the branches, fellowships and departments they cover' },
+  { scope: 'kairos:grants', description: 'Your roles, the branches, fellowships and departments they cover, and whether you administer the church' },
 ];
 
 export interface OAuthClientSummary {

@@ -4,7 +4,7 @@ import { ConfidentialityBody } from '@/components/legal/confidentiality-body';
 export const metadata: Metadata = {
   title: 'Confidentiality & Data Handling Undertaking | Kharis Church',
   description:
-    'Written undertaking required from anyone granted a leadership or administrative role in Kairos.',
+    'Written undertaking required from anyone granted a leadership or administrative role in iKharis.',
 };
 
 export default function ConfidentialityPage() {

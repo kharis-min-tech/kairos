@@ -4,7 +4,7 @@ Understanding these six concepts will make the rest of the documentation much ea
 
 ## 1. Branches
 
-A **branch** is a single church location. Every piece of data in Kairos (members, departments, fellowships, outreach programs, attendance records) belongs to a branch. Branches are the primary unit of organisation.
+A **branch** is a single church location. Every piece of data in iKharis (members, departments, fellowships, outreach programs, attendance records) belongs to a branch. Branches are the primary unit of organisation.
 
 Each branch has:
 - A name, type (Main, Satellite, Campus, etc.), city, and contact details
@@ -16,7 +16,7 @@ Branches cannot see each other's data unless you are an Admin.
 
 ## 2. People, and what "Member" means
 
-Everybody in Kairos lives in one list. A person has a home branch, and can belong to one fellowship and up to two departments within it.
+Everybody in iKharis lives in one list. A person has a home branch, and can belong to one fellowship and up to two departments within it.
 
 Where it gets subtle is the word *Member*. In this church, a Member is specifically somebody who has **completed the four-week membership class**. Attending for years, serving in a department, or even leading a fellowship does not make somebody a Member in that formal sense. See [Membership Classes](/platform/membership).
 
@@ -37,7 +37,7 @@ Visitors and children stay visible in the directory and in attendance totals, be
 
 ## 3. Roles & Grants
 
-Kairos uses two system-level roles (`admin` and `member`) but real permissions come from **functional grants**. A grant is a named role bundle tied to a specific scope, and there are four kinds of scope: a **branch**, a **fellowship**, a **department**, or the whole **church**.
+iKharis uses two system-level roles (`admin` and `member`) but real permissions come from **functional grants**. A grant is a named role bundle tied to a specific scope, and there are four kinds of scope: a **branch**, a **fellowship**, a **department**, or the whole **church**.
 
 For example, a member with a `FellowshipLeader` grant for "Grace K-Group" can manage that fellowship but nothing outside it. The same member with a `DepartmentLeader` grant for "Choir at Kharis London" can manage that department separately.
 
@@ -47,7 +47,7 @@ See [Roles & Permissions](/getting-started/roles-permissions) for the full break
 
 ## 4. The Souls Pipeline
 
-Kairos tracks the journey of people reached through evangelism. A **soul** is someone captured during an outreach event. They move through a pipeline:
+iKharis tracks the journey of people reached through evangelism. A **soul** is someone captured during an outreach event. They move through a pipeline:
 
 **New → Following Up → Interested → Converted**
 
@@ -61,4 +61,4 @@ Any follow-up can be flagged as a **welfare** concern or a **safeguarding** conc
 
 ## 6. Soft Deletes
 
-Nothing is permanently deleted in Kairos. Deactivating a member, fellowship, or department preserves all history. Attendance records, follow-up notes, and role assignments remain intact. This is important for reporting and accountability.
+Nothing is permanently deleted in iKharis. Deactivating a member, fellowship, or department preserves all history. Attendance records, follow-up notes, and role assignments remain intact. This is important for reporting and accountability.

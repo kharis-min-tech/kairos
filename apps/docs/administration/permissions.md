@@ -1,6 +1,6 @@
 # User Permissions
 
-Permissions in Kairos are driven by **functional grants**, not by a job title. Understanding the difference between a system role, a grant, and a scope is the key to configuring access correctly.
+Permissions in iKharis are driven by **functional grants**, not by a job title. Understanding the difference between a system role, a grant, and a scope is the key to configuring access correctly.
 
 ## The two system roles
 
@@ -12,7 +12,7 @@ Every member row carries a `systemRole`, and it has only two possible values:
 | `member` | Everyone else, from a first-time attendee to the Senior Pastor. All of their authority comes from grants. |
 
 ::: warning There is no Pastor or Leader role
-Kairos used to have `pastor`, `leader`, and `elder` as system roles. They are gone. If a document, a spreadsheet, or an old screenshot refers to someone's "role" as Pastor or Leader, it is describing a **pattern of grants**, not a field in the database.
+iKharis used to have `pastor`, `leader`, and `elder` as system roles. They are gone. If a document, a spreadsheet, or an old screenshot refers to someone's "role" as Pastor or Leader, it is describing a **pattern of grants**, not a field in the database.
 :::
 
 ## Functional grants
@@ -35,7 +35,7 @@ A grant is a named role bundle tied to a specific scope. Grants are what give a 
 
 ### The derived grant: Branch Pastor
 
-There is an eleventh grant that nobody assigns. Kairos works it out.
+There is an eleventh grant that nobody assigns. iKharis works it out.
 
 Whoever currently holds the **Main Pastor** row in a branch's leadership is given a `BranchPastor` grant automatically, every time they make a request. It carries safeguarding sight for that branch and nothing else.
 

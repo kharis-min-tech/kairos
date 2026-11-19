@@ -134,7 +134,7 @@ export function renderOAuthProviderLinked(p: SecurityOAuthProviderLinkedPayload)
       heading: 'New sign-in method added',
       greeting: p.memberName,
       bodyHtml: `
-        <p>You signed in to Kairos with <strong>${escapeHtml(p.providerLabel)}</strong>
+        <p>You signed in to iKharis with <strong>${escapeHtml(p.providerLabel)}</strong>
            for the first time on <strong>${escapeHtml(when)}</strong>. That
            provider is now linked to your Kharis Church account, so you can
            use it to sign in again in the future.</p>

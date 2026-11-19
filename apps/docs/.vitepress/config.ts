@@ -2,8 +2,8 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   lang: 'en-US',
-  title: 'Kairos',
-  description: 'Church Administration System: documentation for Kharis Church.',
+  title: 'iKharis',
+  description: 'iKharis end user documentation.',
   base: '/',
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
@@ -24,14 +24,14 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    siteTitle: 'Kairos',
+    siteTitle: 'iKharis',
 
     nav: [
       {
         text: 'Getting Started',
         items: [
           { text: 'Introduction', link: '/getting-started/introduction' },
-          { text: 'What is Kairos?', link: '/getting-started/what-is-kairos' },
+          { text: 'What is iKharis?', link: '/getting-started/what-is-kairos' },
           { text: 'Core Concepts', link: '/getting-started/core-concepts' },
           { text: 'Your First Church', link: '/getting-started/your-first-church' },
           { text: 'Roles & Permissions', link: '/getting-started/roles-permissions' },
@@ -95,7 +95,7 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Introduction', link: '/getting-started/introduction' },
-          { text: 'What is Kairos?', link: '/getting-started/what-is-kairos' },
+          { text: 'What is iKharis?', link: '/getting-started/what-is-kairos' },
           { text: 'Core Concepts', link: '/getting-started/core-concepts' },
           { text: 'Your First Church', link: '/getting-started/your-first-church' },
           { text: 'Roles & Permissions', link: '/getting-started/roles-permissions' },
@@ -174,7 +174,7 @@ export default defineConfig({
 
     footer: {
       message:
-        'Kairos: Church Administration System by Kharis Church &middot; ' +
+        'iKharis &middot; ' +
         '<a href="/legal/terms">Terms &amp; Conditions</a> &middot; ' +
         '<a href="/legal/privacy">Privacy Notice</a>',
     },

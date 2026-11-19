@@ -77,7 +77,7 @@ export default function AttendanceQrPage() {
               <canvas ref={canvasRef} width={320} height={320} />
             </div>
             <p className="max-w-sm text-center text-sm text-muted-foreground">
-              Members: open Kairos → Check in → Scan QR. The previous code stays valid for a moment
+              Members: open iKharis → Check in → Scan QR. The previous code stays valid for a moment
               after each refresh so nobody misses it.
             </p>
           </CardContent>
