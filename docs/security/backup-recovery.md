@@ -407,7 +407,10 @@ noting.
 > give the audit trail an independent copy with its own retention. Audit evidence
 > that shares a failure domain with the data it describes is not independent
 > evidence.
-> **But note that path does not currently exist.** `"logpush": true` appears
+> **But note that path does not currently exist, and as of 18 November 2026
+> there is a decision not to build it yet** (`accepted-risks.md` A5, with a
+> backlog ticket raised as the condition of the acceptance). `"logpush": true`
+> appears
 > nowhere in `apps/api/wrangler.jsonc`, for either environment, and a Worker
 > emits to Logpush only when its own config carries that flag — so the pipeline
 > in `../observability.md` was never wired. Logs stop at Workers Logs,
@@ -520,13 +523,28 @@ just as an assertion:
 **One qualification that should not be lost.** "Not sensitive" is doing less
 work than it appears. Some of these are **photographs of children**, and a
 photograph of a child is special-category-adjacent in practice even where it
-is not special-category data in law. The accepted risk is about
-*availability*, and availability is genuinely the least important of the three
-properties here. **Confidentiality and erasure are not accepted** and are
-being fixed in the same change that produced this document set: delivery URLs
-carry no authentication and no expiry, which is DPIA risk R5, and PR #78 adds
-destruction on erasure and on replacement. **Do not let "images: accepted
-risk" be read as covering R5.** It covers losing them, not leaking them.
+is not special-category data in law. The accepted risk in **this** section is
+about *availability*, and availability is genuinely the least important of the
+three properties here. **Do not let "images: accepted risk" be read as covering
+R5.** This section covers losing them, not leaking them.
+
+> **Updated 19 November 2026, and the change is deliberate rather than
+> editorial.** When this section was written, it continued: "Confidentiality
+> and erasure are not accepted, and are being fixed in the same change that
+> produced this document set." **Erasure was fixed**: PR #78 added destruction
+> on erasure and on replacement, and `dpia.md` §4 R5 records it along with the
+> `member_erased` audit evidence. **Confidentiality was not.** Delivery URLs
+> still carry no authentication, and on 18 November 2026 the product owner
+> accepted that residual as-is with remediation planned
+> (`accepted-risks.md` A6).
+>
+> That is a reversal of the position this paragraph took, so it is recorded
+> here rather than edited away. The sentence above is still the right warning:
+> the two risks remain separate, R5 is still scored **High**, and this
+> section's acceptance of *availability* has never covered *confidentiality*.
+> What changed is that confidentiality now has an acceptance of its own, with
+> its own narrower trigger (before any real photograph of any member is
+> uploaded anywhere) and a technical blocker that is still the next step.
 
 **The option not taken, and why it is worth keeping on the shelf.** The
 natural alternative is R2: either moving storage there outright, or keeping

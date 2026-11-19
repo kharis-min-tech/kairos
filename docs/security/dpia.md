@@ -496,6 +496,17 @@ Cloudflare does not publish. **Guessing it would produce a signature that
 silently 403s every photograph in the system.** Resolving that one question is
 the next step, and it is tracked as an open decision.
 
+**ACCEPTED AS A RESIDUAL, 18 November 2026, without changing this score.** The
+product owner has accepted unauthenticated delivery as-is with remediation
+planned: `accepted-risks.md` A6, which carries the compensating controls and a
+trigger deliberately narrower than the rest of that register (before any real
+photograph of any member is uploaded to any environment, because one
+photograph of one child is enough to make the residual real). **R5 remains
+High.** An acceptance by the controller is not a re-scoring by the DPO, and
+nothing about the decision reduces the harm if a URL leaks. The `signedUrl()`
+question above is unchanged by it and is still what stands between this risk
+and closure.
+
 **Harm.** *Originally:* a child's photograph permanently available to anyone who
 ever obtained the URL, with no way to withdraw it, including after an erasure
 request. *Now:* a child's photograph available to anyone who obtains the URL
@@ -570,7 +581,9 @@ a short window measured in days: `"logpush": true` appears **nowhere** in
 `apps/api/wrangler.jsonc`, for either production or staging, and a Worker emits
 to Logpush only when its own config carries that flag — so no account-level job
 can be receiving anything. The Logpush-to-Axiom pipeline in
-`../observability.md` is intended architecture that was never wired. Sentry is
+`../observability.md` is intended architecture that was never wired, and since
+18 November 2026 there is a decision not to wire it yet, with the reasoning and
+the reopening triggers in `accepted-risks.md` A5. Sentry is
 named in the privacy notice as receiving error reports and **is also not wired
 at all**. So the system has no log destination outside Cloudflare and no error
 reporting whatsoever.
@@ -629,7 +642,7 @@ deploy, held for reviewer approval in the `production` GitHub Environment.
 | **R2** guardian self-attachment | Permit the guardian write only for a `minted` subject, via an explicit `SubjectOrigin` discriminator (`49058161`) | **Remediated, pending merge — PR #72** | Low once deployed |
 | **R3** directory over-exposure | Gate the directory on a pastoral capability (`fa4c88db`); least-privilege field projection (`b77fca9a`, `8137ce5e`); split safeguarding from directory (`4cb6f2fe`); redact minors in CSV export (`f005ef26`); gate mobile screen with its nav row (`7b7ac543`); reject caller-supplied `systemRole`/branch (`616bf37f`); refuse sign-in for deactivated members on every door (`3e7b816a`); stop returning the reset token when the mailer is live (`4490db6f`) | **Remediated, pending merge — PR #71** | **Medium** — the exposure is closed, but the inability to detect or scope a future recurrence (R8) is not addressed by this PR |
 | **R4** repo-public signing key | Make the secrets fail closed in production | **NOT remediated.** Not on either PR. Handled separately; `key-management.md` §1 carries the open decision on how production is detected. | High until done |
-| **R5** children's photographs | Set `requireSignedURLs: true`, mint signed URLs on read, add a delete call, add `Referrer-Policy` | **NOT remediated.** Open decisions in `secure-sdlc.md` §6. Needs a re-flagging pass for images already uploaded. | **High** |
+| **R5** children's photographs | Set `requireSignedURLs: true`, mint signed URLs on read, add a delete call, add `Referrer-Policy` | **Partly remediated.** The delete call and `Referrer-Policy` shipped 8 November 2026; signed delivery did not, and the residual was **accepted by the controller on 18 November 2026** (`accepted-risks.md` A6) pending one measurable technical question. Still needs a re-flagging pass for images already uploaded. | **High** |
 | **R6** indefinite retention | A retention runner; the periods themselves | **NOT remediated, and blocked on decisions** — seven open retention decisions in `data-retention.md` §6. The notice corrections are not blocked and should go first. | High |
 | **R7** non-expiring grants | Filter `selectRoleGrants` on `end_date` | **NOT remediated.** Open decision in `incident-response.md` §9. | High |
 | **R8** detection | `member_exported` / `member_updated` audit actions; **enable Logpush** (`"logpush": true` in the Worker config plus an account-level job — it is confirmed not running); Cloudflare WAF rate limiting; security headers | **NOT remediated.** Open decisions in `incident-response.md` §9 and `secure-sdlc.md` §6. | **High** |

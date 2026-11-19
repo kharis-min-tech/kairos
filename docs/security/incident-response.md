@@ -90,8 +90,23 @@ anomalous export, or an administrator acting outside their remit is detected
 only if a member complains or somebody happens to look. There is no automatic
 notification to anyone.
 
+> **Three updates, 19 November 2026** (`accepted-risks.md` A2 carries these
+> with the rest of the register):
+>
+> 1. **It covers three checklist items, not two.** The 18 November 2026
+>    self-assessment scored 5.4 (log review cadence), 7.1 and 7.2 as Fails, and
+>    those three are the only Fails on it. 5.4 fails on its review half alone:
+>    retention is met and automated, and nobody is rostered to review.
+> 2. **Two compensating controls have since been added** that this section
+>    could not cite: per-account lockout after five failed MFA attempts, and the
+>    edge rate-limiting rule deployed on 12 November against the eight most
+>    sensitive POST paths (`waf-rate-limiting.md` §3). Neither detects anything.
+>    Both raise the cost of the attack the absent detection would have caught.
+> 3. **The reopening trigger is now explicit:** when the support rota exists,
+>    and in any case before real member data is entered into any environment.
+
 **What this is NOT.** It is not a decision that detection is unnecessary, and
-it does not close the two checklist items it covers — they remain **Fail**,
+it does not close the checklist items it covers — they remain **Fail**,
 with a compensating control that is honest rather than flattering: the pilot
 is one branch, the administrator population is small and known by name, and
 `audit_log` now records member edits and all three export paths, so an
@@ -390,7 +405,9 @@ Q7. Record it regardless of outcome. Article 33(5) requires a record of EVERY
 
 Pick by what is compromised, and prefer the narrowest row that covers it.
 Most of these are dashboard or database actions, not scripted ones — the
-absence of a scripted kill switch is itself a finding.
+absence of a scripted kill switch is itself a finding, **temporarily accepted
+on 18 November 2026 with a backlog ticket raised** (`accepted-risks.md` A4,
+which records what the control would buy and what stands in for it today).
 
 | Situation | Action | Note |
 |---|---|---|
@@ -403,7 +420,7 @@ absence of a scripted kill switch is itself a finding.
 | Database credential leaked | Rotate the PlanetScale password; review PlanetScale query insights | Direct DB access bypasses all application RBAC, so assume everything was readable. |
 | Cloudflare API token leaked | Revoke it; review the Cloudflare audit log for deploys | Equivalent to arbitrary code execution with the database binding. Treat as S1. |
 | Malicious or broken deploy | `wrangler rollback`, or redeploy a known-good commit | `main` blocks force-push and deletion, so the good commit is still there. |
-| Need to stop all traffic | Delete the Worker's route in the Cloudflare dashboard, or deploy a 503 build | **There is no maintenance mode.** Both options are manual. |
+| Need to stop all traffic | Delete the Worker's route in the Cloudflare dashboard, or deploy a 503 build | **There is no maintenance mode.** Both options are manual, neither is rehearsed, and the gap is an accepted risk rather than an oversight (`accepted-risks.md` A4). |
 | Data destroyed or corrupted | `backup-recovery.md` §4 | **Export `audit_log` for the affected window before restoring** — the audit trail shares a database with the data, so a restore rolls the evidence back too. |
 
 **Preserve evidence before you fix, and treat it as urgent.** For a finished

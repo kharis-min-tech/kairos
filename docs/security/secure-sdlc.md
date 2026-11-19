@@ -555,6 +555,17 @@ quietly.
   (90d) bounds, and an `oauth_token_reuse` audit action. **The first-party
   session path does not meet the standard the same codebase set for third
   parties.**
+
+  **There is a reason for that asymmetry, and it is not neglect.** A spike on
+  18 November 2026 established that rotation cannot ship while the mobile app
+  seals the refresh token behind the OS biometric requirement and deliberately
+  never re-seals it (re-sealing prompts the user on every Android keychain
+  write). Rotation would present the stale sealed token on every app restart,
+  trip reuse detection on legitimate behaviour, lock out every biometric user
+  and fill the audit log with fabricated reuse events. The spike was not
+  merged, so `accepted-risks.md` A1 is the only record of that reasoning and
+  of the triggers that reopen it. **Detection remains accepted-open, not
+  solved.**
 - **Tokens in browser storage.** The web app persists `accessToken` and
   `refreshToken` via Zustand `persist` (`apps/web/src/lib/auth-store.ts:45`),
   i.e. `localStorage`. That makes any XSS a full session theft — which is what

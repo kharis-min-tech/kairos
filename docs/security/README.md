@@ -1,6 +1,6 @@
 # Security and data protection
 
-Written for the pre-release cyber-security review, 2026-11-08. Nine documents
+Written for the pre-release cyber-security review, 2026-11-08. Ten documents
 covering the questions that are about the **organisation** rather than the
 software, which is why code fixes alone could not close them.
 
@@ -17,6 +17,7 @@ PlanetScale dashboard setting, or a commitment only the church can make.
 | [Secure SDLC](secure-sdlc.md) | The lifecycle as it actually operates — branch protection, the four-command gate, the agent workflow — plus a threat model using the vulnerability classes a real review found here as worked examples. |
 | [Regulatory mapping](regulatory-mapping.md) | UK GDPR obligation by obligation, mapped to where it is met, partly met, or not met. Confirms PCI DSS is out of scope and says why. |
 | [WAF rate limiting](waf-rate-limiting.md) | The rate-limiting rules to create by hand in the Cloudflare dashboard, derived from the actual route surface. Edge rules rather than in-Worker counters, because the Worker binds Hyperdrive and nothing else — there is nowhere to keep a counter. |
+| [Accepted risks](accepted-risks.md) | The register of gaps the controller has looked at and decided not to close yet, each with its owner, date, reasoning in their own words, compensating controls and reopening trigger. Opened 19 November 2026, because a gap nobody has decided about and a gap somebody has accepted read identically six months later. |
 
 ## The two statutory records
 
@@ -69,6 +70,14 @@ of the things settled on 12 November 2026 — the PlanetScale export, Cloudflare
 Images, Cloudflare Pro, the absence of alerting — were open checkboxes or
 unstated assumptions rather than numbered markers, so closing them is recorded
 in the relevant document without moving this count.
+
+**Nor is a settled question always a solved one.** A decision to accept a risk
+closes the question without closing the gap, and those are now collected in
+[`accepted-risks.md`](accepted-risks.md): nine of them, six recorded there in
+full and three cross-referenced to the documents that already held them. Read
+that register alongside this index, because several documents here describe a
+gap in the present tense that has since been decided about, and the decision is
+the part a reviewer needs.
 
 **Eight have since closed with real answers**, and the documents record them
 rather than still asking:

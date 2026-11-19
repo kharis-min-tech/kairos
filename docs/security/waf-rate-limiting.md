@@ -427,7 +427,10 @@ sustained run is reconstructable afterwards even though nothing throttles it —
 though note that this leans on the same absent alerting accepted in
 `incident-response.md` §2, so nobody is told while it is happening. Those two
 accepted risks compound, and should be reviewed together rather than
-separately.
+separately. Both are indexed in `accepted-risks.md` (A9 and A2), which exists
+partly to make compounding pairs like this one visible: several entries there
+rest on the same two facts, that no environment holds real data and that the
+administrator population is small and known by name.
 
 **Revisit when:** the pilot opens beyond one branch, any credential-stuffing
 attempt is observed in the `signin_failure` rows, or the support model (which

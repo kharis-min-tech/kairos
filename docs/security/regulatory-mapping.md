@@ -516,6 +516,16 @@ measures:
 The Article 25 "by design" gaps worth naming explicitly, each from
 `secure-sdlc.md` §4:
 
+> **This list is as-found at drafting on 8 November 2026 and is kept in that
+> form, because what a review found is itself evidence. Four of the five have
+> moved since, and two have moved entirely.** The signing secrets now fail
+> closed (8 November, `key-management.md` §1); rate limiting is deployed at the
+> Cloudflare edge (12 November, `waf-rate-limiting.md` §3); the security headers
+> are set, including HSTS at 180 days verified against the live zone on
+> 15 November; and the two items annotated inline below are partly closed with
+> their residuals formally accepted. **Do not cite this list as current
+> posture.** `accepted-risks.md` is the index of what remains open by decision.
+
 - **Two signing secrets fail open** onto values committed to this repository,
   with no environment gate — in a codebase that states the correct principle in
   its own words at `oauth-server/keys.ts:21`.
@@ -526,8 +536,15 @@ The Article 25 "by design" gaps worth naming explicitly, each from
   session theft.
 - **`requireSignedURLs: false`** on profile photos, including under-16s':
   permanent, unauthenticated, unrevocable URLs with no delete path.
+  *Since 8 November 2026 a delete path exists and the URLs are revocable, so
+  the residual is a leak between upload and deletion rather than a permanent
+  exposure. Delivery is still unauthenticated; accepted 18 November 2026,
+  `accepted-risks.md` A6. DPIA R5 remains High.*
 - **Stateless 365-day refresh tokens** with no store, rotation, reuse detection
   or revocation list — in a codebase whose own OAuth server has all four.
+  *Revocation now exists (14 November 2026, `members.token_version`), so
+  containment is solved. Rotation and reuse detection are accepted-open for a
+  stated technical reason, `accepted-risks.md` A1.*
 
 ---
 
