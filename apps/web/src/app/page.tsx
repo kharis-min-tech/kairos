@@ -1025,7 +1025,7 @@ export default function KairosLanding() {
             One platform. Every branch. Every member.
           </span>
           <span className="text-black/35 dark:text-white/25">
-            © {new Date().getFullYear()} iKharis, Church Administration Platform
+            © {new Date().getFullYear()} iKharis
           </span>
         </div>
         <div className="flex items-center gap-6 self-start md:self-auto">

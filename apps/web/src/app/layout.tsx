@@ -9,8 +9,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: 'iKharis: Church Administration',
-  description: 'Multi-branch church administration platform',
+  title: 'iKharis',
+  description: 'The central church administration platform',
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',

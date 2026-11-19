@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress';
 export default defineConfig({
   lang: 'en-US',
   title: 'iKharis',
-  description: 'Church Administration System: documentation for Kharis Church.',
+  description: 'iKharis end user documentation.',
   base: '/',
   ignoreDeadLinks: [/^http:\/\/localhost/],
 
@@ -174,7 +174,7 @@ export default defineConfig({
 
     footer: {
       message:
-        'iKharis: Church Administration System by Kharis Church &middot; ' +
+        'iKharis &middot; ' +
         '<a href="/legal/terms">Terms &amp; Conditions</a> &middot; ' +
         '<a href="/legal/privacy">Privacy Notice</a>',
     },

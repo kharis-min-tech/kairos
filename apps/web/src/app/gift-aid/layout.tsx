@@ -4,7 +4,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { KharisLogoIcon } from '@/app/(auth)/kharis-logo';
 
 /**
- * Overrides the root metadata, which says "iKharis: Church Administration".
+ * Overrides the root metadata, which says "iKharis".
  * This route is reached by scanning a QR code on a card, so what the phone
  * shows after the scan, and what a shared link previews as, is the only
  * branding a donor sees. "iKharis" is the staff product's name and means
