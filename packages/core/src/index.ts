@@ -31,7 +31,14 @@ export {
   MARK_VIEWBOX,
   MARK_VIEWBOX_SIZE,
   MARK_WIDTH,
+  LOCKUP_ASPECT,
+  LOCKUP_HEIGHT,
+  LOCKUP_VIEWBOX,
+  LOCKUP_WIDTH,
+  WORDMARK_LETTERS,
+  WORDMARK_PATH,
   type MarkSubpath,
+  type WordmarkLetter,
 } from './brand-mark';
 
 export { resolveDaypart, type Daypart } from './daypart';

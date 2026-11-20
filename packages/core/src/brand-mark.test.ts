@@ -8,6 +8,12 @@ import {
   MARK_SUBPATHS,
   MARK_VIEWBOX,
   MARK_WIDTH,
+  LOCKUP_ASPECT,
+  LOCKUP_HEIGHT,
+  LOCKUP_VIEWBOX,
+  LOCKUP_WIDTH,
+  WORDMARK_LETTERS,
+  WORDMARK_PATH,
   type MarkSubpath,
 } from './brand-mark';
 
@@ -173,5 +179,113 @@ describe('the iKharis mark', () => {
     // Each subpath is a closed shape, so the joined form must stay fillable.
     expect(MARK_PATH.startsWith('M')).toBe(true);
     expect(MARK_PATH.match(/Z/g)).toHaveLength(MARK_SUBPATHS.length);
+  });
+});
+
+/**
+ * Walks every endpoint and control point of a path.
+ *
+ * The convex hull of a Bézier's control points always contains the curve, so
+ * a box that fits the hull certainly fits the ink. That is the direction the
+ * tests below need: they are checking that nothing escapes the viewBox.
+ */
+function hull(d: string) {
+  const toks = d.match(/[MCLVHZmclvhz]|-?\d*\.?\d+(?:e[-+]?\d+)?/g) ?? [];
+  let i = 0;
+  let cmd: string | null = null;
+  let cx = 0;
+  let cy = 0;
+  const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+  const num = () => parseFloat(toks[i++]!);
+  const see = (x: number, y: number) => {
+    box.x0 = Math.min(box.x0, x);
+    box.y0 = Math.min(box.y0, y);
+    box.x1 = Math.max(box.x1, x);
+    box.y1 = Math.max(box.y1, y);
+  };
+  while (i < toks.length) {
+    if (/^[MCLVHZmclvhz]$/.test(toks[i]!)) cmd = toks[i++]!;
+    if (cmd === 'M' || cmd === 'L') {
+      cx = num();
+      cy = num();
+      see(cx, cy);
+    } else if (cmd === 'C') {
+      for (let p = 0; p < 3; p++) {
+        cx = num();
+        cy = num();
+        see(cx, cy);
+      }
+    } else if (cmd === 'V') {
+      cy = num();
+      see(cx, cy);
+    } else if (cmd === 'H') {
+      cx = num();
+      see(cx, cy);
+    } else if (cmd === 'Z') {
+      cmd = null;
+    } else {
+      i++;
+    }
+  }
+  return box;
+}
+
+function unionHull(ds: readonly string[]) {
+  return ds.map(hull).reduce((a, b) => ({
+    x0: Math.min(a.x0, b.x0),
+    y0: Math.min(a.y0, b.y0),
+    x1: Math.max(a.x1, b.x1),
+    y1: Math.max(a.y1, b.y1),
+  }));
+}
+
+describe('the iKharis lockup', () => {
+  /**
+   * The lockup is one flat path list in one viewBox — the lettering was
+   * translated into the mark's own coordinate space rather than nested in a
+   * transform. That makes it cheap for both renderers and impossible for the
+   * two halves to disagree, but it also means a regenerated `haris` that
+   * forgets the translate would sit on top of the mark and nothing would
+   * throw. These two tests are what notices.
+   */
+  it('fits the whole lockup inside its viewBox', () => {
+    const { minX, minY, w, h } = parseViewBox(LOCKUP_VIEWBOX);
+    const all = unionHull([...MARK_SUBPATHS.map((s) => s.d), ...WORDMARK_LETTERS.map((l) => l.d)]);
+    expect(all.x0).toBeGreaterThanOrEqual(minX);
+    expect(all.y0).toBeGreaterThanOrEqual(minY);
+    expect(all.x1).toBeLessThanOrEqual(minX + w + 0.001);
+    expect(all.y1).toBeLessThanOrEqual(minY + h + 0.001);
+  });
+
+  it('sets the lettering clear of the mark, not over it', () => {
+    const mark = unionHull(MARK_SUBPATHS.map((s) => s.d));
+    const name = unionHull(WORDMARK_LETTERS.map((l) => l.d));
+    // Figma cuts the K–h gap by hand against the K's lower arm. It is small,
+    // so this asserts a real gap rather than a generous one.
+    expect(name.x0).toBeGreaterThan(mark.x1);
+    expect(name.x0 - mark.x1).toBeLessThan(20);
+  });
+
+  /**
+   * Call sites size the lockup by height (`<KharisLogo height={26} />`) and
+   * derive the width from this. A stale aspect squashes the logo in every
+   * header at once.
+   */
+  it('reports an aspect the callers can size by', () => {
+    expect(LOCKUP_ASPECT).toBeCloseTo(LOCKUP_WIDTH / LOCKUP_HEIGHT, 10);
+    const { w, h } = parseViewBox(LOCKUP_VIEWBOX);
+    expect(w).toBeCloseTo(LOCKUP_WIDTH, 6);
+    expect(h).toBeCloseTo(LOCKUP_HEIGHT, 6);
+  });
+
+  it('spells haris, once each, in reading order', () => {
+    expect(WORDMARK_LETTERS.map((l) => l.letter).join('')).toBe('haris');
+  });
+
+  it('concatenates the letters into the single-path form', () => {
+    expect(WORDMARK_PATH).toBe(WORDMARK_LETTERS.map((l) => l.d).join(''));
+    expect(WORDMARK_PATH.startsWith('M')).toBe(true);
+    // h, i and a each close two subpaths (counter, dot, bowl); r and s one.
+    expect(WORDMARK_PATH.match(/Z/g)).toHaveLength(8);
   });
 });

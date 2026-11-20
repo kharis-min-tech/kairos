@@ -7,11 +7,20 @@
  * animation this component opts into.
  *
  * - KharisMark: the mark itself, brand shapes inheriting currentColor
- * - KharisLogoIcon: the mark in a purple tile — the brand lockup
- * - KharisCardHeader: mark + "Kharis Church" above a card heading
+ * - KharisLogo: the horizontal lockup — the mark with "haris" beside it
+ * - KharisLogoIcon: the mark in a purple tile, for square slots
+ * - KharisCardHeader: the heading block above an auth card
  */
 
-import { MARK_ACCENT, MARK_PATH, MARK_SUBPATHS, MARK_VIEWBOX } from '@kairos/core';
+import {
+  LOCKUP_ASPECT,
+  LOCKUP_VIEWBOX,
+  MARK_ACCENT,
+  MARK_PATH,
+  MARK_SUBPATHS,
+  MARK_VIEWBOX,
+  WORDMARK_LETTERS,
+} from '@kairos/core';
 
 /**
  * The mark.
@@ -81,7 +90,76 @@ export function KharisMark({
   );
 }
 
-/** The mark inside a purple rounded square — the brand lockup */
+/**
+ * The horizontal lockup: the mark with "haris" set beside it.
+ *
+ * This is the logo. Reach for it anywhere the product has to name itself —
+ * headers, the landing nav, anywhere "iKharis" was previously set as text
+ * next to an icon. The lettering is outlined vector from the same Figma
+ * board as the mark, so it never waits on a webfont and never reflows the
+ * hand-tuned spacing between the K and the h.
+ *
+ * Sized by HEIGHT, not by a single `size`, because a lockup is nearly 3:1 and
+ * what a header actually needs to control is how tall it sits. The width
+ * follows from the artwork.
+ *
+ * The `i` dot keeps its gold on both light and dark grounds — gold reads on
+ * either, and it is the one accent in the identity. `tone="mono"` drops it
+ * into currentColor for the cases that need a true single colour: on the
+ * purple tile, and at sizes where a two-pixel gold speck is just dirt.
+ */
+export function KharisLogo({
+  height = 28,
+  className,
+  draw = false,
+  tone = 'brand',
+}: {
+  height?: number;
+  className?: string;
+  draw?: boolean;
+  tone?: 'brand' | 'mono';
+}) {
+  return (
+    <svg
+      viewBox={LOCKUP_VIEWBOX}
+      width={height * LOCKUP_ASPECT}
+      height={height}
+      fill="none"
+      role="img"
+      aria-label="iKharis"
+      className={draw ? `mark-draw ${className ?? ''}` : className}
+    >
+      {MARK_SUBPATHS.map((sub, i) => (
+        <path
+          key={i}
+          className="mark-fill"
+          d={sub.d}
+          fill={sub.role === 'accent' && tone === 'brand' ? MARK_ACCENT : 'currentColor'}
+        />
+      ))}
+      {WORDMARK_LETTERS.map((letter) => (
+        <path key={letter.letter} className="wordmark-fill" d={letter.d} fill="currentColor" />
+      ))}
+      {draw ? (
+        // The mark inks itself; the name is never drawn, only faded in after.
+        // See MARK_PATH's note in @kairos/core for why the stroke is in user
+        // units. 5 is the same ratio as the standalone mark, because the
+        // lockup's viewBox shares the mark's coordinate space exactly.
+        <path
+          className="mark-stroke"
+          d={MARK_PATH}
+          stroke="currentColor"
+          strokeWidth={5}
+          strokeLinejoin="round"
+          pathLength={1}
+          strokeDasharray={1}
+        />
+      ) : null}
+    </svg>
+  );
+}
+
+/** The mark inside a purple rounded square — for square slots (app icon, avatars) */
 export function KharisLogoIcon({ size = 40, draw = false }: { size?: number; draw?: boolean }) {
   return (
     <div
@@ -94,14 +172,19 @@ export function KharisLogoIcon({ size = 40, draw = false }: { size?: number; dra
   );
 }
 
-/** Mark + "Kharis Church" — used above card headings */
+/**
+ * The heading block above an auth card.
+ *
+ * It used to carry a muted mark and "Kharis Church" above the heading. That
+ * row went: the auth shell already shows the full lockup — in the brand
+ * column at xl, and directly above the card below it — so the card was
+ * branding itself a second time, in a third treatment, a few pixels under the
+ * real one. Removing it also lets the heading be the first thing read, which
+ * is what the page is actually for.
+ */
 export function KharisCardHeader({ heading, subtitle }: { heading: React.ReactNode; subtitle: React.ReactNode }) {
   return (
     <div className="px-1 text-center">
-      <div className="mb-4 flex items-center justify-center gap-2">
-        <KharisMark size={22} className="text-gray-900/80 dark:text-white/80" tone="mono" />
-        <span className="text-sm font-medium text-muted-foreground">Kharis Church</span>
-      </div>
       <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
       <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
     </div>

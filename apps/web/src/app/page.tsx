@@ -33,6 +33,7 @@ import { FloatCard } from "@/components/motion/float-card";
 import { Spotlight } from "@/components/motion/spotlight";
 import { Halo } from "@/components/motion/halo";
 import { Assemble } from "@/components/motion/assemble";
+import { KharisLogo } from "@/app/(auth)/kharis-logo";
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 // Six shipped capabilities. Donations + Notifications deliberately left off
@@ -147,8 +148,11 @@ export default function KairosLanding() {
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/85 dark:bg-[#0d0d0d]/85 backdrop-blur-xl border-b border-black/[0.07] dark:border-white/[0.07]">
         <div className="flex items-center justify-between px-6 md:px-16 py-4 md:py-5">
-          <Link href="/" className="font-black text-xl tracking-tighter transition-opacity hover:opacity-80">
-            <span className="text-[#f8b537]">K</span>AIROS
+          <Link
+            href="/"
+            className="flex items-center text-[#5D3FD3] transition-opacity hover:opacity-80 dark:text-white"
+          >
+            <KharisLogo height={30} />
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm text-black/55 dark:text-white/55">
             <a href="#why" className="hover:text-black dark:hover:text-white transition-colors">Why iKharis</a>

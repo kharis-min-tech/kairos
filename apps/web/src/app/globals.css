@@ -230,6 +230,12 @@
   .mark-draw .mark-fill {
     animation: mark-fill-in 420ms ease-out 980ms both;
   }
+  /* The lockup's lettering lands a beat after the mark has filled, so the
+     logo resolves as mark-then-name rather than all at once. The letters are
+     never drawn — see WORDMARK_LETTERS in @kairos/core for why. */
+  .mark-draw .wordmark-fill {
+    animation: mark-fill-in 420ms ease-out 1180ms both;
+  }
 }
 
 @keyframes mark-draw {
