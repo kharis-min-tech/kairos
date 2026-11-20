@@ -395,7 +395,26 @@
     pointer-events: none;
   }
 
+  /* 8c · shooting stars
+   *
+   * The container travels; the trail inside it is rotated to point back along
+   * the path so the bright end stays at the head. transform-origin pins the
+   * rotation to that head, otherwise the bar swings about its middle and the
+   * trail ends up half in front of the star.
+   */
+  .mo-star {
+    will-change: transform, opacity;
+    opacity: 0;
+  }
+  .mo-star-trail {
+    height: 2px;
+    border-radius: 9999px;
+    transform: rotate(-45deg);
+    transform-origin: left center;
+  }
+
   /* Off-screen / hidden-tab pause (set from JS) */
+  [data-paused='true'] .mo-star,
   [data-paused='true'] .mo-beacon,
   [data-paused='true'] .mo-beacon-glow,
   [data-paused='true'] .mo-drift,
@@ -446,6 +465,18 @@
 @keyframes mo-spin {
   to { transform: translate(-50%, -50%) rotate(360deg); }
 }
+@keyframes mo-star-shoot {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  8% { opacity: 1; }
+  72% { opacity: 1; }
+  100% {
+    transform: translate3d(calc(var(--star-travel) * -1), var(--star-travel), 0);
+    opacity: 0;
+  }
+}
 @keyframes mo-beacon-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
@@ -456,6 +487,11 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .mo-star {
+    animation-name: mo-star-shoot;
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.3, 1);
+    animation-iteration-count: infinite;
+  }
   .mo-beacon {
     animation: mo-beacon-float 4200ms ease-in-out infinite;
   }
