@@ -319,9 +319,22 @@ export default function KairosLanding() {
                 <ArrowUpRight className="h-4 w-4" />
               </Link>
             </Halo>
+            {/*
+              The pilot call, aimed at branch pastors and leaders rather than
+              at members. It sits beside Get Started rather than replacing it
+              because the two go to different people: Get Started is for
+              somebody with an account, this is for a branch deciding whether
+              to have one at all.
+            */}
+            <Link
+              href="/register-interest"
+              className="mo-lift [--lift-rot:1deg] inline-flex h-12 items-center gap-2 rounded-full border border-black/10 bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:border-white/10 dark:bg-[#0d0d0d] dark:text-white"
+            >
+              Register Interest
+            </Link>
             <a
               href="#features"
-              className="mo-lift [--lift-rot:1deg] inline-flex h-12 items-center rounded-full border border-black/10 bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:border-white/10 dark:bg-[#0d0d0d] dark:text-white"
+              className="mo-lift [--lift-rot:1deg] hidden h-12 items-center rounded-full border border-black/10 bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] sm:inline-flex dark:border-white/10 dark:bg-[#0d0d0d] dark:text-white"
             >
               Explore Features
             </a>

@@ -1,0 +1,93 @@
+import { z } from 'zod';
+import {
+  PILOT_EMAIL_MAX,
+  PILOT_INTEREST_STATUS_VALUES,
+  PILOT_NAME_MAX,
+  PILOT_REQUIREMENTS,
+  PILOT_ROLE_VALUES,
+} from '@kairos/types';
+
+/**
+ * Every commitment must be ticked, enforced from the shared list.
+ *
+ * Written as a derivation rather than six literals so that adding a
+ * requirement to `PILOT_REQUIREMENTS` cannot leave the API accepting a
+ * submission that never agreed to it. The page renders the same array.
+ *
+ * `z.literal(true)` rather than `z.boolean()`: an unticked box is not a valid
+ * submission, and rejecting it here means the stored row can never contain a
+ * false. The point of the form is that nobody volunteers without having read
+ * what the plan asks of them.
+ */
+const acknowledgements = z.object(
+  Object.fromEntries(
+    PILOT_REQUIREMENTS.map((r) => [
+      r.key,
+      z.literal(true, {
+        errorMap: () => ({ message: `Please confirm: ${r.title}` }),
+      }),
+    ]),
+  ) as Record<(typeof PILOT_REQUIREMENTS)[number]['key'], z.ZodLiteral<true>>,
+);
+
+export const submitPilotInterestSchema = z
+  .object({
+    fullName: z.string().trim().min(1, 'Your name is required').max(PILOT_NAME_MAX),
+    roleAtBranch: z.enum(PILOT_ROLE_VALUES),
+    roleOther: z.string().trim().max(120).optional(),
+    email: z.string().trim().email('A valid email address is required').max(PILOT_EMAIL_MAX),
+    phone: z.string().trim().max(40).optional(),
+
+    // The branch may not be seeded yet, so the name is required and the id is
+    // not. Sending an id that does not resolve is not an error either: the
+    // name is what gets stored.
+    branchId: z.string().uuid().optional(),
+    branchName: z.string().trim().min(1, 'Please name your branch').max(PILOT_NAME_MAX),
+    fellowshipCount: z.coerce.number().int().min(0).max(500).optional(),
+    departmentCount: z.coerce.number().int().min(0).max(500).optional(),
+    approxMembers: z.coerce.number().int().min(0).max(100000).optional(),
+
+    headOfAdminName: z.string().trim().max(PILOT_NAME_MAX).optional(),
+    headOfAdminEmail: z.string().trim().email().max(PILOT_EMAIL_MAX).optional().or(z.literal('')),
+    safeguardingLeadInPost: z.boolean(),
+    safeguardingLeadName: z.string().trim().max(PILOT_NAME_MAX).optional(),
+    earliestStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD').optional(),
+
+    acknowledgements,
+
+    whyThisBranch: z.string().trim().max(4000).optional(),
+    notes: z.string().trim().max(4000).optional(),
+  })
+  .superRefine((v, ctx) => {
+    // 'other' without saying what leaves the admin queue guessing who wrote in.
+    if (v.roleAtBranch === 'other' && !v.roleOther?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['roleOther'],
+        message: 'Please say what your role at the branch is',
+      });
+    }
+    // The plan wants a safeguarding lead "already in post", so claiming one
+    // has to come with a name. Saying there is none is a perfectly valid
+    // answer and is left alone.
+    if (v.safeguardingLeadInPost && !v.safeguardingLeadName?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['safeguardingLeadName'],
+        message: 'Please name your safeguarding lead',
+      });
+    }
+  });
+
+export type SubmitPilotInterestInput = z.infer<typeof submitPilotInterestSchema>;
+
+export const listPilotInterestSchema = z.object({
+  status: z.enum(PILOT_INTEREST_STATUS_VALUES).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export const updatePilotInterestSchema = z.object({
+  status: z.enum(PILOT_INTEREST_STATUS_VALUES),
+  reviewNotes: z.string().trim().max(4000).optional(),
+});

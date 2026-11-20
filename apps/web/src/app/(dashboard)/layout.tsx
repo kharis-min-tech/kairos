@@ -119,6 +119,12 @@ const navItems: NavItem[] = [
     capability: 'giftaid:admin',
     section: 'Organisation',
   },
+  {
+    href: '/admin/pilot-interest',
+    label: 'Pilot interest',
+    adminOnly: true,
+    section: 'Organisation',
+  },
   { href: '/admin/branches', label: 'Branches', adminOnly: true, section: 'Organisation' },
   { href: '/admin/regions', label: 'Regions', adminOnly: true, section: 'Organisation' },
   { href: '/admin/oauth-clients', label: 'Connected apps', adminOnly: true, section: 'Organisation' },

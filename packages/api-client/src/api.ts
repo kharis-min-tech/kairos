@@ -187,6 +187,9 @@ import type {
   PublicGiftAidDeclarationRequest,
   RecordGiftAidWithdrawalRequest,
   GiftAidDeclarationTextResponse,
+  PilotRequirementsResponse,
+  SubmitPilotInterestRequest,
+  PilotInterestListResponse,
   GiftAidListParams,
   GiftAidRegisterRow,
   GiftAidStatus,
@@ -1866,6 +1869,45 @@ export function createApiClient(
         const query = qs.toString();
         return client.getBlob(`/api/gift-aid/register.csv${query ? `?${query}` : ''}`);
       },
+    },
+
+    /**
+     * The pilot sign-up: a branch putting itself forward to go first.
+     *
+     * `submit` and `requirements` take no token. Everyone the form serves is
+     * a branch leader answering before anyone at their branch has an account,
+     * which is the whole ordering of the rollout.
+     */
+    pilotInterest: {
+      requirements: () =>
+        client.get<ApiResponse<PilotRequirementsResponse>>(
+          '/api/public/pilot-interest/requirements',
+        ),
+
+      submit: (data: SubmitPilotInterestRequest) =>
+        client.post<ApiResponse<{ id: string; submittedAt: string }>>(
+          '/api/public/pilot-interest',
+          data,
+        ),
+
+      // ── Admin (platform admin) ──
+
+      list: (params?: { status?: string; limit?: number; offset?: number }) => {
+        const qs = new URLSearchParams();
+        if (params?.status) qs.set('status', params.status);
+        if (params?.limit) qs.set('limit', String(params.limit));
+        if (params?.offset) qs.set('offset', String(params.offset));
+        const q = qs.toString();
+        return client.get<ApiResponse<PilotInterestListResponse>>(
+          `/api/pilot-interest${q ? `?${q}` : ''}`,
+        );
+      },
+
+      update: (id: string, data: { status: string; reviewNotes?: string }) =>
+        client.patch<ApiResponse<{ id: string; status: string }>>(
+          `/api/pilot-interest/${id}`,
+          data,
+        ),
     },
   };
 }

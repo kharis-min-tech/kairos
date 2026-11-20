@@ -21,6 +21,7 @@ import { formsRouter } from './forms/router';
 import { attendanceRouter } from './attendance/router';
 import { mediaRouter } from './media/router';
 import { giftAidRouter, publicGiftAidRouter } from './gift-aid/router';
+import { pilotInterestRouter, publicPilotInterestRouter } from './pilot-interest/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -70,6 +71,10 @@ export function createApp() {
   // policy acceptance.
   app.route('/api/public/gift-aid', publicGiftAidRouter);
 
+  // The pilot sign-up, for the same reason: every branch leader answering it
+  // is doing so before anyone at their branch has an account.
+  app.route('/api/public/pilot-interest', publicPilotInterestRouter);
+
   // Consent gate — 403s any /api/* request from a user who owes a required
   // policy acceptance (with an allowlist for the consent flow + GDPR
   // escape hatches). Client-side, the dashboard layout also redirects to
@@ -82,6 +87,7 @@ export function createApp() {
   // Kairos as an OAuth2 / OIDC authorization server (Better-Auth Phase 2).
   app.route('/api/oauth', oauthServerRouter);
   app.route('/api/branches', branchesRouter);
+  app.route('/api/pilot-interest', pilotInterestRouter);
   app.route('/api/members', membersRouter);
   app.route('/api/fellowships', fellowshipsRouter);
   app.route('/api/departments', departmentsRouter);
