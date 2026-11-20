@@ -53,7 +53,7 @@ jest.mock('lucide-react-native', () => {
 });
 
 jest.mock('@/lib/api-client', () => ({ api: { auth: { forgotPassword: jest.fn() } } }));
-jest.mock('@/components/kharis-dove', () => ({ KharisDove: () => null }));
+jest.mock('@/components/kharis-mark', () => ({ KharisMark: () => null }));
 jest.mock('@/store/auth', () => ({
   useAuthStore: (sel: (s: unknown) => unknown) => sel({ clearSession: jest.fn() }),
 }));

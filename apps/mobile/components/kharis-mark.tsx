@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Animated, Easing } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { DOVE_SUBPATHS, DOVE_VIEWBOX } from '@kairos/core';
+import { MARK_ACCENT, MARK_SUBPATHS, MARK_VIEWBOX } from '@kairos/core';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 /**
- * The Kharis dove.
+ * The iKharis mark — the iK monogram with its dove-inspired wing.
  *
- * Same six paths as web, out of @kairos/core. With `draw`, the outline
+ * Same three paths as web, out of @kairos/core. With `draw`, each outline
  * strokes itself in once on mount and the fill arrives behind it — one brand
  * beat, never a loop.
  *
@@ -16,11 +16,12 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
  * the native driver only takes transforms and opacity. That is acceptable for
  * a single 900ms run on mount; it would not be for anything that repeated.
  */
-export function KharisDove({
+export function KharisMark({
   size = 40,
   color = '#ffffff',
   draw = false,
   drawDelay = 220,
+  tone = 'mono',
 }: {
   size?: number;
   color?: string;
@@ -31,6 +32,12 @@ export function KharisDove({
    * while the mark is invisible and nobody sees it.
    */
   drawDelay?: number;
+  /**
+   * `brand` gives the `i` dot its gold. `mono` paints every shape in `color`,
+   * which is what the purple tile wants — the icon sheet draws the mark solid
+   * white there, and gold on purple is muddy.
+   */
+  tone?: 'brand' | 'mono';
 }) {
   const progress = useRef(new Animated.Value(draw ? 0 : 1)).current;
   const fill = useRef(new Animated.Value(draw ? 0 : 1)).current;
@@ -70,24 +77,27 @@ export function KharisDove({
   }, [draw, drawDelay, progress, fill]);
 
   return (
-    <Svg width={size} height={size} viewBox={DOVE_VIEWBOX}>
-      <AnimatedPath
-        d={DOVE_SUBPATHS.map((s) => s.d).join('')}
-        fill={color}
-        fillRule="evenodd"
-        opacity={fill}
-      />
+    <Svg width={size} height={size} viewBox={MARK_VIEWBOX}>
+      {MARK_SUBPATHS.map((sub, i) => (
+        <AnimatedPath
+          key={i}
+          d={sub.d}
+          fill={sub.role === 'accent' && tone === 'brand' ? MARK_ACCENT : color}
+          opacity={fill}
+        />
+      ))}
       {draw
-        ? DOVE_SUBPATHS.map((sub, i) => (
+        ? MARK_SUBPATHS.map((sub, i) => (
             <AnimatedPath
-              key={i}
+              key={`stroke-${i}`}
               d={sub.d}
               fill="none"
               stroke={color}
-              strokeWidth={4}
+              // Scaled to this mark's 143.4 viewBox, where the dove's was 331.9.
+              strokeWidth={2}
               strokeLinejoin="round"
-              // Each subpath carries its own length, so the short olive-branch
-              // strokes and the long wing outline finish together.
+              // Each subpath carries its own length, so the small dot and the
+              // long wing outline finish together.
               strokeDasharray={[sub.length, sub.length * 2]}
               strokeDashoffset={progress.interpolate({
                 inputRange: [0, 1],

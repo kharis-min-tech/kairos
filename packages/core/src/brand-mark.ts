@@ -1,20 +1,49 @@
 /**
- * The Kharis dove, as vector.
+ * The iKharis mark, as vector.
  *
- * The mark only ever existed as a 344px PNG, which meant it could never be
- * sharp on a retina display and could never be animated. This is that same
- * artwork traced to paths, so both clients draw one identical dove.
+ * One monogram carrying three things at once: a dove-inspired wing, the
+ * lowercase `i` of iKharis, and the uppercase `K` of Kharis. Both clients draw
+ * from these constants so web and mobile are never a redraw apart.
  *
- * It is line art, so the six subpaths are the two edges of each ribbon of the
- * drawing. Fill them with the even-odd rule and you get the logo back exactly;
- * stroke them and you get a pen that can draw it.
+ * ── Variant B, "simplified premium" ───────────────────────────────────────
+ *
+ * Taken from the `iKharis Logo` Figma file's identity review, column B:
+ * shorter wing projection, a unified K contour, fewer separate shapes. The
+ * geometry is Figma's, untouched; only the fills were brought to Modern
+ * Sanctuary. The file's own purple (#6417B8) and gold (#B17A25) are flagged
+ * there as reference-derived and awaiting confirmation against the official
+ * Kharis brand specification, so the app's palette stays the source of truth
+ * and the mark comes to it rather than the reverse.
+ *
+ * ── Why this replaced the dove ────────────────────────────────────────────
+ *
+ * The previous mark was line art: six subpaths tracing the two edges of each
+ * ribbon of a dove, which is why stroking them read as a pen drawing it. This
+ * mark is solid shapes, so a stroke traces each silhouette instead. The draw
+ * still works and still runs once, but it is an outline being inked rather
+ * than a line being followed — a deliberate change in character, not a bug.
  */
 
-/** Square, origin at 0 — the art is centred inside it. */
-export const DOVE_VIEWBOX_SIZE = 331.9;
-export const DOVE_VIEWBOX = `0 0 331.9 331.9`;
+/**
+ * Square, so `size` can set width and height on every call site without
+ * squashing the art.
+ *
+ * The artwork is 143.401 wide by 125 tall. Rather than wrap it in a transform
+ * — which react-native-svg and the web would each need handling for — the
+ * viewBox starts 9.2005 units ABOVE the art and is as tall as it is wide. The
+ * art then sits centred in a square viewport as pure data, with no group node
+ * and nothing for a consumer to get wrong.
+ */
+export const MARK_WIDTH = 143.401;
+export const MARK_HEIGHT = 125;
+export const MARK_VIEWBOX_SIZE = MARK_WIDTH;
+const MARK_Y_OFFSET = (MARK_WIDTH - MARK_HEIGHT) / 2; // 9.2005
+export const MARK_VIEWBOX = `0 ${-MARK_Y_OFFSET} ${MARK_WIDTH} ${MARK_WIDTH}`;
 
-export interface DoveSubpath {
+/** The gold of the `i` dot. Modern Sanctuary's accent, not Figma's #B17A25. */
+export const MARK_ACCENT = '#f8b537';
+
+export interface MarkSubpath {
   d: string;
   /**
    * Its own perimeter in viewBox units. SVG dash patterns are per-subpath, so
@@ -23,16 +52,76 @@ export interface DoveSubpath {
    * not.
    */
   length: number;
+  /**
+   * `brand` inherits `currentColor`, so the mark can be purple on light, white
+   * inside the gradient tile, or black in a single-colour proof without
+   * knowing which. `accent` is the gold dot, and is the one part that carries
+   * its own colour — callers that need a true one-colour mark (small sizes,
+   * mono proofs, the reversed tile) render it in `currentColor` too.
+   */
+  role: 'brand' | 'accent';
 }
 
-export const DOVE_SUBPATHS: readonly DoveSubpath[] = [
-  { length: 1727, d: 'M22.0 10.2L35.5 11.1L78.5 24.6L149.5 37.1L158.7 42.2L171.3 69.2L177.5 75.7L180.5 76.8L185.5 74.6L194.5 63.8L203.5 60.6L215.1 42.2L225.5 36.1L266.5 31.6L312.5 22.8L324.5 22.8L329.5 24.8L331.9 30.2L328.7 41.2L325.5 45.1L324.1 43.2L325.9 36.2L323.5 32.8L319.5 30.8L308.5 30.8L278.5 37.6L226.5 43.1L214.0 49.2L207.9 60.2L208.5 62.6L213.7 66.2L217.0 75.2L215.7 88.2L210.3 100.2L210.5 103.7L228.1 105.2L228.7 111.2L224.7 117.2L230.5 117.1L238.5 121.0L255.5 139.4L263.5 143.4L267.5 143.3L278.5 125.3L287.7 122.2L291.5 117.0L293.9 118.2L293.7 123.2L290.5 129.5L280.5 132.9L271.0 148.2L265.5 152.6L260.5 152.4L252.5 148.4L235.5 130.8L226.5 126.3L225.0 129.2L225.7 147.2L215.1 169.2L224.1 183.2L235.5 194.7L250.5 205.4L272.5 217.0L278.5 221.8L280.7 225.2L281.0 230.2L277.9 238.2L259.2 247.2L258.3 243.2L261.5 238.0L272.3 231.2L272.4 229.2L247.5 215.4L235.5 206.7L227.1 199.2L209.5 177.8L198.3 191.2L195.7 204.2L193.5 208.3L191.5 208.2L192.1 199.2L195.2 190.2L220.7 151.2L221.9 145.2L219.4 131.2L223.2 120.2L221.5 120.0L214.5 125.1L214.3 121.2L217.5 113.2L216.5 111.6L212.5 112.1L204.1 118.2L197.7 133.2L190.5 142.4L189.1 140.2L190.6 130.2L189.5 128.3L178.2 136.2L174.2 148.2L167.5 157.9L166.0 154.2L167.5 143.8L161.5 144.6L157.5 141.8L150.6 141.2L152.5 138.0L161.5 134.1L169.5 133.8L173.5 135.6L176.5 134.6L183.3 128.2L173.6 125.2L174.0 123.2L179.5 120.0L185.5 117.8L195.5 119.3L198.5 117.7L199.4 105.2L201.5 104.8L202.5 108.2L204.5 108.2L211.9 89.2L211.7 80.2L206.7 72.2L201.5 69.8L196.5 70.1L191.0 73.2L182.5 83.4L174.5 84.4L166.3 76.2L156.7 53.2L147.5 46.0L124.5 39.8L69.5 30.4L27.5 17.8L19.5 16.8L8.5 20.3L8.1 18.2L12.2 13.2L22.0 10.2Z' },
-  { length: 574, d: 'M45.4 97.2L48.5 106.7L64.5 116.8L75.2 130.2L86.5 136.4L132.5 155.0L140.5 161.0L143.9 170.2L140.8 182.2L132.8 193.2L117.5 203.5L76.5 222.0L62.3 232.2L61.3 237.2L66.5 245.5L80.5 260.7L85.8 262.2L85.7 266.2L81.5 271.6L73.0 268.2L59.4 251.2L57.1 244.2L57.0 237.2L60.3 228.2L68.0 219.2L75.5 214.0L116.5 196.5L128.5 189.4L137.5 180.4L138.9 174.2L127.5 163.1L82.5 145.4L68.5 137.7L61.0 126.2L47.5 118.4L43.3 114.2L41.4 108.2L45.4 97.2Z' },
-  { length: 509, d: 'M146.9 241.2L148.6 243.2L146.0 256.2L146.0 298.2L147.4 308.2L153.5 310.3L167.5 307.8L174.5 307.8L185.5 310.8L191.7 309.2L192.9 306.2L189.1 291.2L187.0 274.2L189.3 263.2L191.5 261.4L193.0 264.2L193.1 282.2L197.9 297.2L198.0 306.2L194.7 315.2L189.5 320.4L183.5 321.6L164.5 317.8L151.5 320.8L145.3 318.2L141.1 305.2L142.0 281.2L140.5 279.0L135.3 284.2L127.7 303.2L122.5 307.4L114.5 307.4L110.5 303.2L106.1 301.2L102.5 295.3L94.5 295.4L88.4 292.2L87.1 284.2L90.5 276.9L93.2 283.2L100.5 285.6L105.5 285.1L109.5 290.5L113.5 291.6L118.5 297.4L126.5 296.2L132.4 282.2L141.6 268.2L143.1 250.2L146.9 241.2Z' },
-  { length: 165, d: 'M257.3 261.2L259.5 261.1L259.7 264.2L248.9 283.2L241.5 289.4L232.5 289.6L228.7 303.2L224.8 309.2L220.5 310.4L216.3 308.2L214.0 302.2L216.5 297.0L218.5 296.3L223.5 299.6L226.7 296.2L227.0 278.2L228.5 274.0L231.5 273.0L237.5 279.4L243.5 279.4L248.5 275.5L257.3 261.2Z' },
-  { length: 164, d: 'M2.0 39.2L6.3 48.2L14.7 58.2L17.3 69.2L20.3 74.2L25.5 77.4L49.5 84.3L50.6 87.2L46.5 94.8L42.5 91.1L22.5 86.4L16.1 82.2L8.7 64.2L1.3 55.2L0.0 44.2L2.0 39.2Z' },
-  { length: 102, d: 'M322.4 62.2L323.3 64.2L321.5 69.5L310.6 78.2L314.0 83.2L311.7 90.2L306.8 96.2L298.5 100.3L297.4 98.2L298.4 94.2L304.0 89.2L302.3 85.2L305.3 75.2L322.4 62.2Z' },
+/** Wing-and-K, the `i` stem, then the dot — back to front, so the dot lands on top. */
+export const MARK_SUBPATHS: readonly MarkSubpath[] = [
+  {
+    role: 'brand',
+    length: 633.78,
+    d: 'M0 0C15.8629 10.7868 32.3604 10.7868 50.1269 13.9594C73.6041 17.7665 86.9289 24.7462 86.2944 42.5127C100.888 19.6701 123.096 17.7665 143.401 28.5533C126.269 27.2843 119.289 38.7056 110.406 53.934C101.523 69.1624 89.467 79.3147 78.0457 86.9289C98.3503 77.4112 114.213 104.061 142.132 125H113.579C97.0812 125 84.3909 105.964 73.6041 97.7157C68.5279 106.599 65.9899 115.482 64.0863 125V102.157C64.0863 85.6599 73.6041 72.335 79.9492 58.3756C88.8325 38.7056 73.6041 38.7056 52.0305 38.7056C23.4772 39.3401 7.61421 31.0914 0 0Z',
+  },
+  {
+    role: 'brand',
+    length: 145.51,
+    d: 'M56.4721 71.066V125H32.3604V92.6396C32.3604 81.2183 42.5127 74.2386 56.4721 71.066Z',
+  },
+  {
+    role: 'accent',
+    length: 59.81,
+    d: 'M48.2234 66.6244C53.4799 66.6244 57.7411 62.3631 57.7411 57.1066C57.7411 51.8501 53.4799 47.5888 48.2234 47.5888C42.9668 47.5888 38.7056 51.8501 38.7056 57.1066C38.7056 62.3631 42.9668 66.6244 48.2234 66.6244Z',
+  },
 ];
 
-/** All six subpaths as one `d`, for a single filled path. */
-export const DOVE_PATH = DOVE_SUBPATHS.map((s) => s.d).join('');
+/** Every subpath as one `d`, for a single filled path in one colour. */
+export const MARK_PATH = MARK_SUBPATHS.map((s) => s.d).join('');
+
+/**
+ * The small-size master, for 16 and 32 px.
+ *
+ * Not a scaled copy. Below about 48px the primary mark loses the `i` against
+ * the K and the dot turns to mud, so Figma supplies separately drawn geometry
+ * on a 14-unit grid: the K's lower arm split into its own shape, the stem
+ * snapped to whole pixels, the dot opened out to a true 2px circle. It is
+ * single-colour by construction — there is no gold at this size, because a
+ * two-pixel gold dot is an artefact rather than an accent.
+ *
+ * Used for the favicon. Anything 48px or over takes `MARK_SUBPATHS`.
+ */
+export const MARK_SMALL_WIDTH = 14;
+export const MARK_SMALL_HEIGHT = 11.9839;
+const MARK_SMALL_Y_OFFSET = (MARK_SMALL_WIDTH - MARK_SMALL_HEIGHT) / 2;
+export const MARK_SMALL_VIEWBOX = `0 ${-MARK_SMALL_Y_OFFSET} ${MARK_SMALL_WIDTH} ${MARK_SMALL_WIDTH}`;
+
+export const MARK_SMALL_SUBPATHS: readonly MarkSubpath[] = [
+  {
+    role: 'brand',
+    length: 46.84,
+    d: 'M0 0C1.29839 1.41129 3.21774 1.75 5.19355 2.03226C7.45161 2.37097 9.42742 2.76613 9.42742 4.96774C10.4435 3.21774 12.1371 2.25806 14 3.27419C12.3065 3.21774 11.9113 4.74194 10.8952 6.26613C10.0484 7.56452 8.69355 8.46774 7.84677 9.48387C7.33871 10.2177 7.16935 11.121 6.8871 11.9677C6.83065 10.2742 6.94355 8.97581 7.79032 7.73387C8.69355 6.43548 8.97581 5.41935 8.01613 4.74194C6.8871 3.89516 4.62903 4.45968 2.82258 3.89516C1.01613 3.33065 0.33871 2.03226 0 0Z',
+  },
+  {
+    role: 'brand',
+    length: 13.86,
+    d: 'M7.56451 9.59677C8.52419 8.52419 9.48387 8.80644 10.5 9.54032C11.4597 10.2177 12.4194 11.3468 13.4355 11.9677H11.0081C9.42742 11.9677 8.80645 10.5564 7.56451 9.59677Z',
+  },
+  {
+    role: 'brand',
+    length: 11.18,
+    d: 'M6 7.98387V11.9839H4V9.48387C4 8.68387 5 8.23387 6 7.98387Z',
+  },
+  {
+    role: 'brand',
+    length: 6.28,
+    d: 'M5 6.98387C5.55228 6.98387 6 6.53616 6 5.98387C6 5.43159 5.55228 4.98387 5 4.98387C4.44772 4.98387 4 5.43159 4 5.98387C4 6.53616 4.44772 6.98387 5 6.98387Z',
+  },
+];
+
+export const MARK_SMALL_PATH = MARK_SMALL_SUBPATHS.map((s) => s.d).join('');
