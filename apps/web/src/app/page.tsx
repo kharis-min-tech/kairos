@@ -346,10 +346,9 @@ export default function KairosLanding() {
               >
                 <Link
                   href="/register-interest"
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:bg-[#0d0d0d] dark:text-white"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:bg-[#0d0d0d] dark:text-white"
                 >
                   Register Interest
-                  <Sparkles className="h-3.5 w-3.5 text-[#f8b537]" aria-hidden />
                 </Link>
               </Halo>
             </span>
