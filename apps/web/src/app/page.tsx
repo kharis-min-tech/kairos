@@ -326,12 +326,33 @@ export default function KairosLanding() {
               somebody with an account, this is for a branch deciding whether
               to have one at all.
             */}
-            <Link
-              href="/register-interest"
-              className="mo-lift [--lift-rot:1deg] inline-flex h-12 items-center gap-2 rounded-full border border-black/10 bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:border-white/10 dark:bg-[#0d0d0d] dark:text-white"
-            >
-              Register Interest
-            </Link>
+            {/*
+              Deliberately louder than Get Started beside it. That button is
+              for somebody who already has an account; this one is the ask of
+              the whole rollout, aimed at the handful of branch leaders who
+              can answer it, and it has to find them in a page this busy.
+
+              The glow sits outside the Halo rather than inside, because the
+              Halo clips its own contents to paint a 1.5px rim -- a blurred
+              element within it is cropped at the border and reads as a hard
+              edge instead of a bloom.
+            */}
+            <span className="mo-beacon relative inline-flex">
+              <span aria-hidden className="mo-beacon-glow" />
+              <Halo
+                radiusClass="rounded-full"
+                variant="purple"
+                className="mo-lift [--lift-rot:1deg] relative"
+              >
+                <Link
+                  href="/register-interest"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:bg-[#0d0d0d] dark:text-white"
+                >
+                  Register Interest
+                  <Sparkles className="h-3.5 w-3.5 text-[#f8b537]" aria-hidden />
+                </Link>
+              </Halo>
+            </span>
             <a
               href="#features"
               className="mo-lift [--lift-rot:1deg] hidden h-12 items-center rounded-full border border-black/10 bg-white px-[26px] text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] sm:inline-flex dark:border-white/10 dark:bg-[#0d0d0d] dark:text-white"
