@@ -1,11 +1,11 @@
 import { Animated, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients, radii } from '@kairos/ui-native';
-import { KharisDove } from '../kharis-dove';
+import { KharisMark } from '../kharis-mark';
 import { useEntrance } from './use-entrance';
 
 /**
- * The brand tile: the dove, drawn stroke by stroke inside the purple box, once.
+ * The brand tile: the iK mark, drawn shape by shape inside the purple box, once.
  * It enters with the rest of the screen, and the pen waits until the tile has
  * mostly faded in so the drawing is actually seen. It does not float or loop —
  * the drifting glow behind it is the only ambient motion.
@@ -28,13 +28,13 @@ export function CanvasLogo({
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <KharisDove size={Math.round(size * 0.62)} draw drawDelay={DOVE_DRAW_DELAY_MS} />
+      <KharisMark size={Math.round(size * 0.62)} draw drawDelay={MARK_DRAW_DELAY_MS} />
     </Animated.View>
   );
 }
 
 /** Entrance delay (300ms) plus most of its spring, plus the web's 220ms rest. */
-export const DOVE_DRAW_DELAY_MS = 900;
+export const MARK_DRAW_DELAY_MS = 900;
 
 const styles = StyleSheet.create({
   tile: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

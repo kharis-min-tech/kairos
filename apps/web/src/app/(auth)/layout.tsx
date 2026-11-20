@@ -1,5 +1,5 @@
 import { ThemeToggle } from '@/components/theme-toggle';
-import { KharisLogoIcon } from './kharis-logo';
+import { KharisLogo } from './kharis-logo';
 import { pickAuthVerse } from '@kairos/core';
 import { HandDrawn } from '@/components/motion/hand-drawn';
 import { Reveal } from '@/components/motion/reveal';
@@ -85,11 +85,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             it. shrink-0 keeps the column at its stated width instead of
             quietly compressing the verse. */}
         <div className="hidden w-[480px] shrink-0 flex-col justify-between p-10 xl:flex">
-          <div className="flex items-center gap-3">
-            <KharisLogoIcon size={40} draw />
-            <span className="text-lg font-bold uppercase tracking-widest text-gray-900 dark:text-white">
-              iKharis
-            </span>
+          {/* The lockup, not a tile beside the word set in the UI font — the
+              name is part of the artwork, with its own spacing.
+
+              Kept in a wrapper: a bare svg as a flex-column child stretches to
+              the column's 400px and then letterboxes itself, which centres the
+              logo instead of pinning it to the corner. */}
+          <div>
+            <KharisLogo height={40} draw className="text-[#5D3FD3] dark:text-white" />
           </div>
 
           <div className="space-y-8">
@@ -143,11 +146,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Content column. */}
         <div className="flex flex-1 items-center justify-center px-4 py-12">
           <Reveal className="w-full max-w-md space-y-6" delay={250} duration={1300}>
-            <div className="flex items-center justify-center gap-2 xl:hidden">
-              <KharisLogoIcon size={32} draw />
-              <span className="text-lg font-bold uppercase tracking-widest text-primary">
-                iKharis
-              </span>
+            <div className="flex justify-center xl:hidden">
+              <KharisLogo height={34} draw className="text-[#5D3FD3] dark:text-white" />
             </div>
             {children}
           </Reveal>

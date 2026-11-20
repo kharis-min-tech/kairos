@@ -216,30 +216,36 @@
  * slightly longer stroke buy it enough time to be read as a drawing without
  * turning it into an entrance.
  */
-.dove-stroke {
+.mark-stroke {
   opacity: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .dove-draw .dove-stroke {
+  .mark-draw .mark-stroke {
     opacity: 1;
     animation:
-      dove-draw 1100ms cubic-bezier(0.65, 0, 0.35, 1) 220ms both,
-      dove-stroke-out 260ms ease-out 1150ms both;
+      mark-draw 1100ms cubic-bezier(0.65, 0, 0.35, 1) 220ms both,
+      mark-stroke-out 260ms ease-out 1150ms both;
   }
-  .dove-draw .dove-fill {
-    animation: dove-fill-in 420ms ease-out 980ms both;
+  .mark-draw .mark-fill {
+    animation: mark-fill-in 420ms ease-out 980ms both;
+  }
+  /* The lockup's lettering lands a beat after the mark has filled, so the
+     logo resolves as mark-then-name rather than all at once. The letters are
+     never drawn — see WORDMARK_LETTERS in @kairos/core for why. */
+  .mark-draw .wordmark-fill {
+    animation: mark-fill-in 420ms ease-out 1180ms both;
   }
 }
 
-@keyframes dove-draw {
+@keyframes mark-draw {
   from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
 }
-@keyframes dove-stroke-out {
+@keyframes mark-stroke-out {
   to { opacity: 0; }
 }
-@keyframes dove-fill-in {
+@keyframes mark-fill-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }

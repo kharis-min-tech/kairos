@@ -12,6 +12,7 @@ import { cn } from '@kairos/ui';
 import type { Capability } from '@kairos/types';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberAvatar } from '@/components/member-avatar';
+import { KharisLogo } from '@/app/(auth)/kharis-logo';
 import { ConsentBanner } from '@/components/consent-banner';
 import { MfaSetupBanner } from '@/components/mfa-setup-banner';
 // RBAC Phase 5b: in-app role switcher removed. Users see all their grants
@@ -460,10 +461,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-full flex-col bg-white/80 backdrop-blur-[20px] dark:bg-[#0f0f12]/80">
       {/* Brand */}
       <Link href="/dashboard" className="flex items-center gap-3 px-6 py-5">
-        <img src="/logo.png" alt="Kharis Church" className="h-9 w-9 object-contain" />
+        {/* The lockup, not a bare PNG and not a tile beside the name in the UI
+            font. The sidebar is bg-white/80 in light mode and the mark is
+            white, so the old <img src="/logo.png"> was a white dove on a white
+            panel — visible only by its drop shadow. */}
         <div>
-          <p className="text-base font-bold leading-tight text-foreground">iKharis</p>
-          <p className="text-xs text-muted-foreground">Church Admin</p>
+          <KharisLogo height={26} className="text-[#5D3FD3] dark:text-white" />
+          <p className="mt-1 text-xs text-muted-foreground">Church Admin</p>
         </div>
       </Link>
 

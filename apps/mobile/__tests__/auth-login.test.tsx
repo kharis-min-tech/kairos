@@ -61,7 +61,7 @@ jest.mock('@/components/oauth-provider-icon', () => ({
   OAuthProviderIcon: () => null,
   OAUTH_PROVIDER_LABEL: { google: 'Google', microsoft: 'Microsoft', apple: 'Apple' },
 }));
-jest.mock('@/components/kharis-dove', () => ({ KharisDove: () => null }));
+jest.mock('@/components/kharis-mark', () => ({ KharisMark: () => null }));
 jest.mock('@/store/auth', () => ({
   useAuthStore: (sel: (s: unknown) => unknown) =>
     sel({ setSession: jest.fn(), signInWithBiometric: jest.fn() }),
