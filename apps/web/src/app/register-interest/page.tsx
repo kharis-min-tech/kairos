@@ -72,11 +72,6 @@ function Hero({ step }: { step: 'requirements' | 'form' }) {
           branch forward.
         </span>
       </h1>
-      <p className="mt-7 max-w-xl text-[17px] leading-[1.6] text-black/60 dark:text-white/55">
-        One branch runs fully on {BRAND_NAME} before the end of 2026, with every feature
-        switched on. The rest follow through 2027. Going first means shaping it for
-        everyone else — and doing the work while it is still rough.
-      </p>
     </header>
   );
 }
