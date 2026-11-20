@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react-native';
 import {
+  Button,
   Card,
   radii,
   spacing,
@@ -110,6 +111,7 @@ function ConsentCard({
 }) {
   const styles = useThemedStyles(makeStyles);
   const c = useColors();
+  const router = useRouter();
   return (
     <Card padding="md" style={{ gap: spacing.xs }}>
       <View style={styles.rowHead}>
@@ -130,9 +132,27 @@ function ConsentCard({
           : ''}
       </Text>
       {status.needsAccept ? (
-        <Text style={styles.needAccept}>
-          A newer version is available. Toggle to re-accept.
-        </Text>
+        // The switch above is disabled for required policies, so telling
+        // somebody to "toggle to re-accept" pointed them at a control they
+        // could not operate. Re-accepting a required policy means reading the
+        // new version, which is what the gate screen is for.
+        status.required ? (
+          <View style={{ gap: spacing.xs, marginTop: 4 }}>
+            <Text style={styles.needAccept}>
+              Version {status.currentVersion} is now current.
+            </Text>
+            <Button
+              label="Review and accept"
+              variant="primary"
+              size="sm"
+              onPress={() => router.push('/accept-policies')}
+            />
+          </View>
+        ) : (
+          <Text style={styles.needAccept}>
+            A newer version is available. Use the switch to re-accept.
+          </Text>
+        )
       ) : null}
     </Card>
   );

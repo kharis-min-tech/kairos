@@ -3,10 +3,10 @@ import { View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '@kairos/ui-native';
-import { registerAuthCallbacks } from '@/lib/api-client';
+import { api, registerAuthCallbacks } from '@/lib/api-client';
 import { useAuthStore } from '@/store/auth';
 import { useThemeStore } from '@/store/theme';
 import { AlertHost } from '@/components/alert-host';
@@ -73,6 +73,7 @@ export default function RootLayout() {
               `(tabs)/_layout.tsx` to avoid two bars stacked. */}
           {ready ? <PersistentTabBar /> : null}
           {ready ? <AuthGuard /> : null}
+          {ready ? <ConsentGuard /> : null}
           <AlertHost />
         </SafeAreaProvider>
       </ThemeProvider>
@@ -144,6 +145,68 @@ function AuthGuard() {
     if (top === '(auth)') return;
     router.replace('/(auth)/login');
   }, [accessToken, segments, router]);
+
+  return null;
+}
+
+/**
+ * Forces a signed-in caller onto `/accept-policies` while they have any
+ * REQUIRED consent outstanding. The mobile counterpart to the redirect in the
+ * web app's `(dashboard)/layout.tsx`.
+ *
+ * This exists because the API already enforces the same rule and mobile had no
+ * answer to it. `consentGateMiddleware` returns 403 CONSENT_REQUIRED for every
+ * `/api/*` route outside a short allowlist whenever a required consent is
+ * pending, so bumping a policy version used to leave every mobile screen
+ * failing with nowhere to go — and since the gate answers with `c.json`
+ * rather than by throwing, the API logs stayed clean while it happened.
+ * `privacy-consent.tsx` even promised a prompt "the next time you sign in"
+ * that was never built. This is that prompt.
+ *
+ * Deliberately a sibling of AuthGuard rather than logic inside it: the two
+ * answer different questions ("are you signed in" vs "may you proceed") and
+ * ordering matters. A caller with no token must reach the login screen, not a
+ * consent screen that cannot load its own query.
+ *
+ * The query is allowed to run only when there is a session AND the caller is
+ * past the earlier gates. `/api/me/consent` is itself allowlisted by the
+ * middleware, so this lookup still succeeds while everything else 403s.
+ */
+function ConsentGuard() {
+  const router = useRouter();
+  const segments = useSegments();
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const user = useAuthStore((s) => s.user);
+
+  const top = (segments as readonly string[])[0];
+  const onAuthRoute = top === '(auth)';
+  const onGate = top === 'accept-policies';
+
+  // Mirrors the web ordering: profile completion and approval are decided
+  // before consent, so we don't drag a half-onboarded caller through a policy
+  // screen they may not even need yet.
+  const pastEarlierGates =
+    !!accessToken &&
+    !!user &&
+    !user.mustCompleteProfile &&
+    user.approvalStatus === 'approved';
+
+  const { data } = useQuery({
+    queryKey: ['me', 'consent'],
+    queryFn: async () => (await api.me.consent.list()).data ?? { statuses: [] },
+    enabled: pastEarlierGates && !onAuthRoute,
+  });
+
+  const pendingCount = (data?.statuses ?? []).filter(
+    (s) => s.required && s.needsAccept,
+  ).length;
+
+  useEffect(() => {
+    if (!pastEarlierGates) return;
+    if (onAuthRoute || onGate) return;
+    if (pendingCount === 0) return;
+    router.replace('/accept-policies');
+  }, [pastEarlierGates, onAuthRoute, onGate, pendingCount, router]);
 
   return null;
 }
