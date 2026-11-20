@@ -75,18 +75,19 @@ describe('getCurrentConsentVersions', () => {
    * only record of which words a member agreed to, so a change to it must be
    * deliberate and visible in a diff rather than absorbed silently.
    *
-   * 2026-11-v2 is the rebrand: the terms, privacy notice, acceptable use
-   * policy and confidentiality undertaking all had their text rewritten from
-   * Kairos to iKharis. Marketing stays at 1.0 because its copy never named
-   * the product, so there is nothing new to ask anybody.
+   * These sit at 2026-07-v1 even though the rebrand rewrote the policy text,
+   * because bumping them 403s every mobile member out of the app: the consent
+   * gate refuses every route and mobile has no screen to accept on. See the
+   * comment on getCurrentConsentVersions. When the mobile gate lands, this
+   * test and those defaults move to 2026-11-v2 together.
    */
   it('defaults to the current published version for terms + privacy + acceptable use + admin confidentiality, and 1.0 for marketing', () => {
     expect(getCurrentConsentVersions()).toEqual({
-      terms: '2026-11-v2',
-      privacy: '2026-11-v2',
+      terms: '2026-07-v1',
+      privacy: '2026-07-v1',
       marketing: '1.0',
-      acceptable_use: '2026-11-v2',
-      admin_confidentiality: '2026-11-v2',
+      acceptable_use: '2026-07-v1',
+      admin_confidentiality: '2026-07-v1',
     });
   });
 
@@ -101,7 +102,7 @@ describe('getCurrentConsentVersions', () => {
     expect(versions.acceptable_use).toBe('2027-01');
     expect(versions.admin_confidentiality).toBe('2027-02');
     // privacy falls back to its published default when the env var is unset
-    expect(versions.privacy).toBe('2026-11-v2');
+    expect(versions.privacy).toBe('2026-07-v1');
   });
 });
 
