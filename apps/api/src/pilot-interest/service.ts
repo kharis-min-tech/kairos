@@ -58,8 +58,8 @@ export async function submitPilotInterest(
 
       branchId,
       branchName: input.branchName.trim(),
-      fellowshipCount: input.fellowshipCount ?? null,
-      departmentCount: input.departmentCount ?? null,
+      fellowshipCount: input.fellowshipCount,
+      departmentCount: input.departmentCount,
       approxMembers: input.approxMembers ?? null,
 
       headOfAdminName: blankToNull(input.headOfAdminName),

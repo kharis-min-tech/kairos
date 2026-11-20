@@ -188,6 +188,22 @@ const field =
 const label =
   'mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-black/50 dark:text-white/45';
 
+/**
+ * The required marker.
+ *
+ * aria-hidden because the asterisk is for sighted readers only: the input
+ * itself carries `required`, which is what a screen reader announces. Reading
+ * out "star" on top of that is noise, and an asterisk with no explanation is
+ * meaningless anyway -- hence the legend above the form.
+ */
+function Req() {
+  return (
+    <span aria-hidden className="ml-1 text-[#f8b537]">
+      *
+    </span>
+  );
+}
+
 function InterestForm({
   acks,
   onBack,
@@ -266,18 +282,22 @@ function InterestForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-10">
+      <p className="text-[13px] text-black/45 dark:text-white/40">
+        Fields marked <span className="text-[#f8b537]">*</span> are required.
+      </p>
+
       <section className="space-y-5">
         <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
           You
         </h2>
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <label className={label} htmlFor="fullName">Your name</label>
+            <label className={label} htmlFor="fullName">Your name<Req /></label>
             <input id="fullName" required className={field} value={v.fullName}
               onChange={(e) => set('fullName', e.target.value)} />
           </div>
           <div>
-            <label className={label} htmlFor="roleAtBranch">Your role</label>
+            <label className={label} htmlFor="roleAtBranch">Your role<Req /></label>
             <select id="roleAtBranch" className={field} value={v.roleAtBranch}
               onChange={(e) => set('roleAtBranch', e.target.value)}>
               {PILOT_ROLE_VALUES.map((r) => (
@@ -287,13 +307,13 @@ function InterestForm({
           </div>
           {v.roleAtBranch === 'other' && (
             <div className="sm:col-span-2">
-              <label className={label} htmlFor="roleOther">What is your role?</label>
+              <label className={label} htmlFor="roleOther">What is your role?<Req /></label>
               <input id="roleOther" required className={field} value={v.roleOther}
                 onChange={(e) => set('roleOther', e.target.value)} />
             </div>
           )}
           <div>
-            <label className={label} htmlFor="email">Email</label>
+            <label className={label} htmlFor="email">Email<Req /></label>
             <input id="email" type="email" required className={field} value={v.email}
               onChange={(e) => set('email', e.target.value)} />
           </div>
@@ -311,7 +331,7 @@ function InterestForm({
         </h2>
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={label} htmlFor="branchName">Branch</label>
+            <label className={label} htmlFor="branchName">Branch<Req /></label>
             <input id="branchName" required list="known-branches" className={field}
               placeholder="Kharis London Central"
               value={v.branchName}
@@ -330,17 +350,17 @@ function InterestForm({
             </p>
           </div>
           <div>
-            <label className={label} htmlFor="fellowshipCount">Fellowships</label>
-            <input id="fellowshipCount" inputMode="numeric" className={field}
+            <label className={label} htmlFor="fellowshipCount">Fellowships<Req /></label>
+            <input id="fellowshipCount" inputMode="numeric" required min={0} className={field}
               value={v.fellowshipCount} onChange={(e) => set('fellowshipCount', e.target.value)} />
           </div>
           <div>
-            <label className={label} htmlFor="departmentCount">Departments</label>
-            <input id="departmentCount" inputMode="numeric" className={field}
+            <label className={label} htmlFor="departmentCount">Departments<Req /></label>
+            <input id="departmentCount" inputMode="numeric" required min={0} className={field}
               value={v.departmentCount} onChange={(e) => set('departmentCount', e.target.value)} />
           </div>
           <div className="sm:col-span-2">
-            <label className={label} htmlFor="approxMembers">Roughly how many members</label>
+            <label className={label} htmlFor="approxMembers">Roughly how many members (optional)</label>
             <input id="approxMembers" inputMode="numeric" className={field}
               value={v.approxMembers} onChange={(e) => set('approxMembers', e.target.value)} />
             <p className="mt-2 text-[13px] text-black/45 dark:text-white/40">
@@ -387,7 +407,7 @@ function InterestForm({
           </div>
           {v.safeguardingLeadInPost && (
             <div className="sm:col-span-2">
-              <label className={label} htmlFor="safeguardingLeadName">Their name</label>
+              <label className={label} htmlFor="safeguardingLeadName">Their name<Req /></label>
               <input id="safeguardingLeadName" required className={field}
                 value={v.safeguardingLeadName}
                 onChange={(e) => set('safeguardingLeadName', e.target.value)} />

@@ -27,6 +27,8 @@ const valid = {
   roleAtBranch: 'branch_pastor',
   email: 'grace@example.org',
   branchName: 'Kharis London Central',
+  fellowshipCount: 6,
+  departmentCount: 4,
   safeguardingLeadInPost: true,
   safeguardingLeadName: 'Tobi Balogun',
   acknowledgements: allTicked,
@@ -94,13 +96,31 @@ describe('POST /api/public/pilot-interest', () => {
     const res = await post({ ...valid, branchName: '   ' });
     expect(res.status).toBe(400);
   });
+
+  // A blank count is the one answer that cannot be read either way: it could
+  // mean none, or it could mean unanswered, and the plan picks on the mix.
+  it.each(['fellowshipCount', 'departmentCount'])('requires %s', async (key) => {
+    const { [key]: _omitted, ...rest } = valid as Record<string, unknown>;
+    const res = await post(rest);
+    expect(res.status).toBe(400);
+    expect(service.submitPilotInterest).not.toHaveBeenCalled();
+  });
+
+  // Zero is a real answer and must not be read as missing.
+  it('accepts a branch with no departments yet', async () => {
+    vi.mocked(service.submitPilotInterest).mockResolvedValue({ id: 'z' } as never);
+    const res = await post({ ...valid, departmentCount: 0 });
+    expect(res.status).toBe(201);
+  });
 });
 
 describe('GET /api/public/pilot-interest/requirements', () => {
   it('serves the commitments and the version they belong to', async () => {
     const res = await app.request('/api/public/pilot-interest/requirements');
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as {
+      data: { requirements: unknown[]; version: string };
+    };
     expect(body.data.requirements).toHaveLength(PILOT_REQUIREMENTS.length);
     expect(body.data.version).toBeTruthy();
   });
@@ -116,7 +136,7 @@ describe('the admin queue', () => {
   // Who else has volunteered is not a branch's business, so an ordinary
   // member - including one with branch grants - cannot read the queue.
   it('refuses a signed-in member who is not a platform admin', async () => {
-    const token = await signTestToken({ memberId: TEST_IDS.member, systemRole: 'member' });
+    const token = await signTestToken({ memberId: TEST_IDS.memberId, systemRole: 'member' });
     const res = await app.request('/api/pilot-interest', {
       headers: { authorization: `Bearer ${token}` },
     });
@@ -126,7 +146,7 @@ describe('the admin queue', () => {
 
   it('serves a platform admin', async () => {
     vi.mocked(service.listPilotInterest).mockResolvedValue({ rows: [], total: 0 } as never);
-    const token = await signTestToken({ memberId: TEST_IDS.member, systemRole: 'admin' });
+    const token = await signTestToken({ memberId: TEST_IDS.memberId, systemRole: 'admin' });
     const res = await app.request('/api/pilot-interest', {
       headers: { authorization: `Bearer ${token}` },
     });

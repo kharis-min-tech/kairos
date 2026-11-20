@@ -43,8 +43,21 @@ export const submitPilotInterestSchema = z
     // name is what gets stored.
     branchId: z.string().uuid().optional(),
     branchName: z.string().trim().min(1, 'Please name your branch').max(PILOT_NAME_MAX),
-    fellowshipCount: z.coerce.number().int().min(0).max(500).optional(),
-    departmentCount: z.coerce.number().int().min(0).max(500).optional(),
+    // Required, unlike the member count. The plan chooses on "a normal mix of
+    // fellowships and departments, so the pilot exercises the parts every
+    // other branch will use", and a blank here is the one answer that cannot
+    // be read either way -- it could be none, or it could be unanswered.
+    fellowshipCount: z.coerce
+      .number({ required_error: 'How many fellowships does your branch have?' })
+      .int()
+      .min(0)
+      .max(500),
+    departmentCount: z.coerce
+      .number({ required_error: 'How many departments does your branch have?' })
+      .int()
+      .min(0)
+      .max(500),
+    // Genuinely optional: the plan is explicit that it is not choosing on size.
     approxMembers: z.coerce.number().int().min(0).max(100000).optional(),
 
     headOfAdminName: z.string().trim().max(PILOT_NAME_MAX).optional(),
