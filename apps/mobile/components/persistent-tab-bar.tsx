@@ -45,11 +45,16 @@ export function useTabBarVisible(): boolean {
   // Reading segments rather than the pathname avoids brittle string matches.
   const topGroup = segments[0];
   const isAuthRoute = topGroup === '(auth)';
+  // The consent gate is a gate: offering the tab bar would let the caller tap
+  // straight past a screen the API is going to 403 them out of anyway, so they
+  // would land on a tab that cannot load. Hidden for the same reason the auth
+  // routes are.
+  const isConsentGate = topGroup === 'accept-policies';
   const isSignedIn = !!accessToken && !!user;
   const isReadyForTabs =
     isSignedIn && !user?.mustCompleteProfile && user?.approvalStatus === 'approved';
 
-  return !isAuthRoute && isReadyForTabs;
+  return !isAuthRoute && !isConsentGate && isReadyForTabs;
 }
 
 /**

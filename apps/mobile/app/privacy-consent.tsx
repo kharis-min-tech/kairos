@@ -192,6 +192,16 @@ export default function PrivacyConsent() {
                       });
                     }}
                   />
+                ) : status.needsAccept && status.required ? (
+                  // Marketing was the only row with an action, so a required
+                  // policy awaiting acceptance showed "Action needed" and
+                  // offered nothing to act with.
+                  <Button
+                    label="Accept"
+                    variant="primary"
+                    size="sm"
+                    onPress={() => router.push('/accept-policies')}
+                  />
                 ) : null}
               </View>
             );
@@ -200,7 +210,8 @@ export default function PrivacyConsent() {
 
         <Text style={styles.footnote}>
           Required policies can only be updated by re-accepting the newest version. If a required
-          policy shows &quot;Action needed&quot; you&apos;ll be prompted the next time you sign in.
+          policy shows &quot;Action needed&quot;, tap Accept to read it and confirm. You will also be
+          taken there automatically the next time the app needs it.
         </Text>
       </ScrollView>
     </SafeAreaView>
