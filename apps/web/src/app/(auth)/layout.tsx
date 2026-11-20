@@ -73,6 +73,20 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <ThemeToggle variant="full" />
       </div>
 
+      {/* The lockup is chrome too, so it hangs off the viewport corner rather
+          than the capped shell. Inside the shell it tracked the composition's
+          left edge: fine at 1400px, but on a 2300px screen that put it ~600px
+          in from the window, floating under the corner glow instead of sitting
+          in the corner, with the theme toggle pinned to the true corner
+          opposite it. Below xl the brand column is gone and the lockup sits
+          above the card instead, so this one only exists at xl.
+
+          Kept in a wrapper for the same reason the column version was: a bare
+          svg can be stretched by its parent and then letterboxes itself. */}
+      <div className="absolute left-8 top-8 z-20 hidden xl:block">
+        <KharisLogo height={40} draw className="text-[#5D3FD3] dark:text-white" />
+      </div>
+
       {/* The pair. Capped and centred so the composition has equal margins. */}
       <div className="relative z-10 mx-auto flex w-full max-w-[1200px]">
         {/* Brand column. No background of its own any more — it sits ON the
@@ -84,17 +98,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             the better layout, so the pair only engages once there is room for
             it. shrink-0 keeps the column at its stated width instead of
             quietly compressing the verse. */}
-        <div className="hidden w-[480px] shrink-0 flex-col justify-between p-10 xl:flex">
-          {/* The lockup, not a tile beside the word set in the UI font — the
-              name is part of the artwork, with its own spacing.
-
-              Kept in a wrapper: a bare svg as a flex-column child stretches to
-              the column's 400px and then letterboxes itself, which centres the
-              logo instead of pinning it to the corner. */}
-          <div>
-            <KharisLogo height={40} draw className="text-[#5D3FD3] dark:text-white" />
-          </div>
-
+        <div className="hidden w-[480px] shrink-0 flex-col justify-center p-10 xl:flex">
           <div className="space-y-8">
             <p className="text-[28px] font-light leading-snug text-gray-800 dark:text-white/90">
               {before.nodes}
@@ -139,8 +143,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               </span>
             </div>
           </div>
-
-          <div />
         </div>
 
         {/* Content column. */}
