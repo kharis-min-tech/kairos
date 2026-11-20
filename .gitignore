@@ -24,3 +24,6 @@ grant-proposal/
 
 # Generated tutorial clips — produced by tools/tour-video, never committed.
 apps/docs/public/clips/
+
+# A build run out of the way of a live dev server (see next.config.ts).
+apps/web/.next-build/
