@@ -131,7 +131,8 @@ function Requirements({
                   {on ? (
                     <Halo
                       radiusClass="rounded-md"
-                      variant="purple"
+                      variant="gold"
+                      baseClass="bg-[#5D3FD3]/45 dark:bg-white/25"
                       durationMs={2000}
                       reverse
                       className="mt-0.5 shrink-0 self-start"
