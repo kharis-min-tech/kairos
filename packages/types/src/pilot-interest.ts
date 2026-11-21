@@ -38,37 +38,37 @@ export const PILOT_REQUIREMENTS: readonly PilotRequirement[] = [
     key: 'dailyApprovals',
     title: 'Someone clears the sign-up queue every day',
     detail:
-      'Members cannot sign in until they are approved. Somebody at your branch has to clear that queue the same day, including the Monday after a Sunday push. A member who signs up after a service and is still waiting on Wednesday has spent three days locked out of an app they were just told to install.',
+      'New members cannot sign in until someone at your branch approves them. That queue needs clearing the same day, including the Monday after a Sunday service, when most sign-ups arrive. A member who signs up on Sunday and is still waiting on Wednesday has spent three days locked out of an app they were asked to install.',
   },
   {
     key: 'attendanceEveryService',
     title: 'Attendance is recorded at every service',
     detail:
-      'Not most weeks. Attendance is the figure every report is built from, and a month with gaps in it cannot be read.',
+      'Attendance needs recording at every service, not most of them. It is the figure every report is built from, and a month with services missing cannot be relied on.',
   },
   {
     key: 'noHistoryImport',
     title: 'Your numbers start from day one, not from your history',
     detail:
-      `Nothing is carried over from the old system. Every member record in ${BRAND_NAME} is created by that member signing themselves up, so your reports are empty at first and fill as the branch uses it. The benefit only shows once the branch has genuinely adopted it.`,
+      `No records are carried over from the old system. Every member record in ${BRAND_NAME} is created when that member signs up, so your reports start empty and build as the branch uses the app. The full benefit appears once the branch has properly adopted it.`,
   },
   {
     key: 'pilotFeedback',
     title: 'This is a pilot, and you tell us when it is wrong',
     detail:
-      'Things will be broken. We need a leader who will say so plainly, including when it is unflattering. What your branch reports gets fixed before any other branch sees it — that is the whole point of going first.',
+      'Some things will not work as intended. We need a leader who will tell us plainly, including when the feedback is unflattering. Whatever your branch reports is fixed before any other branch sees it, which is the main reason for going first.',
   },
   {
     key: 'training',
     title: 'Two rounds of training, over one to two weeks',
     detail:
-      'First the branch leader and head of admin go through every section, including what a member sees. Then the head of admin sits with each department lead, fellowship leader and role holder as they learn their own section, so your branch ends up with its own expert rather than depending on us.',
+      'First the branch leader and head of admin go through every section of the app, including what a member sees. The head of admin then works through each section with the department leaders, fellowship leaders and other role holders. Your branch ends up with its own expert rather than depending on us.',
   },
   {
     key: 'retireOldSystem',
     title: 'The old system gets switched off',
     detail:
-      'There will be a date, set in advance. Running two systems is how this fails: anyone who can still use the old one will, and then neither holds the full picture.',
+      'A switch-off date is agreed in advance. Running two systems side by side is the most common way this fails: anyone who can still use the old one will, and neither system ends up holding the full picture.',
   },
 ] as const;
 
