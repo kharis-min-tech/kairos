@@ -438,7 +438,7 @@ function InterestForm({
             htmlFor="branchName"
             text="Branch"
             required
-            hint="The branch you are putting forward. Start typing and pick it from the list. If it is not there, type the full name anyway — branches are set up after one is chosen."
+            hint="The branch you are putting forward. Start typing and pick it from the list. If it is not there, type the full name anyway. Branches are set up after one is chosen."
             className="sm:col-span-2"
           >
             <input id="branchName" required list="known-branches" className={field}
@@ -542,7 +542,7 @@ function InterestForm({
           <Field
             htmlFor="earliestStart"
             text="Earliest you could start training"
-            hint="The earliest date your branch could begin the first round of training. An estimate is fine — it is not a commitment."
+            hint="The earliest date your branch could begin the first round of training. An estimate is fine. It is not a commitment."
             className="sm:col-span-2"
           >
             <input id="earliestStart" type="date" className={field} value={v.earliestStart}
@@ -609,7 +609,7 @@ function Submitted() {
       </h1>
       <p className="mx-auto mt-6 max-w-lg text-[17px] leading-[1.6] text-black/60 dark:text-white/55">
         Your branch is on the list. We are reading every response against what the pilot
-        needs, and we will come back to you either way — including if we choose another
+        needs, and we will come back to you either way, including if we choose another
         branch to go first.
       </p>
       <Link href="/"
