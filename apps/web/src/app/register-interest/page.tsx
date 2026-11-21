@@ -379,7 +379,7 @@ function InterestForm({
             htmlFor="fullName"
             text="Your name"
             required
-            hint="The name your branch knows you by — title included, if you use one."
+            hint="The name your branch knows you by."
           >
             <input id="fullName" required className={field} value={v.fullName}
               onChange={(e) => set('fullName', e.target.value)} />
