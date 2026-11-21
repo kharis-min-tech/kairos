@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const sendNotificationEmail = vi.fn(async () => {});
+const sendNotificationEmail = vi.fn(
+  async (_to: string, _subject: string, _html: string): Promise<void> => {},
+);
 const logger = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
 // vitest never binds AWS credentials, so the real isMailerLive() is always
 // false here. The notification path is only reached when it is true.
@@ -54,11 +56,7 @@ describe('submitPilotInterest', () => {
     await submitPilotInterest(fakeDb(), input, ctx);
 
     expect(sendNotificationEmail).toHaveBeenCalledOnce();
-    const [to, subject, html] = sendNotificationEmail.mock.calls[0] as unknown as [
-      string,
-      string,
-      string,
-    ];
+    const [to, subject, html] = sendNotificationEmail.mock.calls[0]!;
     expect(to).toBe('tech@kharis.org');
     expect(subject).toBe('Pilot interest: Kharis London Central - Grace Mensah');
     // The detail has to travel with the mail: an alert that says only "a form
@@ -75,7 +73,7 @@ describe('submitPilotInterest', () => {
       { ...input, fullName: '<script>alert(1)</script>' },
       ctx,
     );
-    const html = (sendNotificationEmail.mock.calls[0] as unknown as string[])[2]!;
+    const html = sendNotificationEmail.mock.calls[0]![2];
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;script&gt;');
     // An ampersand in free text must survive as text, not become an entity
@@ -103,7 +101,7 @@ describe('submitPilotInterest', () => {
   // The branch offered to go first. Losing that because the mail server was
   // down would be the worst possible trade.
   it('still records the submission when the email fails', async () => {
-    sendNotificationEmail.mockRejectedValueOnce(new Error('SES is down') as never);
+    sendNotificationEmail.mockRejectedValueOnce(new Error('SES is down'));
     const result = await submitPilotInterest(fakeDb('kept'), input, ctx);
     expect(result.id).toBe('kept');
     expect(logger.error).toHaveBeenCalledOnce();
