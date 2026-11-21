@@ -70,6 +70,12 @@ interface DateSelectProps {
   disabled?: boolean;
   id?: string;
   className?: string;
+  /**
+   * Replaces the trigger's own classes outright, for surfaces whose fields
+   * are not the dashboard's (the marketing pages size and round theirs
+   * differently). The popover is unaffected and stays the house calendar.
+   */
+  triggerClassName?: string;
 }
 
 export function DateSelect({
@@ -84,6 +90,7 @@ export function DateSelect({
   disabled = false,
   id,
   className,
+  triggerClassName,
 }: DateSelectProps) {
   const effectiveMinDate = minDate ?? (minYear ? `${minYear}-01-01` : undefined);
   const effectiveMaxDate = maxDate ?? (maxYear ? `${maxYear}-12-31` : undefined);
@@ -213,10 +220,12 @@ export function DateSelect({
   const yearGrid = Array.from({ length: 12 }, (_, i) => yearGridStart + i);
 
   // Trigger styles
-  const triggerClass =
+  const defaultTriggerClass =
     variant === 'pill'
       ? 'inline-flex items-center gap-2 rounded bg-[#f0f0f3] px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all duration-150 hover:bg-[#e6e6ea] dark:bg-white/[0.06] dark:hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60'
       : 'flex h-10 w-full items-center justify-between gap-2 rounded border border-input/15 bg-background px-3 py-2 text-sm text-foreground transition-colors hover:border-input/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+
+  const triggerClass = triggerClassName ?? defaultTriggerClass;
 
   const wrapperClass = variant === 'pill' ? 'relative inline-block' : 'relative w-full';
 

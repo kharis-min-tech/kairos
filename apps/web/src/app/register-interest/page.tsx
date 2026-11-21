@@ -13,6 +13,7 @@ import {
   type PilotRole,
 } from '@kairos/types';
 import { useQuery } from '@tanstack/react-query';
+import { DateSelect } from '@/components/date-select';
 import { api } from '@/lib/api';
 import { useSubmitPilotInterest } from '@/hooks/use-pilot-interest';
 
@@ -197,6 +198,13 @@ function Requirements({
 }
 
 // ── Step two ──────────────────────────────────────────────
+
+/** Local today as YYYY-MM-DD. Training cannot start in the past. */
+function todayIso() {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 const field =
   'h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-[15px] text-[#1a1c1c] outline-none transition placeholder:text-black/30 focus:border-[#5D3FD3] dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/25';
@@ -545,8 +553,21 @@ function InterestForm({
             hint="The earliest date your branch could begin the first round of training. An estimate is fine. It is not a commitment."
             className="sm:col-span-2"
           >
-            <input id="earliestStart" type="date" className={field} value={v.earliestStart}
-              onChange={(e) => set('earliestStart', e.target.value)} />
+            {/*
+              The house picker rather than <input type="date">. The native
+              control draws the browser's own calendar, which ignores every
+              token on the page. triggerClassName makes the closed field
+              match the inputs beside it; the popover is the same calendar
+              used throughout the app.
+            */}
+            <DateSelect
+              id="earliestStart"
+              value={v.earliestStart}
+              onChange={(iso) => set('earliestStart', iso)}
+              placeholder="Choose a date"
+              minDate={todayIso()}
+              triggerClassName={`${field} flex items-center justify-between gap-2 text-left`}
+            />
           </Field>
         </div>
       </section>
