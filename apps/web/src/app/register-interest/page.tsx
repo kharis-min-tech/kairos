@@ -125,7 +125,7 @@ function Requirements({ onContinue }: { onContinue: () => void }) {
               key={n}
               className="flex gap-3 text-[14px] leading-relaxed text-black/60 dark:text-white/55"
             >
-              <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-[#f8b537]" aria-hidden />
+              <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-black/30 dark:bg-white/30" aria-hidden />
               {n}
             </li>
           ))}
