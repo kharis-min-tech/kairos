@@ -56,7 +56,7 @@ describe('submitPilotInterest', () => {
       string,
     ];
     expect(to).toBe('tech@kharis.org');
-    expect(subject).toContain('Kharis London Central');
+    expect(subject).toBe('Pilot interest: Kharis London Central - Grace Mensah');
     // The detail has to travel with the mail: an alert that says only "a form
     // was submitted" sends the reader looking for the admin queue, which is
     // the delay the notification exists to remove.

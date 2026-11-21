@@ -174,9 +174,13 @@ async function notifyPilotInterest(
     footerLine: 'Sent by iKharis because a pilot interest form was submitted.',
   });
 
+  // Branch then person: the branch is what the plan chooses between, and it
+  // is what a second submission from the same branch has to line up with in
+  // an inbox. The name is there so a reply does not start by asking who
+  // wrote in.
   await sendNotificationEmail(
     notifyAddress(),
-    `Pilot interest: ${input.branchName.trim()}`,
+    `Pilot interest: ${input.branchName.trim()} - ${input.fullName.trim()}`,
     html,
   );
 }
