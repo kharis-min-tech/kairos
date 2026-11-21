@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ShieldCheck, AlertCircle, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ShieldCheck, AlertCircle, Info } from 'lucide-react';
 import {
   BRAND_NAME,
   PILOT_REQUIREMENTS,
@@ -164,6 +164,17 @@ function Requirements({
           Continue
           <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
+        {/*
+          A link rather than a button: on step one there is no earlier step to
+          go back to, so back means leaving the flow for the site.
+        */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-[0.2em] text-black/45 transition hover:text-[#5D3FD3] dark:text-white/45 dark:hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Back
+        </Link>
         {!allAcked && (
           <p className="text-[13px] text-black/45 dark:text-white/40">
             Tick all {PILOT_REQUIREMENTS.length} to continue.
@@ -567,7 +578,8 @@ function InterestForm({
           <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
         <button type="button" onClick={onBack}
-          className="text-xs font-extrabold uppercase tracking-[0.2em] text-black/45 hover:text-[#5D3FD3] dark:text-white/45">
+          className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-[0.2em] text-black/45 transition hover:text-[#5D3FD3] dark:text-white/45 dark:hover:text-white">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
         </button>
       </div>
