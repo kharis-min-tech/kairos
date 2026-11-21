@@ -379,7 +379,7 @@ function InterestForm({
             htmlFor="fullName"
             text="Your name"
             required
-            hint="Use the name your branch knows you by. If you are ordained, give your ministry name rather than your legal name."
+            hint="The name your branch knows you by — title included, if you use one."
           >
             <input id="fullName" required className={field} value={v.fullName}
               onChange={(e) => set('fullName', e.target.value)} />
