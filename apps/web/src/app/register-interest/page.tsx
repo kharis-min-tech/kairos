@@ -14,6 +14,7 @@ import {
 } from '@kairos/types';
 import { useQuery } from '@tanstack/react-query';
 import { DateSelect } from '@/components/date-select';
+import { Halo } from '@/components/motion/halo';
 import { api } from '@/lib/api';
 import { useSubmitPilotInterest } from '@/hooks/use-pilot-interest';
 
@@ -113,15 +114,37 @@ function Requirements({
                       : 'border-black/10 bg-black/[0.015] hover:border-black/20 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-white/20'
                   }`}
                 >
-                  <span
-                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
-                      on
-                        ? 'border-[#5D3FD3] bg-gradient-to-br from-[#451ebb] to-[#5d3fd3]'
-                        : 'border-black/20 dark:border-white/25'
-                    }`}
-                  >
-                    {on && <Check className="h-4 w-4 text-white" aria-hidden />}
-                  </span>
+                  {/*
+                    Ticked, the box gets the same travelling rim light as the
+                    Register Interest button, so the gesture that brought them
+                    here is the one that confirms each commitment.
+
+                    Halo adds its own 1.5px frame, so the untouched box is
+                    given the same padding rather than none. Otherwise every
+                    tick would nudge the title 3px sideways.
+
+                    self-start on both: the card is a flex row, so without it
+                    the wrapper stretches to the full card height and the
+                    rim light runs down the side of the description instead
+                    of around the box.
+                  */}
+                  {on ? (
+                    <Halo
+                      radiusClass="rounded-md"
+                      variant="purple"
+                      durationMs={2000}
+                      reverse
+                      className="mt-0.5 shrink-0 self-start"
+                    >
+                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-[#451ebb] to-[#5d3fd3]">
+                        <Check className="h-4 w-4 text-white" aria-hidden />
+                      </span>
+                    </Halo>
+                  ) : (
+                    <span className="mt-0.5 inline-flex shrink-0 self-start p-[1.5px]">
+                      <span className="h-6 w-6 rounded-md border border-black/20 transition dark:border-white/25" />
+                    </span>
+                  )}
                   <span>
                     <span className="block text-[15px] font-bold text-[#1a1c1c] dark:text-white">
                       {r.title}
