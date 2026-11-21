@@ -154,43 +154,43 @@ function Requirements({
         </ul>
       </section>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="button"
-          disabled={!allAcked}
-          onClick={onContinue}
-          className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] px-7 text-xs font-extrabold uppercase tracking-[0.2em] text-white transition disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          Continue
-          <ArrowRight className="h-4 w-4" aria-hidden />
-        </button>
+      <div>
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            disabled={!allAcked}
+            onClick={onContinue}
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] px-7 text-xs font-extrabold uppercase tracking-[0.2em] text-white transition disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            Continue
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </button>
+          {/*
+            A link rather than a button: on step one there is no earlier step
+            to go back to, so back means leaving the flow for the site.
+          */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-[0.2em] text-black/45 transition hover:text-[#5D3FD3] dark:text-white/45 dark:hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            Back
+          </Link>
+        </div>
+
         {/*
-          Between the two controls rather than after them: it explains why
-          Continue is dim, so it belongs beside Continue, not trailing the
-          row where it reads as a separate remark.
+          Under the button rather than beside it: it explains why Continue is
+          dim, and the gold asterisk is the same marker the form uses on a
+          required field, so the symbol means one thing across both steps.
         */}
         {!allAcked && (
-          // self-end drops it below the button's centre line; the gold
-          // asterisk is the same marker the form uses for a required field,
-          // so the two read as one convention across both steps.
-          <p className="self-end pb-[10px] text-[12px] text-black/45 dark:text-white/40">
+          <p className="mt-3 text-[12px] text-black/45 dark:text-white/40">
             <span aria-hidden className="mr-1 text-[#f8b537]">
               *
             </span>
             Tick all {PILOT_REQUIREMENTS.length} to continue.
           </p>
         )}
-        {/*
-          A link rather than a button: on step one there is no earlier step to
-          go back to, so back means leaving the flow for the site.
-        */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-[0.2em] text-black/45 transition hover:text-[#5D3FD3] dark:text-white/45 dark:hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back
-        </Link>
       </div>
     </div>
   );
