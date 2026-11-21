@@ -3,32 +3,8 @@ import {
   PILOT_EMAIL_MAX,
   PILOT_INTEREST_STATUS_VALUES,
   PILOT_NAME_MAX,
-  PILOT_REQUIREMENTS,
   PILOT_ROLE_VALUES,
 } from '@kairos/types';
-
-/**
- * Every commitment must be ticked, enforced from the shared list.
- *
- * Written as a derivation rather than six literals so that adding a
- * requirement to `PILOT_REQUIREMENTS` cannot leave the API accepting a
- * submission that never agreed to it. The page renders the same array.
- *
- * `z.literal(true)` rather than `z.boolean()`: an unticked box is not a valid
- * submission, and rejecting it here means the stored row can never contain a
- * false. The point of the form is that nobody volunteers without having read
- * what the plan asks of them.
- */
-const acknowledgements = z.object(
-  Object.fromEntries(
-    PILOT_REQUIREMENTS.map((r) => [
-      r.key,
-      z.literal(true, {
-        errorMap: () => ({ message: `Please confirm: ${r.title}` }),
-      }),
-    ]),
-  ) as Record<(typeof PILOT_REQUIREMENTS)[number]['key'], z.ZodLiteral<true>>,
-);
 
 export const submitPilotInterestSchema = z
   .object({
@@ -66,7 +42,6 @@ export const submitPilotInterestSchema = z
     safeguardingLeadName: z.string().trim().max(PILOT_NAME_MAX).optional(),
     earliestStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD').optional(),
 
-    acknowledgements,
 
     whyThisBranch: z.string().trim().max(4000).optional(),
     notes: z.string().trim().max(4000).optional(),

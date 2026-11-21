@@ -20,8 +20,6 @@ const service = await import('./service');
 const { createApp } = await import('../app');
 const app = createApp();
 
-const allTicked = Object.fromEntries(PILOT_REQUIREMENTS.map((r) => [r.key, true]));
-
 const valid = {
   fullName: 'Grace Mensah',
   roleAtBranch: 'branch_pastor',
@@ -31,7 +29,6 @@ const valid = {
   departmentCount: 4,
   safeguardingLeadInPost: true,
   safeguardingLeadName: 'Tobi Balogun',
-  acknowledgements: allTicked,
 };
 
 const post = (body: unknown) =>
@@ -55,20 +52,13 @@ describe('POST /api/public/pilot-interest', () => {
     expect(service.submitPilotInterest).toHaveBeenCalledOnce();
   });
 
-  // The whole point of the page is that nobody volunteers without reading
-  // what the rollout plan asks of them, so an unticked box is not a
-  // submission that can be stored and chased up later.
-  it.each(PILOT_REQUIREMENTS.map((r) => r.key))(
-    'rejects a submission with %s not confirmed',
-    async (key) => {
-      const res = await post({
-        ...valid,
-        acknowledgements: { ...allTicked, [key]: false },
-      });
-      expect(res.status).toBe(400);
-      expect(service.submitPilotInterest).not.toHaveBeenCalled();
-    },
-  );
+  // The commitments are read, not ticked, so there is nothing to confirm in
+  // the payload. A submission that carries no acknowledgements is complete.
+  it('does not require any per-commitment confirmation', async () => {
+    vi.mocked(service.submitPilotInterest).mockResolvedValue({ id: 'q' } as never);
+    const res = await post(valid);
+    expect(res.status).toBe(201);
+  });
 
   it('rejects a claimed safeguarding lead with no name', async () => {
     const res = await post({ ...valid, safeguardingLeadName: undefined });

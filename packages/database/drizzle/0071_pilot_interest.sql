@@ -14,10 +14,10 @@
 -- resolves, and ON DELETE SET NULL because deleting a branch must not delete
 -- the evidence that somebody offered it.
 --
--- The acknowledgements are one column each rather than a single "I agree".
--- Which commitment a branch hesitated over is the useful signal, and one
--- boolean throws it away. `requirements_version` records the wording they
--- were shown so a later edit to the page cannot rewrite what was agreed to.
+-- `requirements_version` records the wording the commitments carried when
+-- this branch read them, so a later edit to the page cannot rewrite what was
+-- shown. There are no per-commitment booleans: the page presents them to be
+-- read, not ticked.
 --
 -- No member link. Whoever fills this in has no account yet; members sign
 -- themselves up only once a branch is chosen and seeded.
@@ -48,12 +48,6 @@ CREATE TABLE IF NOT EXISTS pilot_interest (
   earliest_start               DATE,
 
   requirements_version         VARCHAR(20) NOT NULL,
-  ack_daily_approvals          BOOLEAN NOT NULL DEFAULT FALSE,
-  ack_attendance_every_service BOOLEAN NOT NULL DEFAULT FALSE,
-  ack_no_history_import        BOOLEAN NOT NULL DEFAULT FALSE,
-  ack_pilot_feedback           BOOLEAN NOT NULL DEFAULT FALSE,
-  ack_training                 BOOLEAN NOT NULL DEFAULT FALSE,
-  ack_retire_old_system        BOOLEAN NOT NULL DEFAULT FALSE,
 
   why_this_branch              TEXT,
   notes                        TEXT,

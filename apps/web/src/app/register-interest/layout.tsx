@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BRAND_NAME } from '@kairos/types';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { ShootingStars } from '@/components/motion/shooting-stars';
 import { KharisLogoIcon } from '@/app/(auth)/kharis-logo';
 
 export const metadata: Metadata = {
@@ -25,15 +24,7 @@ export const metadata: Metadata = {
  */
 export default function RegisterInterestLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white dark:bg-[#07070a]">
-      {/*
-        Behind everything, and behind the header's backdrop-blur too. The
-        stars need a stacking context they cannot escape, which is why the
-        wrapper is relative and clips: a trail that ran past the viewport
-        edge would otherwise add a scrollbar on a page that has no more
-        content.
-      */}
-      <ShootingStars />
+    <div className="relative min-h-screen bg-white dark:bg-[#07070a]">
       <div className="relative">
       <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-white/70 backdrop-blur-xl dark:border-white/[0.06] dark:bg-black/40">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">

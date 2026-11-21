@@ -35,14 +35,11 @@ import { branches } from './branches';
  *    branch is chosen. What they typed is the record; the foreign key is a
  *    convenience for the admin queue once it resolves.
  *
- * 3. The acknowledgements are stored per commitment, not as one "I agree".
- *    The plan names distinct obligations -- the daily approval queue,
- *    attendance every service, no history being imported, a real pilot that
- *    will surface faults, the training rounds, retiring the old system -- and
- *    which of them a branch hesitated over is the useful signal. One boolean
- *    would throw that away. `requirements_version` records which wording they
- *    were shown, so a later edit to the page cannot rewrite what somebody
- *    agreed to.
+ * 3. `requirements_version` records which wording the commitments carried
+ *    when this branch read them, so a later edit to the page cannot rewrite
+ *    what somebody was shown. There are no per-commitment booleans: the page
+ *    presents the commitments to be read, not ticked, and storing a tick
+ *    would record a promise nobody is held to.
  *
  * 4. No member link, and no cascade anywhere. Whoever fills this in has no
  *    Kairos account yet -- the plan has members signing themselves up only
@@ -88,12 +85,6 @@ export const pilotInterest = pgTable(
 
     // ── What they are taking on ──
     requirementsVersion: varchar('requirements_version', { length: 20 }).notNull(),
-    ackDailyApprovals: boolean('ack_daily_approvals').notNull().default(false),
-    ackAttendanceEveryService: boolean('ack_attendance_every_service').notNull().default(false),
-    ackNoHistoryImport: boolean('ack_no_history_import').notNull().default(false),
-    ackPilotFeedback: boolean('ack_pilot_feedback').notNull().default(false),
-    ackTraining: boolean('ack_training').notNull().default(false),
-    ackRetireOldSystem: boolean('ack_retire_old_system').notNull().default(false),
 
     // ── In their own words ──
     whyThisBranch: text('why_this_branch'),

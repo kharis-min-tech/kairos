@@ -30,6 +30,12 @@ export interface CustomSelectProps {
   disabled?: boolean;
   id?: string;
   className?: string;
+  /**
+   * Extra classes for the trigger itself, merged over its own. For surfaces
+   * whose fields are not the dashboard's -- the marketing pages size and
+   * round theirs differently. The panel is unaffected.
+   */
+  triggerClassName?: string;
   /** "default" fills available width like an Input; "sm" is compact inline */
   size?: 'sm' | 'default';
 }
@@ -42,6 +48,7 @@ export function CustomSelect({
   disabled = false,
   id,
   className,
+  triggerClassName,
   size = 'default',
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
@@ -199,6 +206,7 @@ export function CustomSelect({
           'focus-visible:outline-none focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20',
           'disabled:cursor-not-allowed disabled:opacity-50',
           displayLabel ? 'text-foreground' : 'text-muted-foreground',
+          triggerClassName,
         )}
       >
         <span className="min-w-0 flex-1 truncate text-left">{displayLabel ?? placeholder}</span>

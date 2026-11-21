@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, ShieldCheck, AlertCircle, Info } from 'lucide-react';
 import {
@@ -9,20 +9,13 @@ import {
   PILOT_SELECTION_NOTES,
   PILOT_ROLE_LABEL,
   PILOT_ROLE_VALUES,
-  type PilotRequirement,
   type PilotRole,
 } from '@kairos/types';
 import { useQuery } from '@tanstack/react-query';
+import { CustomSelect, Input, Textarea } from '@kairos/ui';
 import { DateSelect } from '@/components/date-select';
-import { Halo } from '@/components/motion/halo';
 import { api } from '@/lib/api';
 import { useSubmitPilotInterest } from '@/hooks/use-pilot-interest';
-
-type AckKey = PilotRequirement['key'];
-
-const BLANK_ACKS = Object.fromEntries(
-  PILOT_REQUIREMENTS.map((r) => [r.key, false]),
-) as Record<AckKey, boolean>;
 
 /**
  * The pilot sign-up.
@@ -36,8 +29,6 @@ const BLANK_ACKS = Object.fromEntries(
  */
 export default function RegisterInterestPage() {
   const [step, setStep] = useState<'requirements' | 'form' | 'done'>('requirements');
-  const [acks, setAcks] = useState<Record<AckKey, boolean>>(BLANK_ACKS);
-  const allAcked = useMemo(() => PILOT_REQUIREMENTS.every((r) => acks[r.key]), [acks]);
 
   if (step === 'done') return <Submitted />;
 
@@ -45,15 +36,9 @@ export default function RegisterInterestPage() {
     <div className="mx-auto max-w-3xl px-6 py-14 md:py-20">
       <Hero step={step} />
       {step === 'requirements' ? (
-        <Requirements
-          acks={acks}
-          setAcks={setAcks}
-          allAcked={allAcked}
-          onContinue={() => setStep('form')}
-        />
+        <Requirements onContinue={() => setStep('form')} />
       ) : (
         <InterestForm
-          acks={acks}
           onBack={() => setStep('requirements')}
           onDone={() => setStep('done')}
         />
@@ -78,17 +63,17 @@ function Hero({ step }: { step: 'requirements' | 'form' }) {
   );
 }
 
-function Requirements({
-  acks,
-  setAcks,
-  allAcked,
-  onContinue,
-}: {
-  acks: Record<AckKey, boolean>;
-  setAcks: (v: Record<AckKey, boolean>) => void;
-  allAcked: boolean;
-  onContinue: () => void;
-}) {
+/**
+ * What the pilot asks of a branch, to be read before the form.
+ *
+ * Deliberately not a set of checkboxes. Ticking six boxes turns reading into
+ * a task to be got through, and a tick is worth nothing anyway: nobody is
+ * held to it, and storing six booleans would have implied we were. What a
+ * branch leader needs is to know what they are putting their branch up for
+ * before they give us their name, which is a matter of reading, not of
+ * agreeing. The version they were shown is recorded with the submission.
+ */
+function Requirements({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="space-y-10">
       <section>
@@ -96,68 +81,36 @@ function Requirements({
           Before you volunteer
         </h2>
         <p className="mt-3 text-[15px] leading-relaxed text-black/60 dark:text-white/55">
-          Tick each one you can genuinely commit to.
+          Please read these before you fill in the form, so you know what your
+          branch would be taking on.
         </p>
 
         <ul className="mt-7 space-y-3">
-          {PILOT_REQUIREMENTS.map((r) => {
-            const on = acks[r.key];
-            return (
-              <li key={r.key}>
-                <button
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => setAcks({ ...acks, [r.key]: !on })}
-                  className={`group flex w-full gap-4 rounded-2xl border p-5 text-left transition ${
-                    on
-                      ? 'border-[#5D3FD3]/40 bg-[#5D3FD3]/[0.06]'
-                      : 'border-black/10 bg-black/[0.015] hover:border-black/20 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-white/20'
-                  }`}
-                >
-                  {/*
-                    Ticked, the box gets the same travelling rim light as the
-                    Register Interest button, so the gesture that brought them
-                    here is the one that confirms each commitment.
-
-                    Halo adds its own 1.5px frame, so the untouched box is
-                    given the same padding rather than none. Otherwise every
-                    tick would nudge the title 3px sideways.
-
-                    self-start on both: the card is a flex row, so without it
-                    the wrapper stretches to the full card height and the
-                    rim light runs down the side of the description instead
-                    of around the box.
-                  */}
-                  {on ? (
-                    <Halo
-                      radiusClass="rounded-md"
-                      variant="gold"
-                      baseClass="bg-[#5D3FD3]/45 dark:bg-white/25"
-                      durationMs={2000}
-                      reverse
-                      className="mt-0.5 shrink-0 self-start"
-                    >
-                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-[#451ebb] to-[#5d3fd3]">
-                        <Check className="h-4 w-4 text-white" aria-hidden />
-                      </span>
-                    </Halo>
-                  ) : (
-                    <span className="mt-0.5 inline-flex shrink-0 self-start p-[1.5px]">
-                      <span className="h-6 w-6 rounded-md border border-black/20 transition dark:border-white/25" />
-                    </span>
-                  )}
-                  <span>
-                    <span className="block text-[15px] font-bold text-[#1a1c1c] dark:text-white">
-                      {r.title}
-                    </span>
-                    <span className="mt-1.5 block text-[14px] leading-relaxed text-black/55 dark:text-white/50">
-                      {r.detail}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {PILOT_REQUIREMENTS.map((r, i) => (
+            <li
+              key={r.key}
+              className="flex gap-4 rounded-2xl border border-black/10 bg-black/[0.015] p-5 dark:border-white/10 dark:bg-white/[0.02]"
+            >
+              {/*
+                A number, not a checkbox. It reads as "one of six things to
+                read" rather than as a control the reader has to operate.
+              */}
+              <span
+                aria-hidden
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center self-start rounded-md bg-[#5D3FD3]/10 text-[12px] font-bold text-[#5D3FD3] dark:bg-white/[0.07] dark:text-[#a78bfa]"
+              >
+                {i + 1}
+              </span>
+              <span>
+                <span className="block text-[15px] font-bold text-[#1a1c1c] dark:text-white">
+                  {r.title}
+                </span>
+                <span className="mt-1.5 block text-[14px] leading-relaxed text-black/55 dark:text-white/50">
+                  {r.detail}
+                </span>
+              </span>
+            </li>
+          ))}
         </ul>
       </section>
 
@@ -183,9 +136,8 @@ function Requirements({
         <div className="flex flex-wrap items-center gap-4">
           <button
             type="button"
-            disabled={!allAcked}
             onClick={onContinue}
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] px-7 text-xs font-extrabold uppercase tracking-[0.2em] text-white transition disabled:cursor-not-allowed disabled:opacity-35"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-br from-[#451ebb] to-[#5d3fd3] px-7 text-xs font-extrabold uppercase tracking-[0.2em] text-white transition"
           >
             Continue
             <ArrowRight className="h-4 w-4" aria-hidden />
@@ -202,20 +154,6 @@ function Requirements({
             Back
           </Link>
         </div>
-
-        {/*
-          Under the button rather than beside it: it explains why Continue is
-          dim, and the gold asterisk is the same marker the form uses on a
-          required field, so the symbol means one thing across both steps.
-        */}
-        {!allAcked && (
-          <p className="mt-3 text-[12px] text-black/45 dark:text-white/40">
-            <span aria-hidden className="mr-1 text-[#f8b537]">
-              *
-            </span>
-            Tick all {PILOT_REQUIREMENTS.length} to continue.
-          </p>
-        )}
       </div>
     </div>
   );
@@ -321,11 +259,9 @@ function Field({
 }
 
 function InterestForm({
-  acks,
   onBack,
   onDone,
 }: {
-  acks: Record<AckKey, boolean>;
   onBack: () => void;
   onDone: () => void;
 }) {
@@ -384,7 +320,6 @@ function InterestForm({
         safeguardingLeadInPost: v.safeguardingLeadInPost,
         safeguardingLeadName: blank(v.safeguardingLeadName),
         earliestStart: blank(v.earliestStart),
-        acknowledgements: acks,
         whyThisBranch: blank(v.whyThisBranch),
         notes: blank(v.notes),
       });
@@ -413,7 +348,7 @@ function InterestForm({
             required
             hint="The name your branch knows you by."
           >
-            <input id="fullName" required className={field} value={v.fullName}
+            <Input id="fullName" required className={field} value={v.fullName}
               onChange={(e) => set('fullName', e.target.value)} />
           </Field>
           <Field
@@ -422,12 +357,13 @@ function InterestForm({
             required
             hint="Your position at the branch. Choose 'Another role at the branch' if you are filling this in on a leader's behalf."
           >
-            <select id="roleAtBranch" className={field} value={v.roleAtBranch}
-              onChange={(e) => set('roleAtBranch', e.target.value)}>
-              {PILOT_ROLE_VALUES.map((r) => (
-                <option key={r} value={r}>{PILOT_ROLE_LABEL[r]}</option>
-              ))}
-            </select>
+            <CustomSelect
+              id="roleAtBranch"
+              value={v.roleAtBranch}
+              onValueChange={(value) => set('roleAtBranch', value)}
+              options={PILOT_ROLE_VALUES.map((r) => ({ value: r, label: PILOT_ROLE_LABEL[r] }))}
+              triggerClassName={field}
+            />
           </Field>
           {v.roleAtBranch === 'other' && (
             <Field
@@ -437,7 +373,7 @@ function InterestForm({
               hint="Your position in your own words, for example head of admin or branch administrator."
               className="sm:col-span-2"
             >
-              <input id="roleOther" required className={field} value={v.roleOther}
+              <Input id="roleOther" required className={field} value={v.roleOther}
                 onChange={(e) => set('roleOther', e.target.value)} />
             </Field>
           )}
@@ -447,7 +383,7 @@ function InterestForm({
             required
             hint="The address we will reply to. Please use one you check regularly."
           >
-            <input id="email" type="email" required className={field} value={v.email}
+            <Input id="email" type="email" required className={field} value={v.email}
               onChange={(e) => set('email', e.target.value)} />
           </Field>
           <Field
@@ -455,7 +391,7 @@ function InterestForm({
             text="Phone (optional)"
             hint="A number we can call if we need a quick answer. Leave it blank if you would rather we only email."
           >
-            <input id="phone" className={field} value={v.phone}
+            <Input id="phone" className={field} value={v.phone}
               onChange={(e) => set('phone', e.target.value)} />
           </Field>
         </div>
@@ -473,7 +409,7 @@ function InterestForm({
             hint="The branch you are putting forward. Start typing and pick it from the list. If it is not there, type the full name anyway. Branches are set up after one is chosen."
             className="sm:col-span-2"
           >
-            <input id="branchName" required list="known-branches" className={field}
+            <Input id="branchName" required list="known-branches" className={field}
               placeholder="Kharis London Central"
               value={v.branchName}
               onChange={(e) => {
@@ -493,7 +429,7 @@ function InterestForm({
             required
             hint="How many fellowships your branch runs at the moment, such as men's, women's or youth. Your best count is fine. Enter 0 if you have none."
           >
-            <input id="fellowshipCount" inputMode="numeric" required min={0} className={field}
+            <Input id="fellowshipCount" inputMode="numeric" required min={0} className={field}
               value={v.fellowshipCount} onChange={(e) => set('fellowshipCount', e.target.value)} />
           </Field>
           <Field
@@ -502,7 +438,7 @@ function InterestForm({
             required
             hint="How many departments your branch runs, such as choir, ushering, media or protocol. Your best count is fine. Enter 0 if you have none."
           >
-            <input id="departmentCount" inputMode="numeric" required min={0} className={field}
+            <Input id="departmentCount" inputMode="numeric" required min={0} className={field}
               value={v.departmentCount} onChange={(e) => set('departmentCount', e.target.value)} />
           </Field>
           <Field
@@ -511,7 +447,7 @@ function InterestForm({
             hint="An approximate figure is fine. We are not choosing a branch on size; it only tells us what to expect in the first week."
             className="sm:col-span-2"
           >
-            <input id="approxMembers" inputMode="numeric" className={field}
+            <Input id="approxMembers" inputMode="numeric" className={field}
               value={v.approxMembers} onChange={(e) => set('approxMembers', e.target.value)} />
           </Field>
         </div>
@@ -527,7 +463,7 @@ function InterestForm({
             text="Head of admin"
             hint="The person who would approve new members each day and handle the everyday admin. Leave it blank if you have not decided yet."
           >
-            <input id="headOfAdminName" className={field} value={v.headOfAdminName}
+            <Input id="headOfAdminName" className={field} value={v.headOfAdminName}
               onChange={(e) => set('headOfAdminName', e.target.value)} />
           </Field>
           <Field
@@ -535,7 +471,7 @@ function InterestForm({
             text="Their email"
             hint="The address we would use to set up the head of admin's account before members start signing up."
           >
-            <input id="headOfAdminEmail" type="email" className={field} value={v.headOfAdminEmail}
+            <Input id="headOfAdminEmail" type="email" className={field} value={v.headOfAdminEmail}
               onChange={(e) => set('headOfAdminEmail', e.target.value)} />
           </Field>
           <div className="sm:col-span-2">
@@ -566,7 +502,7 @@ function InterestForm({
               hint="The person who already holds the safeguarding role at your branch."
               className="sm:col-span-2"
             >
-              <input id="safeguardingLeadName" required className={field}
+              <Input id="safeguardingLeadName" required className={field}
                 value={v.safeguardingLeadName}
                 onChange={(e) => set('safeguardingLeadName', e.target.value)} />
             </Field>
@@ -605,7 +541,7 @@ function InterestForm({
           text="Why your branch should go first"
           hint="Anything that makes your branch a good first choice: how ready your leaders are, how well attendance is already kept, or why the timing suits you."
         >
-          <textarea id="whyThisBranch" rows={4}
+          <Textarea id="whyThisBranch" rows={4}
             className={`${field} h-auto py-3 leading-relaxed`}
             value={v.whyThisBranch} onChange={(e) => set('whyThisBranch', e.target.value)} />
         </Field>
@@ -614,7 +550,7 @@ function InterestForm({
           text="Anything we should know"
           hint="Anything that might affect the timing or the setup, such as a building move, a busy season or a leader on leave. Leave it blank if there is nothing."
         >
-          <textarea id="notes" rows={3}
+          <Textarea id="notes" rows={3}
             className={`${field} h-auto py-3 leading-relaxed`}
             value={v.notes} onChange={(e) => set('notes', e.target.value)} />
         </Field>

@@ -1,7 +1,7 @@
 import { BRAND_NAME } from './brand';
 
 /**
- * The pilot interest form: what a branch is agreeing to by volunteering.
+ * The pilot interest form: what the pilot asks of a branch.
  *
  * The rollout plan is blunt about why this list exists and why it is shown
  * before the form rather than after it: "The time cost belongs in the
@@ -11,17 +11,18 @@ import { BRAND_NAME } from './brand';
  *
  * So the commitments live here, next to the version stamped onto every row.
  * The page renders this array and the API stores which version was rendered,
- * which means nobody can later rewrite what a branch agreed to, and the
- * wording cannot drift between the page and the record the way duplicated
- * copy always does.
+ * which means the record says what a branch was shown, and the wording
+ * cannot drift between the page and the record the way duplicated copy
+ * always does.
  *
- * `key` is also the column name on `pilot_interest`, minus the `ack_` prefix.
- * Adding a commitment means a column, a version bump, and nothing else.
+ * They are read, not ticked. Six checkboxes would turn reading into a task
+ * to be got through, and a stored tick would imply a promise nobody holds
+ * anyone to. Changing the wording means bumping the version, nothing else.
  */
 export const PILOT_REQUIREMENTS_VERSION = '2026-11';
 
 export interface PilotRequirement {
-  /** Matches the `ack_<key>` column on pilot_interest. */
+  /** Stable id for the commitment. Not stored; the version is. */
   key:
     | 'dailyApprovals'
     | 'attendanceEveryService'
@@ -129,7 +130,6 @@ export interface SubmitPilotInterestRequest {
   safeguardingLeadInPost: boolean;
   safeguardingLeadName?: string;
   earliestStart?: string;
-  acknowledgements: Record<PilotRequirement['key'], boolean>;
   whyThisBranch?: string;
   notes?: string;
 }

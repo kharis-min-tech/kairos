@@ -1,8 +1,13 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Database } from '@kairos/database';
 import { branches, pilotInterest } from '@kairos/database';
-import { PILOT_REQUIREMENTS_VERSION, type PilotInterestStatus } from '@kairos/types';
-import { NotFoundError } from '@kairos/utils';
+import {
+  PILOT_REQUIREMENTS_VERSION,
+  PILOT_ROLE_LABEL,
+  type PilotInterestStatus,
+} from '@kairos/types';
+import { logger, NotFoundError, sendNotificationEmail } from '@kairos/utils';
+import { renderLayout } from '../notifications/templates/_layout';
 import type { SubmitPilotInterestInput } from './schemas';
 
 /** Corroborating detail about the submission, not about the branch. */
@@ -45,8 +50,6 @@ export async function submitPilotInterest(
     branchId = hit?.id ?? null;
   }
 
-  const a = input.acknowledgements;
-
   const [row] = await db
     .insert(pilotInterest)
     .values({
@@ -70,12 +73,6 @@ export async function submitPilotInterest(
 
       // The version the submitter was shown, not whatever the page says now.
       requirementsVersion: PILOT_REQUIREMENTS_VERSION,
-      ackDailyApprovals: a.dailyApprovals,
-      ackAttendanceEveryService: a.attendanceEveryService,
-      ackNoHistoryImport: a.noHistoryImport,
-      ackPilotFeedback: a.pilotFeedback,
-      ackTraining: a.training,
-      ackRetireOldSystem: a.retireOldSystem,
 
       whyThisBranch: blankToNull(input.whyThisBranch),
       notes: blankToNull(input.notes),
@@ -89,9 +86,108 @@ export async function submitPilotInterest(
   // type is an array, so this is a type narrowing rather than a real case.
   if (!row) throw new Error('pilot interest insert returned no row');
 
+  // The row is saved either way. A submission that stored cleanly but could
+  // not be announced is a notification problem, not the branch leader's, and
+  // failing their request would invite them to send it again.
+  await notifyPilotInterest(input, row.id).catch((err) => {
+    logger.error('pilot interest: notification failed', {
+      submissionId: row.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  });
+
   // Nothing about other submissions goes back to a public caller: who else
   // has volunteered is not theirs to see.
   return { id: row.id, submittedAt: row.submittedAt };
+}
+
+/**
+ * Where a new submission is announced.
+ *
+ * The rollout plan turns on hearing back quickly -- the announcement goes out
+ * before the app is ready "because nothing else can be arranged until we know
+ * which branch is first" -- and a row sitting unread in an admin queue nobody
+ * has opened is the same as no row at all. Overridable by env for staging,
+ * which should not mail the real inbox.
+ */
+function notifyAddress(): string {
+  return process.env['PILOT_INTEREST_NOTIFY_TO']?.trim() || 'tech@kharis.org';
+}
+
+async function notifyPilotInterest(
+  input: SubmitPilotInterestInput,
+  submissionId: string,
+): Promise<void> {
+  const role =
+    input.roleAtBranch === 'other'
+      ? (input.roleOther?.trim() || 'Another role at the branch')
+      : PILOT_ROLE_LABEL[input.roleAtBranch];
+
+  const rows: Array<[string, string]> = [
+    ['Name', input.fullName.trim()],
+    ['Role', role],
+    ['Email', input.email.trim().toLowerCase()],
+    ['Phone', input.phone?.trim() || 'Not given'],
+    ['Branch', input.branchName.trim()],
+    ['Fellowships', String(input.fellowshipCount)],
+    ['Departments', String(input.departmentCount)],
+    ['Approx members', input.approxMembers == null ? 'Not given' : String(input.approxMembers)],
+    ['Head of admin', input.headOfAdminName?.trim() || 'Not named'],
+    ['Head of admin email', input.headOfAdminEmail?.trim() || 'Not given'],
+    [
+      'Safeguarding lead',
+      input.safeguardingLeadInPost
+        ? (input.safeguardingLeadName?.trim() || 'In post')
+        : 'Not in post',
+    ],
+    ['Earliest start', input.earliestStart || 'Not given'],
+    ['Commitments version', PILOT_REQUIREMENTS_VERSION],
+  ];
+
+  const table = rows
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:6px 16px 6px 0;color:#6b7280;white-space:nowrap;">${escapeHtml(k)}</td>` +
+        `<td style="padding:6px 0;color:#111827;">${escapeHtml(v)}</td></tr>`,
+    )
+    .join('');
+
+  const freeText = ([
+    ['Why their branch should go first', input.whyThisBranch],
+    ['Anything we should know', input.notes],
+  ] as Array<[string, string | undefined]>)
+    .filter(([, value]) => value?.trim())
+    .map(
+      ([heading, value]) =>
+        `<h3 style="margin:24px 0 4px;font-size:14px;color:#111827;">${escapeHtml(heading)}</h3>` +
+        `<p style="margin:0;white-space:pre-wrap;color:#374151;">${escapeHtml(value!.trim())}</p>`,
+    )
+    .join('');
+
+  const html = renderLayout({
+    heading: 'A branch has put itself forward',
+    bodyHtml:
+      `<p>${escapeHtml(input.branchName.trim())} offered to run the pilot.</p>` +
+      `<table style="border-collapse:collapse;font-size:14px;">${table}</table>` +
+      freeText +
+      `<p style="font-size:12px;color:#6b7280;margin-top:24px;">Submission ${escapeHtml(submissionId)}</p>`,
+    footerLine: 'Sent by iKharis because a pilot interest form was submitted.',
+  });
+
+  await sendNotificationEmail(
+    notifyAddress(),
+    `Pilot interest: ${input.branchName.trim()}`,
+    html,
+  );
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 export async function listPilotInterest(
