@@ -493,7 +493,7 @@ function InterestForm({
           <Field
             htmlFor="headOfAdminName"
             text="Head of admin"
-            hint="The person who would clear the daily sign-up queue and handle day-to-day admin. Leave it blank if you have not decided yet."
+            hint="The person who would approve new members each day and handle the everyday admin. Leave it blank if you have not decided yet."
           >
             <input id="headOfAdminName" className={field} value={v.headOfAdminName}
               onChange={(e) => set('headOfAdminName', e.target.value)} />
