@@ -6,7 +6,7 @@ import {
   PILOT_ROLE_LABEL,
   type PilotInterestStatus,
 } from '@kairos/types';
-import { logger, NotFoundError, sendNotificationEmail } from '@kairos/utils';
+import { isMailerLive, logger, NotFoundError, sendNotificationEmail } from '@kairos/utils';
 import { renderLayout } from '../notifications/templates/_layout';
 import type { SubmitPilotInterestInput } from './schemas';
 
@@ -118,6 +118,18 @@ async function notifyPilotInterest(
   input: SubmitPilotInterestInput,
   submissionId: string,
 ): Promise<void> {
+  // With no AWS credentials bound, the mailer logs the send at info and
+  // returns as though it worked, so a misconfigured environment would drop
+  // every notification without anything looking wrong. That is the one
+  // failure mode nobody would notice, so it is raised here rather than
+  // swallowed: the caller logs it as an error, and the row is kept either
+  // way.
+  if (!isMailerLive()) {
+    throw new Error(
+      'mailer is not configured (AWS credentials absent) -- pilot interest notification not sent',
+    );
+  }
+
   const role =
     input.roleAtBranch === 'other'
       ? (input.roleOther?.trim() || 'Another role at the branch')

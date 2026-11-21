@@ -2,10 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const sendNotificationEmail = vi.fn(async () => {});
 const logger = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
+// vitest never binds AWS credentials, so the real isMailerLive() is always
+// false here. The notification path is only reached when it is true.
+const mailer = { live: true };
 
 vi.mock('@kairos/utils', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@kairos/utils')>();
-  return { ...actual, sendNotificationEmail, logger };
+  return { ...actual, sendNotificationEmail, logger, isMailerLive: () => mailer.live };
 });
 
 const { submitPilotInterest } = await import('./service');
@@ -42,6 +45,7 @@ const ctx = { sourceIp: null, userAgent: null };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mailer.live = true;
   delete process.env['PILOT_INTEREST_NOTIFY_TO'];
 });
 
@@ -83,6 +87,17 @@ describe('submitPilotInterest', () => {
     process.env['PILOT_INTEREST_NOTIFY_TO'] = 'staging@example.org';
     await submitPilotInterest(fakeDb(), input, ctx);
     expect(sendNotificationEmail.mock.calls[0]![0]).toBe('staging@example.org');
+  });
+
+  // An environment with no mail credentials would otherwise drop every
+  // notification silently: the mailer logs the send and returns as though it
+  // worked. This is the one failure that has to be loud.
+  it('logs an error rather than sending nothing quietly', async () => {
+    mailer.live = false;
+    const result = await submitPilotInterest(fakeDb('still-saved'), input, ctx);
+    expect(result.id).toBe('still-saved');
+    expect(sendNotificationEmail).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledOnce();
   });
 
   // The branch offered to go first. Losing that because the mail server was
