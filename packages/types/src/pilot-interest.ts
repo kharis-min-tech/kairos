@@ -36,39 +36,39 @@ export interface PilotRequirement {
 export const PILOT_REQUIREMENTS: readonly PilotRequirement[] = [
   {
     key: 'dailyApprovals',
-    title: 'Someone clears the sign-up queue every day',
+    title: 'Someone approves new members every day',
     detail:
-      'New members cannot sign in until someone at your branch approves them. That queue needs clearing the same day, including the Monday after a Sunday service, when most sign-ups arrive. A member who signs up on Sunday and is still waiting on Wednesday has spent three days locked out of an app they were asked to install.',
+      'When a member signs up, they cannot use the app until someone at your branch approves them. That needs doing every day, including Mondays, because most people sign up straight after a Sunday service. If nobody checks until Wednesday, those members have been locked out for three days.',
   },
   {
     key: 'attendanceEveryService',
-    title: 'Attendance is recorded at every service',
+    title: 'Attendance is taken at every service',
     detail:
-      'Attendance needs recording at every service, not most of them. It is the figure every report is built from, and a month with services missing cannot be relied on.',
+      'Take attendance at every service, not just most of them. Your reports are worked out from these numbers, so if a few services are missed, that month will show the wrong totals.',
   },
   {
     key: 'noHistoryImport',
-    title: 'Your numbers start from day one, not from your history',
+    title: 'You start with no data, not with your old records',
     detail:
-      `No records are carried over from the old system. Every member record in ${BRAND_NAME} is created when that member signs up, so your reports start empty and build as the branch uses the app. The full benefit appears once the branch has properly adopted it.`,
+      `Nothing moves across from your old system. Each member creates their own record in ${BRAND_NAME} when they sign up, so your reports will be empty at first and fill up as people join and attend. You will only see the full picture once most of your branch is using the app.`,
   },
   {
     key: 'pilotFeedback',
-    title: 'This is a pilot, and you tell us when it is wrong',
+    title: 'You are first, so you will find the problems',
     detail:
-      'Some things will not work as intended. We need a leader who will tell us plainly, including when the feedback is unflattering. Whatever your branch reports is fixed before any other branch sees it, which is the main reason for going first.',
+      'Some things will not work properly, and your branch will hit them before anyone else does. We need a leader who will tell us exactly what went wrong, even when it is awkward to say. We fix what you report before the next branch starts.',
   },
   {
     key: 'training',
     title: 'Two rounds of training, over one to two weeks',
     detail:
-      'First the branch leader and head of admin go through every section of the app, including what a member sees. The head of admin then works through each section with the department leaders, fellowship leaders and other role holders. Your branch ends up with its own expert rather than depending on us.',
+      'Training happens twice. First we show you and your head of admin every part of the app, including what a member sees on their phone. Then your head of admin teaches each department leader, fellowship leader and role holder the part they will use. After that your branch has its own expert, so you are not waiting on us.',
   },
   {
     key: 'retireOldSystem',
     title: 'The old system gets switched off',
     detail:
-      'A switch-off date is agreed in advance. Running two systems side by side is the most common way this fails: anyone who can still use the old one will, and neither system ends up holding the full picture.',
+      'You pick a date to stop using your old system, and tell everyone well before it arrives. If both stay open, some people keep using the old one, and then neither system has everybody on it.',
   },
 ] as const;
 
@@ -86,7 +86,7 @@ export const PILOT_SELECTION_NOTES: readonly string[] = [
   'A leader who wants to do it and will give direct feedback.',
   'Someone available to act as head of admin, set up before members start signing up.',
   'A safeguarding lead already in post.',
-  'A normal mix of fellowships and departments, so the pilot exercises what every other branch will use.',
+  'A normal mix of fellowships and departments, so the pilot covers what every other branch will use.',
   'We are not choosing on size, in either direction.',
 ] as const;
 
