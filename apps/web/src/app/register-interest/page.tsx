@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ArrowRight, Check, ShieldCheck, AlertCircle, Info } from 'lucide-react';
 import {
   BRAND_NAME,
   PILOT_REQUIREMENTS,
@@ -179,7 +179,7 @@ function Requirements({
 const field =
   'h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-[15px] text-[#1a1c1c] outline-none transition placeholder:text-black/30 focus:border-[#5D3FD3] dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/25';
 const label =
-  'mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-black/50 dark:text-white/45';
+  'text-[11px] font-bold uppercase tracking-[0.16em] text-black/50 dark:text-white/45';
 
 /**
  * The required marker.
@@ -194,6 +194,75 @@ function Req() {
     <span aria-hidden className="ml-1 text-[#f8b537]">
       *
     </span>
+  );
+}
+
+/**
+ * One form field: its label, an explanation behind an info button, and the
+ * input itself.
+ *
+ * The hint opens below the input rather than floating over it. A floating
+ * tooltip needs hover to appear, and most of the people filling this in are
+ * on a phone, where there is no hover -- and the page sits inside an
+ * `overflow-hidden` container, so anything positioned past the edge of a
+ * field would be clipped. Putting it after the input also means opening one
+ * never shoves its own input out of line with the field beside it, which is
+ * what happens if the hint pushes from above in a two-column row.
+ */
+function Field({
+  htmlFor,
+  text,
+  hint,
+  required = false,
+  className,
+  children,
+}: {
+  htmlFor: string;
+  text: string;
+  hint: string;
+  required?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const hintId = `${htmlFor}-hint`;
+
+  return (
+    <div className={className}>
+      <div className="mb-2 flex items-center gap-1.5">
+        <label className={label} htmlFor={htmlFor}>
+          {text}
+          {required && <Req />}
+        </label>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls={hintId}
+          aria-label={`What to put in ${text}`}
+          // -m-1.5 keeps the icon the same size on screen while giving the
+          // tap target the padding a thumb needs.
+          className={`-m-1.5 shrink-0 rounded-full p-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5D3FD3] ${
+            open
+              ? 'text-[#5D3FD3] dark:text-[#a78bfa]'
+              : 'text-black/30 hover:text-[#5D3FD3] dark:text-white/30 dark:hover:text-[#a78bfa]'
+          }`}
+        >
+          <Info className="h-4 w-4" aria-hidden />
+        </button>
+      </div>
+
+      {children}
+
+      {open && (
+        <p
+          id={hintId}
+          className="mt-2 rounded-lg border border-[#5D3FD3]/25 bg-[#5D3FD3]/[0.05] px-3 py-2 text-[13px] leading-relaxed text-black/65 dark:text-white/60"
+        >
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -284,37 +353,57 @@ function InterestForm({
           You
         </h2>
         <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label className={label} htmlFor="fullName">Your name<Req /></label>
+          <Field
+            htmlFor="fullName"
+            text="Your name"
+            required
+            hint="Your full name, as your branch would know you."
+          >
             <input id="fullName" required className={field} value={v.fullName}
               onChange={(e) => set('fullName', e.target.value)} />
-          </div>
-          <div>
-            <label className={label} htmlFor="roleAtBranch">Your role<Req /></label>
+          </Field>
+          <Field
+            htmlFor="roleAtBranch"
+            text="Your role"
+            required
+            hint="Your position at the branch. Choose 'Another role at the branch' if you are filling this in on a leader's behalf."
+          >
             <select id="roleAtBranch" className={field} value={v.roleAtBranch}
               onChange={(e) => set('roleAtBranch', e.target.value)}>
               {PILOT_ROLE_VALUES.map((r) => (
                 <option key={r} value={r}>{PILOT_ROLE_LABEL[r]}</option>
               ))}
             </select>
-          </div>
+          </Field>
           {v.roleAtBranch === 'other' && (
-            <div className="sm:col-span-2">
-              <label className={label} htmlFor="roleOther">What is your role?<Req /></label>
+            <Field
+              htmlFor="roleOther"
+              text="What is your role?"
+              required
+              hint="Your position in your own words, for example head of admin or branch administrator."
+              className="sm:col-span-2"
+            >
               <input id="roleOther" required className={field} value={v.roleOther}
                 onChange={(e) => set('roleOther', e.target.value)} />
-            </div>
+            </Field>
           )}
-          <div>
-            <label className={label} htmlFor="email">Email<Req /></label>
+          <Field
+            htmlFor="email"
+            text="Email"
+            required
+            hint="The address we will reply to. Please use one you check regularly."
+          >
             <input id="email" type="email" required className={field} value={v.email}
               onChange={(e) => set('email', e.target.value)} />
-          </div>
-          <div>
-            <label className={label} htmlFor="phone">Phone (optional)</label>
+          </Field>
+          <Field
+            htmlFor="phone"
+            text="Phone (optional)"
+            hint="A number we can call if we need a quick answer. Leave it blank if you would rather we only email."
+          >
             <input id="phone" className={field} value={v.phone}
               onChange={(e) => set('phone', e.target.value)} />
-          </div>
+          </Field>
         </div>
       </section>
 
@@ -323,8 +412,13 @@ function InterestForm({
           Your branch
         </h2>
         <div className="grid gap-5 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className={label} htmlFor="branchName">Branch<Req /></label>
+          <Field
+            htmlFor="branchName"
+            text="Branch"
+            required
+            hint="The branch you are putting forward. Start typing and pick it from the list. If it is not there, type the full name anyway — branches are set up after one is chosen."
+            className="sm:col-span-2"
+          >
             <input id="branchName" required list="known-branches" className={field}
               placeholder="Kharis London Central"
               value={v.branchName}
@@ -338,28 +432,34 @@ function InterestForm({
                 <option key={b.id} value={b.branchName} />
               ))}
             </datalist>
-            <p className="mt-2 text-[13px] text-black/45 dark:text-white/40">
-              Not in the list? Type it anyway — branches are set up after one is chosen.
-            </p>
-          </div>
-          <div>
-            <label className={label} htmlFor="fellowshipCount">Fellowships<Req /></label>
+          </Field>
+          <Field
+            htmlFor="fellowshipCount"
+            text="Fellowships"
+            required
+            hint="How many fellowships your branch runs at the moment, such as men's, women's or youth. Your best count is fine. Enter 0 if you have none."
+          >
             <input id="fellowshipCount" inputMode="numeric" required min={0} className={field}
               value={v.fellowshipCount} onChange={(e) => set('fellowshipCount', e.target.value)} />
-          </div>
-          <div>
-            <label className={label} htmlFor="departmentCount">Departments<Req /></label>
+          </Field>
+          <Field
+            htmlFor="departmentCount"
+            text="Departments"
+            required
+            hint="How many departments your branch runs, such as choir, ushering, media or protocol. Your best count is fine. Enter 0 if you have none."
+          >
             <input id="departmentCount" inputMode="numeric" required min={0} className={field}
               value={v.departmentCount} onChange={(e) => set('departmentCount', e.target.value)} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={label} htmlFor="approxMembers">Roughly how many members (optional)</label>
+          </Field>
+          <Field
+            htmlFor="approxMembers"
+            text="Roughly how many members (optional)"
+            hint="An approximate figure is fine. We are not choosing a branch on size; it only tells us what to expect in the first week."
+            className="sm:col-span-2"
+          >
             <input id="approxMembers" inputMode="numeric" className={field}
               value={v.approxMembers} onChange={(e) => set('approxMembers', e.target.value)} />
-            <p className="mt-2 text-[13px] text-black/45 dark:text-white/40">
-              We are not choosing on size. It tells us what to expect in week one.
-            </p>
-          </div>
+          </Field>
         </div>
       </section>
 
@@ -368,16 +468,22 @@ function InterestForm({
           Who would run it
         </h2>
         <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label className={label} htmlFor="headOfAdminName">Head of admin</label>
+          <Field
+            htmlFor="headOfAdminName"
+            text="Head of admin"
+            hint="The person who would clear the daily sign-up queue and handle day-to-day admin. Leave it blank if you have not decided yet."
+          >
             <input id="headOfAdminName" className={field} value={v.headOfAdminName}
               onChange={(e) => set('headOfAdminName', e.target.value)} />
-          </div>
-          <div>
-            <label className={label} htmlFor="headOfAdminEmail">Their email</label>
+          </Field>
+          <Field
+            htmlFor="headOfAdminEmail"
+            text="Their email"
+            hint="The address we would use to set up the head of admin's account before members start signing up."
+          >
             <input id="headOfAdminEmail" type="email" className={field} value={v.headOfAdminEmail}
               onChange={(e) => set('headOfAdminEmail', e.target.value)} />
-          </div>
+          </Field>
           <div className="sm:col-span-2">
             <button type="button" aria-pressed={v.safeguardingLeadInPost}
               onClick={() => set('safeguardingLeadInPost', !v.safeguardingLeadInPost)}
@@ -399,18 +505,27 @@ function InterestForm({
             </button>
           </div>
           {v.safeguardingLeadInPost && (
-            <div className="sm:col-span-2">
-              <label className={label} htmlFor="safeguardingLeadName">Their name<Req /></label>
+            <Field
+              htmlFor="safeguardingLeadName"
+              text="Their name"
+              required
+              hint="The person who already holds the safeguarding role at your branch."
+              className="sm:col-span-2"
+            >
               <input id="safeguardingLeadName" required className={field}
                 value={v.safeguardingLeadName}
                 onChange={(e) => set('safeguardingLeadName', e.target.value)} />
-            </div>
+            </Field>
           )}
-          <div className="sm:col-span-2">
-            <label className={label} htmlFor="earliestStart">Earliest you could start training</label>
+          <Field
+            htmlFor="earliestStart"
+            text="Earliest you could start training"
+            hint="The earliest date your branch could begin the first round of training. An estimate is fine — it is not a commitment."
+            className="sm:col-span-2"
+          >
             <input id="earliestStart" type="date" className={field} value={v.earliestStart}
               onChange={(e) => set('earliestStart', e.target.value)} />
-          </div>
+          </Field>
         </div>
       </section>
 
@@ -418,18 +533,24 @@ function InterestForm({
         <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
           In your own words
         </h2>
-        <div>
-          <label className={label} htmlFor="whyThisBranch">Why your branch should go first</label>
+        <Field
+          htmlFor="whyThisBranch"
+          text="Why your branch should go first"
+          hint="Anything that makes your branch a good first choice: how ready your leaders are, how well attendance is already kept, or why the timing suits you."
+        >
           <textarea id="whyThisBranch" rows={4}
             className={`${field} h-auto py-3 leading-relaxed`}
             value={v.whyThisBranch} onChange={(e) => set('whyThisBranch', e.target.value)} />
-        </div>
-        <div>
-          <label className={label} htmlFor="notes">Anything we should know</label>
+        </Field>
+        <Field
+          htmlFor="notes"
+          text="Anything we should know"
+          hint="Anything that might affect the timing or the setup, such as a building move, a busy season or a leader on leave. Leave it blank if there is nothing."
+        >
           <textarea id="notes" rows={3}
             className={`${field} h-auto py-3 leading-relaxed`}
             value={v.notes} onChange={(e) => set('notes', e.target.value)} />
-        </div>
+        </Field>
       </section>
 
       {error && (
