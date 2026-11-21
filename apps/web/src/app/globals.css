@@ -349,7 +349,10 @@
 
   /* 8 · halo + hover lift */
   .mo-halo-spin {
-    animation: mo-spin 3600ms linear infinite;
+    /* Both custom properties are set by <Halo>; the fallbacks keep a bare
+       .mo-halo-spin working if one is ever used outside the component. */
+    animation: mo-spin var(--mo-halo-duration, 3600ms) linear infinite;
+    animation-direction: var(--mo-halo-direction, normal);
   }
   .mo-lift {
     transition:

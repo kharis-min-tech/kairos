@@ -343,6 +343,8 @@ export default function KairosLanding() {
                 radiusClass="rounded-full"
                 variant="purple"
                 className="mo-lift [--lift-rot:1deg] relative"
+                durationMs={2000}
+                reverse
               >
                 <Link
                   href="/register-interest"
