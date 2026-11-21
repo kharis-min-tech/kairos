@@ -165,6 +165,16 @@ function Requirements({
           <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
         {/*
+          Between the two controls rather than after them: it explains why
+          Continue is dim, so it belongs beside Continue, not trailing the
+          row where it reads as a separate remark.
+        */}
+        {!allAcked && (
+          <p className="text-[13px] text-black/45 dark:text-white/40">
+            Tick all {PILOT_REQUIREMENTS.length} to continue.
+          </p>
+        )}
+        {/*
           A link rather than a button: on step one there is no earlier step to
           go back to, so back means leaving the flow for the site.
         */}
@@ -175,11 +185,6 @@ function Requirements({
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
         </Link>
-        {!allAcked && (
-          <p className="text-[13px] text-black/45 dark:text-white/40">
-            Tick all {PILOT_REQUIREMENTS.length} to continue.
-          </p>
-        )}
       </div>
     </div>
   );
