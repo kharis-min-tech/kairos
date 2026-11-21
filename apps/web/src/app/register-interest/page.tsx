@@ -170,7 +170,13 @@ function Requirements({
           row where it reads as a separate remark.
         */}
         {!allAcked && (
-          <p className="text-[13px] text-black/45 dark:text-white/40">
+          // self-end drops it below the button's centre line; the gold
+          // asterisk is the same marker the form uses for a required field,
+          // so the two read as one convention across both steps.
+          <p className="self-end pb-[10px] text-[12px] text-black/45 dark:text-white/40">
+            <span aria-hidden className="mr-1 text-[#f8b537]">
+              *
+            </span>
             Tick all {PILOT_REQUIREMENTS.length} to continue.
           </p>
         )}
