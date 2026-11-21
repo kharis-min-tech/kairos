@@ -94,8 +94,6 @@ function Requirements({
           Before you volunteer
         </h2>
         <p className="mt-3 text-[15px] leading-relaxed text-black/60 dark:text-white/55">
-          These are not terms and conditions. They are the things that have sunk pilots
-          elsewhere, and we would rather you say no now than discover them in week three.
           Tick each one you can genuinely commit to.
         </p>
 
