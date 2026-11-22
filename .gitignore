@@ -21,3 +21,9 @@ grant-proposal/
 *.keystore
 # Local dev server logs (scripts/local-up.ps1)
 .local-logs/
+
+# Generated tutorial clips — produced by tools/tour-video, never committed.
+apps/docs/public/clips/
+
+# A build run out of the way of a live dev server (see next.config.ts).
+apps/web/.next-build/

@@ -1,5 +1,16 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from 'tailwindcss';
+
+/**
+ * ESM, not `module.exports`.
+ *
+ * This file is `.ts`, and Node 26 loads a `.ts` file as an ES module. A
+ * CommonJS `module.exports` in one therefore throws `ReferenceError: module
+ * is not defined` the moment Tailwind reads it -- which is on every CSS
+ * rebuild. The dev server died on each edit to globals.css, and because the
+ * stylesheet then failed to compile the page came back unstyled, which looks
+ * exactly like a broken stylesheet rather than a crashed config load.
+ */
+const config: Config = {
   darkMode: 'class',
   content: [
     './src/**/*.{ts,tsx}',
@@ -110,3 +121,5 @@ module.exports = {
   },
   plugins: [],
 };
+
+export default config;

@@ -349,7 +349,10 @@
 
   /* 8 · halo + hover lift */
   .mo-halo-spin {
-    animation: mo-spin 3600ms linear infinite;
+    /* Both custom properties are set by <Halo>; the fallbacks keep a bare
+       .mo-halo-spin working if one is ever used outside the component. */
+    animation: mo-spin var(--mo-halo-duration, 3600ms) linear infinite;
+    animation-direction: var(--mo-halo-direction, normal);
   }
   .mo-lift {
     transition:
@@ -367,7 +370,37 @@
     animation: mo-fill 1300ms var(--mo-draw) both;
   }
 
+  /* 8b · the beacon: one control that asks to be pressed
+   *
+   * For a call to action that has to out-compete the primary button beside
+   * it. Three parts, because any one alone reads as a mistake: a slow float
+   * so the eye catches movement in the periphery, a glow that breathes under
+   * it so it lifts off the page, and the Halo's travelling light around the
+   * rim. The float and the glow are deliberately out of phase (4.2s against
+   * 2.8s) -- locking them together looks mechanical, like a loading state.
+   *
+   * Both stop dead under reduced motion, which is the whole reason they are
+   * declared inside a no-preference query rather than switched off in one:
+   * a vestibular trigger is exactly a thing that floats and pulses.
+   */
+  .mo-beacon-glow {
+    position: absolute;
+    inset: -14px;
+    border-radius: 9999px;
+    background: radial-gradient(
+      closest-side,
+      rgba(93, 63, 211, 0.42),
+      rgba(248, 181, 55, 0.18) 60%,
+      transparent 100%
+    );
+    filter: blur(14px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
   /* Off-screen / hidden-tab pause (set from JS) */
+  [data-paused='true'] .mo-beacon,
+  [data-paused='true'] .mo-beacon-glow,
   [data-paused='true'] .mo-drift,
   [data-paused='true'].mo-halo,
   [data-paused='true'] .mo-halo-spin,
@@ -415,6 +448,23 @@
 }
 @keyframes mo-spin {
   to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes mo-beacon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes mo-beacon-breathe {
+  0%, 100% { opacity: 0.4; transform: scale(0.97); }
+  50% { opacity: 0.85; transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mo-beacon {
+    animation: mo-beacon-float 4200ms ease-in-out infinite;
+  }
+  .mo-beacon-glow {
+    animation: mo-beacon-breathe 2800ms ease-in-out infinite;
+  }
 }
 @keyframes mo-fill {
   from { transform: scaleX(0); }

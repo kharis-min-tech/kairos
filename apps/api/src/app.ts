@@ -21,6 +21,7 @@ import { formsRouter } from './forms/router';
 import { attendanceRouter } from './attendance/router';
 import { mediaRouter } from './media/router';
 import { giftAidRouter, publicGiftAidRouter } from './gift-aid/router';
+import { publicPilotInterestRouter } from './pilot-interest/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -69,6 +70,10 @@ export function createApp() {
   // because the people it serves have no Kairos account and so can owe no
   // policy acceptance.
   app.route('/api/public/gift-aid', publicGiftAidRouter);
+
+  // The pilot sign-up, for the same reason: every branch leader answering it
+  // is doing so before anyone at their branch has an account.
+  app.route('/api/public/pilot-interest', publicPilotInterestRouter);
 
   // Consent gate — 403s any /api/* request from a user who owes a required
   // policy acceptance (with an allowlist for the consent flow + GDPR

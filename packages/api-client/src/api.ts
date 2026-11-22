@@ -187,6 +187,8 @@ import type {
   PublicGiftAidDeclarationRequest,
   RecordGiftAidWithdrawalRequest,
   GiftAidDeclarationTextResponse,
+  PilotRequirementsResponse,
+  SubmitPilotInterestRequest,
   GiftAidListParams,
   GiftAidRegisterRow,
   GiftAidStatus,
@@ -1866,6 +1868,26 @@ export function createApiClient(
         const query = qs.toString();
         return client.getBlob(`/api/gift-aid/register.csv${query ? `?${query}` : ''}`);
       },
+    },
+
+    /**
+     * The pilot sign-up: a branch putting itself forward to go first.
+     *
+     * `submit` and `requirements` take no token. Everyone the form serves is
+     * a branch leader answering before anyone at their branch has an account,
+     * which is the whole ordering of the rollout.
+     */
+    pilotInterest: {
+      requirements: () =>
+        client.get<ApiResponse<PilotRequirementsResponse>>(
+          '/api/public/pilot-interest/requirements',
+        ),
+
+      submit: (data: SubmitPilotInterestRequest) =>
+        client.post<ApiResponse<{ submittedAt: string }>>(
+          '/api/public/pilot-interest',
+          data,
+        ),
     },
   };
 }
