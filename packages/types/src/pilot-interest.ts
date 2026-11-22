@@ -9,99 +9,99 @@ import { BRAND_NAME } from './brand';
  * on enthusiasm alone and then meets the daily approval queue will sour by
  * the third week."
  *
- * So the commitments live here, next to the version stamped onto every row.
- * The page renders this array and the API stores which version was rendered,
- * which means the record says what a branch was shown, and the wording
- * cannot drift between the page and the record the way duplicated copy
- * always does.
+ * So the commitments live here, next to the version stamped onto every
+ * submission. The page renders this array and the notification quotes the
+ * version, which means the record says what a branch was shown, and the
+ * wording cannot drift between the page and the record the way duplicated
+ * copy always does.
  *
- * They are read, not ticked. Six checkboxes would turn reading into a task
+ * They are read, not ticked. Five checkboxes would turn reading into a task
  * to be got through, and a stored tick would imply a promise nobody holds
  * anyone to. Changing the wording means bumping the version, nothing else.
  */
-export const PILOT_REQUIREMENTS_VERSION = '2026-11';
+export const PILOT_REQUIREMENTS_VERSION = '2026-11.2';
 
 export interface PilotRequirement {
   /** Stable id for the commitment. Not stored; the version is. */
   key:
-    | 'dailyApprovals'
-    | 'attendanceEveryService'
-    | 'noHistoryImport'
-    | 'pilotFeedback'
+    | 'engagement'
+    | 'onboardingLiaison'
+    | 'keyRoles'
     | 'training'
-    | 'retireOldSystem';
+    | 'activeUsage';
   title: string;
   detail: string;
 }
 
 export const PILOT_REQUIREMENTS: readonly PilotRequirement[] = [
   {
-    key: 'dailyApprovals',
-    title: 'Someone approves new members every day',
+    key: 'engagement',
+    title: 'You stay engaged, and you talk to us',
     detail:
-      'When a member signs up, they cannot use the app until someone at your branch approves them. That needs doing every day, including Mondays, because most people sign up straight after a Sunday service. If nobody checks until Wednesday, those members have been locked out for three days.',
+      'The pilot runs on a feedback loop, so communication is the thing it depends on most. We need to be able to reach you and your leaders, and to get an answer back, for the whole of the pilot.',
   },
   {
-    key: 'attendanceEveryService',
-    title: 'Attendance is taken at every service',
+    key: 'onboardingLiaison',
+    title: 'You appoint a dedicated onboarding liaison',
     detail:
-      'Take attendance at every service, not just most of them. Your reports are worked out from these numbers, so if a few services are missed, that month will show the wrong totals.',
+      'One named person whose job is to confirm your full list of departments and fellowships as they actually stand today, not as an old list says they stand. Everything else is built on that list being right.',
   },
   {
-    key: 'noHistoryImport',
-    title: 'You start with no data, not with your old records',
+    key: 'keyRoles',
+    title: 'You confirm your key roles up front',
     detail:
-      `Nothing moves across from your old system. Each member creates their own record in ${BRAND_NAME} when they sign up, so your reports will be empty at first and fill up as people join and attend. You will only see the full picture once most of your branch is using the app.`,
-  },
-  {
-    key: 'pilotFeedback',
-    title: 'You are first, so you will find the problems',
-    detail:
-      'Some things will not work properly, and your branch will hit them before anyone else does. We need a leader who will tell us exactly what went wrong, even when it is awkward to say. We fix what you report before the next branch starts.',
+      'A head of admin, a safeguarding lead for your branch, and every department leader and fellowship leader. These people are onboarded first, before anyone else at your branch.',
   },
   {
     key: 'training',
-    title: 'Two rounds of training, over one to two weeks',
+    title: 'Two to three hours of training a week, for two to three weeks',
     detail:
-      'Training happens twice. First we show you and your head of admin every part of the app, including what a member sees on their phone. Then your head of admin teaches each department leader, fellowship leader and role holder the part they will use. After that your branch has its own expert, so you are not waiting on us.',
+      `A rough commitment from you, your liaison and the leaders named above. The training covers every role and every feature of ${BRAND_NAME}. Your onboarding liaison or head of admin must be in every session, because they become the point of contact for any initial problems your branch hits.`,
   },
   {
-    key: 'retireOldSystem',
-    title: 'The old system gets switched off',
+    key: 'activeUsage',
+    title: 'You actually use it, and you tell us how it goes',
     detail:
-      'You pick a date to stop using your old system, and tell everyone well before it arrives. If both stay open, some people keep using the old one, and then neither system has everybody on it.',
+      'Daily use through the pilot, and feedback said plainly when something does not work. Your branch will hit problems before anyone else does, and we fix what you report before the next branch starts.',
   },
 ] as const;
 
 /**
- * What the plan looks for when choosing, as opposed to what it asks for.
+ * The branches a leader can put forward.
  *
- * Shown on the page as "what we are looking for" rather than as checkboxes,
- * because these are facts about a branch, not promises. Notably absent: size.
- * The plan rules it out in both directions — a large branch with a reluctant
- * leader "teaches us nothing except that people do not log in", and a very
- * small one "may not have enough of a normal mix of fellowships and
- * departments to exercise everything".
+ * A fixed list rather than a lookup against the branches table. The form is
+ * public and runs before any branch has been seeded for the pilot, so there
+ * is nothing authoritative to read from yet, and a free-text box invites
+ * twenty spellings of the same branch. The submission carries the name
+ * because there is no id to carry.
+ *
+ * Adding a branch here is the whole of adding a branch to the form.
  */
-export const PILOT_SELECTION_NOTES: readonly string[] = [
-  'A leader who wants to do it and will give direct feedback.',
-  'Someone available to act as head of admin, set up before members start signing up.',
-  'A safeguarding lead already in post.',
-  'A normal mix of fellowships and departments, so the pilot covers what every other branch will use.',
-  'We are not choosing on size, in either direction.',
+export const PILOT_BRANCHES: readonly string[] = [
+  'London',
+  'Accra',
+  'Birmingham',
+  'Brighton',
+  'Bristol',
+  'Chatham',
+  'Chelmsford',
+  'Coventry',
+  'Croydon',
+  'Freetown',
+  'Luton',
+  'Northampton',
+  'Nottingham',
+  'Orpington',
+  'Reading',
+  'Swindon',
+  'Manchester',
+  'KP2 Barking',
+  'KP2 Birmingham',
+  'KP2 London',
+  'KP2 Peterborough',
+  'KP2 Romford',
+  'KP2 Southampton',
 ] as const;
-
-export const PILOT_ROLE_VALUES = ['branch_pastor', 'branch_leader', 'other'] as const;
-export type PilotRole = (typeof PILOT_ROLE_VALUES)[number];
-
-export const PILOT_ROLE_LABEL: Record<PilotRole, string> = {
-  branch_pastor: 'Branch pastor',
-  branch_leader: 'Branch leader',
-  other: 'Another role at the branch',
-};
-
-export const PILOT_INTEREST_STATUS_VALUES = ['new', 'reviewing', 'selected', 'declined'] as const;
-export type PilotInterestStatus = (typeof PILOT_INTEREST_STATUS_VALUES)[number];
 
 export const PILOT_NAME_MAX = 200;
 export const PILOT_EMAIL_MAX = 255;
@@ -111,62 +111,21 @@ export const PILOT_EMAIL_MAX = 255;
 export interface PilotRequirementsResponse {
   version: string;
   requirements: PilotRequirement[];
-  selectionNotes: string[];
-}
-
-export interface SubmitPilotInterestRequest {
-  fullName: string;
-  roleAtBranch: PilotRole;
-  roleOther?: string;
-  email: string;
-  phone?: string;
-  branchId?: string;
-  branchName: string;
-  fellowshipCount?: number;
-  departmentCount?: number;
-  approxMembers?: number;
-  headOfAdminName?: string;
-  headOfAdminEmail?: string;
-  safeguardingLeadInPost: boolean;
-  safeguardingLeadName?: string;
-  earliestStart?: string;
-  whyThisBranch?: string;
-  notes?: string;
 }
 
 /**
- * A row as the admin queue receives it.
+ * A submission.
  *
- * Spelled out rather than derived from the request type. What a browser sends
- * omits a field; what the database returns carries an explicit null, and
- * pretending those are the same shape makes every optional field lie.
+ * Nothing is persisted: the API validates this and emails it. So this shape
+ * is the whole record, and every field in it has to earn a line in that
+ * email. There is no role field because the form is addressed to the branch
+ * leader; no phone because we reply by email; and no free text because a
+ * paragraph about why a branch should go first was never going to decide it.
  */
-export interface PilotInterestRow {
-  id: string;
-  fullName: string;
-  roleAtBranch: PilotRole;
-  roleOther: string | null;
+export interface SubmitPilotInterestRequest {
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string | null;
-  branchId: string | null;
   branchName: string;
-  fellowshipCount: number | null;
-  departmentCount: number | null;
-  approxMembers: number | null;
-  headOfAdminName: string | null;
-  headOfAdminEmail: string | null;
-  safeguardingLeadInPost: boolean;
-  safeguardingLeadName: string | null;
-  earliestStart: string | null;
-  requirementsVersion: string;
-  whyThisBranch: string | null;
-  notes: string | null;
-  status: PilotInterestStatus;
-  reviewNotes: string | null;
-  submittedAt: string;
-}
-
-export interface PilotInterestListResponse {
-  rows: PilotInterestRow[];
-  total: number;
+  approxMembers?: number;
 }

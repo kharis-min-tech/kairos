@@ -2,19 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Check, ShieldCheck, AlertCircle, Info } from 'lucide-react';
-import {
-  BRAND_NAME,
-  PILOT_REQUIREMENTS,
-  PILOT_SELECTION_NOTES,
-  PILOT_ROLE_LABEL,
-  PILOT_ROLE_VALUES,
-  type PilotRole,
-} from '@kairos/types';
-import { useQuery } from '@tanstack/react-query';
-import { CustomSelect, Input, Textarea } from '@kairos/ui';
-import { DateSelect } from '@/components/date-select';
-import { api } from '@/lib/api';
+import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { BRAND_NAME, PILOT_BRANCHES, PILOT_REQUIREMENTS } from '@kairos/types';
+import { CustomSelect, Input, Label } from '@kairos/ui';
 import { useSubmitPilotInterest } from '@/hooks/use-pilot-interest';
 
 /**
@@ -66,7 +56,7 @@ function Hero({ step }: { step: 'requirements' | 'form' }) {
 /**
  * What the pilot asks of a branch, to be read before the form.
  *
- * Deliberately not a set of checkboxes. Ticking six boxes turns reading into
+ * Deliberately not a set of checkboxes. Ticking five boxes turns reading into
  * a task to be got through, and a tick is worth nothing anyway: nobody is
  * held to it, and storing six booleans would have implied we were. What a
  * branch leader needs is to know what they are putting their branch up for
@@ -78,28 +68,31 @@ function Requirements({ onContinue }: { onContinue: () => void }) {
     <div className="space-y-10">
       <section>
         <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
-          Before you volunteer
+          Before you fill in the form
         </h2>
         <p className="mt-3 text-[15px] leading-relaxed text-black/60 dark:text-white/55">
-          Please read these before you fill in the form, so you know what your
+          Please read these carefully as they detail the expectations and commitments required for a successful onboarding of your branch onto iKharis, so you know what your
           branch would be taking on.
         </p>
 
-        <ul className="mt-7 space-y-3">
+        {/*
+          No cards. Five bordered boxes stacked in a column read as five
+          separate objects to be dealt with, when this is one list to be read
+          straight through. A hairline between items does the same separating
+          work without drawing a frame around every sentence.
+        */}
+        <ul className="mt-8 divide-y divide-black/[0.07] border-y border-black/[0.07] dark:divide-white/[0.07] dark:border-white/[0.07]">
           {PILOT_REQUIREMENTS.map((r, i) => (
-            <li
-              key={r.key}
-              className="flex gap-4 rounded-2xl border border-black/10 bg-black/[0.015] p-5 dark:border-white/10 dark:bg-white/[0.02]"
-            >
+            <li key={r.key} className="flex gap-5 py-6">
               {/*
-                A number, not a checkbox. It reads as "one of six things to
+                A number, not a checkbox. It reads as "one of five things to
                 read" rather than as a control the reader has to operate.
               */}
               <span
                 aria-hidden
-                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center self-start rounded-md bg-[#5D3FD3]/10 text-[12px] font-bold text-[#5D3FD3] dark:bg-white/[0.07] dark:text-[#a78bfa]"
+                className="shrink-0 pt-[3px] font-mono text-[13px] font-bold tabular-nums text-[#5D3FD3] dark:text-[#a78bfa]"
               >
-                {i + 1}
+                {String(i + 1).padStart(2, '0')}
               </span>
               <span>
                 <span className="block text-[15px] font-bold text-[#1a1c1c] dark:text-white">
@@ -109,24 +102,6 @@ function Requirements({ onContinue }: { onContinue: () => void }) {
                   {r.detail}
                 </span>
               </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="rounded-2xl border border-black/[0.08] bg-[#f9f9f9] p-6 dark:border-white/[0.08] dark:bg-white/[0.03]">
-        <h2 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
-          <ShieldCheck className="h-4 w-4" aria-hidden />
-          What we are looking for
-        </h2>
-        <ul className="mt-4 space-y-2">
-          {PILOT_SELECTION_NOTES.map((n) => (
-            <li
-              key={n}
-              className="flex gap-3 text-[14px] leading-relaxed text-black/60 dark:text-white/55"
-            >
-              <span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-black/30 dark:bg-white/30" aria-hidden />
-              {n}
             </li>
           ))}
         </ul>
@@ -161,103 +136,24 @@ function Requirements({ onContinue }: { onContinue: () => void }) {
 
 // ── Step two ──────────────────────────────────────────────
 
-/** Local today as YYYY-MM-DD. Training cannot start in the past. */
-function todayIso() {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-const field =
-  'h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-[15px] text-[#1a1c1c] outline-none transition placeholder:text-black/30 focus:border-[#5D3FD3] dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/25';
-const label =
-  'text-[11px] font-bold uppercase tracking-[0.16em] text-black/50 dark:text-white/45';
-
 /**
- * The required marker.
+ * The form.
  *
- * aria-hidden because the asterisk is for sighted readers only: the input
- * itself carries `required`, which is what a screen reader announces. Reading
- * out "star" on top of that is noise, and an asterisk with no explanation is
- * meaningless anyway -- hence the legend above the form.
- */
-function Req() {
-  return (
-    <span aria-hidden className="ml-1 text-[#f8b537]">
-      *
-    </span>
-  );
-}
-
-/**
- * One form field: its label, an explanation behind an info button, and the
- * input itself.
+ * Built out of the same pieces as the signup form, deliberately: `Label` with
+ * a plain `*` in the text, `Input` at `h-11`, `CustomSelect` for anything with
+ * a fixed set of answers. The earlier version of this page invented its own
+ * input class, its own gold asterisk and a per-field info button, none of
+ * which appear anywhere else in the product. A public form is the first thing
+ * a branch leader ever sees of it, so it is the last place that should look
+ * like a different application.
  *
- * The hint opens below the input rather than floating over it. A floating
- * tooltip needs hover to appear, and most of the people filling this in are
- * on a phone, where there is no hover -- and the page sits inside an
- * `overflow-hidden` container, so anything positioned past the edge of a
- * field would be clipped. Putting it after the input also means opening one
- * never shoves its own input out of line with the field beside it, which is
- * what happens if the hint pushes from above in a two-column row.
+ * What it asks for is deliberately short. There is no role field because the
+ * form is addressed to the branch leader; no phone because we reply by email;
+ * no head of admin or safeguarding lead because confirming those is a
+ * commitment on the previous step rather than a question here; no start date
+ * because we set the cadence; and no free text, because a paragraph on why a
+ * branch should go first was never going to be what decided it.
  */
-function Field({
-  htmlFor,
-  text,
-  hint,
-  required = false,
-  className,
-  children,
-}: {
-  htmlFor: string;
-  text: string;
-  hint: string;
-  required?: boolean;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  const hintId = `${htmlFor}-hint`;
-
-  return (
-    <div className={className}>
-      <div className="mb-2 flex items-center gap-1.5">
-        <label className={label} htmlFor={htmlFor}>
-          {text}
-          {required && <Req />}
-        </label>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls={hintId}
-          aria-label={`What to put in ${text}`}
-          // -m-1.5 keeps the icon the same size on screen while giving the
-          // tap target the padding a thumb needs.
-          className={`-m-1.5 shrink-0 rounded-full p-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5D3FD3] ${
-            open
-              ? 'text-[#5D3FD3] dark:text-[#a78bfa]'
-              : 'text-black/30 hover:text-[#5D3FD3] dark:text-white/30 dark:hover:text-[#a78bfa]'
-          }`}
-        >
-          <Info className="h-4 w-4" aria-hidden />
-        </button>
-      </div>
-
-      {children}
-
-      {open && (
-        <p
-          id={hintId}
-          className="mt-2 rounded-lg border border-[#5D3FD3]/25 bg-[#5D3FD3]/[0.05] px-3 py-2 text-[13px] leading-relaxed text-black/65 dark:text-white/60"
-        >
-          {hint}
-        </p>
-      )}
-    </div>
-  );
-}
-
 function InterestForm({
   onBack,
   onDone,
@@ -266,62 +162,38 @@ function InterestForm({
   onDone: () => void;
 }) {
   const submit = useSubmitPilotInterest();
-  // The dropdown is a convenience, not a gate: the plan seeds a branch only
-  // after one is chosen, so a branch that is not in this list yet is exactly
-  // the kind of answer we still want.
-  const branches = useQuery({
-    queryKey: ['public-branches'],
-    queryFn: async () => (await api.branches.listPublic()).data ?? [],
-    staleTime: 5 * 60 * 1000,
-  });
 
   const [v, setV] = useState({
-    fullName: '',
-    roleAtBranch: 'branch_pastor' as PilotRole,
-    roleOther: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    phone: '',
-    branchId: '',
     branchName: '',
-    fellowshipCount: '',
-    departmentCount: '',
     approxMembers: '',
-    headOfAdminName: '',
-    headOfAdminEmail: '',
-    safeguardingLeadInPost: false,
-    safeguardingLeadName: '',
-    earliestStart: '',
-    whyThisBranch: '',
-    notes: '',
   });
-  const set = (k: keyof typeof v, value: string | boolean) => setV({ ...v, [k]: value });
+  const set = (k: keyof typeof v, value: string) => setV((prev) => ({ ...prev, [k]: value }));
   const [error, setError] = useState<string | null>(null);
 
   const num = (s: string) => (s.trim() === '' ? undefined : Number(s));
-  const blank = (s: string) => (s.trim() === '' ? undefined : s.trim());
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    // The select cannot be left empty by the keyboard, but it starts empty,
+    // so submitting without touching it has to be caught here: a native
+    // `required` on a CustomSelect trigger would not fire.
+    if (!v.branchName) {
+      setError('Please choose your branch.');
+      return;
+    }
+
     try {
       await submit.mutateAsync({
-        fullName: v.fullName,
-        roleAtBranch: v.roleAtBranch,
-        roleOther: blank(v.roleOther),
-        email: v.email,
-        phone: blank(v.phone),
-        branchId: blank(v.branchId),
+        firstName: v.firstName.trim(),
+        lastName: v.lastName.trim(),
+        email: v.email.trim(),
         branchName: v.branchName,
-        fellowshipCount: num(v.fellowshipCount),
-        departmentCount: num(v.departmentCount),
         approxMembers: num(v.approxMembers),
-        headOfAdminName: blank(v.headOfAdminName),
-        headOfAdminEmail: blank(v.headOfAdminEmail),
-        safeguardingLeadInPost: v.safeguardingLeadInPost,
-        safeguardingLeadName: blank(v.safeguardingLeadName),
-        earliestStart: blank(v.earliestStart),
-        whyThisBranch: blank(v.whyThisBranch),
-        notes: blank(v.notes),
       });
       onDone();
     } catch (err) {
@@ -333,67 +205,29 @@ function InterestForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-10">
-      <p className="text-[13px] text-black/45 dark:text-white/40">
-        Fields marked <span className="text-[#f8b537]">*</span> are required.
-      </p>
-
       <section className="space-y-5">
         <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
           You
         </h2>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field
-            htmlFor="fullName"
-            text="Your name"
-            required
-            hint="The name your branch knows you by."
-          >
-            <Input id="fullName" required className={field} value={v.fullName}
-              onChange={(e) => set('fullName', e.target.value)} />
-          </Field>
-          <Field
-            htmlFor="roleAtBranch"
-            text="Your role"
-            required
-            hint="Your position at the branch. Choose 'Another role at the branch' if you are filling this in on a leader's behalf."
-          >
-            <CustomSelect
-              id="roleAtBranch"
-              value={v.roleAtBranch}
-              onValueChange={(value) => set('roleAtBranch', value)}
-              options={PILOT_ROLE_VALUES.map((r) => ({ value: r, label: PILOT_ROLE_LABEL[r] }))}
-              triggerClassName={field}
-            />
-          </Field>
-          {v.roleAtBranch === 'other' && (
-            <Field
-              htmlFor="roleOther"
-              text="What is your role?"
-              required
-              hint="Your position in your own words, for example head of admin or branch administrator."
-              className="sm:col-span-2"
-            >
-              <Input id="roleOther" required className={field} value={v.roleOther}
-                onChange={(e) => set('roleOther', e.target.value)} />
-            </Field>
-          )}
-          <Field
-            htmlFor="email"
-            text="Email"
-            required
-            hint="The address we will reply to. Please use one you check regularly."
-          >
-            <Input id="email" type="email" required className={field} value={v.email}
-              onChange={(e) => set('email', e.target.value)} />
-          </Field>
-          <Field
-            htmlFor="phone"
-            text="Phone (optional)"
-            hint="A number we can call if we need a quick answer. Leave it blank if you would rather we only email."
-          >
-            <Input id="phone" className={field} value={v.phone}
-              onChange={(e) => set('phone', e.target.value)} />
-          </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First Name *</Label>
+            <Input id="firstName" required className="h-11" value={v.firstName}
+              onChange={(e) => set('firstName', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name *</Label>
+            <Input id="lastName" required className="h-11" value={v.lastName}
+              onChange={(e) => set('lastName', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">Email *</Label>
+          <Input id="email" type="email" required className="h-11"
+            placeholder="you@example.co.uk" value={v.email}
+            onChange={(e) => set('email', e.target.value)} />
         </div>
       </section>
 
@@ -401,159 +235,24 @@ function InterestForm({
         <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
           Your branch
         </h2>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field
-            htmlFor="branchName"
-            text="Branch"
-            required
-            hint="The branch you are putting forward. Start typing and pick it from the list. If it is not there, type the full name anyway. Branches are set up after one is chosen."
-            className="sm:col-span-2"
-          >
-            <Input id="branchName" required list="known-branches" className={field}
-              placeholder="Kharis London Central"
-              value={v.branchName}
-              onChange={(e) => {
-                const name = e.target.value;
-                const hit = (branches.data ?? []).find((b) => b.branchName === name);
-                setV({ ...v, branchName: name, branchId: hit?.id ?? '' });
-              }} />
-            <datalist id="known-branches">
-              {(branches.data ?? []).map((b) => (
-                <option key={b.id} value={b.branchName} />
-              ))}
-            </datalist>
-          </Field>
-          <Field
-            htmlFor="fellowshipCount"
-            text="Fellowships"
-            required
-            hint="How many fellowships your branch runs at the moment, such as men's, women's or youth. Your best count is fine. Enter 0 if you have none."
-          >
-            <Input id="fellowshipCount" inputMode="numeric" required min={0} className={field}
-              value={v.fellowshipCount} onChange={(e) => set('fellowshipCount', e.target.value)} />
-          </Field>
-          <Field
-            htmlFor="departmentCount"
-            text="Departments"
-            required
-            hint="How many departments your branch runs, such as choir, ushering, media or protocol. Your best count is fine. Enter 0 if you have none."
-          >
-            <Input id="departmentCount" inputMode="numeric" required min={0} className={field}
-              value={v.departmentCount} onChange={(e) => set('departmentCount', e.target.value)} />
-          </Field>
-          <Field
-            htmlFor="approxMembers"
-            text="Roughly how many members (optional)"
-            hint="An approximate figure is fine. We are not choosing a branch on size; it only tells us what to expect in the first week."
-            className="sm:col-span-2"
-          >
-            <Input id="approxMembers" inputMode="numeric" className={field}
-              value={v.approxMembers} onChange={(e) => set('approxMembers', e.target.value)} />
-          </Field>
-        </div>
-      </section>
 
-      <section className="space-y-5">
-        <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
-          Who would run it
-        </h2>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field
-            htmlFor="headOfAdminName"
-            text="Head of admin"
-            hint="The person who would approve new members each day and handle the everyday admin. Leave it blank if you have not decided yet."
-          >
-            <Input id="headOfAdminName" className={field} value={v.headOfAdminName}
-              onChange={(e) => set('headOfAdminName', e.target.value)} />
-          </Field>
-          <Field
-            htmlFor="headOfAdminEmail"
-            text="Their email"
-            hint="The address we would use to set up the head of admin's account before members start signing up."
-          >
-            <Input id="headOfAdminEmail" type="email" className={field} value={v.headOfAdminEmail}
-              onChange={(e) => set('headOfAdminEmail', e.target.value)} />
-          </Field>
-          <div className="sm:col-span-2">
-            <button type="button" aria-pressed={v.safeguardingLeadInPost}
-              onClick={() => set('safeguardingLeadInPost', !v.safeguardingLeadInPost)}
-              className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition ${
-                v.safeguardingLeadInPost
-                  ? 'border-[#5D3FD3]/40 bg-[#5D3FD3]/[0.06]'
-                  : 'border-black/10 dark:border-white/10'
-              }`}>
-              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                v.safeguardingLeadInPost
-                  ? 'border-[#5D3FD3] bg-gradient-to-br from-[#451ebb] to-[#5d3fd3]'
-                  : 'border-black/20 dark:border-white/25'
-              }`}>
-                {v.safeguardingLeadInPost && <Check className="h-3.5 w-3.5 text-white" aria-hidden />}
-              </span>
-              <span className="text-[14px] text-[#1a1c1c] dark:text-white">
-                We already have a safeguarding lead in post
-              </span>
-            </button>
-          </div>
-          {v.safeguardingLeadInPost && (
-            <Field
-              htmlFor="safeguardingLeadName"
-              text="Their name"
-              required
-              hint="The person who already holds the safeguarding role at your branch."
-              className="sm:col-span-2"
-            >
-              <Input id="safeguardingLeadName" required className={field}
-                value={v.safeguardingLeadName}
-                onChange={(e) => set('safeguardingLeadName', e.target.value)} />
-            </Field>
-          )}
-          <Field
-            htmlFor="earliestStart"
-            text="Earliest you could start training"
-            hint="The earliest date your branch could begin the first round of training. An estimate is fine. It is not a commitment."
-            className="sm:col-span-2"
-          >
-            {/*
-              The house picker rather than <input type="date">. The native
-              control draws the browser's own calendar, which ignores every
-              token on the page. triggerClassName makes the closed field
-              match the inputs beside it; the popover is the same calendar
-              used throughout the app.
-            */}
-            <DateSelect
-              id="earliestStart"
-              value={v.earliestStart}
-              onChange={(iso) => set('earliestStart', iso)}
-              placeholder="Choose a date"
-              minDate={todayIso()}
-              triggerClassName={`${field} flex items-center justify-between gap-2 text-left`}
-            />
-          </Field>
+        <div className="space-y-2">
+          <Label htmlFor="branchName">Branch *</Label>
+          <CustomSelect
+            id="branchName"
+            value={v.branchName}
+            onValueChange={(value) => set('branchName', value)}
+            placeholder="Select a branch..."
+            options={PILOT_BRANCHES.map((b) => ({ value: b, label: b }))}
+          />
         </div>
-      </section>
 
-      <section className="space-y-5">
-        <h2 className="text-xs font-extrabold uppercase tracking-[0.22em] text-black/45 dark:text-white/45">
-          In your own words
-        </h2>
-        <Field
-          htmlFor="whyThisBranch"
-          text="Why your branch should go first"
-          hint="Anything that makes your branch a good first choice: how ready your leaders are, how well attendance is already kept, or why the timing suits you."
-        >
-          <Textarea id="whyThisBranch" rows={4}
-            className={`${field} h-auto py-3 leading-relaxed`}
-            value={v.whyThisBranch} onChange={(e) => set('whyThisBranch', e.target.value)} />
-        </Field>
-        <Field
-          htmlFor="notes"
-          text="Anything we should know"
-          hint="Anything that might affect the timing or the setup, such as a building move, a busy season or a leader on leave. Leave it blank if there is nothing."
-        >
-          <Textarea id="notes" rows={3}
-            className={`${field} h-auto py-3 leading-relaxed`}
-            value={v.notes} onChange={(e) => set('notes', e.target.value)} />
-        </Field>
+        <div className="space-y-2">
+          <Label htmlFor="approxMembers">Roughly how many members</Label>
+          <Input id="approxMembers" type="number" inputMode="numeric" min={0}
+            className="h-11" value={v.approxMembers}
+            onChange={(e) => set('approxMembers', e.target.value)} />
+        </div>
       </section>
 
       {error && (

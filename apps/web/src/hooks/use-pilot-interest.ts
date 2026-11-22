@@ -1,46 +1,20 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { SubmitPilotInterestRequest } from '@kairos/types';
 
 /**
- * The commitments, fetched rather than hardcoded in the page.
+ * Submitting is the whole module.
  *
- * The wording a person agreed to is stamped onto their row by version. If the
- * page carried its own copy, the two could drift and nobody would notice
- * until somebody argued about what they had signed up to.
+ * Nothing is stored, so there is nothing to read back: no list, no status, no
+ * cache to invalidate. The commitments the page shows come from
+ * `PILOT_REQUIREMENTS` directly rather than through a query, since they are a
+ * constant the web app already has at build time.
  */
-export function usePilotRequirements() {
-  return useQuery({
-    queryKey: ['pilot-interest', 'requirements'],
-    queryFn: async () => (await api.pilotInterest.requirements()).data!,
-    staleTime: Infinity,
-  });
-}
-
 export function useSubmitPilotInterest() {
   return useMutation({
     mutationFn: async (data: SubmitPilotInterestRequest) =>
       (await api.pilotInterest.submit(data)).data!,
-  });
-}
-
-export function usePilotInterestList(params?: { status?: string }) {
-  return useQuery({
-    queryKey: ['pilot-interest', params],
-    queryFn: async () => (await api.pilotInterest.list(params)).data!,
-  });
-}
-
-export function useUpdatePilotInterest() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      ...data
-    }: { id: string; status: string; reviewNotes?: string }) =>
-      (await api.pilotInterest.update(id, data)).data!,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['pilot-interest'] }),
   });
 }

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { signTestToken, TEST_IDS } from '../test-helpers';
-import { PILOT_REQUIREMENTS } from '@kairos/types';
+import { PILOT_BRANCHES, PILOT_REQUIREMENTS } from '@kairos/types';
 
 vi.mock('../lib/grants', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/grants')>();
@@ -10,25 +9,17 @@ vi.mock('../lib/grants', async (importOriginal) => {
 const mockDb = { select: vi.fn(), insert: vi.fn(), update: vi.fn(), delete: vi.fn() };
 vi.mock('../db', () => ({ db: mockDb }));
 
-vi.mock('./service', () => ({
-  submitPilotInterest: vi.fn(),
-  listPilotInterest: vi.fn(),
-  updatePilotInterest: vi.fn(),
-}));
+vi.mock('./service', () => ({ submitPilotInterest: vi.fn() }));
 
 const service = await import('./service');
 const { createApp } = await import('../app');
 const app = createApp();
 
 const valid = {
-  fullName: 'Grace Mensah',
-  roleAtBranch: 'branch_pastor',
+  firstName: 'Grace',
+  lastName: 'Mensah',
   email: 'grace@example.org',
-  branchName: 'Kharis London Central',
-  fellowshipCount: 6,
-  departmentCount: 4,
-  safeguardingLeadInPost: true,
-  safeguardingLeadName: 'Tobi Balogun',
+  branchName: 'London',
 };
 
 const post = (body: unknown) =>
@@ -43,9 +34,8 @@ beforeEach(() => vi.clearAllMocks());
 describe('POST /api/public/pilot-interest', () => {
   it('accepts a complete submission without a signed-in user', async () => {
     vi.mocked(service.submitPilotInterest).mockResolvedValue({
-      id: 'abc',
-      submittedAt: new Date('2026-11-20T10:00:00Z'),
-    } as never);
+      submittedAt: '2026-11-20T10:00:00.000Z',
+    });
 
     const res = await post(valid);
     expect(res.status).toBe(201);
@@ -55,51 +45,41 @@ describe('POST /api/public/pilot-interest', () => {
   // The commitments are read, not ticked, so there is nothing to confirm in
   // the payload. A submission that carries no acknowledgements is complete.
   it('does not require any per-commitment confirmation', async () => {
-    vi.mocked(service.submitPilotInterest).mockResolvedValue({ id: 'q' } as never);
+    vi.mocked(service.submitPilotInterest).mockResolvedValue({ submittedAt: 'x' });
     const res = await post(valid);
     expect(res.status).toBe(201);
   });
 
-  it('rejects a claimed safeguarding lead with no name', async () => {
-    const res = await post({ ...valid, safeguardingLeadName: undefined });
-    expect(res.status).toBe(400);
-  });
-
-  // Saying there is no safeguarding lead is a valid answer. The plan uses it
-  // to choose, not to filter out.
-  it('accepts a branch that has no safeguarding lead yet', async () => {
-    vi.mocked(service.submitPilotInterest).mockResolvedValue({ id: 'x' } as never);
-    const res = await post({
-      ...valid,
-      safeguardingLeadInPost: false,
-      safeguardingLeadName: undefined,
-    });
-    expect(res.status).toBe(201);
-  });
-
-  it('requires a role description when the role is "other"', async () => {
-    const res = await post({ ...valid, roleAtBranch: 'other' });
-    expect(res.status).toBe(400);
-  });
-
-  it('requires a branch name', async () => {
-    const res = await post({ ...valid, branchName: '   ' });
-    expect(res.status).toBe(400);
-  });
-
-  // A blank count is the one answer that cannot be read either way: it could
-  // mean none, or it could mean unanswered, and the plan picks on the mix.
-  it.each(['fellowshipCount', 'departmentCount'])('requires %s', async (key) => {
-    const { [key]: _omitted, ...rest } = valid as Record<string, unknown>;
-    const res = await post(rest);
+  it.each(['firstName', 'lastName'])('requires %s', async (key) => {
+    const res = await post({ ...valid, [key]: '   ' });
     expect(res.status).toBe(400);
     expect(service.submitPilotInterest).not.toHaveBeenCalled();
   });
 
-  // Zero is a real answer and must not be read as missing.
-  it('accepts a branch with no departments yet', async () => {
-    vi.mocked(service.submitPilotInterest).mockResolvedValue({ id: 'z' } as never);
-    const res = await post({ ...valid, departmentCount: 0 });
+  it('rejects an address that is not an email', async () => {
+    const res = await post({ ...valid, email: 'grace.example.org' });
+    expect(res.status).toBe(400);
+  });
+
+  // The form offers a dropdown, so a branch outside the list did not come
+  // from the form.
+  it('rejects a branch that is not one of ours', async () => {
+    const res = await post({ ...valid, branchName: 'Atlantis' });
+    expect(res.status).toBe(400);
+    expect(service.submitPilotInterest).not.toHaveBeenCalled();
+  });
+
+  it('accepts every branch on the list', async () => {
+    vi.mocked(service.submitPilotInterest).mockResolvedValue({ submittedAt: 'x' });
+    for (const branchName of PILOT_BRANCHES) {
+      const res = await post({ ...valid, branchName });
+      expect(res.status, branchName).toBe(201);
+    }
+  });
+
+  it('accepts a submission that leaves the member count blank', async () => {
+    vi.mocked(service.submitPilotInterest).mockResolvedValue({ submittedAt: 'z' });
+    const res = await post(valid);
     expect(res.status).toBe(201);
   });
 });
@@ -116,31 +96,15 @@ describe('GET /api/public/pilot-interest/requirements', () => {
   });
 });
 
-describe('the admin queue', () => {
-  it('refuses an anonymous caller', async () => {
-    const res = await app.request('/api/pilot-interest');
-    expect(res.status).toBe(401);
-    expect(service.listPilotInterest).not.toHaveBeenCalled();
-  });
-
-  // Who else has volunteered is not a branch's business, so an ordinary
-  // member - including one with branch grants - cannot read the queue.
-  it('refuses a signed-in member who is not a platform admin', async () => {
-    const token = await signTestToken({ memberId: TEST_IDS.memberId, systemRole: 'member' });
-    const res = await app.request('/api/pilot-interest', {
-      headers: { authorization: `Bearer ${token}` },
-    });
-    expect(res.status).toBe(403);
-    expect(service.listPilotInterest).not.toHaveBeenCalled();
-  });
-
-  it('serves a platform admin', async () => {
-    vi.mocked(service.listPilotInterest).mockResolvedValue({ rows: [], total: 0 } as never);
-    const token = await signTestToken({ memberId: TEST_IDS.memberId, systemRole: 'admin' });
-    const res = await app.request('/api/pilot-interest', {
-      headers: { authorization: `Bearer ${token}` },
-    });
-    expect(res.status).toBe(200);
-    expect(service.listPilotInterest).toHaveBeenCalledOnce();
+// The queue is an inbox now. Nothing persists, so there is nothing to read
+// back, and the admin routes that used to serve it are gone rather than
+// merely unlinked.
+describe('the retired admin queue', () => {
+  it.each([
+    ['GET', '/api/pilot-interest'],
+    ['PATCH', '/api/pilot-interest/some-id'],
+  ])('%s %s is no longer routed', async (method, path) => {
+    const res = await app.request(path, { method });
+    expect(res.status).toBe(404);
   });
 });

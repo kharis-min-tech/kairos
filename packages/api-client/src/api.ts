@@ -189,7 +189,6 @@ import type {
   GiftAidDeclarationTextResponse,
   PilotRequirementsResponse,
   SubmitPilotInterestRequest,
-  PilotInterestListResponse,
   GiftAidListParams,
   GiftAidRegisterRow,
   GiftAidStatus,
@@ -1885,27 +1884,8 @@ export function createApiClient(
         ),
 
       submit: (data: SubmitPilotInterestRequest) =>
-        client.post<ApiResponse<{ id: string; submittedAt: string }>>(
+        client.post<ApiResponse<{ submittedAt: string }>>(
           '/api/public/pilot-interest',
-          data,
-        ),
-
-      // ── Admin (platform admin) ──
-
-      list: (params?: { status?: string; limit?: number; offset?: number }) => {
-        const qs = new URLSearchParams();
-        if (params?.status) qs.set('status', params.status);
-        if (params?.limit) qs.set('limit', String(params.limit));
-        if (params?.offset) qs.set('offset', String(params.offset));
-        const q = qs.toString();
-        return client.get<ApiResponse<PilotInterestListResponse>>(
-          `/api/pilot-interest${q ? `?${q}` : ''}`,
-        );
-      },
-
-      update: (id: string, data: { status: string; reviewNotes?: string }) =>
-        client.patch<ApiResponse<{ id: string; status: string }>>(
-          `/api/pilot-interest/${id}`,
           data,
         ),
     },

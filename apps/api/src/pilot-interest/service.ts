@@ -1,12 +1,5 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
-import type { Database } from '@kairos/database';
-import { branches, pilotInterest } from '@kairos/database';
-import {
-  PILOT_REQUIREMENTS_VERSION,
-  PILOT_ROLE_LABEL,
-  type PilotInterestStatus,
-} from '@kairos/types';
-import { isMailerLive, logger, NotFoundError, sendNotificationEmail } from '@kairos/utils';
+import { PILOT_REQUIREMENTS_VERSION } from '@kairos/types';
+import { isMailerLive, sendNotificationEmail } from '@kairos/utils';
 import { renderLayout } from '../notifications/templates/_layout';
 import type { SubmitPilotInterestInput } from './schemas';
 
@@ -16,89 +9,37 @@ export interface SubmissionContext {
   userAgent: string | null;
 }
 
-const blankToNull = (v: string | undefined | null) => {
-  const t = v?.trim();
-  return t ? t : null;
-};
-
 /**
- * Record a branch's offer to go first.
+ * Pass a branch's offer to go first on to the people who decide.
  *
- * Deliberately NOT idempotent and deliberately not de-duplicated by email.
- * Two leaders from the same branch both writing in is a signal worth seeing,
- * and the same person submitting twice usually means they thought of
- * something after the first one. Collapsing either would hide it. The admin
- * queue groups by branch rather than the database refusing the row.
+ * There is no table behind this. A handful of branches answer a one-off
+ * announcement, somebody reads them and picks one, and that is the end of the
+ * feature -- so a table, a migration, an admin queue and a status workflow
+ * were all machinery for a decision that gets made in an inbox.
  *
- * The branch id is resolved rather than trusted: the form is public, so the
- * id arrives from a dropdown the caller could have edited. A name typed by
- * hand is always kept exactly as typed, since the branch may not be seeded
- * yet -- the plan seeds a branch only after it has been chosen.
+ * The consequence, and it is why there is no catch around the send: the email
+ * IS the record. Nothing is written first and announced second, so a
+ * notification that failed quietly would be a submission that never happened.
+ * If the mail does not go, the caller has to hear about it, so they can send
+ * it again rather than walk away believing it arrived.
  */
 export async function submitPilotInterest(
-  db: Database,
   input: SubmitPilotInterestInput,
   ctx: SubmissionContext,
-) {
-  let branchId: string | null = null;
-  if (input.branchId) {
-    const [hit] = await db
-      .select({ id: branches.id })
-      .from(branches)
-      .where(and(eq(branches.id, input.branchId), eq(branches.isActive, true)))
-      .limit(1);
-    branchId = hit?.id ?? null;
+): Promise<{ submittedAt: string }> {
+  // With no AWS credentials bound, the mailer logs the send at info and
+  // returns as though it worked. Everywhere else that is a tolerable
+  // degradation because a row was already saved; here it would drop the
+  // submission entirely, so it is raised before we start rather than after.
+  if (!isMailerLive()) {
+    throw new Error(
+      'mailer is not configured (AWS credentials absent) -- pilot interest cannot be submitted',
+    );
   }
 
-  const [row] = await db
-    .insert(pilotInterest)
-    .values({
-      fullName: input.fullName.trim(),
-      roleAtBranch: input.roleAtBranch,
-      roleOther: blankToNull(input.roleOther),
-      email: input.email.trim().toLowerCase(),
-      phone: blankToNull(input.phone),
-
-      branchId,
-      branchName: input.branchName.trim(),
-      fellowshipCount: input.fellowshipCount,
-      departmentCount: input.departmentCount,
-      approxMembers: input.approxMembers ?? null,
-
-      headOfAdminName: blankToNull(input.headOfAdminName),
-      headOfAdminEmail: blankToNull(input.headOfAdminEmail)?.toLowerCase() ?? null,
-      safeguardingLeadInPost: input.safeguardingLeadInPost,
-      safeguardingLeadName: blankToNull(input.safeguardingLeadName),
-      earliestStart: input.earliestStart ?? null,
-
-      // The version the submitter was shown, not whatever the page says now.
-      requirementsVersion: PILOT_REQUIREMENTS_VERSION,
-
-      whyThisBranch: blankToNull(input.whyThisBranch),
-      notes: blankToNull(input.notes),
-
-      sourceIp: ctx.sourceIp,
-      userAgent: ctx.userAgent,
-    })
-    .returning({ id: pilotInterest.id, submittedAt: pilotInterest.submittedAt });
-
-  // An insert with .returning() yields exactly one row or throws, but the
-  // type is an array, so this is a type narrowing rather than a real case.
-  if (!row) throw new Error('pilot interest insert returned no row');
-
-  // The row is saved either way. A submission that stored cleanly but could
-  // not be announced is a notification problem, not the branch leader's, and
-  // failing their request would invite them to send it again.
-  await notifyPilotInterest(input, row.id).catch((err) => {
-    logger.error('pilot interest: notification failed', {
-      submissionId: row.id,
-      error: err instanceof Error ? err.message : String(err),
-    });
-  });
-
-  // Nothing about other submissions goes back to a public caller: who else
-  // has volunteered is not theirs to see.
-  return { id: row.id, submittedAt: row.submittedAt };
+  const submittedAt = new Date();
+  await notifyPilotInterest(input, ctx, submittedAt);
+  return { submittedAt: submittedAt.toISOString() };
 }
 
 /**
@@ -116,44 +57,22 @@ function notifyAddress(): string {
 
 async function notifyPilotInterest(
   input: SubmitPilotInterestInput,
-  submissionId: string,
+  ctx: SubmissionContext,
+  submittedAt: Date,
 ): Promise<void> {
-  // With no AWS credentials bound, the mailer logs the send at info and
-  // returns as though it worked, so a misconfigured environment would drop
-  // every notification without anything looking wrong. That is the one
-  // failure mode nobody would notice, so it is raised here rather than
-  // swallowed: the caller logs it as an error, and the row is kept either
-  // way.
-  if (!isMailerLive()) {
-    throw new Error(
-      'mailer is not configured (AWS credentials absent) -- pilot interest notification not sent',
-    );
-  }
-
-  const role =
-    input.roleAtBranch === 'other'
-      ? (input.roleOther?.trim() || 'Another role at the branch')
-      : PILOT_ROLE_LABEL[input.roleAtBranch];
+  const fullName = `${input.firstName.trim()} ${input.lastName.trim()}`;
 
   const rows: Array<[string, string]> = [
-    ['Name', input.fullName.trim()],
-    ['Role', role],
+    ['Name', fullName],
     ['Email', input.email.trim().toLowerCase()],
-    ['Phone', input.phone?.trim() || 'Not given'],
-    ['Branch', input.branchName.trim()],
-    ['Fellowships', String(input.fellowshipCount)],
-    ['Departments', String(input.departmentCount)],
-    ['Approx members', input.approxMembers == null ? 'Not given' : String(input.approxMembers)],
-    ['Head of admin', input.headOfAdminName?.trim() || 'Not named'],
-    ['Head of admin email', input.headOfAdminEmail?.trim() || 'Not given'],
+    ['Branch', input.branchName],
     [
-      'Safeguarding lead',
-      input.safeguardingLeadInPost
-        ? (input.safeguardingLeadName?.trim() || 'In post')
-        : 'Not in post',
+      'Approx members',
+      input.approxMembers === undefined ? 'Not given' : String(input.approxMembers),
     ],
-    ['Earliest start', input.earliestStart || 'Not given'],
+    ['Submitted', submittedAt.toISOString()],
     ['Commitments version', PILOT_REQUIREMENTS_VERSION],
+    ['Source IP', ctx.sourceIp ?? 'Unknown'],
   ];
 
   const table = rows
@@ -164,25 +83,11 @@ async function notifyPilotInterest(
     )
     .join('');
 
-  const freeText = ([
-    ['Why their branch should go first', input.whyThisBranch],
-    ['Anything we should know', input.notes],
-  ] as Array<[string, string | undefined]>)
-    .filter(([, value]) => value?.trim())
-    .map(
-      ([heading, value]) =>
-        `<h3 style="margin:24px 0 4px;font-size:14px;color:#111827;">${escapeHtml(heading)}</h3>` +
-        `<p style="margin:0;white-space:pre-wrap;color:#374151;">${escapeHtml(value!.trim())}</p>`,
-    )
-    .join('');
-
   const html = renderLayout({
     heading: 'A branch has put itself forward',
     bodyHtml:
-      `<p>${escapeHtml(input.branchName.trim())} offered to run the pilot.</p>` +
-      `<table style="border-collapse:collapse;font-size:14px;">${table}</table>` +
-      freeText +
-      `<p style="font-size:12px;color:#6b7280;margin-top:24px;">Submission ${escapeHtml(submissionId)}</p>`,
+      `<p>${escapeHtml(input.branchName)} offered to run the pilot.</p>` +
+      `<table style="border-collapse:collapse;font-size:14px;">${table}</table>`,
     footerLine: 'Sent by iKharis because a pilot interest form was submitted.',
   });
 
@@ -192,7 +97,7 @@ async function notifyPilotInterest(
   // wrote in.
   await sendNotificationEmail(
     notifyAddress(),
-    `Pilot interest: ${input.branchName.trim()} - ${input.fullName.trim()}`,
+    `Pilot interest: ${input.branchName} - ${fullName}`,
     html,
   );
 }
@@ -204,68 +109,4 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-export async function listPilotInterest(
-  db: Database,
-  query: { status?: PilotInterestStatus; limit: number; offset: number },
-) {
-  const where = query.status ? eq(pilotInterest.status, query.status) : undefined;
-
-  const rows = await db
-    .select({
-      id: pilotInterest.id,
-      fullName: pilotInterest.fullName,
-      roleAtBranch: pilotInterest.roleAtBranch,
-      roleOther: pilotInterest.roleOther,
-      email: pilotInterest.email,
-      phone: pilotInterest.phone,
-      branchId: pilotInterest.branchId,
-      branchName: pilotInterest.branchName,
-      fellowshipCount: pilotInterest.fellowshipCount,
-      departmentCount: pilotInterest.departmentCount,
-      approxMembers: pilotInterest.approxMembers,
-      headOfAdminName: pilotInterest.headOfAdminName,
-      headOfAdminEmail: pilotInterest.headOfAdminEmail,
-      safeguardingLeadInPost: pilotInterest.safeguardingLeadInPost,
-      safeguardingLeadName: pilotInterest.safeguardingLeadName,
-      earliestStart: pilotInterest.earliestStart,
-      requirementsVersion: pilotInterest.requirementsVersion,
-      whyThisBranch: pilotInterest.whyThisBranch,
-      notes: pilotInterest.notes,
-      status: pilotInterest.status,
-      reviewNotes: pilotInterest.reviewNotes,
-      submittedAt: pilotInterest.submittedAt,
-    })
-    .from(pilotInterest)
-    .where(where)
-    .orderBy(desc(pilotInterest.submittedAt))
-    .limit(query.limit)
-    .offset(query.offset);
-
-  const counted = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(pilotInterest)
-    .where(where);
-
-  return { rows, total: counted[0]?.count ?? 0 };
-}
-
-export async function updatePilotInterest(
-  db: Database,
-  id: string,
-  patch: { status: PilotInterestStatus; reviewNotes?: string },
-) {
-  const [row] = await db
-    .update(pilotInterest)
-    .set({
-      status: patch.status,
-      reviewNotes: blankToNull(patch.reviewNotes),
-      updatedAt: new Date(),
-    })
-    .where(eq(pilotInterest.id, id))
-    .returning({ id: pilotInterest.id, status: pilotInterest.status });
-
-  if (!row) throw new NotFoundError('Pilot interest submission not found');
-  return row;
 }

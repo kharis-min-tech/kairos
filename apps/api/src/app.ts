@@ -21,7 +21,7 @@ import { formsRouter } from './forms/router';
 import { attendanceRouter } from './attendance/router';
 import { mediaRouter } from './media/router';
 import { giftAidRouter, publicGiftAidRouter } from './gift-aid/router';
-import { pilotInterestRouter, publicPilotInterestRouter } from './pilot-interest/router';
+import { publicPilotInterestRouter } from './pilot-interest/router';
 import { db } from './db';
 import { successResponse } from '@kairos/utils';
 import { branches, regions } from '@kairos/database';
@@ -87,7 +87,6 @@ export function createApp() {
   // Kairos as an OAuth2 / OIDC authorization server (Better-Auth Phase 2).
   app.route('/api/oauth', oauthServerRouter);
   app.route('/api/branches', branchesRouter);
-  app.route('/api/pilot-interest', pilotInterestRouter);
   app.route('/api/members', membersRouter);
   app.route('/api/fellowships', fellowshipsRouter);
   app.route('/api/departments', departmentsRouter);

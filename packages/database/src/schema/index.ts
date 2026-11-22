@@ -152,9 +152,3 @@ export {
   type NewOAuthVerificationToken,
 } from './oauth-verification-tokens';
 
-export {
-  pilotInterest,
-  pilotInterestRelations,
-  type PilotInterest,
-  type NewPilotInterest,
-} from './pilot-interest';
