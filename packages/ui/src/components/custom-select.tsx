@@ -11,6 +11,8 @@ const VIEWPORT_PADDING = 12;
 interface PanelPosition {
   top: number;
   left: number;
+  /** Set for the default size, so the panel matches the field. `sm` hugs its options instead. */
+  width: number | undefined;
   minWidth: number;
   maxWidth: number;
   maxHeight: number;
@@ -85,10 +87,25 @@ export function CustomSelect({
         ?? Math.min(options.length * 36 + 8, 300);
       const maxWidth = Math.max(120, window.innerWidth - VIEWPORT_PADDING * 2);
       const minWidth = Math.min(rect.width, maxWidth);
-      const panelWidth = Math.min(
-        Math.max(panelRef.current?.getBoundingClientRect().width ?? rect.width, minWidth),
-        maxWidth,
-      );
+      /*
+       * The panel is sized from the trigger, not from its own content.
+       *
+       * Measuring the content is what this used to do, and it cannot work
+       * here: the options are `w-full`, so their width is a percentage of
+       * the panel that is itself being sized by them. Chrome resolves that
+       * cycle by handing each option the full available width, so the
+       * measurement came back as roughly the whole window -- which then set
+       * `left` to the viewport padding and pinned a window-wide panel to the
+       * left edge of the screen, nowhere near the field that opened it.
+       *
+       * `sm` keeps the old behaviour because it is a different shape of
+       * control: it opts into `w-max`, so its panel really does hug its
+       * options and has no `w-full` cycle to fall into.
+       */
+      const measured = size === 'sm'
+        ? panelRef.current?.getBoundingClientRect().width ?? rect.width
+        : rect.width;
+      const panelWidth = Math.min(Math.max(measured, minWidth), maxWidth);
       const opensUpward =
         spaceBelow - POPOVER_GAP - VIEWPORT_PADDING < panelHeight
         && rect.top > spaceBelow;
@@ -101,7 +118,14 @@ export function CustomSelect({
         ? Math.max(120, rect.top - POPOVER_GAP - VIEWPORT_PADDING)
         : Math.max(120, window.innerHeight - top - VIEWPORT_PADDING);
 
-      setPanelPosition({ top, left, minWidth, maxWidth, maxHeight });
+      setPanelPosition({
+        top,
+        left,
+        width: size === 'sm' ? undefined : panelWidth,
+        minWidth,
+        maxWidth,
+        maxHeight,
+      });
     };
 
     updatePosition();
@@ -111,7 +135,7 @@ export function CustomSelect({
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
-  }, [open, options.length]);
+  }, [open, options.length, size]);
 
   const toggleOpen = () => {
     setOpen((o) => !o);
@@ -135,6 +159,7 @@ export function CustomSelect({
           style={{
             top: panelPosition?.top ?? 0,
             left: panelPosition?.left ?? 0,
+            width: panelPosition?.width,
             minWidth: panelPosition?.minWidth,
             maxWidth: panelPosition?.maxWidth,
             maxHeight: panelPosition?.maxHeight,

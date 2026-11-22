@@ -85,6 +85,33 @@ describe('CustomSelect', () => {
     expect(screen.queryByRole('button', { name: 'Apple' })).not.toBeInTheDocument();
   });
 
+  // jsdom reports every rect as zero, so the panel's real width cannot be
+  // asserted here. What can be asserted is that the default size commits to
+  // an explicit width at all. Leaving it to the browser is what broke: the
+  // panel is `fixed` with `left` and no width, its options are `w-full`, and
+  // Chrome resolves that cycle by handing them the whole viewport -- so the
+  // panel spanned the window and sat at its left edge, nowhere near the
+  // field. `sm` opts out, because `w-max` genuinely hugs its options.
+  it('gives the default panel an explicit width instead of letting it fill', async () => {
+    const user = userEvent.setup();
+    render(<CustomSelect value="" onValueChange={() => {}} options={options} placeholder="Pick" />);
+    await user.click(screen.getByRole('button', { name: /pick/i }));
+    const panel = screen.getByRole('button', { name: 'Apple' }).parentElement!;
+    expect(panel.style.width).not.toBe('');
+    expect(panel.className).not.toContain('w-max');
+  });
+
+  it('lets the sm panel hug its options', async () => {
+    const user = userEvent.setup();
+    render(
+      <CustomSelect value="" onValueChange={() => {}} options={options} placeholder="Pick" size="sm" />,
+    );
+    await user.click(screen.getByRole('button', { name: /pick/i }));
+    const panel = screen.getByRole('button', { name: 'Apple' }).parentElement!;
+    expect(panel.className).toContain('w-max');
+    expect(panel.style.width).toBe('');
+  });
+
   it('renders the small-size variant', () => {
     render(
       <CustomSelect value="a" onValueChange={() => {}} options={options} size="sm" />,
