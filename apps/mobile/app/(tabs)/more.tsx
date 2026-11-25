@@ -249,7 +249,7 @@ export default function More() {
           ) : null}
         </Section>
 
-        <Section label="Gatherings">
+        <Section label="Services">
           {canSeeReports ? (
             <NavRow
               icon={BarChart3}

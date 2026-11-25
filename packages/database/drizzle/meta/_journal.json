@@ -470,6 +470,34 @@
       "when": 1793350000000,
       "tag": "0066_audit_log_erasure_action",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1793400000000,
+      "tag": "0067_member_mfa",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1793450000000,
+      "tag": "0068_gift_aid_bank_account_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1793500000000,
+      "tag": "0069_audit_log_mfa_reset_action",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1793550000000,
+      "tag": "0070_members_token_version",
+      "breakpoints": true
     }
   ]
 }

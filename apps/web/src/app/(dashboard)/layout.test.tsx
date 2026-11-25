@@ -71,7 +71,7 @@ describe('Dashboard nav — Attendance gating', () => {
   it('shows Attendance to plain members (page-level canRecord gates the CTAs)', () => {
     authState = makeState('member');
     render(<DashboardLayout>{null}</DashboardLayout>);
-    openSection('Gatherings');
+    openSection('Services');
     expect(screen.getAllByRole('link', { name: /^Attendance$/ }).length).toBeGreaterThan(0);
   });
 
@@ -85,14 +85,14 @@ describe('Dashboard nav — Attendance gating', () => {
   it('shows Attendance to leaders', () => {
     authState = makeState('leader');
     render(<DashboardLayout>{null}</DashboardLayout>);
-    openSection('Gatherings');
+    openSection('Services');
     expect(screen.getAllByRole('link', { name: /^Attendance$/ }).length).toBeGreaterThan(0);
   });
 
   it('shows Attendance to admins', () => {
     authState = makeState('admin');
     render(<DashboardLayout>{null}</DashboardLayout>);
-    openSection('Gatherings');
+    openSection('Services');
     expect(screen.getAllByRole('link', { name: /^Attendance$/ }).length).toBeGreaterThan(0);
   });
 });
