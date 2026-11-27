@@ -48,7 +48,7 @@ type NavSection =
   | 'For you'
   | 'People'
   | 'Groups'
-  | 'Gatherings'
+  | 'Services'
   | 'Insights'
   | 'Organisation';
 
@@ -57,7 +57,7 @@ const NAV_SECTIONS: NavSection[] = [
   'For you',
   'People',
   'Groups',
-  'Gatherings',
+  'Services',
   'Insights',
   'Organisation',
 ];
@@ -97,11 +97,11 @@ const navItems: NavItem[] = [
   // /attendance is open to all — page-level gating (canRecord) hides write CTAs
   // from non-writers, and Admin-dept members (systemRole='member') need the
   // entry point to reach the desk.
-  { href: '/attendance', label: 'Attendance', section: 'Gatherings' },
+  { href: '/attendance', label: 'Attendance', section: 'Services' },
   // /attendance/check-in is the member self-check-in surface (honour system +
   // QR scanner). Open to any authenticated member — the API 403s if the branch
   // has self-check-in off.
-  { href: '/attendance/check-in', label: 'Check in', section: 'Gatherings' },
+  { href: '/attendance/check-in', label: 'Check in', section: 'Services' },
 
   { href: '/reports', label: 'Reports', section: 'Insights' },
   { href: '/souls-dashboard', label: 'Souls Dashboard', section: 'Insights' },

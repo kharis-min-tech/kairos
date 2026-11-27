@@ -34,7 +34,7 @@ Members can also record themselves, if their branch has self check-in switched o
 | Sunday Service | Regular weekly service |
 | Midweek Service | Wednesday or other midweek |
 | Special Service | Seasonal or one-off events |
-| Prayer Meeting | Dedicated prayer gatherings |
+| Prayer Meeting | Dedicated prayer services |
 | Other | Any other format |
 
 ---

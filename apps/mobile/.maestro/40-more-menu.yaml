@@ -38,7 +38,7 @@ env:
 
 - scrollUntilVisible:
     element:
-      text: "Gatherings"
+      text: "Services"
     direction: DOWN
     timeout: 8000
     speed: 40

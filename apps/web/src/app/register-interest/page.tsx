@@ -289,8 +289,7 @@ function Submitted() {
       </h1>
       <p className="mx-auto mt-6 max-w-lg text-[17px] leading-[1.6] text-black/60 dark:text-white/55">
         Your branch is on the list. We are reading every response against what the pilot
-        needs, and we will come back to you either way, including if we choose another
-        branch to go first.
+        needs, and we will come back to you on the next steps.
       </p>
       <Link href="/"
         className="mt-10 inline-flex h-12 items-center rounded-full border border-black/10 px-7 text-xs font-extrabold uppercase tracking-[0.2em] text-[#1a1c1c] dark:border-white/15 dark:text-white">
